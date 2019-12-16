@@ -23,7 +23,7 @@ metadata {
     preferences {
         #!include:getDefaultMetadataPreferences()
         input(name: "numSwitches", type: "enum", title: "Number of Switches", description: "Set the number of buttons on the switch (default 1)", options: ["1", "2", "3", "4"], defaultValue: "1", displayDuringSetup: true, required: true)
-        #!include:getDefaultMetadataPreferencesForTasmota()
+        #!include:getDefaultMetadataPreferencesForTasmota(False) # False = No TelePeriod setting
 	}
 }
 
@@ -51,7 +51,7 @@ def installedAdditional() {
 
 def on() {
 	logging("on()",50)
-    //logging("device.namespace: ${getDeviceInfoByName('namespace')}, device.driverName: ${getDeviceInfoByName('driverName')}", 50)
+    //logging("device.namespace: ${getDeviceInfoByName('namespace')}, device.driverName: ${getDeviceInfoByName('name')}", 50)
     def cmds = []
     // Power0 doesn't work correctly for Tuya devices yet
     //cmds << getAction(getCommandString("Power0", "1"))
@@ -83,7 +83,6 @@ def parse(description) {
             #!include:getTasmotaParserForBasicData()
             #!include:getTasmotaParserForTuyaSwitch()
             #!include:getTasmotaParserForWifi()
-            #!include:getTasmotaParserForEnergyMonitor()
         #!include:getGenericTasmotaParseFooter()
 }
 
@@ -91,7 +90,7 @@ def update_needed_settings()
 {
     #!include:getUpdateNeededSettingsTasmotaHeader()
 
-    #!include:getUpdateNeededSettingsTasmotaModuleCommand(55)
+    #!include:getUpdateNeededSettingsTasmotaModuleCommand(54)
 
     // Update the TuyaMCU device with the correct number of switches
     cmds << getAction(getCommandString("TuyaMCU", null))

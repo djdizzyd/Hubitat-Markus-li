@@ -49,7 +49,7 @@ private void createChildDevices() {
     
     // If making changes here, don't forget that recreateDevices need to have the same settings set
     for (i in 1..numSwitchesI) {
-        addChildDevice("${getDeviceInfoByName('namespace')}", "${getDeviceInfoByName('driverName')} (Child)", "$device.id-$i", [name: "$device.name #$i", label: "$device.displayName $i", isComponent: true])
+        addChildDevice("${getDeviceInfoByName('namespace')}", "${getDeviceInfoByName('name')} (Child)", "$device.id-$i", [name: "$device.name #$i", label: "$device.displayName $i", isComponent: true])
     }
 }
 
@@ -62,14 +62,15 @@ def recreateChildDevices() {
         childDevice = childDevices.find{it.deviceNetworkId.endsWith("-$i")}
         if (childDevice) {
             // The device exists, just update it
-            childDevice.setName("${getDeviceInfoByName('driverName')} #$i")
-            childDevice.setDeviceNetworkId("$device.id-$i")
+            childDevice.setName("${getDeviceInfoByName('name')} #$i")
+            childDevice.setDeviceNetworkId("$device.id-$i")  // This doesn't work right now...
+            logging(childDevice.getData(), 10)
             // We leave the device Label alone, since that might be desired by the user to change
             //childDevice.setLabel("$device.displayName $i")
             //.setLabel doesn't seem to work on child devices???
         } else {
             // No such device, we should create it
-            addChildDevice("${getDeviceInfoByName('namespace')}", "${getDeviceInfoByName('driverName')} (Child)", "$device.id-$i", [name: "${getDeviceInfoByName('driverName')} #$i", label: "$device.displayName $i", isComponent: true])
+            addChildDevice("${getDeviceInfoByName('namespace')}", "${getDeviceInfoByName('name')} (Child)", "$device.id-$i", [name: "${getDeviceInfoByName('name')} #$i", label: "$device.displayName $i", isComponent: true])
         }
     }
     if (numSwitchesI < 4) {

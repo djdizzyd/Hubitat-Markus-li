@@ -131,18 +131,20 @@ def main(run=False):
         #codeVersion = hubitatAjax.get_driver_current_code_version(550)
         #print(codeVersion)
         
-        #hubitatAjax.push_app_code(97, appDir / 'tasmota-connect.groovy')
-        #hubitatAjax.push_app_code(163, appDir / 'tasmota-connect-test.groovy')
+        hubitatAjax.push_app_code(97, appDir / 'tasmota-connect.groovy')
+        hubitatAjax.push_app_code(163, appDir / 'tasmota-connect-test.groovy')
         
         driverFiles = [
             {'id': 550, 'file': driverDir / 'tasmota-tuya-wifi-touch-switch-child-test.groovy' },
             {'id': 513, 'file': driverDir / 'tasmota-sonoff-powr2.groovy' },
             {'id': 548, 'file': driverDir / 'tasmota-tuya-wifi-touch-switch.groovy' },
             {'id': 549, 'file': driverDir / 'tasmota-tuya-wifi-touch-switch-child.groovy' },
+            {'id': 551, 'file': driverDir / 'tasmota-sonoff-s2x.groovy' },
         ]
         for d in driverFiles:
             expandGroovyFile(d['file'], expandedDir)
-            hubitatAjax.push_driver_code(d['id'], getOutputGroovyFile(d['file'], expandedDir))
+            if(d['id'] != 0):
+                hubitatAjax.push_driver_code(d['id'], getOutputGroovyFile(d['file'], expandedDir))
         #expandGroovyFile(driverDir / 'tasmota-sonoff-powr2.groovy', expandedDir)
         #hubitatAjax.push_driver_code(513, getOutputGroovyFile(driverDir / 'tasmota-sonoff-powr2.groovy', expandedDir))
         

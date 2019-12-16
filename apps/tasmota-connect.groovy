@@ -84,6 +84,7 @@ def manuallyAdd(){
             input "deviceType", "enum", title:"Device Type", description: "", required: false, options: 
                 ["Tasmota - Sonoff Wifi Switch",
                  "Tasmota - Sonoff PowR2",
+                 "Tasmota - Sonoff S2X",
                  "Tasmota - Tuya Wifi Touch Switch",
                 ]
             input "ipAddress", "text", title:"IP Address", description: "", required: false 
@@ -371,7 +372,7 @@ def addDevices() {
 			else if (selectedDevice?.value?.name?.startsWith("Sonoff S31"))
                 deviceHandlerName = "Sonoff S31 - Tasmota"
             else if (selectedDevice?.value?.name?.startsWith("Sonoff S2"))
-                deviceHandlerName = "Sonoff S20 - Tasmota"
+                deviceHandlerName = "Tasmota - Sonoff S2X"
             else if (selectedDevice?.value?.name?.startsWith("Sonoff SC"))
                 deviceHandlerName = "Sonoff SC - Tasmota"
             else if (selectedDevice?.value?.name?.startsWith("Sonoff Bridge"))

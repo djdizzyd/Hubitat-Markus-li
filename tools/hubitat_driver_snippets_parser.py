@@ -98,6 +98,7 @@ if (result.containsKey("Version")) {
 }
 if (result.containsKey("Module")) {
     logging("Module: $result.Module",99)
+    events << createEvent(name: "module", value: "$result.Module")
 }
 if (result.containsKey("RestartReason")) {
     logging("RestartReason: $result.RestartReason",99)
