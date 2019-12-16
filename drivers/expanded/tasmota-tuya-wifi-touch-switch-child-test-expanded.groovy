@@ -33,7 +33,7 @@ def getDeviceInfoByName(infoName) {
     return(deviceInfo[infoName])
 }
 
-/* These functions are unique to each driver */
+/* These functions are unique tos each driver */
 void on() { 
     logging("$device on",1)
     parent.childOn(device.deviceNetworkId)

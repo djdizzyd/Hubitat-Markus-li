@@ -96,9 +96,20 @@ if (result.containsKey("WebServerMode")) {
 if (result.containsKey("Version")) {
     logging("Version: $result.Version",99)
 }
-if (result.containsKey("Module")) {
-    logging("Module: $result.Module",99)
+if (result.containsKey("Module") && !result.containsKey("Version")) {
+    // The check for Version is here to avoid using the wrong message
+    logging("Module: $result.Module",50)
     events << createEvent(name: "module", value: "$result.Module")
+}
+// When it is a Template, it looks a bit different
+if (result.containsKey("NAME") && result.containsKey("GPIO") && result.containsKey("FLAG") && result.containsKey("BASE")) {  
+    n = result.toMapString()
+    n = n.replaceAll(' ','').replaceAll('\\\\[','{').replaceAll('\\\\]','}')
+    n = n.replaceAll('NAME:', '"NAME":"').replaceAll(',GPIO:\\\\{', '","GPIO":\\\\[')
+    n = n.replaceAll('\\\\},FLAG', '\\\\],"FLAG"').replaceAll('BASE', '"BASE"')
+    // TODO: Learn how to do this the right way in Groovy
+    logging("Template: $n",50)
+    events << createEvent(name: "templateData", value: "${n}")
 }
 if (result.containsKey("RestartReason")) {
     logging("RestartReason: $result.RestartReason",99)

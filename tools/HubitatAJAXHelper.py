@@ -185,11 +185,34 @@ class HubitatAJAXHelper:
     else:
       return -1
 
+  def get_driver_list(self):
+    self._prepare_session()
+    APIUrl = self.API_base_url + '/device/drivers'
+    
+    #print(APIUrl)
+    
+    response = self.session.get(APIUrl)
+    if(response.status_code == 200):
+      try:
+        rdict = response.json()['drivers']
+        ndict = {}
+        for d in rdict:
+          ndict[d['id']] = d
+        return(ndict)
+      except json.decoder.JSONDecodeError:
+        print("Not json in response for get_driver_list(), try to login first?")
+        return(-3)
+    else:
+      print("Unknown problem occured in get_driver_list(): " + str(response))
+      return -1
+
+  # http://192.168.10.1/device/drivers
+
   def push_app_code(self, codeID, groovyFileToPublish):
-    self._push_code('app', codeID, groovyFileToPublish)
+    return(self._push_code('app', codeID, groovyFileToPublish))
   
   def push_driver_code(self, codeID, groovyFileToPublish):
-    self._push_code('driver', codeID, groovyFileToPublish)
+    return(self._push_code('driver', codeID, groovyFileToPublish))
 
   def _push_code(self, codeType, codeID, groovyFileToPublish):
     self._prepare_session()
@@ -208,7 +231,7 @@ class HubitatAJAXHelper:
       # Compare current source to the old one
       if(currentCode['source'] == source):
         print(Fore.GREEN + "The source for code ID '" + str(codeID) + "' is already up-to-date! No update needed!" + Fore.RESET)
-        return(0)
+        return(currentCode)
       else:
         data = {
           'id': codeID,
@@ -220,6 +243,8 @@ class HubitatAJAXHelper:
         response = self.session.post(APIUrl, data=data)
         try:
           jsonResponse = response.json()
+          print(Fore.GREEN + "The source for code ID '" + str(codeID) + "' has been updated!" + Fore.RESET)
+          return(jsonResponse)
         except json.decoder.JSONDecodeError:
           print("ERROR: Not json in the response for publishing '" + str(groovyFileToPublish) + "' to ID '" + str(codeID) + "' with current version '" + str(codeVersion) + "'")
           return(-3)

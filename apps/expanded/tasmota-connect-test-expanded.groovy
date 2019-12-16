@@ -1,7 +1,21 @@
-#!include:getHeaderLicense()
+ /**
+ *  Copyright 2019 Markus Liljergren
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at:
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
 
 definition(
-    name: "Tasmota Connect",
+    name: "Tasmota Connect TEST",
     namespace: "tasmota",
     author: "Markus Liljergren (markus-li)",
     description: "Service Manager for Tasmota-based Devices",
@@ -66,7 +80,11 @@ def manuallyAdd(){
 		section {
 			paragraph "This process will manually create a Tasmota-based Device based with the entered IP address. Tasmota Connect then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your wifi network."
             input "deviceType", "enum", title:"Device Type", description: "", required: false, options: 
-                #!include:makeTasmotaConnectDriverListV1()
+                ["Tasmota - Sonoff PowR2",
+                "Tasmota - Tuya Wifi Touch Switch",
+                "Tasmota - Sonoff S2X",
+                "Tasmota - Generic Wifi Switch",
+                ]
             input "ipAddress", "text", title:"IP Address", description: "", required: false 
 		}
     }
@@ -335,7 +353,14 @@ def addDevices() {
             log.debug "Creating Tasmota-based Device with dni: ${selectedDevice.value.mac}"
 
             def deviceHandlerName
-            #!include:makeTasmotaConnectDriverListV2()
+            if (selectedDevice?.value?.name?.startsWith("Sonoff POW"))
+                deviceHandlerName = "Tasmota - Sonoff PowR2"
+            if (selectedDevice?.value?.name?.startsWith("Tuya"))
+                deviceHandlerName = "Tasmota - Tuya Wifi Touch Switch"
+            if (selectedDevice?.value?.name?.startsWith("Sonoff S2"))
+                deviceHandlerName = "Tasmota - Sonoff S2X"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic Wifi Switch"))
+                deviceHandlerName = "Tasmota - Generic Wifi Switch"
 			else if (selectedDevice?.value?.name?.startsWith("quired"))
                 deviceHandlerName = "Tasmota - Generic Wifi Switch"
             else if (selectedDevice?.value?.name?.startsWith("Aquired"))

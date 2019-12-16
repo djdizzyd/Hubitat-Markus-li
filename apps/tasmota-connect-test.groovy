@@ -1,22 +1,4 @@
- /**
- *  Copyright 2019 Markus Liljergren
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at:
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
- *  Original Code Author: Eric Maycock (erocm123)2
- */
-
-// THIS IS NOT A REAL APP AND IS ONLY USED FOR TESTING THE GENERATOR AND AUTO-PUBLISHING SYSTEM!
+#!include:getHeaderLicense()
 
 definition(
     name: "Tasmota Connect TEST",
@@ -82,12 +64,9 @@ def configurePDevice(params){
 def manuallyAdd(){
    dynamicPage(name: "manuallyAdd", title: "Manually add a Tasmota-based Device", nextPage: "manuallyAddConfirm") {
 		section {
-			paragraph "This process will manually create a Tasmota-based Device based on the entered IP address. The SmartApp then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your wifi network."
+			paragraph "This process will manually create a Tasmota-based Device based with the entered IP address. Tasmota Connect then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your wifi network."
             input "deviceType", "enum", title:"Device Type", description: "", required: false, options: 
-                ["Tasmota - Sonoff Wifi Switch",
-                 "Tasmota - Sonoff PowR2",
-                 "Tasmota - Tuya Wifi Touch Switch",
-                ]
+                #!include:makeTasmotaConnectDriverListV1()
             input "ipAddress", "text", title:"IP Address", description: "", required: false 
 		}
     }
@@ -356,37 +335,16 @@ def addDevices() {
             log.debug "Creating Tasmota-based Device with dni: ${selectedDevice.value.mac}"
 
             def deviceHandlerName
-            if (selectedDevice?.value?.name?.startsWith("Sonoff TH"))
-                deviceHandlerName = "Sonoff TH Wifi Switch"
-            else if (selectedDevice?.value?.name?.startsWith("Sonoff POW"))
-                deviceHandlerName = "Tasmota - Sonoff POWR2"
-            else if (selectedDevice?.value?.name?.startsWith("Sonoff Dual "))
-                deviceHandlerName = "Sonoff 2CH - Tasmota"
-            else if (selectedDevice?.value?.name?.startsWith("Sonoff Dual"))
-                deviceHandlerName = "Sonoff Dual Wifi Switch"
-            else if (selectedDevice?.value?.name?.startsWith("Sonoff 4CH "))
-                deviceHandlerName = "Sonoff 4Ch - Tasmota"
-            else if (selectedDevice?.value?.name?.startsWith("Sonoff 4CH"))
-                deviceHandlerName = "Sonoff 4CH Wifi Switch"
-            else if (selectedDevice?.value?.name?.startsWith("Sonoff IFan02"))
-                deviceHandlerName = "Sonoff IFan02 Wifi Controller"
-			else if (selectedDevice?.value?.name?.startsWith("Sonoff S31"))
-                deviceHandlerName = "Sonoff S31 - Tasmota"
-            else if (selectedDevice?.value?.name?.startsWith("Sonoff S2"))
-                deviceHandlerName = "Sonoff S20 - Tasmota"
-            else if (selectedDevice?.value?.name?.startsWith("Sonoff SC"))
-                deviceHandlerName = "Sonoff SC - Tasmota"
-            else if (selectedDevice?.value?.name?.startsWith("Sonoff Bridge"))
-                deviceHandlerName = "Sonoff Bridge - Tasmota"
-            else if (selectedDevice?.value?.name?.startsWith("Tuya"))
-                deviceHandlerName = "Tasmota - Tuya Wifi Touch Switch"
+            #!include:makeTasmotaConnectDriverListV2()
 			else if (selectedDevice?.value?.name?.startsWith("quired"))
-                deviceHandlerName = "Sonoff 2CH - Tasmota"
+                deviceHandlerName = "Tasmota - Generic Wifi Switch"
+            else if (selectedDevice?.value?.name?.startsWith("Aquired"))
+                deviceHandlerName = "Tasmota - Generic Wifi Switch"
             else 
-                deviceHandlerName = "Tasmota - Sonoff Wifi Switch"
+                deviceHandlerName = "Tasmota - Generic Wifi Switch"
             try {
             def newDevice = addChildDevice("tasmota", deviceHandlerName, selectedDevice.value.mac, selectedDevice?.value.hub, [
-                "label": selectedDevice?.value?.name ?: "Tasmota - Sonoff Wifi Switch",
+                "label": selectedDevice?.value?.name ?: "Tasmota - Generic Wifi Switch",
                 "data": [
                     "mac": selectedDevice.value.mac,
                     "ip": convertHexToIP(selectedDevice.value.networkAddress),

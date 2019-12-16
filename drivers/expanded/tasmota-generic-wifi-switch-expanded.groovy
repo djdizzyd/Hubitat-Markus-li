@@ -18,31 +18,17 @@
 import groovy.json.JsonSlurper
 
 metadata {
-	definition (name: "Tasmota - Sonoff PowR2", namespace: "tasmota", author: "Markus Liljergren", vid:"generic-switch") {
+	definition (name: "Tasmota - Generic Wifi Switch", namespace: "tasmota", author: "Markus Liljergren", vid:"generic-switch") {
         capability "Actuator"
 		capability "Switch"
 		capability "Sensor"
 
-        
-        // Default Capabilities for Energy Monitor
-        capability "Voltage Measurement"
-        capability "Power Meter"
-        capability "Energy Meter"
         
         // Default Capabilities
         capability "Refresh"
         capability "Configuration"
         capability "HealthCheck"
         
-        
-        // Default Attributes for Energy Monitor
-        attribute   "current", "string"
-        attribute   "apparentPower", "string"
-        attribute   "reactivePower", "string"
-        attribute   "powerFactor", "string"
-        attribute   "energyToday", "string"
-        attribute   "energyYesterday", "string"
-        attribute   "energyTotal", "string"
         
         // Default Attributes
         attribute   "needUpdate", "string"
@@ -63,13 +49,15 @@ metadata {
         // Default Preferences
         input(description: "For details and guidance, see the release thread in the <a href=\"https://community.hubitat.com/t/release-tasmota-7-x-firmware-with-hubitat-support/29368\"> Hubitat Forum</a>.", title: "Settings", displayDuringSetup: false, type: "paragraph", element: "paragraph")
         generate_preferences(configuration_model_debug())
+        input(name: "moduleNumber", type: "number", title: "Module Number", description: "Module Number used in Tasmota (default: 0)", displayDuringSetup: true, required: false, defaultValue: 0)
+        input(name: "deviceTemplateInput", type: "string", title: "Device Template", description: "ADVANCED: Set this to a Device Template for Tasmota, leave it EMPTY to NOT set a template. (Example: {\"NAME\":\"S120\",\"GPIO\":[0,0,0,0,0,21,0,0,0,52,90,0,0],\"FLAG\":0,\"BASE\":18})", displayDuringSetup: true, required: false)
         
         // Default Preferences for Tasmota
         input(name: "ipAddress", type: "string", title: "Device IP Address", description: "Set this as a default for the auto-discovery feature", displayDuringSetup: true, required: false)
         input(name: "port", type: "number", title: "Device Port", description: "Port (default: 80)", displayDuringSetup: true, required: false, defaultValue: 80)
         input(name: "override", type: "bool", title: "Override IP", description: "Override the automatically discovered IP address and disable auto-discovery.", displayDuringSetup: true, required: false)
         input(name: "disableModuleSelection", type: "bool", title: "Disable Automatically Setting Module and Template", description: "Disable automatically setting the Module Type and Template in Tasmota. Enable for using custom Module or Template settings directly on the device. With this disabled, you need to set these settings manually on the device.", displayDuringSetup: true, required: false)
-        input(name: "telePeriod", type: "string", title: "Update Frequency", description: "Tasmota sensor value update interval, set this to any value between 10 and 3600 seconds. See the Tasmota docs concerning telePeriod for details. This is NOT a poll frequency. Button/switch changes are immediate and are NOT affected by this. This is for SENSORS only. (default = 300)", displayDuringSetup: true, required: false)
+        
         generate_preferences(configuration_model_tasmota())
         input(name: "useIPAsID", type: "bool", title: "EXPERTS ONLY: IP as Network ID", description: "Not needed under normal circumstances. Setting this when not needed can break updates. This requires the IP to be static or set to not change in your DHCP server. It will force the use of IP as network ID. When in use, set Override IP to true and input the correct Device IP Address. See the release thread in the Hubitat forum for details and guidance.", displayDuringSetup: true, required: false)
 	}
@@ -78,7 +66,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - Sonoff PowR2', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
+    deviceInfo = ['name': 'Tasmota - Generic Wifi Switch', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
     return(deviceInfo[infoName])
 }
 
@@ -215,88 +203,6 @@ def parse(description) {
                     logging("SSId: $result.Wifi.SSId",99)
                 }
             }
-            
-            // Standard Energy Monitor Data parsing
-            if (result.containsKey("StatusSNS")) {
-                if (result.StatusSNS.containsKey("ENERGY")) {
-                    if (result.StatusSNS.ENERGY.containsKey("Total")) {
-                        logging("Total: $result.StatusSNS.ENERGY.Total kWh",99)
-                        events << createEvent(name: "energyTotal", value: "$result.StatusSNS.ENERGY.Total kWh")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Today")) {
-                        logging("Today: $result.StatusSNS.ENERGY.Today kWh",99)
-                        events << createEvent(name: "energyToday", value: "$result.StatusSNS.ENERGY.Today kWh")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Yesterday")) {
-                        logging("Yesterday: $result.StatusSNS.ENERGY.Yesterday kWh",99)
-                        events << createEvent(name: "energyYesterday", value: "$result.StatusSNS.ENERGY.Yesterday kWh")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Current")) {
-                        logging("Current: $result.StatusSNS.ENERGY.Current A",99)
-                        events << createEvent(name: "current", value: "$result.StatusSNS.ENERGY.Current A")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("ApparentPower")) {
-                        logging("apparentPower: $result.StatusSNS.ENERGY.ApparentPower VA",99)
-                        events << createEvent(name: "apparentPower", value: "$result.StatusSNS.ENERGY.ApparentPower VA")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("ReactivePower")) {
-                        logging("reactivePower: $result.StatusSNS.ENERGY.ReactivePower VAr",99)
-                        events << createEvent(name: "reactivePower", value: "$result.StatusSNS.ENERGY.ReactivePower VAr")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Factor")) {
-                        logging("powerFactor: $result.StatusSNS.ENERGY.Factor",99)
-                        events << createEvent(name: "powerFactor", value: "$result.StatusSNS.ENERGY.Factor")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Voltage")) {
-                        logging("Voltage: $result.StatusSNS.ENERGY.Voltage V",99)
-                        events << createEvent(name: "voltage", value: "$result.StatusSNS.ENERGY.Voltage V")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Power")) {
-                        logging("Power: $result.StatusSNS.ENERGY.Power W",99)
-                        events << createEvent(name: "power", value: "$result.StatusSNS.ENERGY.Power W")
-                    }
-                }
-            }
-            if (result.containsKey("ENERGY")) {
-                logging("Has ENERGY...", 1)
-                if (result.ENERGY.containsKey("Total")) {
-                    logging("Total: $result.ENERGY.Total kWh",99)
-                    events << createEvent(name: "energyTotal", value: "$result.ENERGY.Total kWh")
-                }
-                if (result.ENERGY.containsKey("Today")) {
-                    logging("Today: $result.ENERGY.Today kWh",99)
-                    events << createEvent(name: "energyToday", value: "$result.ENERGY.Today kWh")
-                }
-                if (result.ENERGY.containsKey("Yesterday")) {
-                    logging("Yesterday: $result.ENERGY.Yesterday kWh",99)
-                    events << createEvent(name: "energyYesterday", value: "$result.ENERGY.Yesterday kWh")
-                }
-                if (result.ENERGY.containsKey("Current")) {
-                    logging("Current: $result.ENERGY.Current A",99)
-                    events << createEvent(name: "current", value: "$result.ENERGY.Current A")
-                }
-                if (result.ENERGY.containsKey("ApparentPower")) {
-                    logging("apparentPower: $result.ENERGY.ApparentPower VA",99)
-                    events << createEvent(name: "apparentPower", value: "$result.ENERGY.ApparentPower VA")
-                }
-                if (result.ENERGY.containsKey("ReactivePower")) {
-                    logging("reactivePower: $result.ENERGY.ReactivePower VAr",99)
-                    events << createEvent(name: "reactivePower", value: "$result.ENERGY.ReactivePower VAr")
-                }
-                if (result.ENERGY.containsKey("Factor")) {
-                    logging("powerFactor: $result.ENERGY.Factor",99)
-                    events << createEvent(name: "powerFactor", value: "$result.ENERGY.Factor")
-                }
-                if (result.ENERGY.containsKey("Voltage")) {
-                    logging("Voltage: $result.ENERGY.Voltage V",99)
-                    events << createEvent(name: "voltage", value: "$result.ENERGY.Voltage V")
-                }
-                if (result.ENERGY.containsKey("Power")) {
-                    logging("Power: $result.ENERGY.Power W",99)
-                    events << createEvent(name: "power", value: "$result.ENERGY.Power W")
-                }
-            }
-            // StatusPTH:[PowerDelta:0, PowerLow:0, PowerHigh:0, VoltageLow:0, VoltageHigh:0, CurrentLow:0, CurrentHigh:0]
         // parse() Generic footer BEGINS here
         } else {
                 //log.debug "Response is not JSON: $body"
@@ -323,14 +229,31 @@ def update_needed_settings()
     // updateNeededSettings() Generic header ENDS here
 
     
-    // Tasmota Module selection command (autogenerated)
-    moduleNumber = 43
+    // Tasmota Module and Template selection command (autogenerated)
     cmds << getAction(getCommandString("Module", null))
     cmds << getAction(getCommandString("Template", null))
     if(disableModuleSelection == null) disableModuleSelection = false
-    if(disableModuleSelection == false) {
+    if(disableModuleSelection == false && deviceTemplateInput != null && deviceTemplateInput != "") {
+        logging("Setting the Template soon...", 10)
+        logging(device.currentValue('templateData'), 10)
+        moduleNumber = 0  // This activates the Template when set
+        // TODO: Remove all SPACES from deviceTemplate
+        if(device.currentValue('templateData') != null && device.currentValue('templateData') != deviceTemplateInput) {
+            logging("The template is NOT set to '${deviceTemplateInput}', it is set to '${device.currentValue('templateData')}'",10)
+            urlencodedTemplate = URLEncoder.encode(deviceTemplateInput)
+            cmds << getAction(getCommandString("Template", "${urlencodedTemplate}"))
+        } else {
+            logging("The template is set to '${deviceTemplateInput}' already!",10)
+        }
+    } else {
+        logging("Can't set the Template soon...", 10)
+        logging(device.currentValue('templateData'), 10)
+        logging("deviceTemplateInput: '${deviceTemplateInput}'", 10)
+        logging("disableModuleSelection: '${disableModuleSelection}'", 10)
+    }
+    if(disableModuleSelection == false && moduleNumber != null && moduleNumber >= 0) {
         logging("Setting the Module soon...", 10)
-        logging(device.currentValue('module'), 10)
+        logging("device.currentValue('module'): '${device.currentValue('module')}'", 10)
         if(device.currentValue('module') != null && !device.currentValue('module').startsWith("[${moduleNumber}:")) {
             logging("This DOESN'T start with [${moduleNumber} ${device.currentValue('module')}",10)
             cmds << getAction(getCommandString("Module", "${moduleNumber}"))
@@ -341,9 +264,10 @@ def update_needed_settings()
         logging("Setting the Module has been disabled!", 10)
     }
 
-    cmds << getAction(getCommandString("SetOption81", "1")) // Set PCF8574 component behavior for all ports as inverted
-    cmds << getAction(getCommandString("LedPower", "1"))  // 1 = turn LED ON and set LedState 8
-    cmds << getAction(getCommandString("LedState", "8"))  // 8 = LED on when Wi-Fi and MQTT are connected.
+    //Disabling these here, but leacing them if anyone needs them
+    //cmds << getAction(getCommandString("SetOption81", "1")) // Set PCF8574 component behavior for all ports as inverted
+    //cmds << getAction(getCommandString("LedPower", "1"))  // 1 = turn LED ON and set LedState 8
+    //mds << getAction(getCommandString("LedState", "8"))  // 8 = LED on when Wi-Fi and MQTT are connected.
     
     
     // updateNeededSettings() TelePeriod setting

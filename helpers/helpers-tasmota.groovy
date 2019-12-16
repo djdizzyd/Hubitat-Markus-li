@@ -158,7 +158,7 @@ def configuration_model_tasmota()
 {
 '''
 <configuration>
-<Value type="password" byteSize="1" index="password" label="Device Password" min="" max="" value="" setting_type="preference" fw="">
+<Value type="password" byteSize="1" index="password" label="Device Password" description="REQUIRED if set on the Device! Otherwise leave empty." min="" max="" value="" setting_type="preference" fw="">
 <Help>
 </Help>
 </Value>
