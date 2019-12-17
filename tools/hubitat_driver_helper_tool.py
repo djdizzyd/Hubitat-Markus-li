@@ -14,6 +14,8 @@ import os
 from pathlib import Path
 import re
 import pprint
+import yaml
+import ruamel.yaml
 
 # Local imports
 from hubitat_driver_snippets import *
@@ -38,45 +40,67 @@ def getHelperFunctions(helperFunctionType):
         raise Exception("Helper function type '" + helperFunctionType + "' can't be included! File doesn't exist!")
     return(r)
 
-def getOutputGroovyFile(inputGroovyFile, outputGroovyDir):
+def getOutputGroovyFile(inputGroovyFile, outputGroovyDir, alternateOutputFilename = None):
     #print('Using "' + str(inputGroovyFile) + '" to get path for "' + str(outputGroovyDir) + '"...')
     #print('Filename stem: ' + inputGroovyFile.stem)
     #print('Filename suffix: ' + inputGroovyFile.suffix)
-    outputGroovyFile = outputGroovyDir / str(inputGroovyFile.stem + "-expanded" + inputGroovyFile.suffix)
+    if(alternateOutputFilename != None):
+        outputGroovyFile = outputGroovyDir / str(alternateOutputFilename + "-expanded" + inputGroovyFile.suffix)
+    else:
+        outputGroovyFile = outputGroovyDir / str(inputGroovyFile.stem + "-expanded" + inputGroovyFile.suffix)
     #print('outputGroovyFile: ' + str(outputGroovyFile))
     return(outputGroovyFile)
 
-def checkForDefinitionString(l):
+def checkForDefinitionString(l, alternateName = None, alternateNamespace = None, alternateVid = None):
     definitionPosition = l.find('definition (')
     if(definitionPosition != -1):
         ds = l[definitionPosition+11:].strip()
+        # On all my drivers the definition row ends with ") {"
+        print('Parsing Definition statement')
+        print('{'+ds[1:-3]+'}')
+        definitionDict = yaml.load(('{'+ds[1:-3]+' }').replace(':', ': '), Loader=yaml.FullLoader)
+        print(definitionDict)
+        if(alternateName != None):
+            definitionDict['name'] = alternateName
+        if(alternateNamespace != None):
+            definitionDict['namespace'] = alternateNamespace
+        if(alternateVid != None):
+            definitionDict['vid'] = alternateVid
+        #print(definitionDict)
         # Process this string
         # (name: "Tasmota - Tuya Wifi Touch Switch TEST (Child)", namespace: "tasmota", author: "Markus Liljergren") {
-        PATTERN = re.compile(r'''((?:[^,"']|"[^"]*"|'[^']*')+)''')
-        PATTERN2 = re.compile(r'''((?:[^(){}:"']|"[^"]*"|'[^']*')+)''')
-        l1 = PATTERN.split(ds)[1::2]
-        d = {}
-        for p1 in l1:
-            p1 = p1.strip()
-            i = 0
-            previousp2 = None
-            for p2 in PATTERN2.split(p1)[1::2]:
-                p2 = p2.strip()
-                if(p2 != ''):
-                    if(i==0):
-                        previousp2 = p2.strip('"')
-                    else:
-                        #print('"' + previousp2 + '"="' + p2.strip('"') + '"')
-                        d[previousp2] = p2.strip('"')
-                    i += 1
-        ds = '[' + str(d)[1:-1] + ']'
+        #PATTERN = re.compile(r'''((?:[^,"']|"[^"]*"|'[^']*')+)''')
+        #PATTERN2 = re.compile(r'''((?:[^(){}:"']|"[^"]*"|'[^']*')+)''')
+        #l1 = PATTERN.split(ds)[1::2]
+        #d = {}
+        #for p1 in l1:
+        #    p1 = p1.strip()
+        #    i = 0
+        #    previousp2 = None
+        #    for p2 in PATTERN2.split(p1)[1::2]:
+        #        p2 = p2.strip()
+        #        if(p2 != ''):
+        #            if(i==0):
+        #                previousp2 = p2.strip('"')
+        #            else:
+        #                #print('"' + previousp2 + '"="' + p2.strip('"') + '"')
+        #                d[previousp2] = p2.strip('"')
+        #            i += 1
+        #print(d)
+        
+        ds = '[' + str(definitionDict)[1:-1] + ']'
+        for k in definitionDict:
+            definitionDict[k] = '"x' + definitionDict[k] + 'x"'
+        newDefinition = (l[:definitionPosition]) + 'definition (' + yaml.dump(definitionDict, default_flow_style=False, sort_keys=False ).replace('\'"x', '"').replace('x"\'', '"').replace('\n', ', ')[:-2] + ') {\n'
+        print(newDefinition)
         output = 'def getDeviceInfoByName(infoName) { \n' + \
             '    // DO NOT EDIT: This is generated from the metadata!\n' + \
             '    // TODO: Figure out how to get this from Hubitat instead of generating this?\n' + \
             '    deviceInfo = ' + ds + '\n' + \
             '    return(deviceInfo[infoName])\n' + \
             '}'
-        return(output)
+        #newDefinition = l
+        return(newDefinition, output)
     else:
         return(None)
 
@@ -118,8 +142,9 @@ def makeTasmotaConnectDriverListV2(driversList):
                 '    deviceHandlerName = "' + name + '"\n'
     return(tsDriverList)
 
-def expandGroovyFile(inputGroovyFile, outputGroovyDir, extraData = None):
-    outputGroovyFile = getOutputGroovyFile(inputGroovyFile, outputGroovyDir)
+def expandGroovyFile(inputGroovyFile, outputGroovyDir, extraData = None, alternateOutputFilename = None, \
+                     alternateName = None, alternateNamespace = None, alternateVid = None):
+    outputGroovyFile = getOutputGroovyFile(inputGroovyFile, outputGroovyDir, alternateOutputFilename)
     print('Expanding "' + str(inputGroovyFile) + '" to "' + str(outputGroovyFile) + '"...')
     definitionString = None
     with open (outputGroovyFile, "w") as wd:
@@ -127,7 +152,9 @@ def expandGroovyFile(inputGroovyFile, outputGroovyDir, extraData = None):
             # Read lines in loop
             for l in rd:
                 if(definitionString == None):
-                    definitionString = checkForDefinitionString(l)
+                    definitionString = checkForDefinitionString(l, alternateName = alternateName, alternateNamespace = alternateNamespace, alternateVid = alternateVid)
+                    if(definitionString != None):
+                        (l, definitionString) = definitionString
                 includePosition = l.find('#!include:')
                 if(includePosition != -1):
                     evalCmd = l[includePosition+10:].strip()
@@ -191,16 +218,32 @@ def main():
         {'id': 513, 'file': driverDir / 'tasmota-sonoff-powr2.groovy' },
         {'id': 548, 'file': driverDir / 'tasmota-tuya-wifi-touch-switch.groovy' },
         {'id': 549, 'file': driverDir / 'tasmota-tuya-wifi-touch-switch-child.groovy' },
+        {'id': 418, 'file': driverDir / 'tasmota-tuya-wifi-touch-switch-child.groovy', \
+         'alternateOutputFilename': 'tasmota-tuya-wifi-touch-switch-legacy-child', \
+         'alternateName': 'Tasmota - Tuya Wifi Touch Switch Legacy (Child)', \
+         'alternateNamespace': 'tasmota-legacy'},
         {'id': 551, 'file': driverDir / 'tasmota-sonoff-s2x.groovy' },
-        {'id': 554, 'file': driverDir / 'tasmota-sonoff-mini.groovy' },
+        {'id': 554, 'file': driverDir / 'tasmota-sonoff-mini.groovy'},
+        {'id': 556, 'file': driverDir / 'tasmota-sonoff-mini.groovy', \
+         'alternateOutputFilename': 'tasmota-sonoff-basic-r3', \
+         'alternateName': 'Tasmota - Sonoff Basic R3'},
         {'id': 552, 'file': driverDir / 'tasmota-generic-wifi-switch.groovy' },
         {'id': 553, 'file': driverDir / 'tasmota-s120-plug.groovy' },
     ]
 
     for d in driversFiles:
-        expandGroovyFile(d['file'], expandedDriversDir)
+        aOF = None
+        if('alternateOutputFilename' in d and d['alternateOutputFilename'] != ''):
+            alternateVid = (d['alternateVid'] if 'alternateVid' in d else None)
+            alternateNamespace = (d['alternateNamespace'] if 'alternateNamespace' in d else None)
+            expandGroovyFile(d['file'], expandedDriversDir, alternateOutputFilename=d['alternateOutputFilename'], \
+                             alternateName=d['alternateName'], alternateNamespace=alternateNamespace, \
+                             alternateVid=alternateVid)
+            aOF = d['alternateOutputFilename']
+        else:
+            expandGroovyFile(d['file'], expandedDriversDir)
         if(d['id'] != 0):
-            r = hubitatAjax.push_driver_code(d['id'], getOutputGroovyFile(d['file'], expandedDriversDir))
+            r = hubitatAjax.push_driver_code(d['id'], getOutputGroovyFile(d['file'], expandedDriversDir, alternateOutputFilename=aOF))
             try:
                 if 'source' in r:
                     r['source'] = '<hidden>'

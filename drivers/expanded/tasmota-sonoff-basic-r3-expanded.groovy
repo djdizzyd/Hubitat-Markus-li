@@ -18,7 +18,7 @@
 import groovy.json.JsonSlurper
 
 metadata {
-	definition (name: "Tasmota - Generic Wifi Switch", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
+	definition (name: "Tasmota - Sonoff Basic R3", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
         capability "Actuator"
 		capability "Switch"
 		capability "Sensor"
@@ -67,7 +67,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - Generic Wifi Switch', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
+    deviceInfo = ['name': 'Tasmota - Sonoff Basic R3', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
     return(deviceInfo[infoName])
 }
 
@@ -251,7 +251,7 @@ def update_needed_settings()
     cmds << getAction(getCommandString("Template", null))
     if(disableModuleSelection == null) disableModuleSelection = false
     moduleNumberUsed = moduleNumber
-    if(moduleNumber == null || moduleNumber == -1) moduleNumberUsed = 1
+    if(moduleNumber == null || moduleNumber == -1) moduleNumberUsed = 8
     useDefaultTemplate = false
     defaultDeviceTemplate = ''
     if(deviceTemplateInput != null && deviceTemplateInput == "0") {
@@ -300,10 +300,9 @@ def update_needed_settings()
         logging("Setting the Module has been disabled!", 10)
     }
 
-    //Disabling these here, but leaving them if anyone needs them
-    //cmds << getAction(getCommandString("SetOption81", "1")) // Set PCF8574 component behavior for all ports as inverted
-    //cmds << getAction(getCommandString("LedPower", "1"))  // 1 = turn LED ON and set LedState 8
-    //mds << getAction(getCommandString("LedState", "8"))  // 8 = LED on when Wi-Fi and MQTT are connected.
+    cmds << getAction(getCommandString("SetOption81", "1")) // Set PCF8574 component behavior for all ports as inverted
+    cmds << getAction(getCommandString("LedPower", "1"))  // 1 = turn LED ON and set LedState 8
+    cmds << getAction(getCommandString("LedState", "8"))  // 8 = LED on when Wi-Fi and MQTT are connected.
     
     
     // updateNeededSettings() TelePeriod setting

@@ -18,7 +18,7 @@
 import groovy.json.JsonSlurper
 
 metadata {
-	definition (name: "Tasmota - S120 Plug", namespace: "tasmota", author: "Markus Liljergren", vid:"generic-switch") {
+	definition (name: "Tasmota - S120 Plug", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
         capability "Actuator"
 		capability "Switch"
 		capability "Sensor"
