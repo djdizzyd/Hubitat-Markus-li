@@ -104,7 +104,8 @@ if (result.containsKey("Module") && !result.containsKey("Version")) {
 // When it is a Template, it looks a bit different
 if (result.containsKey("NAME") && result.containsKey("GPIO") && result.containsKey("FLAG") && result.containsKey("BASE")) {  
     n = result.toMapString()
-    n = n.replaceAll(' ','').replaceAll('\\\\[','{').replaceAll('\\\\]','}')
+    n = n.replaceAll(', ',',')
+    n = n.replaceAll('\\\\[','{').replaceAll('\\\\]','}')
     n = n.replaceAll('NAME:', '"NAME":"').replaceAll(',GPIO:\\\\{', '","GPIO":\\\\[')
     n = n.replaceAll('\\\\},FLAG', '\\\\],"FLAG"').replaceAll('BASE', '"BASE"')
     // TODO: Learn how to do this the right way in Groovy
@@ -126,7 +127,9 @@ if (result.containsKey("SetOption113")) {
 }
 if (result.containsKey("Uptime")) {
     logging("Uptime: $result.Uptime",99)
-    events << createEvent(name: 'uptime', value: result.Uptime, displayed: false)
+    // Even with "displayed: false, archivable: false" these events still show up under events...
+    //events << createEvent(name: 'uptime', value: result.Uptime, displayed: false, archivable: false)
+    state.uptime = result.Uptime
 }
 """
 

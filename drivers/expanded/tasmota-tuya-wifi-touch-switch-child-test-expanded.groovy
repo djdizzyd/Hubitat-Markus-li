@@ -44,6 +44,15 @@ void off() {
     parent.childOff(device.deviceNetworkId)
 }
 
+/* Default functions go here */
+private def getDriverVersion() {
+    logging("getDriverVersion()", 50)
+	def cmds = []
+    sendEvent(name: "driverVersion", value: "v0.9.0 for Tasmota 7.x (Hubitat version)")
+    return cmds
+}
+
+
 /* Logging function included in all drivers */
 private def logging(message, level) {
     if (logLevel != "0"){

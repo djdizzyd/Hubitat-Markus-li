@@ -19,6 +19,13 @@ def configure() {
     logging("configure()", 50)
     def cmds = []
     cmds = update_needed_settings()
+    try {
+        // Try to run the getDriverVersion() command
+        newCmds = getDriverVersion()
+        if (newCmds != []) cmds = cmds + newCmds
+    } catch (MissingMethodException e) {
+        // ignore
+    }
     if (cmds != []) cmds
 }
 
@@ -33,7 +40,8 @@ def generate_preferences(configuration_model)
         {   
             case ["number"]:
                 input "${it.@index}", "number",
-                    title:"${it.@label}\n" + "${it.Help}",
+                    title:"<b>${it.@label}</b>\n" + "${it.Help}",
+                    description: "<i>${it.@description}</i>",
                     range: "${it.@min}..${it.@max}",
                     defaultValue: "${it.@value}",
                     displayDuringSetup: "${it.@displayDuringSetup}"
@@ -42,26 +50,30 @@ def generate_preferences(configuration_model)
                 def items = []
                 it.Item.each { items << ["${it.@value}":"${it.@label}"] }
                 input "${it.@index}", "enum",
-                    title:"${it.@label}\n" + "${it.Help}",
+                    title:"<b>${it.@label}</b>\n" + "${it.Help}",
+                    description: "<i>${it.@description}</i>",
                     defaultValue: "${it.@value}",
                     displayDuringSetup: "${it.@displayDuringSetup}",
                     options: items
             break
             case ["password"]:
                 input "${it.@index}", "password",
-                    title:"${it.@label}\n" + "${it.Help}",
+                    title:"<b>${it.@label}</b>\n" + "${it.Help}",
+                    description: "<i>${it.@description}</i>",
                     displayDuringSetup: "${it.@displayDuringSetup}"
             break
             case "decimal":
                input "${it.@index}", "decimal",
-                    title:"${it.@label}\n" + "${it.Help}",
+                    title:"<b>${it.@label}</b>\n" + "${it.Help}",
+                    description: "<i>${it.@description}</i>",
                     range: "${it.@min}..${it.@max}",
                     defaultValue: "${it.@value}",
                     displayDuringSetup: "${it.@displayDuringSetup}"
             break
             case "boolean":
                input "${it.@index}", "boolean",
-                    title:"${it.@label}\n" + "${it.Help}",
+                    title:"<b>${it.@label}</b>\n" + "${it.Help}",
+                    description: "<i>${it.@description}</i>",
                     defaultValue: "${it.@value}",
                     displayDuringSetup: "${it.@displayDuringSetup}"
             break
@@ -93,7 +105,7 @@ def configuration_model_debug()
 {
 '''
 <configuration>
-<Value type="list" index="logLevel" label="Debug Logging Level" value="0" setting_type="preference" fw="">
+<Value type="list" index="logLevel" label="Debug Log Level" description="Under normal operations, set this to None. Only needed for debugging." value="0" setting_type="preference" fw="">
 <Help>
 </Help>
     <Item label="None" value="0" />

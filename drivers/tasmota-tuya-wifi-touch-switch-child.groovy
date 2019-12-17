@@ -22,4 +22,6 @@ void off() {
     parent.childOff(device.deviceNetworkId)
 }
 
+#!include:getDefaultFunctions()
+
 #!include:getLoggingFunction()

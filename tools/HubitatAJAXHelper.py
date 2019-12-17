@@ -243,14 +243,12 @@ class HubitatAJAXHelper:
         response = self.session.post(APIUrl, data=data)
         try:
           jsonResponse = response.json()
-          print(Fore.GREEN + "The source for code ID '" + str(codeID) + "' has been updated!" + Fore.RESET)
-          return(jsonResponse)
         except json.decoder.JSONDecodeError:
           print("ERROR: Not json in the response for publishing '" + str(groovyFileToPublish) + "' to ID '" + str(codeID) + "' with current version '" + str(codeVersion) + "'")
           return(-3)
         if(jsonResponse['status'] == 'success'):
           print(Fore.GREEN + "The source for code ID '" + str(codeID) + "' has been UPDATED!" + Fore.RESET)
-          return(1)
+          return(jsonResponse)
         elif(jsonResponse['status'] == 'error'):
           print(Fore.RED + "Failed to update code with error: '" + str(jsonResponse['errorMessage']).strip() + "'" + Fore.RESET)
           #print('\a')

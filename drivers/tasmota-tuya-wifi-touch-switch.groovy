@@ -90,7 +90,7 @@ def update_needed_settings()
 {
     #!include:getUpdateNeededSettingsTasmotaHeader()
 
-    #!include:getUpdateNeededSettingsTasmotaModuleCommand(54)
+    #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand(54)
 
     // Update the TuyaMCU device with the correct number of switches
     cmds << getAction(getCommandString("TuyaMCU", null))
@@ -134,6 +134,8 @@ def update_needed_settings()
 
     #!include:getUpdateNeededSettingsTasmotaFooter()
 }
+
+#!include:getDefaultFunctions()
 
 #!include:getLoggingFunction()
 

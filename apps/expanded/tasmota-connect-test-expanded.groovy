@@ -84,6 +84,7 @@ def manuallyAdd(){
                 "Tasmota - Tuya Wifi Touch Switch",
                 "Tasmota - Sonoff S2X",
                 "Tasmota - Generic Wifi Switch",
+                "Tasmota - S120 Plug",
                 ]
             input "ipAddress", "text", title:"IP Address", description: "", required: false 
 		}
@@ -361,6 +362,8 @@ def addDevices() {
                 deviceHandlerName = "Tasmota - Sonoff S2X"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic Wifi Switch"))
                 deviceHandlerName = "Tasmota - Generic Wifi Switch"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - S120 Plug"))
+                deviceHandlerName = "Tasmota - S120 Plug"
 			else if (selectedDevice?.value?.name?.startsWith("quired"))
                 deviceHandlerName = "Tasmota - Generic Wifi Switch"
             else if (selectedDevice?.value?.name?.startsWith("Aquired"))
