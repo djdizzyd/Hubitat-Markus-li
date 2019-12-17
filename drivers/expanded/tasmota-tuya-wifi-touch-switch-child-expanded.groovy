@@ -17,6 +17,7 @@
 /* Default imports */
 import groovy.json.JsonSlurper
 
+
 metadata {
     definition (name: "Tasmota - Tuya Wifi Touch Switch (Child)", namespace: "tasmota", author: "Markus Liljergren") {
         capability "Switch"

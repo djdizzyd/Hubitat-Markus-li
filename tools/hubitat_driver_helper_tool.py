@@ -229,8 +229,10 @@ def main():
          'alternateName': 'Tasmota - Sonoff Basic R3'},
         {'id': 552, 'file': driverDir / 'tasmota-generic-wifi-switch.groovy' },
         {'id': 553, 'file': driverDir / 'tasmota-s120-plug.groovy' },
+        {'id': 557, 'file': driverDir / 'tasmota-ykyc-001-em-plug.groovy' },
     ]
-
+    
+    j=0
     for d in driversFiles:
         aOF = None
         if('alternateOutputFilename' in d and d['alternateOutputFilename'] != ''):
@@ -243,6 +245,7 @@ def main():
         else:
             expandGroovyFile(d['file'], expandedDriversDir)
         if(d['id'] != 0):
+            j += 1
             r = hubitatAjax.push_driver_code(d['id'], getOutputGroovyFile(d['file'], expandedDriversDir, alternateOutputFilename=aOF))
             try:
                 if 'source' in r:
@@ -253,10 +256,11 @@ def main():
             except Exception:
                 id = 0
             print("Just worked on Driver ID " + str(id))
+    print('Had '+str(j)+' drivers to work on for the apps...')
     
     #pp.pprint(usedDriversDict)
     #print(makeTasmotaConnectDriverListV1(usedDriversDict))
-    #{"NAME":"S120c","GPIO":[0,0,0,0,0,21,0,0,0,52,90,0,0],"FLAG":0,"BASE":18}
+
     appsFiles = [
         {'id': 97, 'file': appsDir / 'tasmota-connect.groovy' },
         {'id': 163, 'file': appsDir / 'tasmota-connect-test.groovy' },
@@ -265,6 +269,7 @@ def main():
     for a in appsFiles:
         expandGroovyFile(a['file'], expandedAppsDir, usedDriversDict)
         if(a['id'] != 0 and len(usedDriversDict) >= 8):
+            print('Found ' + str(len(usedDriversDict)) + ' driver(s)...')
             r = hubitatAjax.push_app_code(a['id'], getOutputGroovyFile(a['file'], expandedAppsDir))
             try:
                 id = r['id']
@@ -275,7 +280,7 @@ def main():
             if(a['id'] == 0):
                 print("Not making App updates since this app has no ID set yet! Skipped updating App with path: '" + str(a['file']) + "'")
             else:
-                print("Not ready for App updates! Only " + str(len(usedDriversDict)) + " driver currently active! Skipped updating App ID " + str(a['id']))
+                print("Not ready for App updates! Only " + str(len(usedDriversDict)) + " driver(s) currently active! Skipped updating App ID " + str(a['id']))
     
     #expandGroovyFile(driverDir / 'tasmota-sonoff-powr2.groovy', expandedDir)
     #hubitatAjax.push_driver_code(513, getOutputGroovyFile(driverDir / 'tasmota-sonoff-powr2.groovy', expandedDir))

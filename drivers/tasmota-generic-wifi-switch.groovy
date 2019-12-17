@@ -19,7 +19,7 @@ metadata {
     
     preferences {
         #!include:getDefaultMetadataPreferences()
-        #!include:getDefaultMetadataPreferencesForTasmota(False) # False = No TelePeriod setting, True is default
+        #!include:getDefaultMetadataPreferencesForTasmota(True) # False = No TelePeriod setting, True is default
 	}
 }
 

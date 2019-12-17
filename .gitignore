@@ -3,3 +3,4 @@ hubitat_ajax.cfg
 *.cpython-*.pyc
 /DEVELOPER
 /drivers/expanded/tasmota-tuya-wifi-touch-switch-legacy-child-expanded.groovy
+/drivers/OLD_drivers
