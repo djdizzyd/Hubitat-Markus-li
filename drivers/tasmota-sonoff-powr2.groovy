@@ -27,21 +27,9 @@ metadata {
 
 #!include:getDeviceInfoFunction()
 
+#!include:getGenericOnOffFunctions()
+
 /* These functions are unique to each driver */
-def on() {
-	logging("on()", 50)
-    def cmds = []
-    cmds << getAction(getCommandString("Power", "On"))
-    return cmds
-}
-
-def off() {
-    logging("off()", 50)
-	def cmds = []
-    cmds << getAction(getCommandString("Power", "Off"))
-    return cmds
-}
-
 def parse(description) {
     #!include:getGenericTasmotaParseHeader()
             #!include:getTasmotaParserForBasicData()

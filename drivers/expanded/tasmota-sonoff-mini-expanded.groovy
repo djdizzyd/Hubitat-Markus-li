@@ -18,31 +18,17 @@
 import groovy.json.JsonSlurper
 
 metadata {
-	definition (name: "Tasmota - Sonoff PowR2", namespace: "tasmota", author: "Markus Liljergren", vid:"generic-switch") {
+	definition (name: "Tasmota - Sonoff Mini", namespace: "tasmota", author: "Markus Liljergren", vid:"generic-switch") {
         capability "Actuator"
 		capability "Switch"
 		capability "Sensor"
 
-        
-        // Default Capabilities for Energy Monitor
-        capability "Voltage Measurement"
-        capability "Power Meter"
-        capability "Energy Meter"
         
         // Default Capabilities
         capability "Refresh"
         capability "Configuration"
         capability "HealthCheck"
         
-        
-        // Default Attributes for Energy Monitor
-        attribute   "current", "string"
-        attribute   "apparentPower", "string"
-        attribute   "reactivePower", "string"
-        attribute   "powerFactor", "string"
-        attribute   "energyToday", "string"
-        attribute   "energyYesterday", "string"
-        attribute   "energyTotal", "string"
         
         // Default Attributes
         attribute   "needUpdate", "string"
@@ -69,7 +55,7 @@ metadata {
         input(name: "ipAddress", type: "string", title: "<b>Device IP Address</b>", description: "<i>Set this as a default fallback for the auto-discovery feature.</i>", displayDuringSetup: true, required: false)
         input(name: "port", type: "number", title: "<b>Device Port</b>", description: "<i>The http Port of the Device (default: 80)</i>", displayDuringSetup: true, required: false, defaultValue: 80)
         input(name: "override", type: "bool", title: "<b>Override IP</b>", description: "<i>Override the automatically discovered IP address and disable auto-discovery.</i>", displayDuringSetup: true, required: false)
-        input(name: "telePeriod", type: "string", title: "<b>Update Frequency</b>", description: "<i>Tasmota sensor value update interval, set this to any value between 10 and 3600 seconds. See the Tasmota docs concerning telePeriod for details. This is NOT a poll frequency. Button/switch changes are immediate and are NOT affected by this. This affects SENSORS only. (default = 300)</i>", displayDuringSetup: true, required: false)
+        
         generate_preferences(configuration_model_tasmota())
         input(name: "disableModuleSelection", type: "bool", title: "<b>Disable Automatically Setting Module and Template</b>", description: "ADVANCED: <i>Disable automatically setting the Module Type and Template in Tasmota. Enable for using custom Module or Template settings directly on the device. With this disabled, you need to set these settings manually on the device.</i>", displayDuringSetup: true, required: false)
         input(name: "moduleNumber", type: "number", title: "<b>Module Number</b>", description: "ADVANCED: <i>Module Number used in Tasmota. If Device Template is set, this value is IGNORED. (default: -1 (use the default for the driver))</i>", displayDuringSetup: true, required: false, defaultValue: -1)
@@ -81,7 +67,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - Sonoff PowR2', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
+    deviceInfo = ['name': 'Tasmota - Sonoff Mini', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
     return(deviceInfo[infoName])
 }
 
@@ -224,88 +210,6 @@ def parse(description) {
                     logging("SSId: $result.Wifi.SSId",99)
                 }
             }
-            
-            // Standard Energy Monitor Data parsing
-            if (result.containsKey("StatusSNS")) {
-                if (result.StatusSNS.containsKey("ENERGY")) {
-                    if (result.StatusSNS.ENERGY.containsKey("Total")) {
-                        logging("Total: $result.StatusSNS.ENERGY.Total kWh",99)
-                        events << createEvent(name: "energyTotal", value: "$result.StatusSNS.ENERGY.Total kWh")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Today")) {
-                        logging("Today: $result.StatusSNS.ENERGY.Today kWh",99)
-                        events << createEvent(name: "energyToday", value: "$result.StatusSNS.ENERGY.Today kWh")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Yesterday")) {
-                        logging("Yesterday: $result.StatusSNS.ENERGY.Yesterday kWh",99)
-                        events << createEvent(name: "energyYesterday", value: "$result.StatusSNS.ENERGY.Yesterday kWh")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Current")) {
-                        logging("Current: $result.StatusSNS.ENERGY.Current A",99)
-                        events << createEvent(name: "current", value: "$result.StatusSNS.ENERGY.Current A")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("ApparentPower")) {
-                        logging("apparentPower: $result.StatusSNS.ENERGY.ApparentPower VA",99)
-                        events << createEvent(name: "apparentPower", value: "$result.StatusSNS.ENERGY.ApparentPower VA")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("ReactivePower")) {
-                        logging("reactivePower: $result.StatusSNS.ENERGY.ReactivePower VAr",99)
-                        events << createEvent(name: "reactivePower", value: "$result.StatusSNS.ENERGY.ReactivePower VAr")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Factor")) {
-                        logging("powerFactor: $result.StatusSNS.ENERGY.Factor",99)
-                        events << createEvent(name: "powerFactor", value: "$result.StatusSNS.ENERGY.Factor")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Voltage")) {
-                        logging("Voltage: $result.StatusSNS.ENERGY.Voltage V",99)
-                        events << createEvent(name: "voltage", value: "$result.StatusSNS.ENERGY.Voltage V")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Power")) {
-                        logging("Power: $result.StatusSNS.ENERGY.Power W",99)
-                        events << createEvent(name: "power", value: "$result.StatusSNS.ENERGY.Power W")
-                    }
-                }
-            }
-            if (result.containsKey("ENERGY")) {
-                logging("Has ENERGY...", 1)
-                if (result.ENERGY.containsKey("Total")) {
-                    logging("Total: $result.ENERGY.Total kWh",99)
-                    events << createEvent(name: "energyTotal", value: "$result.ENERGY.Total kWh")
-                }
-                if (result.ENERGY.containsKey("Today")) {
-                    logging("Today: $result.ENERGY.Today kWh",99)
-                    events << createEvent(name: "energyToday", value: "$result.ENERGY.Today kWh")
-                }
-                if (result.ENERGY.containsKey("Yesterday")) {
-                    logging("Yesterday: $result.ENERGY.Yesterday kWh",99)
-                    events << createEvent(name: "energyYesterday", value: "$result.ENERGY.Yesterday kWh")
-                }
-                if (result.ENERGY.containsKey("Current")) {
-                    logging("Current: $result.ENERGY.Current A",99)
-                    events << createEvent(name: "current", value: "$result.ENERGY.Current A")
-                }
-                if (result.ENERGY.containsKey("ApparentPower")) {
-                    logging("apparentPower: $result.ENERGY.ApparentPower VA",99)
-                    events << createEvent(name: "apparentPower", value: "$result.ENERGY.ApparentPower VA")
-                }
-                if (result.ENERGY.containsKey("ReactivePower")) {
-                    logging("reactivePower: $result.ENERGY.ReactivePower VAr",99)
-                    events << createEvent(name: "reactivePower", value: "$result.ENERGY.ReactivePower VAr")
-                }
-                if (result.ENERGY.containsKey("Factor")) {
-                    logging("powerFactor: $result.ENERGY.Factor",99)
-                    events << createEvent(name: "powerFactor", value: "$result.ENERGY.Factor")
-                }
-                if (result.ENERGY.containsKey("Voltage")) {
-                    logging("Voltage: $result.ENERGY.Voltage V",99)
-                    events << createEvent(name: "voltage", value: "$result.ENERGY.Voltage V")
-                }
-                if (result.ENERGY.containsKey("Power")) {
-                    logging("Power: $result.ENERGY.Power W",99)
-                    events << createEvent(name: "power", value: "$result.ENERGY.Power W")
-                }
-            }
-            // StatusPTH:[PowerDelta:0, PowerLow:0, PowerHigh:0, VoltageLow:0, VoltageHigh:0, CurrentLow:0, CurrentHigh:0]
         // parse() Generic footer BEGINS here
         } else {
                 //log.debug "Response is not JSON: $body"
@@ -347,7 +251,7 @@ def update_needed_settings()
     cmds << getAction(getCommandString("Template", null))
     if(disableModuleSelection == null) disableModuleSelection = false
     moduleNumberUsed = moduleNumber
-    if(moduleNumber == null || moduleNumber == -1) moduleNumberUsed = 43
+    if(moduleNumber == null || moduleNumber == -1) moduleNumberUsed = 8
     useDefaultTemplate = false
     defaultDeviceTemplate = ''
     if(deviceTemplateInput != null && deviceTemplateInput == "0") {

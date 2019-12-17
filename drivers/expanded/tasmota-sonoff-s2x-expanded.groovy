@@ -71,7 +71,8 @@ def getDeviceInfoByName(infoName) {
     return(deviceInfo[infoName])
 }
 
-/* These functions are unique to each driver */
+
+/* Generic On/Off functions used when only 1 switch/button exists */
 def on() {
 	logging("on()", 50)
     def cmds = []
@@ -86,6 +87,8 @@ def off() {
     return cmds
 }
 
+
+/* These functions are unique to each driver */
 def parse(description) {
     // parse() Generic header BEGINS here
     //log.debug "Parsing: ${description}"

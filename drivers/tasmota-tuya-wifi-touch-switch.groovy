@@ -22,7 +22,7 @@ metadata {
     
     preferences {
         #!include:getDefaultMetadataPreferences()
-        input(name: "numSwitches", type: "enum", title: "Number of Switches", description: "Set the number of buttons on the switch (default 1)", options: ["1", "2", "3", "4"], defaultValue: "1", displayDuringSetup: true, required: true)
+        input(name: "numSwitches", type: "enum", title: "<b>Number of Switches</b>", description: "<i>Set the number of buttons on the switch (default 1)</i>", options: ["1", "2", "3", "4"], defaultValue: "1", displayDuringSetup: true, required: true)
         #!include:getDefaultMetadataPreferencesForTasmota(False) # False = No TelePeriod setting
 	}
 }
