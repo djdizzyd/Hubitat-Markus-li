@@ -558,6 +558,13 @@ private postAction(uri, data){
   return hubAction    
 }
 
+private onOffCmd(value, endpoint) {
+    logging("onOffCmd, value: $value, endpoint: $endpoint", 1)
+    def cmds = []
+    cmds << getAction(getCommandString("Power$endpoint", "$value"))
+    return cmds
+}
+
 private setDeviceNetworkId(macOrIP, isIP = false){
     def myDNI
     if (isIP == false) {
