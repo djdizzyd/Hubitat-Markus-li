@@ -80,7 +80,7 @@ def manuallyAdd(){
 		section {
 			paragraph "This process will manually create a Tasmota-based Device based with the entered IP address. Tasmota Connect then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your wifi network."
             input "deviceType", "enum", title:"Device Type", description: "", required: false, options: 
-                ["Tasmota - Sonoff PowR2",
+                ["Tasmota - Sonoff Pow R2",
                 "Tasmota - Tuya Wifi Touch Switch",
                 "Tasmota - Sonoff S2X",
                 "Tasmota - Sonoff Mini",
@@ -90,7 +90,7 @@ def manuallyAdd(){
                 "Tasmota - S120 Plug",
                 "Tasmota - YKYC-001 Power Monitor Plug",
                 "Tasmota - Brilliant BL20925 Power Monitor Plug",
-                "Tasmota - Genric Power Monitor Plug",
+                "Tasmota - Generic Power Monitor Plug",
                 ]
             input "ipAddress", "text", title:"IP Address", description: "", required: false 
 		}
@@ -360,8 +360,8 @@ def addDevices() {
             log.debug "Creating Tasmota-based Device with dni: ${selectedDevice.value.mac}"
 
             def deviceHandlerName
-            if (selectedDevice?.value?.name?.startsWith("Sonoff POW"))
-                deviceHandlerName = "Tasmota - Sonoff PowR2"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - Sonoff Pow R2"))
+                deviceHandlerName = "Tasmota - Sonoff Pow R2"
             if (selectedDevice?.value?.name?.startsWith("Tuya"))
                 deviceHandlerName = "Tasmota - Tuya Wifi Touch Switch"
             if (selectedDevice?.value?.name?.startsWith("Sonoff S2"))
@@ -380,8 +380,8 @@ def addDevices() {
                 deviceHandlerName = "Tasmota - YKYC-001 Power Monitor Plug"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Brilliant BL20925 Power Monitor Plug"))
                 deviceHandlerName = "Tasmota - Brilliant BL20925 Power Monitor Plug"
-            if (selectedDevice?.value?.name?.startsWith("Tasmota - Genric Power Monitor Plug"))
-                deviceHandlerName = "Tasmota - Genric Power Monitor Plug"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic Power Monitor Plug"))
+                deviceHandlerName = "Tasmota - Generic Power Monitor Plug"
 			else if (selectedDevice?.value?.name?.startsWith("quired"))
                 deviceHandlerName = "Tasmota - Generic Wifi Switch"
             else if (selectedDevice?.value?.name?.startsWith("Aquired"))
