@@ -232,6 +232,7 @@ def main():
         {'id': 553, 'file': driverDir / 'tasmota-s120-plug.groovy' },
         {'id': 557, 'file': driverDir / 'tasmota-ykyc-001-pm-plug.groovy' },
         {'id': 559, 'file': driverDir / 'tasmota-brilliant-bl20925-pm-plug.groovy' },
+        {'id': 577, 'file': driverDir / 'tasmota-prime-ccrcwfii113pk-plug.groovy' },
         {'id': 558, 'file': driverDir / 'tasmota-generic-pm-plug.groovy' },
     ]
     
