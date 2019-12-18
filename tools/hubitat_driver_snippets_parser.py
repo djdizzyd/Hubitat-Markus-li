@@ -224,7 +224,7 @@ if (result.containsKey("StatusSNS")) {
     }
 }
 if (result.containsKey("ENERGY")) {
-    logging("Has ENERGY...", 1)
+    //logging("Has ENERGY...", 1)
     if (result.ENERGY.containsKey("Total")) {
         logging("Total: $result.ENERGY.Total kWh",99)
         events << createEvent(name: "energyTotal", value: "$result.ENERGY.Total kWh")

@@ -235,6 +235,10 @@ def main():
         {'id': 558, 'file': driverDir / 'tasmota-generic-pm-plug.groovy' },
     ]
     
+    #driversFiles = [
+    #    {'id': 557, 'file': driverDir / 'tasmota-ykyc-001-pm-plug.groovy' },
+    #]
+
     j=0
     for d in driversFiles:
         aOF = None
@@ -271,7 +275,7 @@ def main():
 
     for a in appsFiles:
         expandGroovyFile(a['file'], expandedAppsDir, usedDriversDict)
-        if(a['id'] != 0 and len(usedDriversDict) >= 8):
+        if(a['id'] != 0 and len(usedDriversDict) >= 14):
             print('Found ' + str(len(usedDriversDict)) + ' driver(s)...')
             r = hubitatAjax.push_app_code(a['id'], getOutputGroovyFile(a['file'], expandedAppsDir))
             try:

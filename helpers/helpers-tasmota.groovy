@@ -1,24 +1,30 @@
 /* Helper functions included in all Tasmota drivers */
 def refresh() {
-	log.debug "refresh()"
+	logging("refresh()", 10)
     def cmds = []
     cmds << getAction(getCommandString("Status", "0"))
     return cmds
 }
 
 def reboot() {
-	log.debug "reboot()"
+	logging("reboot()", 10)
     getAction(getCommandString("Restart", "1"))
 }
 
 def updated()
 {
-    logging("updated()", 1)
+    logging("updated()", 10)
     def cmds = [] 
     cmds = update_needed_settings()
     sendEvent(name: "checkInterval", value: 2 * 15 * 60 + 2 * 60, displayed: false, data: [protocol: "lan", hubHardwareId: device.hub.hardwareID])
     sendEvent(name:"needUpdate", value: device.currentValue("needUpdate"), displayed:false, isStateChange: true)
-    logging(cmds,1)
+    logging(cmds,0)
+    try {
+        // Also run initialize(), if it exists...
+        initialize()
+    } catch (MissingMethodException e) {
+        // ignore
+    }
     if (cmds != [] && cmds != null) cmds
 }
 

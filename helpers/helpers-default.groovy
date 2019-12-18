@@ -15,6 +15,19 @@ def installed() {
     }
 }
 
+/*
+	initialize
+
+	Purpose: initialize the driver
+	Note: also called from updated() in most drivers
+*/
+void initialize()
+{
+    logging("initialize()", 50)
+	unschedule()
+	if (logLevel != "0") runIn(1800, logsOff)        // disable debug logs after 30 min
+}
+
 def configure() {
     logging("configure()", 50)
     def cmds = []
@@ -101,11 +114,28 @@ def update_current_properties(cmd)
     state.currentProperties = currentProperties
 }
 
+/*
+	logsOff
+
+	Purpose: automatically disable debug logging after 30 mins.
+	Note: scheduled in Initialize()
+*/
+void logsOff(){
+	log.warn "Debug logging disabled..."
+    // Setting logLevel to "0" doesn't seem to work, it disables logs, but does not update the UI...
+	//device.updateSetting("logLevel",[value:"0",type:"string"])
+    //app.updateSetting("logLevel",[value:"0",type:"list"])
+    // Not sure which ones are needed, so doing all... This works!
+    device.clearSetting("logLevel")
+    device.removeSetting("logLevel")
+    state.settings.remove("logLevel")
+}
+
 def configuration_model_debug()
 {
 '''
 <configuration>
-<Value type="list" index="logLevel" label="Debug Log Level" description="Under normal operations, set this to None. Only needed for debugging." value="0" setting_type="preference" fw="">
+<Value type="list" index="logLevel" label="Debug Log Level" description="Under normal operations, set this to None. Only needed for debugging. Auto-disabled after 30 minutes." value="0" setting_type="preference" fw="">
 <Help>
 </Help>
     <Item label="None" value="0" />
