@@ -92,6 +92,7 @@ def manuallyAdd(){
                 "Tasmota - Brilliant BL20925 Power Monitor Plug",
                 "Tasmota - Prime CCRCWFII113PK Plug",
                 "Tasmota - Generic Power Monitor Plug",
+                "Tasmota - UNTESTED Generic Temperature & Humidity Device",
                 ]
             input "ipAddress", "text", title:"IP Address", description: "", required: false 
 		}
@@ -385,6 +386,8 @@ def addDevices() {
                 deviceHandlerName = "Tasmota - Prime CCRCWFII113PK Plug"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic Power Monitor Plug"))
                 deviceHandlerName = "Tasmota - Generic Power Monitor Plug"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - UNTESTED Generic Temperature & Humidity Device"))
+                deviceHandlerName = "Tasmota - UNTESTED Generic Temperature & Humidity Device"
 			else if (selectedDevice?.value?.name?.startsWith("quired"))
                 deviceHandlerName = "Tasmota - Generic Wifi Switch/Plug"
             else if (selectedDevice?.value?.name?.startsWith("Aquired"))

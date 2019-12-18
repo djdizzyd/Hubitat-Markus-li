@@ -234,10 +234,13 @@ def main():
         {'id': 559, 'file': driverDir / 'tasmota-brilliant-bl20925-pm-plug.groovy' },
         {'id': 577, 'file': driverDir / 'tasmota-prime-ccrcwfii113pk-plug.groovy' },
         {'id': 558, 'file': driverDir / 'tasmota-generic-pm-plug.groovy' },
+        {'id': 578, 'file': driverDir / 'tasmota-generic-th-device.groovy' },
     ]
     
+    # Example driver: https://github.com/hubitat/HubitatPublic/blob/master/examples/drivers/GenericZigbeeRGBWBulb.groovy
+
     #driversFiles = [
-    #    {'id': 557, 'file': driverDir / 'tasmota-ykyc-001-pm-plug.groovy' },
+    #    {'id': 578, 'file': driverDir / 'tasmota-generic-th-device.groovy' },
     #]
 
     j=0
@@ -276,7 +279,7 @@ def main():
 
     for a in appsFiles:
         expandGroovyFile(a['file'], expandedAppsDir, usedDriversDict)
-        if(a['id'] != 0 and len(usedDriversDict) >= 14):
+        if(a['id'] != 0 and len(usedDriversDict) >= 16):
             print('Found ' + str(len(usedDriversDict)) + ' driver(s)...')
             r = hubitatAjax.push_app_code(a['id'], getOutputGroovyFile(a['file'], expandedAppsDir))
             try:

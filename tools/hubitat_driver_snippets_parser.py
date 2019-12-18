@@ -264,3 +264,50 @@ if (result.containsKey("ENERGY")) {
 }
 // StatusPTH:[PowerDelta:0, PowerLow:0, PowerHigh:0, VoltageLow:0, VoltageHigh:0, CurrentLow:0, CurrentHigh:0]
 """
+
+def getTasmotaParserForTHMonitor():
+    return """
+// Standard Energy Monitor Data parsing
+resultTH = null
+if (result.containsKey("AM2301")) {
+    resultTH = result.AM2301
+}
+if (result.containsKey("BME280")) {
+    resultTH = result.BME280
+}
+if (result.containsKey("StatusSNS")) {
+    if (result.StatusSNS.containsKey("AM2301")) {
+        resultTH = result.StatusSNS.AM2301
+    }
+    if (result.StatusSNS.containsKey("BME280")) {
+        resultTH = result.StatusSNS.BME280
+    }
+}
+if (result.containsKey("SENSOR")) {
+    if (result.SENSOR.containsKey("AM2301")) {
+        resultTH = result.StatusSNS.AM2301
+    }
+    if (result.SENSOR.containsKey("BME280")) {
+        resultTH = result.SENSOR.BME280
+    }
+}
+if(resultTH != null) {
+    if (resultTH.containsKey("Humidity")) {
+        logging("Humidity: RH $resultTH.Humidity %",99)
+        state.realHumidity = Math.round((resultTH.Humidity as Double) * 100) / 100
+        events << createEvent(name: "humidity", value: "${getAdjustedHumidity(state.realHumidity)}", unit: "%")
+    }
+    if (resultTH.containsKey("Temperature")) {
+        //Probably need this line below
+        //state.realTemperature = convertTemperatureIfNeeded(resultTH.Temperature.toFloat(), result.TempUnit, 1)
+        state.realTemperature = resultTH.Temperature.toFloat()
+        logging("Temperature: ${getAdjustedTemp(state.realTemperature? state.realTemperature:0)}",99)
+        events << createEvent(name: "temperature", value: "${getAdjustedTemp(state.realTemperature)}", unit: "${location.temperatureScale}")
+    }
+    if (resultTH.containsKey("Pressure")) {
+        logging("Pressure: $resultTH.Pressure $result.PressureUnit",99)
+        state.realPressure = Math.round((resultTH.PressureUnit as Double) * 100) / 100
+        events << createEvent(name: "pressure", value: "${state.realHumidity}", unit: "${result.PressureUnit}")
+    }
+}
+"""

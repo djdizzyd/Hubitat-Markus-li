@@ -55,6 +55,14 @@ capability "Power Meter"
 capability "Energy Meter"
 """
 
+def getDefaultMetadataCapabilitiesForTHMonitor():
+    return """
+// Default Capabilities for TH Monitor
+capability "Sensor"
+capability "Temperature Measurement"
+capability "Relative Humidity Measurement"
+"""
+
 def getDefaultMetadataAttributes():
     return """
 // Default Attributes
@@ -76,6 +84,11 @@ attribute   "powerFactor", "string"
 attribute   "energyToday", "string"
 attribute   "energyYesterday", "string"
 attribute   "energyTotal", "string"
+"""
+
+def getDefaultMetadataAttributesForTHMonitor():
+    return """
+// Default Attributes for Temperature Humidity Monitor
 """
 
 def getDefaultMetadataCommands():
@@ -113,6 +126,11 @@ input(name: "disableModuleSelection", type: "bool", title: "<b>Disable Automatic
 input(name: "moduleNumber", type: "number", title: "<b>Module Number</b>", description: "ADVANCED: <i>Module Number used in Tasmota. If Device Template is set, this value is IGNORED. (default: -1 (use the default for the driver))</i>", displayDuringSetup: true, required: false, defaultValue: -1)
 input(name: "deviceTemplateInput", type: "string", title: "<b>Device Template</b>", description: "ADVANCED: <i>Set this to a Device Template for Tasmota, leave it EMPTY to use the driver default. Set it to 0 to NOT use a Template. NAME can be maximum 14 characters! (Example: {\\\"NAME\\\":\\\"S120\\\",\\\"GPIO\\\":[0,0,0,0,0,21,0,0,0,52,90,0,0],\\\"FLAG\\\":0,\\\"BASE\\\":18})</i>", displayDuringSetup: true, required: false)
 input(name: "useIPAsID", type: "bool", title: "<b>IP as Network ID</b>", description: "ADVANCED: <i>Not needed under normal circumstances. Setting this when not needed can break updates. This requires the IP to be static or set to not change in your DHCP server. It will force the use of IP as network ID. When in use, set Override IP to true and input the correct Device IP Address. See the release thread in the Hubitat forum for details and guidance.</i>", displayDuringSetup: true, required: false)
+"""
+
+def getDefaultMetadataPreferencesForTHMonitor():
+    return """
+// Default Preferences for Temperature Humidity Monitor
 """
 
 def getUpdateNeededSettingsTasmotaHeader():

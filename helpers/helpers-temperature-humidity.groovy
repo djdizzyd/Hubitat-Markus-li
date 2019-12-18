@@ -1,0 +1,1 @@
+/* Helper functions included in all drivers with Temperature and Humidity */
