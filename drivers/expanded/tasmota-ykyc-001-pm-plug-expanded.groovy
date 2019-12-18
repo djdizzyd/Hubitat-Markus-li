@@ -489,7 +489,8 @@ void initialize()
 {
     logging("initialize()", 50)
 	unschedule()
-	if (logLevel != "0") runIn(1800, logsOff)        // disable debug logs after 30 min
+    // disable debug logs after 30 min, unless override is in place
+	if (logLevel != "0" && runReset != "DEBUG") runIn(1800, logsOff)
 }
 
 def configure() {

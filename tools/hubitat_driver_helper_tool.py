@@ -228,7 +228,7 @@ def main():
         {'id': 556, 'file': driverDir / 'tasmota-sonoff-basic.groovy', \
          'alternateOutputFilename': 'tasmota-sonoff-basic-r3', \
          'alternateName': 'Tasmota - Sonoff Basic R3'},
-        {'id': 552, 'file': driverDir / 'tasmota-generic-wifi-switch.groovy' },
+        {'id': 552, 'file': driverDir / 'tasmota-generic-wifi-switch-plug.groovy' },
         {'id': 553, 'file': driverDir / 'tasmota-s120-plug.groovy' },
         {'id': 557, 'file': driverDir / 'tasmota-ykyc-001-pm-plug.groovy' },
         {'id': 559, 'file': driverDir / 'tasmota-brilliant-bl20925-pm-plug.groovy' },

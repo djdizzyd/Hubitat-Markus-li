@@ -86,7 +86,7 @@ def manuallyAdd(){
                 "Tasmota - Sonoff Mini",
                 "Tasmota - Sonoff Basic",
                 "Tasmota - Sonoff Basic R3",
-                "Tasmota - Generic Wifi Switch",
+                "Tasmota - Generic Wifi Switch/Plug",
                 "Tasmota - S120 Plug",
                 "Tasmota - YKYC-001 Power Monitor Plug",
                 "Tasmota - Brilliant BL20925 Power Monitor Plug",
@@ -100,8 +100,8 @@ def manuallyAdd(){
 def manuallyAddConfirm(){
    if ( ipAddress =~ /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/) {
        log.debug "Creating Tasmota-based Wifi Device with dni: ${convertIPtoHex(ipAddress)}"
-       addChildDevice("tasmota", deviceType ? deviceType : "Sonoff Wifi Switch", "${convertIPtoHex(ipAddress)}", location.hubs[0].id, [
-           "label": (deviceType ? deviceType : "Tasmota - Sonoff Wifi Switch") + " (${ipAddress})",
+       addChildDevice("tasmota", deviceType ? deviceType : "Tasmota - Generic Wifi Switch/Plug", "${convertIPtoHex(ipAddress)}", location.hubs[0].id, [
+           "label": (deviceType ? deviceType : "Tasmota - Generic Wifi Switch/Plug") + " (${ipAddress})",
            "data": [
            "ip": ipAddress,
            "port": "80" 
@@ -372,8 +372,8 @@ def addDevices() {
                 deviceHandlerName = "Tasmota - Sonoff Basic"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Sonoff Basic R3"))
                 deviceHandlerName = "Tasmota - Sonoff Basic R3"
-            if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic Wifi Switch"))
-                deviceHandlerName = "Tasmota - Generic Wifi Switch"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic Wifi Switch/Plug"))
+                deviceHandlerName = "Tasmota - Generic Wifi Switch/Plug"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - S120 Plug"))
                 deviceHandlerName = "Tasmota - S120 Plug"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - YKYC-001 Power Monitor Plug"))
@@ -383,14 +383,14 @@ def addDevices() {
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic Power Monitor Plug"))
                 deviceHandlerName = "Tasmota - Generic Power Monitor Plug"
 			else if (selectedDevice?.value?.name?.startsWith("quired"))
-                deviceHandlerName = "Tasmota - Generic Wifi Switch"
+                deviceHandlerName = "Tasmota - Generic Wifi Switch/Plug"
             else if (selectedDevice?.value?.name?.startsWith("Aquired"))
-                deviceHandlerName = "Tasmota - Generic Wifi Switch"
+                deviceHandlerName = "Tasmota - Generic Wifi Switch/Plug"
             else 
-                deviceHandlerName = "Tasmota - Generic Wifi Switch"
+                deviceHandlerName = "Tasmota - Generic Wifi Switch/Plug"
             try {
             def newDevice = addChildDevice("tasmota", deviceHandlerName, selectedDevice.value.mac, selectedDevice?.value.hub, [
-                "label": selectedDevice?.value?.name ?: "Tasmota - Generic Wifi Switch",
+                "label": selectedDevice?.value?.name ?: "Tasmota - Generic Wifi Switch/Plug",
                 "data": [
                     "mac": selectedDevice.value.mac,
                     "ip": convertHexToIP(selectedDevice.value.networkAddress),
