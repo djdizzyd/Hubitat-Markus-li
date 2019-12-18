@@ -19,31 +19,17 @@ import groovy.json.JsonSlurper
 
 
 metadata {
-	definition (name: "Tasmota - Sonoff Pow R2", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
+	definition (name: "Tasmota - Sonoff Basic", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
         capability "Actuator"
 		capability "Switch"
 		capability "Sensor"
 
-        
-        // Default Capabilities for Energy Monitor
-        capability "Voltage Measurement"
-        capability "Power Meter"
-        capability "Energy Meter"
         
         // Default Capabilities
         capability "Refresh"
         capability "Configuration"
         capability "HealthCheck"
         
-        
-        // Default Attributes for Energy Monitor
-        attribute   "current", "string"
-        attribute   "apparentPower", "string"
-        attribute   "reactivePower", "string"
-        attribute   "powerFactor", "string"
-        attribute   "energyToday", "string"
-        attribute   "energyYesterday", "string"
-        attribute   "energyTotal", "string"
         
         // Default Attributes
         attribute   "needUpdate", "string"
@@ -82,7 +68,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - Sonoff Pow R2', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
+    deviceInfo = ['name': 'Tasmota - Sonoff Basic', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
     return(deviceInfo[infoName])
 }
 
@@ -225,88 +211,6 @@ def parse(description) {
                     logging("SSId: $result.Wifi.SSId",99)
                 }
             }
-            
-            // Standard Energy Monitor Data parsing
-            if (result.containsKey("StatusSNS")) {
-                if (result.StatusSNS.containsKey("ENERGY")) {
-                    if (result.StatusSNS.ENERGY.containsKey("Total")) {
-                        logging("Total: $result.StatusSNS.ENERGY.Total kWh",99)
-                        events << createEvent(name: "energyTotal", value: "$result.StatusSNS.ENERGY.Total kWh")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Today")) {
-                        logging("Today: $result.StatusSNS.ENERGY.Today kWh",99)
-                        events << createEvent(name: "energyToday", value: "$result.StatusSNS.ENERGY.Today kWh")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Yesterday")) {
-                        logging("Yesterday: $result.StatusSNS.ENERGY.Yesterday kWh",99)
-                        events << createEvent(name: "energyYesterday", value: "$result.StatusSNS.ENERGY.Yesterday kWh")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Current")) {
-                        logging("Current: $result.StatusSNS.ENERGY.Current A",99)
-                        events << createEvent(name: "current", value: "$result.StatusSNS.ENERGY.Current A")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("ApparentPower")) {
-                        logging("apparentPower: $result.StatusSNS.ENERGY.ApparentPower VA",99)
-                        events << createEvent(name: "apparentPower", value: "$result.StatusSNS.ENERGY.ApparentPower VA")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("ReactivePower")) {
-                        logging("reactivePower: $result.StatusSNS.ENERGY.ReactivePower VAr",99)
-                        events << createEvent(name: "reactivePower", value: "$result.StatusSNS.ENERGY.ReactivePower VAr")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Factor")) {
-                        logging("powerFactor: $result.StatusSNS.ENERGY.Factor",99)
-                        events << createEvent(name: "powerFactor", value: "$result.StatusSNS.ENERGY.Factor")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Voltage")) {
-                        logging("Voltage: $result.StatusSNS.ENERGY.Voltage V",99)
-                        events << createEvent(name: "voltage", value: "$result.StatusSNS.ENERGY.Voltage V")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Power")) {
-                        logging("Power: $result.StatusSNS.ENERGY.Power W",99)
-                        events << createEvent(name: "power", value: "$result.StatusSNS.ENERGY.Power W")
-                    }
-                }
-            }
-            if (result.containsKey("ENERGY")) {
-                logging("Has ENERGY...", 1)
-                if (result.ENERGY.containsKey("Total")) {
-                    logging("Total: $result.ENERGY.Total kWh",99)
-                    events << createEvent(name: "energyTotal", value: "$result.ENERGY.Total kWh")
-                }
-                if (result.ENERGY.containsKey("Today")) {
-                    logging("Today: $result.ENERGY.Today kWh",99)
-                    events << createEvent(name: "energyToday", value: "$result.ENERGY.Today kWh")
-                }
-                if (result.ENERGY.containsKey("Yesterday")) {
-                    logging("Yesterday: $result.ENERGY.Yesterday kWh",99)
-                    events << createEvent(name: "energyYesterday", value: "$result.ENERGY.Yesterday kWh")
-                }
-                if (result.ENERGY.containsKey("Current")) {
-                    logging("Current: $result.ENERGY.Current A",99)
-                    events << createEvent(name: "current", value: "$result.ENERGY.Current A")
-                }
-                if (result.ENERGY.containsKey("ApparentPower")) {
-                    logging("apparentPower: $result.ENERGY.ApparentPower VA",99)
-                    events << createEvent(name: "apparentPower", value: "$result.ENERGY.ApparentPower VA")
-                }
-                if (result.ENERGY.containsKey("ReactivePower")) {
-                    logging("reactivePower: $result.ENERGY.ReactivePower VAr",99)
-                    events << createEvent(name: "reactivePower", value: "$result.ENERGY.ReactivePower VAr")
-                }
-                if (result.ENERGY.containsKey("Factor")) {
-                    logging("powerFactor: $result.ENERGY.Factor",99)
-                    events << createEvent(name: "powerFactor", value: "$result.ENERGY.Factor")
-                }
-                if (result.ENERGY.containsKey("Voltage")) {
-                    logging("Voltage: $result.ENERGY.Voltage V",99)
-                    events << createEvent(name: "voltage", value: "$result.ENERGY.Voltage V")
-                }
-                if (result.ENERGY.containsKey("Power")) {
-                    logging("Power: $result.ENERGY.Power W",99)
-                    events << createEvent(name: "power", value: "$result.ENERGY.Power W")
-                }
-            }
-            // StatusPTH:[PowerDelta:0, PowerLow:0, PowerHigh:0, VoltageLow:0, VoltageHigh:0, CurrentLow:0, CurrentHigh:0]
         // parse() Generic footer BEGINS here
         } else {
                 //log.debug "Response is not JSON: $body"
@@ -348,7 +252,7 @@ def update_needed_settings()
     cmds << getAction(getCommandString("Template", null))
     if(disableModuleSelection == null) disableModuleSelection = false
     moduleNumberUsed = moduleNumber
-    if(moduleNumber == null || moduleNumber == -1) moduleNumberUsed = 43
+    if(moduleNumber == null || moduleNumber == -1) moduleNumberUsed = 1
     useDefaultTemplate = false
     defaultDeviceTemplate = ''
     if(deviceTemplateInput != null && deviceTemplateInput == "0") {
@@ -399,9 +303,9 @@ def update_needed_settings()
         logging("Setting the Module has been disabled!", 10)
     }
 
-    cmds << getAction(getCommandString("SetOption81", "1")) // Set PCF8574 component behavior for all ports as inverted (default=0)
-    cmds << getAction(getCommandString("LedPower", "1"))  // 1 = turn LED ON and set LedState 8
-    cmds << getAction(getCommandString("LedState", "8"))  // 8 = LED on when Wi-Fi and MQTT are connected.
+    cmds << getAction(getCommandString("SetOption81", "0")) // Set PCF8574 component behavior for all ports as inverted (default=0)
+    //cmds << getAction(getCommandString("LedPower", "1"))  // 1 = turn LED ON and set LedState 8
+    //cmds << getAction(getCommandString("LedState", "8"))  // 8 = LED on when Wi-Fi and MQTT are connected.
     
     
     // updateNeededSettings() TelePeriod setting

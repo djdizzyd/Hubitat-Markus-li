@@ -41,7 +41,7 @@ def update_needed_settings()
 
     #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand(8)
 
-    cmds << getAction(getCommandString("SetOption81", "1")) // Set PCF8574 component behavior for all ports as inverted
+    cmds << getAction(getCommandString("SetOption81", "0")) // Set PCF8574 component behavior for all ports as inverted (default=0)
     cmds << getAction(getCommandString("LedPower", "1"))  // 1 = turn LED ON and set LedState 8
     cmds << getAction(getCommandString("LedState", "8"))  // 8 = LED on when Wi-Fi and MQTT are connected.
     

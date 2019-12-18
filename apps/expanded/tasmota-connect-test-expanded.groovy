@@ -84,10 +84,13 @@ def manuallyAdd(){
                 "Tasmota - Tuya Wifi Touch Switch",
                 "Tasmota - Sonoff S2X",
                 "Tasmota - Sonoff Mini",
+                "Tasmota - Sonoff Basic",
                 "Tasmota - Sonoff Basic R3",
                 "Tasmota - Generic Wifi Switch",
                 "Tasmota - S120 Plug",
-                "Tasmota - YKYC-001 Energy Monitor Plug",
+                "Tasmota - YKYC-001 Power Monitor Plug",
+                "Tasmota - Brilliant BL20925 Power Monitor Plug",
+                "Tasmota - Genric Power Monitor Plug",
                 ]
             input "ipAddress", "text", title:"IP Address", description: "", required: false 
 		}
@@ -365,14 +368,20 @@ def addDevices() {
                 deviceHandlerName = "Tasmota - Sonoff S2X"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Sonoff Mini"))
                 deviceHandlerName = "Tasmota - Sonoff Mini"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - Sonoff Basic"))
+                deviceHandlerName = "Tasmota - Sonoff Basic"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Sonoff Basic R3"))
                 deviceHandlerName = "Tasmota - Sonoff Basic R3"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic Wifi Switch"))
                 deviceHandlerName = "Tasmota - Generic Wifi Switch"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - S120 Plug"))
                 deviceHandlerName = "Tasmota - S120 Plug"
-            if (selectedDevice?.value?.name?.startsWith("Tasmota - YKYC-001 Energy Monitor Plug"))
-                deviceHandlerName = "Tasmota - YKYC-001 Energy Monitor Plug"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - YKYC-001 Power Monitor Plug"))
+                deviceHandlerName = "Tasmota - YKYC-001 Power Monitor Plug"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - Brilliant BL20925 Power Monitor Plug"))
+                deviceHandlerName = "Tasmota - Brilliant BL20925 Power Monitor Plug"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - Genric Power Monitor Plug"))
+                deviceHandlerName = "Tasmota - Genric Power Monitor Plug"
 			else if (selectedDevice?.value?.name?.startsWith("quired"))
                 deviceHandlerName = "Tasmota - Generic Wifi Switch"
             else if (selectedDevice?.value?.name?.startsWith("Aquired"))
