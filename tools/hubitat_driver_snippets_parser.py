@@ -275,20 +275,31 @@ if (result.containsKey("AM2301")) {
 if (result.containsKey("BME280")) {
     resultTH = result.BME280
 }
+if (result.containsKey("BMP280")) {
+    resultTH = result.BMP280
+}
 if (result.containsKey("StatusSNS")) {
+    logging("Using key StatusSNS in parse()",1)
     if (result.StatusSNS.containsKey("AM2301")) {
         resultTH = result.StatusSNS.AM2301
     }
     if (result.StatusSNS.containsKey("BME280")) {
         resultTH = result.StatusSNS.BME280
     }
+    if (result.StatusSNS.containsKey("BMP280")) {
+        resultTH = result.StatusSNS.BMP280
+    }
 }
 if (result.containsKey("SENSOR")) {
+    logging("Using key SENSOR in parse()",1)
     if (result.SENSOR.containsKey("AM2301")) {
         resultTH = result.StatusSNS.AM2301
     }
     if (result.SENSOR.containsKey("BME280")) {
         resultTH = result.SENSOR.BME280
+    }
+    if (result.SENSOR.containsKey("BMP280")) {
+        resultTH = result.SENSOR.BMP280
     }
 }
 if(resultTH != null) {
@@ -306,8 +317,10 @@ if(resultTH != null) {
     }
     if (resultTH.containsKey("Pressure")) {
         logging("Pressure: $resultTH.Pressure $result.PressureUnit",99)
-        state.realPressure = Math.round((resultTH.PressureUnit as Double) * 100) / 100
-        events << createEvent(name: "pressure", value: "${state.realHumidity}", unit: "${result.PressureUnit}")
+        state.realPressure = Math.round((resultTH.Pressure as Double) * 100) / 100
+        events << createEvent(name: "pressure", value: "${state.realPressure}", unit: "${result.PressureUnit}")
+        // Since there is no Pressure tile yet, we need an attribute with the unit...
+        events << createEvent(name: "pressureWithUnit", value: "${state.realPressure} ${result.PressureUnit}")
     }
 }
 """

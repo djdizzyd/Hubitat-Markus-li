@@ -19,7 +19,7 @@ import groovy.json.JsonSlurper
 
 
 metadata {
-	definition (name: "Tasmota - UNTESTED Generic Temperature & Humidity Device", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
+	definition (name: "Tasmota - Generic Temperature & Humidity Device", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
         capability "Actuator"
 		capability "Switch"
 		capability "Sensor"
@@ -29,6 +29,7 @@ metadata {
         capability "Sensor"
         capability "Temperature Measurement"
         capability "Relative Humidity Measurement"
+        capability "PressureMeasurement"
         
         // Default Capabilities
         capability "Refresh"
@@ -37,6 +38,7 @@ metadata {
         
         
         // Default Attributes for Temperature Humidity Monitor
+        attribute   "pressureWithUnit", "string"
         
         // Default Attributes
         attribute   "needUpdate", "string"
@@ -77,7 +79,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - UNTESTED Generic Temperature & Humidity Device', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
+    deviceInfo = ['name': 'Tasmota - Generic Temperature & Humidity Device', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
     return(deviceInfo[infoName])
 }
 
@@ -229,20 +231,31 @@ def parse(description) {
             if (result.containsKey("BME280")) {
                 resultTH = result.BME280
             }
+            if (result.containsKey("BMP280")) {
+                resultTH = result.BMP280
+            }
             if (result.containsKey("StatusSNS")) {
+                logging("Using key StatusSNS in parse()",1)
                 if (result.StatusSNS.containsKey("AM2301")) {
                     resultTH = result.StatusSNS.AM2301
                 }
                 if (result.StatusSNS.containsKey("BME280")) {
                     resultTH = result.StatusSNS.BME280
                 }
+                if (result.StatusSNS.containsKey("BMP280")) {
+                    resultTH = result.StatusSNS.BMP280
+                }
             }
             if (result.containsKey("SENSOR")) {
+                logging("Using key SENSOR in parse()",1)
                 if (result.SENSOR.containsKey("AM2301")) {
                     resultTH = result.StatusSNS.AM2301
                 }
                 if (result.SENSOR.containsKey("BME280")) {
                     resultTH = result.SENSOR.BME280
+                }
+                if (result.SENSOR.containsKey("BMP280")) {
+                    resultTH = result.SENSOR.BMP280
                 }
             }
             if(resultTH != null) {
@@ -260,8 +273,10 @@ def parse(description) {
                 }
                 if (resultTH.containsKey("Pressure")) {
                     logging("Pressure: $resultTH.Pressure $result.PressureUnit",99)
-                    state.realPressure = Math.round((resultTH.PressureUnit as Double) * 100) / 100
-                    events << createEvent(name: "pressure", value: "${state.realHumidity}", unit: "${result.PressureUnit}")
+                    state.realPressure = Math.round((resultTH.Pressure as Double) * 100) / 100
+                    events << createEvent(name: "pressure", value: "${state.realPressure}", unit: "${result.PressureUnit}")
+                    // Since there is no Pressure tile yet, we need an attribute with the unit...
+                    events << createEvent(name: "pressureWithUnit", value: "${state.realPressure} ${result.PressureUnit}")
                 }
             }
         // parse() Generic footer BEGINS here

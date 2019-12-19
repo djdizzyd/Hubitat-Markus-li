@@ -61,6 +61,7 @@ def getDefaultMetadataCapabilitiesForTHMonitor():
 capability "Sensor"
 capability "Temperature Measurement"
 capability "Relative Humidity Measurement"
+capability "PressureMeasurement"
 """
 
 def getDefaultMetadataAttributes():
@@ -89,6 +90,7 @@ attribute   "energyTotal", "string"
 def getDefaultMetadataAttributesForTHMonitor():
     return """
 // Default Attributes for Temperature Humidity Monitor
+attribute   "pressureWithUnit", "string"
 """
 
 def getDefaultMetadataCommands():
