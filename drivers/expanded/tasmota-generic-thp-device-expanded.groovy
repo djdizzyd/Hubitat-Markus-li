@@ -19,17 +19,26 @@ import groovy.json.JsonSlurper
 
 
 metadata {
-	definition (name: "Tasmota - S120 Plug", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
+	definition (name: "Tasmota - Generic Temperature/Humidity/Pressure Device", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
         capability "Actuator"
 		capability "Switch"
 		capability "Sensor"
 
+        
+        // Default Capabilities for TH Monitor
+        capability "Sensor"
+        capability "Temperature Measurement"
+        capability "Relative Humidity Measurement"
+        capability "PressureMeasurement"
         
         // Default Capabilities
         capability "Refresh"
         capability "Configuration"
         capability "HealthCheck"
         
+        
+        // Default Attributes for Temperature Humidity Monitor
+        attribute   "pressureWithUnit", "string"
         
         // Default Attributes
         attribute   "needUpdate", "string"
@@ -52,6 +61,12 @@ metadata {
         input(name: "runReset", description: "<i>For details and guidance, see the release thread in the <a href=\"https://community.hubitat.com/t/release-tasmota-7-x-firmware-with-hubitat-support/29368\"> Hubitat Forum</a>. For settings marked as ADVANCED, make sure you understand what they do before activating them. If settings are not reflected on the device, press the Configure button in this driver. Also make sure all settings really are saved and correct.<br/>Type RESET and then press 'Save Preferences' to DELETE all Preferences and return to DEFAULTS.</i>", title: "<b>Settings</b>", displayDuringSetup: false, type: "paragraph", element: "paragraph")
         generate_preferences(configuration_model_debug())
         
+        // Default Preferences for Temperature Humidity Monitor
+        input(name: "tempOffset", type: "decimal", title: "<b>Temperature Offset</b>", description: "<i>Adjust the temperature by this many degrees (in Celcius).</i>", displayDuringSetup: true, required: false, range: "*..*")
+        input(name: "humidityOffset", type: "decimal", title: "<b>Humidity Offset</b>", description: "<i>Adjust the humidity by this many percent.</i>", displayDuringSetup: true, required: false, range: "*..*")
+        input(name: "pressureOffset", type: "decimal", title: "<b>Pressure Offset</b>", description: "<i>Adjust the pressure value by this much.</i>", displayDuringSetup: true, required: false, range: "*..*")
+        input(name: "tempRes", type: "enum", title: "<b>Temperature Resolution</b>", description: "<i>Temperature sensor resolution (0..3 = maximum number of decimal places, default: 1)<br/>NOTE: If the 3rd decimal is a 0 (eg. 24.720) it will show without the last decimal (eg. 24.72).</i>", options: ["0", "1", "2", "3"], defaultValue: "1", displayDuringSetup: true, required: false)
+        
         // Default Preferences for Tasmota
         input(name: "ipAddress", type: "string", title: "<b>Device IP Address</b>", description: "<i>Set this as a default fallback for the auto-discovery feature.</i>", displayDuringSetup: true, required: false)
         input(name: "port", type: "number", title: "<b>Device Port</b>", description: "<i>The http Port of the Device (default: 80)</i>", displayDuringSetup: true, required: false, defaultValue: 80)
@@ -68,7 +83,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - S120 Plug', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
+    deviceInfo = ['name': 'Tasmota - Generic Temperature/Humidity/Pressure Device', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
     return(deviceInfo[infoName])
 }
 
@@ -211,6 +226,64 @@ def parse(description) {
                     logging("SSId: $result.Wifi.SSId",99)
                 }
             }
+            
+            // Standard Energy Monitor Data parsing
+            resultTH = null
+            if (result.containsKey("AM2301")) {
+                resultTH = result.AM2301
+            }
+            if (result.containsKey("BME280")) {
+                resultTH = result.BME280
+            }
+            if (result.containsKey("BMP280")) {
+                resultTH = result.BMP280
+            }
+            if (result.containsKey("StatusSNS")) {
+                logging("Using key StatusSNS in parse()",1)
+                if (result.StatusSNS.containsKey("AM2301")) {
+                    resultTH = result.StatusSNS.AM2301
+                }
+                if (result.StatusSNS.containsKey("BME280")) {
+                    resultTH = result.StatusSNS.BME280
+                }
+                if (result.StatusSNS.containsKey("BMP280")) {
+                    resultTH = result.StatusSNS.BMP280
+                }
+            }
+            if (result.containsKey("SENSOR")) {
+                logging("Using key SENSOR in parse()",1)
+                if (result.SENSOR.containsKey("AM2301")) {
+                    resultTH = result.StatusSNS.AM2301
+                }
+                if (result.SENSOR.containsKey("BME280")) {
+                    resultTH = result.SENSOR.BME280
+                }
+                if (result.SENSOR.containsKey("BMP280")) {
+                    resultTH = result.SENSOR.BMP280
+                }
+            }
+            if(resultTH != null) {
+                if (resultTH.containsKey("Humidity")) {
+                    logging("Humidity: RH $resultTH.Humidity %",99)
+                    state.realHumidity = Math.round((resultTH.Humidity as Double) * 100) / 100
+                    events << createEvent(name: "humidity", value: "${getAdjustedHumidity(state.realHumidity)}", unit: "%")
+                }
+                if (resultTH.containsKey("Temperature")) {
+                    //Probably need this line below
+                    //state.realTemperature = convertTemperatureIfNeeded(resultTH.Temperature.toFloat(), result.TempUnit, 1)
+                    state.realTemperature = resultTH.Temperature.toFloat()
+                    logging("Temperature: ${getAdjustedTemp(state.realTemperature? state.realTemperature:0)}",99)
+                    events << createEvent(name: "temperature", value: "${getAdjustedTemp(state.realTemperature)}", unit: "${location.temperatureScale}")
+                }
+                if (resultTH.containsKey("Pressure")) {
+                    logging("Pressure: $resultTH.Pressure $result.PressureUnit",99)
+                    state.realPressure = Math.round((resultTH.Pressure as Double) * 100) / 100
+                    adjustedPressure = getAdjustedPressure(state.realPressure)
+                    events << createEvent(name: "pressure", value: "${adjustedPressure}", unit: "${result.PressureUnit}")
+                    // Since there is no Pressure tile yet, we need an attribute with the unit...
+                    events << createEvent(name: "pressureWithUnit", value: "${adjustedPressure} ${result.PressureUnit}")
+                }
+            }
         // parse() Generic Tasmota-device footer BEGINS here
         } else {
                 //log.debug "Response is not JSON: $body"
@@ -246,14 +319,14 @@ def update_needed_settings()
     
     // updateNeededSettings() Generic header ENDS here
 
-    // Same as: https://blakadder.github.io/templates/brilliant_plug.html
+    // Unless the User sets a Module or Template, we won't touch the Tasmota settings in this driver
     
     // Tasmota Module and Template selection command (autogenerated)
     cmds << getAction(getCommandString("Module", null))
     cmds << getAction(getCommandString("Template", null))
     if(disableModuleSelection == null) disableModuleSelection = false
     moduleNumberUsed = moduleNumber
-    if(moduleNumber == null || moduleNumber == -1) moduleNumberUsed = 0
+    if(moduleNumber == null || moduleNumber == -1) moduleNumberUsed = -1
     useDefaultTemplate = false
     defaultDeviceTemplate = ''
     if(deviceTemplateInput != null && deviceTemplateInput == "0") {
@@ -263,7 +336,7 @@ def update_needed_settings()
     if(deviceTemplateInput == null || deviceTemplateInput == "") {
         // We should use the default of the driver
         useDefaultTemplate = true
-        defaultDeviceTemplate = '{"NAME":"S120 Plug","GPIO":[0,0,0,0,0,21,0,0,0,52,90,0,0],"FLAG":0,"BASE":18}'
+        defaultDeviceTemplate = ''
     }
     if(deviceTemplateInput != null) deviceTemplateInput = deviceTemplateInput.replaceAll(' ','')
     if(disableModuleSelection == false && ((deviceTemplateInput != null && deviceTemplateInput != "") || 
@@ -304,14 +377,16 @@ def update_needed_settings()
         logging("Setting the Module has been disabled!", 10)
     }
 
-    //Disabling these here, but leacing them if anyone needs them
-    cmds << getAction(getCommandString("SetOption81", "0")) // Set PCF8574 component behavior for all ports as inverted (default=0)
+    //cmds << getAction(getCommandString("SetOption81", "1")) // Set PCF8574 component behavior for all ports as inverted (default=0)
     //cmds << getAction(getCommandString("LedPower", "1"))  // 1 = turn LED ON and set LedState 8
     //cmds << getAction(getCommandString("LedState", "8"))  // 8 = LED on when Wi-Fi and MQTT are connected.
     
     
     // updateNeededSettings() TelePeriod setting
     cmds << getAction(getCommandString("TelePeriod", (telePeriod == '' || telePeriod == null ? "300" : telePeriod)))
+    
+    // updateNeededSettings() Temperature/Humidity/Pressure setting
+    cmds << getAction(getCommandString("TempRes", (tempRes == '' || tempRes == null ? "1" : tempRes)))
     
     
     // updateNeededSettings() Generic footer BEGINS here
@@ -706,4 +781,39 @@ def configuration_model_tasmota()
 </Value>
 </configuration>
 '''
+}
+
+/* Helper functions included in all drivers with Temperature and Humidity */
+private getAdjustedTemp(value) {
+    if(tempRes == null || tempRes == '') {
+        decimalLimit = 10
+    } else {
+        decimalLimit = 10**(tempRes as Integer) // 10 to the power of tempRes
+    }
+    value = Math.round((value as Double) * decimalLimit) / decimalLimit
+	if (tempOffset) {
+	   return value =  value + Math.round(tempOffset * decimalLimit) / decimalLimit
+	} else {
+       return value
+    }
+}
+
+private getAdjustedHumidity(value) {
+    value = Math.round((value as Double) * 100) / 100
+
+	if (humidityOffset) {
+	   return value =  value + Math.round(humidityOffset * 100) / 100
+	} else {
+       return value
+    }
+}
+
+private getAdjustedPressure(value) {
+    value = Math.round((value as Double) * 100) / 100
+
+	if (pressureOffset) {
+	   return value =  value + Math.round(pressureOffset * 100) / 100
+	} else {
+       return value
+    }   
 }

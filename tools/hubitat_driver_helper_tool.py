@@ -143,7 +143,8 @@ def makeTasmotaConnectDriverListV2(driversList):
     return(tsDriverList)
 
 def expandGroovyFile(inputGroovyFile, outputGroovyDir, extraData = None, alternateOutputFilename = None, \
-                     alternateName = None, alternateNamespace = None, alternateVid = None):
+                     alternateName = None, alternateNamespace = None, alternateVid = None, \
+                     alternateTemplate = None):
     outputGroovyFile = getOutputGroovyFile(inputGroovyFile, outputGroovyDir, alternateOutputFilename)
     print('Expanding "' + str(inputGroovyFile) + '" to "' + str(outputGroovyFile) + '"...')
     definitionString = None
@@ -177,6 +178,9 @@ def expandGroovyFile(inputGroovyFile, outputGroovyDir, extraData = None, alterna
                             output = ''
                         else:
                             output = makeTasmotaConnectDriverListV2(extraData)
+                    elif(alternateTemplate != None and alternateTemplate != '' and evalCmd.startswith('getUpdateNeededSettingsTasmotaDynamicModuleCommand(')):
+                        print("Executing getUpdateNeededSettingsTasmotaDynamicModuleCommand(0, '" + alternateTemplate + "')...")
+                        output = getUpdateNeededSettingsTasmotaDynamicModuleCommand(0, alternateTemplate)
                     else:
                         output = eval(evalCmd)
                     if(includePosition > 0):
@@ -214,33 +218,75 @@ def main():
     usedDriversDict = {}
 
     driversFiles = [
-        {'id': 550, 'file': driverDir / 'tasmota-tuya-wifi-touch-switch-child-test.groovy' },
+        {'id': 548, 'file': driverDir / 'tasmota-tuyamcu-wifi-touch-switch.groovy' },
+        {'id': 549, 'file': driverDir / 'tasmota-tuyamcu-wifi-touch-switch-child.groovy' },
+        {'id': 550, 'file': driverDir / 'tasmota-tuyamcu-wifi-touch-switch-child-test.groovy' },
         {'id': 513, 'file': driverDir / 'tasmota-sonoff-powr2.groovy' },
-        {'id': 548, 'file': driverDir / 'tasmota-tuya-wifi-touch-switch.groovy' },
-        {'id': 549, 'file': driverDir / 'tasmota-tuya-wifi-touch-switch-child.groovy' },
-        {'id': 418, 'file': driverDir / 'tasmota-tuya-wifi-touch-switch-child.groovy', \
-         'alternateOutputFilename': 'tasmota-tuya-wifi-touch-switch-legacy-child', \
-         'alternateName': 'Tasmota - Tuya Wifi Touch Switch Legacy (Child)', \
-         'alternateNamespace': 'tasmota-legacy'},
         {'id': 551, 'file': driverDir / 'tasmota-sonoff-s2x.groovy' },
         {'id': 554, 'file': driverDir / 'tasmota-sonoff-mini.groovy'},
         {'id': 560, 'file': driverDir / 'tasmota-sonoff-basic.groovy'},
-        {'id': 556, 'file': driverDir / 'tasmota-sonoff-basic.groovy', \
-         'alternateOutputFilename': 'tasmota-sonoff-basic-r3', \
-         'alternateName': 'Tasmota - Sonoff Basic R3'},
         {'id': 552, 'file': driverDir / 'tasmota-generic-wifi-switch-plug.groovy' },
         {'id': 553, 'file': driverDir / 'tasmota-s120-plug.groovy' },
         {'id': 557, 'file': driverDir / 'tasmota-ykyc-001-pm-plug.groovy' },
         {'id': 559, 'file': driverDir / 'tasmota-brilliant-bl20925-pm-plug.groovy' },
         {'id': 577, 'file': driverDir / 'tasmota-prime-ccrcwfii113pk-plug.groovy' },
         {'id': 558, 'file': driverDir / 'tasmota-generic-pm-plug.groovy' },
-        {'id': 578, 'file': driverDir / 'tasmota-generic-th-device.groovy' },
+        {'id': 578, 'file': driverDir / 'tasmota-generic-thp-device.groovy' },
+        {'id': 579, 'file': driverDir / 'zigbee-generic-wifi-switch-plug.groovy' },
+        # Drivers without their own base-files:
+        {'id': 418, 'file': driverDir / 'tasmota-tuyamcu-wifi-touch-switch-child.groovy', \
+         'alternateOutputFilename': 'tasmota-tuyamcu-wifi-touch-switch-legacy-child', \
+         'alternateName': 'Tasmota - TuyaMCU Wifi Touch Switch Legacy (Child)', \
+         'alternateNamespace': 'tasmota-legacy'},
+        {'id': 556, 'file': driverDir / 'tasmota-sonoff-basic.groovy', \
+         'alternateOutputFilename': 'tasmota-sonoff-basic-r3', \
+         'alternateName': 'Tasmota - Sonoff Basic R3'},
+        # https://templates.blakadder.com/ce_smart_home-WF500D.html
+        {'id': 580, 'file': driverDir / 'tasmota-tuyamcu-wifi-touch-switch.groovy' , \
+         'alternateOutputFilename': 'tasmota-tuyamcu-ce-wf500d-dimmer', \
+         'alternateName': 'Tasmota - TuyaMCU CE Smart Home WF500D Dimmer (NO DIMMING)', \
+         'alternateTemplate': '{"NAME":"CE WF500D","GPIO":[255,255,255,255,255,255,0,0,255,108,255,107,255],"FLAG":0,"BASE":54}'},
+        # https://templates.blakadder.com/ce_smart_home_LA-2-W3.html
+        {'id': 581, 'file': driverDir / 'tasmota-generic-wifi-switch-plug.groovy' , \
+         'alternateOutputFilename': 'tasmota-ce-la-2-w3-wall-outlet', \
+         'alternateName': 'Tasmota - CE Smart Home LA-2-W3 Wall Outlet', \
+         'alternateTemplate': '{"NAME":"CE LA-2-W3","GPIO":[255,255,255,255,157,17,0,0,21,255,255,255,255],"FLAG":15,"BASE":18}'},
+        # https://templates.blakadder.com/ce_smart_home_LQ-2-W3.html
+        {'id': 582, 'file': driverDir / 'tasmota-generic-wifi-switch-plug.groovy' , \
+         'alternateOutputFilename': 'tasmota-ce-lq-2-w3-wall-outlet', \
+         'alternateName': 'Tasmota - CE Smart Home LQ-2-W3 Wall Outlet', \
+         'alternateTemplate': '{"NAME":"CE LQ-2-W3","GPIO":[255,255,255,255,255,17,255,255,21,255,255,255,255],"FLAG":15,"BASE":18}'},
+        # https://templates.blakadder.com/hugoai_awp02l-n.html
+        {'id': 583, 'file': driverDir / 'tasmota-generic-wifi-switch-plug.groovy' , \
+         'alternateOutputFilename': 'tasmota-awp02l-n-plug', \
+         'alternateName': 'Tasmota - AWP02L-N Plug', \
+         'alternateTemplate': '{"NAME":"AWP02L-N","GPIO":[57,0,56,0,0,0,0,0,0,17,0,21,0],"FLAG":1,"BASE":18}'},
+        # https://templates.blakadder.com/cyyltd_bifans_J23.html
+        {'id': 584, 'file': driverDir / 'tasmota-generic-wifi-switch-plug.groovy' , \
+         'alternateOutputFilename': 'tasmota-cyyltf-bifans-j23-plug', \
+         'alternateName': 'Tasmota - CYYLTF BIFANS J23 Plug', \
+         'alternateTemplate': '{"NAME":"CYYLTF J23","GPIO":[56,0,0,0,0,0,0,0,21,17,0,0,0],"FLAG":1,"BASE":18}'},
+        # https://templates.blakadder.com/gosund_wp3.html
+        {'id': 585, 'file': driverDir / 'tasmota-generic-wifi-switch-plug.groovy' , \
+         'alternateOutputFilename': 'tasmota-gosund-wp3-plug', \
+         'alternateName': 'Tasmota - Gosund WP3 Plug', \
+         'alternateTemplate': '{"NAME":"Gosund WP3","GPIO":[0,0,0,0,17,0,0,0,56,57,21,0,0],"FLAG":0,"BASE":18}'},
+        # https://templates.blakadder.com/SK03_outdoor.html
+        {'id': 586, 'file': driverDir / 'tasmota-generic-pm-plug.groovy' , \
+         'alternateOutputFilename': 'tasmota-sk03-pm-outdoor-plug', \
+         'alternateName': 'Tasmota - SK03 Power Monitor Outdoor Plug', \
+         'alternateTemplate': '{"NAME":"SK03 Outdoor","GPIO":[17,0,0,0,133,132,0,0,131,57,56,21,0],"FLAG":0,"BASE":57}'},
+        # https://templates.blakadder.com/aoycocr_X10S.html
+        {'id': 587, 'file': driverDir / 'tasmota-generic-pm-plug.groovy' , \
+         'alternateOutputFilename': 'tasmota-aoycocr-x10s-pm-plug', \
+         'alternateName': 'Tasmota - Aoycocr X10S Power Monitor Plug', \
+         'alternateTemplate': '{"NAME":"Aoycocr X10S","GPIO":[56,0,57,0,21,134,0,0,131,17,132,0,0],"FLAG":0,"BASE":45}'},
     ]
     
     # Example driver: https://github.com/hubitat/HubitatPublic/blob/master/examples/drivers/GenericZigbeeRGBWBulb.groovy
 
     #driversFiles = [
-    #    {'id': 578, 'file': driverDir / 'tasmota-generic-th-device.groovy' },
+        
     #]
 
     j=0
@@ -249,9 +295,10 @@ def main():
         if('alternateOutputFilename' in d and d['alternateOutputFilename'] != ''):
             alternateVid = (d['alternateVid'] if 'alternateVid' in d else None)
             alternateNamespace = (d['alternateNamespace'] if 'alternateNamespace' in d else None)
+            alternateTemplate = (d['alternateTemplate'] if 'alternateTemplate' in d else None)
             expandGroovyFile(d['file'], expandedDriversDir, alternateOutputFilename=d['alternateOutputFilename'], \
                              alternateName=d['alternateName'], alternateNamespace=alternateNamespace, \
-                             alternateVid=alternateVid)
+                             alternateVid=alternateVid, alternateTemplate=alternateTemplate)
             aOF = d['alternateOutputFilename']
         else:
             expandGroovyFile(d['file'], expandedDriversDir)
@@ -278,8 +325,10 @@ def main():
     ]
 
     for a in appsFiles:
-        expandGroovyFile(a['file'], expandedAppsDir, usedDriversDict)
+        if(a['id'] != 97 or a['id'] != 163):
+            expandGroovyFile(a['file'], expandedAppsDir, usedDriversDict)
         if(a['id'] != 0 and len(usedDriversDict) >= 16):
+            expandGroovyFile(a['file'], expandedAppsDir, usedDriversDict)
             print('Found ' + str(len(usedDriversDict)) + ' driver(s)...')
             r = hubitatAjax.push_app_code(a['id'], getOutputGroovyFile(a['file'], expandedAppsDir))
             try:

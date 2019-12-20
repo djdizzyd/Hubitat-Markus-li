@@ -16,7 +16,7 @@
 """
 
 def getGenericTasmotaParseHeader():
-    return """// parse() Generic header BEGINS here
+    return """// parse() Generic Tasmota-device header BEGINS here
 //log.debug "Parsing: ${description}"
 def events = []
 def descMap = parseDescriptionAsMap(description)
@@ -53,7 +53,7 @@ if (body && body != "") {
         """
 
 def getGenericTasmotaParseFooter():
-    return """// parse() Generic footer BEGINS here
+    return """// parse() Generic Tasmota-device footer BEGINS here
 } else {
         //log.debug "Response is not JSON: $body"
     }
@@ -318,9 +318,25 @@ if(resultTH != null) {
     if (resultTH.containsKey("Pressure")) {
         logging("Pressure: $resultTH.Pressure $result.PressureUnit",99)
         state.realPressure = Math.round((resultTH.Pressure as Double) * 100) / 100
-        events << createEvent(name: "pressure", value: "${state.realPressure}", unit: "${result.PressureUnit}")
+        adjustedPressure = getAdjustedPressure(state.realPressure)
+        events << createEvent(name: "pressure", value: "${adjustedPressure}", unit: "${result.PressureUnit}")
         // Since there is no Pressure tile yet, we need an attribute with the unit...
-        events << createEvent(name: "pressureWithUnit", value: "${state.realPressure} ${result.PressureUnit}")
+        events << createEvent(name: "pressureWithUnit", value: "${adjustedPressure} ${result.PressureUnit}")
     }
 }
 """
+
+
+def getGenericZigbeeParseHeader():
+    return """// parse() Generic Zigbee-device header BEGINS here
+logging("Parsing: ${description}", 10)
+def events = []
+def msgMap = zigbee.parseDescriptionAsMap(description)
+logging("msgMap: ${msgMap}", 10)
+// parse() Generic header ENDS here"""
+
+def getGenericZigbeeParseFooter():
+    return """// parse() Generic Zigbee-device footer BEGINS here
+
+return events
+// parse() Generic footer ENDS here"""

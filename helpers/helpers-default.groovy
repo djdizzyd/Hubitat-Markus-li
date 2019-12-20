@@ -26,7 +26,7 @@ void initialize()
     logging("initialize()", 50)
 	unschedule()
     // disable debug logs after 30 min, unless override is in place
-	if (logLevel != "0" && runReset != "DEBUG") runIn(1800, logsOff)
+	if (logLevel != "0") runIn(1800, logsOff)
 }
 
 def configure() {
@@ -122,14 +122,19 @@ def update_current_properties(cmd)
 	Note: scheduled in Initialize()
 */
 void logsOff(){
-	log.warn "Debug logging disabled..."
-    // Setting logLevel to "0" doesn't seem to work, it disables logs, but does not update the UI...
-	//device.updateSetting("logLevel",[value:"0",type:"string"])
-    //app.updateSetting("logLevel",[value:"0",type:"list"])
-    // Not sure which ones are needed, so doing all... This works!
-    device.clearSetting("logLevel")
-    device.removeSetting("logLevel")
-    state.settings.remove("logLevel")
+    if(runReset != "DEBUG") {
+        log.warn "Debug logging disabled..."
+        // Setting logLevel to "0" doesn't seem to work, it disables logs, but does not update the UI...
+        //device.updateSetting("logLevel",[value:"0",type:"string"])
+        //app.updateSetting("logLevel",[value:"0",type:"list"])
+        // Not sure which ones are needed, so doing all... This works!
+        device.clearSetting("logLevel")
+        device.removeSetting("logLevel")
+        state.settings.remove("logLevel")
+    } else {
+        log.warn "OVERRIDE: Disabling Debug logging will not execute with 'DEBUG' set..."
+        if (logLevel != "0") runIn(1800, logsOff)
+    }
 }
 
 def configuration_model_debug()

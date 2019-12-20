@@ -3,7 +3,7 @@
 #!include:getDefaultImports()
 
 metadata {
-	definition (name: "Tasmota - Generic Temperature & Humidity Device", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
+	definition (name: "Tasmota - Generic Temperature/Humidity/Pressure Device", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
         capability "Actuator"
 		capability "Switch"
 		capability "Sensor"
@@ -51,6 +51,7 @@ def update_needed_settings()
     //cmds << getAction(getCommandString("LedState", "8"))  // 8 = LED on when Wi-Fi and MQTT are connected.
     
     #!include:getUpdateNeededSettingsTelePeriod()
+    #!include:getUpdateNeededSettingsTHMonitor()
     
     #!include:getUpdateNeededSettingsTasmotaFooter()
 }

@@ -19,17 +19,16 @@ import groovy.json.JsonSlurper
 
 
 metadata {
-	definition (name: "Tasmota - Generic Temperature & Humidity Device", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
+	definition (name: "Tasmota - SK03 Power Monitor Outdoor Plug", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
         capability "Actuator"
 		capability "Switch"
 		capability "Sensor"
 
         
-        // Default Capabilities for TH Monitor
-        capability "Sensor"
-        capability "Temperature Measurement"
-        capability "Relative Humidity Measurement"
-        capability "PressureMeasurement"
+        // Default Capabilities for Energy Monitor
+        capability "Voltage Measurement"
+        capability "Power Meter"
+        capability "Energy Meter"
         
         // Default Capabilities
         capability "Refresh"
@@ -37,8 +36,14 @@ metadata {
         capability "HealthCheck"
         
         
-        // Default Attributes for Temperature Humidity Monitor
-        attribute   "pressureWithUnit", "string"
+        // Default Attributes for Energy Monitor
+        attribute   "current", "string"
+        attribute   "apparentPower", "string"
+        attribute   "reactivePower", "string"
+        attribute   "powerFactor", "string"
+        attribute   "energyToday", "string"
+        attribute   "energyYesterday", "string"
+        attribute   "energyTotal", "string"
         
         // Default Attributes
         attribute   "needUpdate", "string"
@@ -61,8 +66,6 @@ metadata {
         input(name: "runReset", description: "<i>For details and guidance, see the release thread in the <a href=\"https://community.hubitat.com/t/release-tasmota-7-x-firmware-with-hubitat-support/29368\"> Hubitat Forum</a>. For settings marked as ADVANCED, make sure you understand what they do before activating them. If settings are not reflected on the device, press the Configure button in this driver. Also make sure all settings really are saved and correct.<br/>Type RESET and then press 'Save Preferences' to DELETE all Preferences and return to DEFAULTS.</i>", title: "<b>Settings</b>", displayDuringSetup: false, type: "paragraph", element: "paragraph")
         generate_preferences(configuration_model_debug())
         
-        // Default Preferences for Temperature Humidity Monitor
-        
         // Default Preferences for Tasmota
         input(name: "ipAddress", type: "string", title: "<b>Device IP Address</b>", description: "<i>Set this as a default fallback for the auto-discovery feature.</i>", displayDuringSetup: true, required: false)
         input(name: "port", type: "number", title: "<b>Device Port</b>", description: "<i>The http Port of the Device (default: 80)</i>", displayDuringSetup: true, required: false, defaultValue: 80)
@@ -79,7 +82,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - Generic Temperature & Humidity Device', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
+    deviceInfo = ['name': 'Tasmota - SK03 Power Monitor Outdoor Plug', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
     return(deviceInfo[infoName])
 }
 
@@ -102,7 +105,7 @@ def off() {
 
 /* These functions are unique to each driver */
 def parse(description) {
-    // parse() Generic header BEGINS here
+    // parse() Generic Tasmota-device header BEGINS here
     //log.debug "Parsing: ${description}"
     def events = []
     def descMap = parseDescriptionAsMap(description)
@@ -224,62 +227,87 @@ def parse(description) {
             }
             
             // Standard Energy Monitor Data parsing
-            resultTH = null
-            if (result.containsKey("AM2301")) {
-                resultTH = result.AM2301
-            }
-            if (result.containsKey("BME280")) {
-                resultTH = result.BME280
-            }
-            if (result.containsKey("BMP280")) {
-                resultTH = result.BMP280
-            }
             if (result.containsKey("StatusSNS")) {
-                logging("Using key StatusSNS in parse()",1)
-                if (result.StatusSNS.containsKey("AM2301")) {
-                    resultTH = result.StatusSNS.AM2301
-                }
-                if (result.StatusSNS.containsKey("BME280")) {
-                    resultTH = result.StatusSNS.BME280
-                }
-                if (result.StatusSNS.containsKey("BMP280")) {
-                    resultTH = result.StatusSNS.BMP280
-                }
-            }
-            if (result.containsKey("SENSOR")) {
-                logging("Using key SENSOR in parse()",1)
-                if (result.SENSOR.containsKey("AM2301")) {
-                    resultTH = result.StatusSNS.AM2301
-                }
-                if (result.SENSOR.containsKey("BME280")) {
-                    resultTH = result.SENSOR.BME280
-                }
-                if (result.SENSOR.containsKey("BMP280")) {
-                    resultTH = result.SENSOR.BMP280
-                }
-            }
-            if(resultTH != null) {
-                if (resultTH.containsKey("Humidity")) {
-                    logging("Humidity: RH $resultTH.Humidity %",99)
-                    state.realHumidity = Math.round((resultTH.Humidity as Double) * 100) / 100
-                    events << createEvent(name: "humidity", value: "${getAdjustedHumidity(state.realHumidity)}", unit: "%")
-                }
-                if (resultTH.containsKey("Temperature")) {
-                    //Probably need this line below
-                    //state.realTemperature = convertTemperatureIfNeeded(resultTH.Temperature.toFloat(), result.TempUnit, 1)
-                    state.realTemperature = resultTH.Temperature.toFloat()
-                    logging("Temperature: ${getAdjustedTemp(state.realTemperature? state.realTemperature:0)}",99)
-                    events << createEvent(name: "temperature", value: "${getAdjustedTemp(state.realTemperature)}", unit: "${location.temperatureScale}")
-                }
-                if (resultTH.containsKey("Pressure")) {
-                    logging("Pressure: $resultTH.Pressure $result.PressureUnit",99)
-                    state.realPressure = Math.round((resultTH.Pressure as Double) * 100) / 100
-                    events << createEvent(name: "pressure", value: "${state.realPressure}", unit: "${result.PressureUnit}")
-                    // Since there is no Pressure tile yet, we need an attribute with the unit...
-                    events << createEvent(name: "pressureWithUnit", value: "${state.realPressure} ${result.PressureUnit}")
+                if (result.StatusSNS.containsKey("ENERGY")) {
+                    if (result.StatusSNS.ENERGY.containsKey("Total")) {
+                        logging("Total: $result.StatusSNS.ENERGY.Total kWh",99)
+                        events << createEvent(name: "energyTotal", value: "$result.StatusSNS.ENERGY.Total kWh")
+                    }
+                    if (result.StatusSNS.ENERGY.containsKey("Today")) {
+                        logging("Today: $result.StatusSNS.ENERGY.Today kWh",99)
+                        events << createEvent(name: "energyToday", value: "$result.StatusSNS.ENERGY.Today kWh")
+                    }
+                    if (result.StatusSNS.ENERGY.containsKey("Yesterday")) {
+                        logging("Yesterday: $result.StatusSNS.ENERGY.Yesterday kWh",99)
+                        events << createEvent(name: "energyYesterday", value: "$result.StatusSNS.ENERGY.Yesterday kWh")
+                    }
+                    if (result.StatusSNS.ENERGY.containsKey("Current")) {
+                        logging("Current: $result.StatusSNS.ENERGY.Current A",99)
+                        events << createEvent(name: "current", value: "$result.StatusSNS.ENERGY.Current A")
+                    }
+                    if (result.StatusSNS.ENERGY.containsKey("ApparentPower")) {
+                        logging("apparentPower: $result.StatusSNS.ENERGY.ApparentPower VA",99)
+                        events << createEvent(name: "apparentPower", value: "$result.StatusSNS.ENERGY.ApparentPower VA")
+                    }
+                    if (result.StatusSNS.ENERGY.containsKey("ReactivePower")) {
+                        logging("reactivePower: $result.StatusSNS.ENERGY.ReactivePower VAr",99)
+                        events << createEvent(name: "reactivePower", value: "$result.StatusSNS.ENERGY.ReactivePower VAr")
+                    }
+                    if (result.StatusSNS.ENERGY.containsKey("Factor")) {
+                        logging("powerFactor: $result.StatusSNS.ENERGY.Factor",99)
+                        events << createEvent(name: "powerFactor", value: "$result.StatusSNS.ENERGY.Factor")
+                    }
+                    if (result.StatusSNS.ENERGY.containsKey("Voltage")) {
+                        logging("Voltage: $result.StatusSNS.ENERGY.Voltage V",99)
+                        events << createEvent(name: "voltage", value: "$result.StatusSNS.ENERGY.Voltage V")
+                    }
+                    if (result.StatusSNS.ENERGY.containsKey("Power")) {
+                        logging("Power: $result.StatusSNS.ENERGY.Power W",99)
+                        events << createEvent(name: "power", value: "$result.StatusSNS.ENERGY.Power W")
+                    }
                 }
             }
-        // parse() Generic footer BEGINS here
+            if (result.containsKey("ENERGY")) {
+                //logging("Has ENERGY...", 1)
+                if (result.ENERGY.containsKey("Total")) {
+                    logging("Total: $result.ENERGY.Total kWh",99)
+                    events << createEvent(name: "energyTotal", value: "$result.ENERGY.Total kWh")
+                }
+                if (result.ENERGY.containsKey("Today")) {
+                    logging("Today: $result.ENERGY.Today kWh",99)
+                    events << createEvent(name: "energyToday", value: "$result.ENERGY.Today kWh")
+                }
+                if (result.ENERGY.containsKey("Yesterday")) {
+                    logging("Yesterday: $result.ENERGY.Yesterday kWh",99)
+                    events << createEvent(name: "energyYesterday", value: "$result.ENERGY.Yesterday kWh")
+                }
+                if (result.ENERGY.containsKey("Current")) {
+                    logging("Current: $result.ENERGY.Current A",99)
+                    events << createEvent(name: "current", value: "$result.ENERGY.Current A")
+                }
+                if (result.ENERGY.containsKey("ApparentPower")) {
+                    logging("apparentPower: $result.ENERGY.ApparentPower VA",99)
+                    events << createEvent(name: "apparentPower", value: "$result.ENERGY.ApparentPower VA")
+                }
+                if (result.ENERGY.containsKey("ReactivePower")) {
+                    logging("reactivePower: $result.ENERGY.ReactivePower VAr",99)
+                    events << createEvent(name: "reactivePower", value: "$result.ENERGY.ReactivePower VAr")
+                }
+                if (result.ENERGY.containsKey("Factor")) {
+                    logging("powerFactor: $result.ENERGY.Factor",99)
+                    events << createEvent(name: "powerFactor", value: "$result.ENERGY.Factor")
+                }
+                if (result.ENERGY.containsKey("Voltage")) {
+                    logging("Voltage: $result.ENERGY.Voltage V",99)
+                    events << createEvent(name: "voltage", value: "$result.ENERGY.Voltage V")
+                }
+                if (result.ENERGY.containsKey("Power")) {
+                    logging("Power: $result.ENERGY.Power W",99)
+                    events << createEvent(name: "power", value: "$result.ENERGY.Power W")
+                }
+            }
+            // StatusPTH:[PowerDelta:0, PowerLow:0, PowerHigh:0, VoltageLow:0, VoltageHigh:0, CurrentLow:0, CurrentHigh:0]
+        // parse() Generic Tasmota-device footer BEGINS here
         } else {
                 //log.debug "Response is not JSON: $body"
             }
@@ -314,14 +342,13 @@ def update_needed_settings()
     
     // updateNeededSettings() Generic header ENDS here
 
-    // Unless the User sets a Module or Template, we won't touch the Tasmota settings in this driver
     
     // Tasmota Module and Template selection command (autogenerated)
     cmds << getAction(getCommandString("Module", null))
     cmds << getAction(getCommandString("Template", null))
     if(disableModuleSelection == null) disableModuleSelection = false
     moduleNumberUsed = moduleNumber
-    if(moduleNumber == null || moduleNumber == -1) moduleNumberUsed = -1
+    if(moduleNumber == null || moduleNumber == -1) moduleNumberUsed = 0
     useDefaultTemplate = false
     defaultDeviceTemplate = ''
     if(deviceTemplateInput != null && deviceTemplateInput == "0") {
@@ -331,7 +358,7 @@ def update_needed_settings()
     if(deviceTemplateInput == null || deviceTemplateInput == "") {
         // We should use the default of the driver
         useDefaultTemplate = true
-        defaultDeviceTemplate = ''
+        defaultDeviceTemplate = '{"NAME":"SK03 Outdoor","GPIO":[17,0,0,0,133,132,0,0,131,57,56,21,0],"FLAG":0,"BASE":57}'
     }
     if(deviceTemplateInput != null) deviceTemplateInput = deviceTemplateInput.replaceAll(' ','')
     if(disableModuleSelection == false && ((deviceTemplateInput != null && deviceTemplateInput != "") || 
@@ -383,6 +410,8 @@ def update_needed_settings()
     
     // updateNeededSettings() Generic footer BEGINS here
     cmds << getAction(getCommandString("SetOption113", "1")) // Hubitat Enabled
+    // Disabling Emulation so that we don't flood the logs with upnp traffic
+    cmds << getAction(getCommandString("Emulation", "0")) // Emulation Disabled
     cmds << getAction(getCommandString("HubitatHost", device.hub.getDataValue("localIP")))
     cmds << getAction(getCommandString("HubitatPort", device.hub.getDataValue("localSrvPortTCP")))
     cmds << getAction(getCommandString("FriendlyName1", URLEncoder.encode(device.displayName.take(32)))) // Set to a maximum of 32 characters
@@ -401,7 +430,7 @@ def update_needed_settings()
 private def getDriverVersion() {
     logging("getDriverVersion()", 50)
 	def cmds = []
-    sendEvent(name: "driverVersion", value: "v0.9.0 for Tasmota 7.x (Hubitat version)")
+    sendEvent(name: "driverVersion", value: "v0.9.1 for Tasmota 7.x (Hubitat version)")
     return cmds
 }
 
@@ -463,7 +492,7 @@ void initialize()
     logging("initialize()", 50)
 	unschedule()
     // disable debug logs after 30 min, unless override is in place
-	if (logLevel != "0" && runReset != "DEBUG") runIn(1800, logsOff)
+	if (logLevel != "0") runIn(1800, logsOff)
 }
 
 def configure() {
@@ -559,14 +588,19 @@ def update_current_properties(cmd)
 	Note: scheduled in Initialize()
 */
 void logsOff(){
-	log.warn "Debug logging disabled..."
-    // Setting logLevel to "0" doesn't seem to work, it disables logs, but does not update the UI...
-	//device.updateSetting("logLevel",[value:"0",type:"string"])
-    //app.updateSetting("logLevel",[value:"0",type:"list"])
-    // Not sure which ones are needed, so doing all... This works!
-    device.clearSetting("logLevel")
-    device.removeSetting("logLevel")
-    state.settings.remove("logLevel")
+    if(runReset != "DEBUG") {
+        log.warn "Debug logging disabled..."
+        // Setting logLevel to "0" doesn't seem to work, it disables logs, but does not update the UI...
+        //device.updateSetting("logLevel",[value:"0",type:"string"])
+        //app.updateSetting("logLevel",[value:"0",type:"list"])
+        // Not sure which ones are needed, so doing all... This works!
+        device.clearSetting("logLevel")
+        device.removeSetting("logLevel")
+        state.settings.remove("logLevel")
+    } else {
+        log.warn "OVERRIDE: Disabling Debug logging will not execute with 'DEBUG' set..."
+        if (logLevel != "0") runIn(1800, logsOff)
+    }
 }
 
 def configuration_model_debug()
@@ -766,27 +800,4 @@ def configuration_model_tasmota()
 </Value>
 </configuration>
 '''
-}
-
-/* Helper functions included in all drivers with Temperature and Humidity */
-private getAdjustedTemp(value) {
-    value = Math.round((value as Double) * 100) / 100
-
-	if (tempOffset) {
-	   return value =  value + Math.round(tempOffset * 100) /100
-	} else {
-       return value
-    }
-    
-}
-
-private getAdjustedHumidity(value) {
-    value = Math.round((value as Double) * 100) / 100
-
-	if (humidityOffset) {
-	   return value =  value + Math.round(humidityOffset * 100) /100
-	} else {
-       return value
-    }
-    
 }

@@ -21,7 +21,7 @@ import groovy.json.JsonSlurper
 // THIS IS NOT A REAL DRIVER AND IS ONLY USED FOR TESTING THE GENERATOR AND AUTO-PUBLISHING SYSTEM!
 
 metadata {
-    definition (name: "Tasmota - Tuya Wifi Touch Switch TEST (Child)", namespace: "tasmota", author: "Markus Liljergren") {
+    definition (name: "Tasmota - DO NOT USE Tuya Wifi Touch Switch TEST (Child)", namespace: "tasmota", author: "Markus Liljergren") {
         capability "Switch"
         capability "Actuator"
     }
@@ -30,7 +30,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - Tuya Wifi Touch Switch TEST (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren']
+    deviceInfo = ['name': 'Tasmota - DO NOT USE Tuya Wifi Touch Switch TEST (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren']
     return(deviceInfo[infoName])
 }
 
@@ -49,7 +49,7 @@ void off() {
 private def getDriverVersion() {
     logging("getDriverVersion()", 50)
 	def cmds = []
-    sendEvent(name: "driverVersion", value: "v0.9.0 for Tasmota 7.x (Hubitat version)")
+    sendEvent(name: "driverVersion", value: "v0.9.1 for Tasmota 7.x (Hubitat version)")
     return cmds
 }
 

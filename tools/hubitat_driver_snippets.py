@@ -11,7 +11,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-driverVersion = "v0.9.0 for Tasmota 7.x (Hubitat version)"
+driverVersion = "v0.9.1 for Tasmota 7.x (Hubitat version)"
 
 """
   Snippets used by hubitat-driver-helper-tool
@@ -133,6 +133,10 @@ input(name: "useIPAsID", type: "bool", title: "<b>IP as Network ID</b>", descrip
 def getDefaultMetadataPreferencesForTHMonitor():
     return """
 // Default Preferences for Temperature Humidity Monitor
+input(name: "tempOffset", type: "decimal", title: "<b>Temperature Offset</b>", description: "<i>Adjust the temperature by this many degrees (in Celcius).</i>", displayDuringSetup: true, required: false, range: "*..*")
+input(name: "humidityOffset", type: "decimal", title: "<b>Humidity Offset</b>", description: "<i>Adjust the humidity by this many percent.</i>", displayDuringSetup: true, required: false, range: "*..*")
+input(name: "pressureOffset", type: "decimal", title: "<b>Pressure Offset</b>", description: "<i>Adjust the pressure value by this much.</i>", displayDuringSetup: true, required: false, range: "*..*")
+input(name: "tempRes", type: "enum", title: "<b>Temperature Resolution</b>", description: "<i>Temperature sensor resolution (0..3 = maximum number of decimal places, default: 1)<br/>NOTE: If the 3rd decimal is a 0 (eg. 24.720) it will show without the last decimal (eg. 24.72).</i>", options: ["0", "1", "2", "3"], defaultValue: "1", displayDuringSetup: true, required: false)
 """
 
 def getUpdateNeededSettingsTasmotaHeader():
@@ -244,10 +248,18 @@ def getUpdateNeededSettingsTelePeriod():
 cmds << getAction(getCommandString("TelePeriod", (telePeriod == '' || telePeriod == null ? "300" : telePeriod)))
 """
 
+def getUpdateNeededSettingsTHMonitor():
+    return """
+// updateNeededSettings() Temperature/Humidity/Pressure setting
+cmds << getAction(getCommandString("TempRes", (tempRes == '' || tempRes == null ? "1" : tempRes)))
+"""
+
 def getUpdateNeededSettingsTasmotaFooter():
     return """
 // updateNeededSettings() Generic footer BEGINS here
 cmds << getAction(getCommandString("SetOption113", "1")) // Hubitat Enabled
+// Disabling Emulation so that we don't flood the logs with upnp traffic
+cmds << getAction(getCommandString("Emulation", "0")) // Emulation Disabled
 cmds << getAction(getCommandString("HubitatHost", device.hub.getDataValue("localIP")))
 cmds << getAction(getCommandString("HubitatPort", device.hub.getDataValue("localSrvPortTCP")))
 cmds << getAction(getCommandString("FriendlyName1", URLEncoder.encode(device.displayName.take(32)))) // Set to a maximum of 32 characters

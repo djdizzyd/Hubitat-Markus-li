@@ -2,8 +2,10 @@
 
 #!include:getDefaultImports()
 
+// THIS IS NOT A REAL DRIVER AND IS ONLY USED FOR TESTING THE GENERATOR AND AUTO-PUBLISHING SYSTEM!
+
 metadata {
-    definition (name: "Tasmota - Tuya Wifi Touch Switch (Child)", namespace: "tasmota", author: "Markus Liljergren") {
+    definition (name: "Tasmota - DO NOT USE Tuya Wifi Touch Switch TEST (Child)", namespace: "tasmota", author: "Markus Liljergren") {
         capability "Switch"
         capability "Actuator"
     }
@@ -11,7 +13,7 @@ metadata {
 
 #!include:getDeviceInfoFunction()
 
-/* These functions are unique to each driver */
+/* These functions are unique tos each driver */
 void on() { 
     logging("$device on",1)
     parent.childOn(device.deviceNetworkId)

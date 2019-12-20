@@ -105,7 +105,7 @@ def off() {
 
 /* These functions are unique to each driver */
 def parse(description) {
-    // parse() Generic header BEGINS here
+    // parse() Generic Tasmota-device header BEGINS here
     //log.debug "Parsing: ${description}"
     def events = []
     def descMap = parseDescriptionAsMap(description)
@@ -307,7 +307,7 @@ def parse(description) {
                 }
             }
             // StatusPTH:[PowerDelta:0, PowerLow:0, PowerHigh:0, VoltageLow:0, VoltageHigh:0, CurrentLow:0, CurrentHigh:0]
-        // parse() Generic footer BEGINS here
+        // parse() Generic Tasmota-device footer BEGINS here
         } else {
                 //log.debug "Response is not JSON: $body"
             }
@@ -410,6 +410,8 @@ def update_needed_settings()
     
     // updateNeededSettings() Generic footer BEGINS here
     cmds << getAction(getCommandString("SetOption113", "1")) // Hubitat Enabled
+    // Disabling Emulation so that we don't flood the logs with upnp traffic
+    cmds << getAction(getCommandString("Emulation", "0")) // Emulation Disabled
     cmds << getAction(getCommandString("HubitatHost", device.hub.getDataValue("localIP")))
     cmds << getAction(getCommandString("HubitatPort", device.hub.getDataValue("localSrvPortTCP")))
     cmds << getAction(getCommandString("FriendlyName1", URLEncoder.encode(device.displayName.take(32)))) // Set to a maximum of 32 characters
@@ -428,7 +430,7 @@ def update_needed_settings()
 private def getDriverVersion() {
     logging("getDriverVersion()", 50)
 	def cmds = []
-    sendEvent(name: "driverVersion", value: "v0.9.0 for Tasmota 7.x (Hubitat version)")
+    sendEvent(name: "driverVersion", value: "v0.9.1 for Tasmota 7.x (Hubitat version)")
     return cmds
 }
 
@@ -490,7 +492,7 @@ void initialize()
     logging("initialize()", 50)
 	unschedule()
     // disable debug logs after 30 min, unless override is in place
-	if (logLevel != "0" && runReset != "DEBUG") runIn(1800, logsOff)
+	if (logLevel != "0") runIn(1800, logsOff)
 }
 
 def configure() {
@@ -586,14 +588,19 @@ def update_current_properties(cmd)
 	Note: scheduled in Initialize()
 */
 void logsOff(){
-	log.warn "Debug logging disabled..."
-    // Setting logLevel to "0" doesn't seem to work, it disables logs, but does not update the UI...
-	//device.updateSetting("logLevel",[value:"0",type:"string"])
-    //app.updateSetting("logLevel",[value:"0",type:"list"])
-    // Not sure which ones are needed, so doing all... This works!
-    device.clearSetting("logLevel")
-    device.removeSetting("logLevel")
-    state.settings.remove("logLevel")
+    if(runReset != "DEBUG") {
+        log.warn "Debug logging disabled..."
+        // Setting logLevel to "0" doesn't seem to work, it disables logs, but does not update the UI...
+        //device.updateSetting("logLevel",[value:"0",type:"string"])
+        //app.updateSetting("logLevel",[value:"0",type:"list"])
+        // Not sure which ones are needed, so doing all... This works!
+        device.clearSetting("logLevel")
+        device.removeSetting("logLevel")
+        state.settings.remove("logLevel")
+    } else {
+        log.warn "OVERRIDE: Disabling Debug logging will not execute with 'DEBUG' set..."
+        if (logLevel != "0") runIn(1800, logsOff)
+    }
 }
 
 def configuration_model_debug()
