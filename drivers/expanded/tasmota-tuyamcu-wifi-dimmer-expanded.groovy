@@ -19,31 +19,19 @@ import groovy.json.JsonSlurper
 
 
 metadata {
-	definition (name: "Tasmota - SK03 Power Monitor Outdoor Plug", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
-        capability "Actuator"
+	definition (name: "Tasmota - TuyaMCU Wifi Dimmer (EXPERIMENTAL)", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
+        capability "Light"
 		capability "Switch"
-		capability "Sensor"
-
-        
-        // Default Capabilities for Energy Monitor
-        capability "Voltage Measurement"
-        capability "Power Meter"
-        capability "Energy Meter"
+		capability "SwitchLevel"
+        capability "ColorControl"
         
         // Default Capabilities
         capability "Refresh"
         capability "Configuration"
         capability "HealthCheck"
         
-        
-        // Default Attributes for Energy Monitor
-        attribute   "current", "string"
-        attribute   "apparentPower", "string"
-        attribute   "reactivePower", "string"
-        attribute   "powerFactor", "string"
-        attribute   "energyToday", "string"
-        attribute   "energyYesterday", "string"
-        attribute   "energyTotal", "string"
+        attribute   "dimState", "number"
+        attribute   "tuyaMCU", "string"
         
         // Default Attributes
         attribute   "needUpdate", "string"
@@ -52,6 +40,13 @@ metadata {
         attribute   "module", "string"
         attribute   "templateData", "string"
         attribute   "driverVersion", "string"
+
+        //
+          // Commands for handling Child Devices
+          command "childOn"
+          command "childOff"
+          command "recreateChildDevices"
+          command "deleteChildren"
         
         // Default Commands
         command "reboot"
@@ -65,6 +60,9 @@ metadata {
         // Default Preferences
         input(name: "runReset", description: "<i>For details and guidance, see the release thread in the <a href=\"https://community.hubitat.com/t/release-tasmota-7-x-firmware-with-hubitat-support/29368\"> Hubitat Forum</a>. For settings marked as ADVANCED, make sure you understand what they do before activating them. If settings are not reflected on the device, press the Configure button in this driver. Also make sure all settings really are saved and correct.<br/>Type RESET and then press 'Save Preferences' to DELETE all Preferences and return to DEFAULTS.</i>", title: "<b>Settings</b>", displayDuringSetup: false, type: "paragraph", element: "paragraph")
         generate_preferences(configuration_model_debug())
+        //input(name: "numSwitches", type: "enum", title: "<b>Number of Switches</b>", description: "<i>Set the number of buttons on the switch (default 1)</i>", options: ["1", "2", "3", "4"], defaultValue: "1", displayDuringSetup: true, required: true)
+        input(name: "lowLevel", type: "string", title: "<b>Dimming Range (low)</b>", description: '<i>Used to calibrate the MINIMUM dimming level, see <a href="https://github.com/arendst/Tasmota/wiki/TuyaMCU-Configurations#dimming-range">here</a> for details.</i>', displayDuringSetup: true, required: false)
+        input(name: "highLevel", type: "string", title: "<b>Dimming Range (high)</b>", description: '<i>Used to calibrate the MINIMUM dimming level, see <a href="https://github.com/arendst/Tasmota/wiki/TuyaMCU-Configurations#dimming-range">here</a> for details.</i>', displayDuringSetup: true, required: false)
         
         // Default Preferences for Tasmota
         input(name: "ipAddress", type: "string", title: "<b>Device IP Address</b>", description: "<i>Set this as a default fallback for the auto-discovery feature.</i>", displayDuringSetup: true, required: false)
@@ -82,28 +80,59 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - SK03 Power Monitor Outdoor Plug', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
+    deviceInfo = ['name': 'Tasmota - TuyaMCU Wifi Dimmer (EXPERIMENTAL)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
     return(deviceInfo[infoName])
 }
 
+/* These functions are unique to each driver */
+def getDeviceConfigByName(configName) {
+    // This is used for module specific settings and reused 
+    // by generated code
+    switch (configName) {
+        case "module": 
+            return('54')
+        case "template":
+            // This may contain a default Tasmota Template, if needed by this driver
+            return('')
+        break
+    }
+}
 
-/* Generic On/Off functions used when only 1 switch/button exists */
+def installedAdditional() {
+    // This runs from installed()
+	logging("installedAdditional()",50)
+    createChildDevices()
+}
+
 def on() {
-	logging("on()", 50)
+	logging("on()",50)
+    //logging("device.namespace: ${getDeviceInfoByName('namespace')}, device.driverName: ${getDeviceInfoByName('name')}", 50)
     def cmds = []
-    cmds << getAction(getCommandString("Power", "On"))
+    // Power0 doesn't work correctly for Tuya devices yet
+    //cmds << getAction(getCommandString("Power0", "1"))
+    Integer numSwitchesI = numSwitches.toInteger()
+    
+    for (i in 1..numSwitchesI) {
+        cmds << getAction(getCommandString("Power$i", "1"))
+    }
+    //return delayBetween(cmds, 500)
     return cmds
 }
 
 def off() {
-    logging("off()", 50)
-	def cmds = []
-    cmds << getAction(getCommandString("Power", "Off"))
+    logging("off()",50)
+    def cmds = []
+    // Power0 doesn't work correctly for Tuya devices yet
+    //cmds << getAction(getCommandString("Power0", "0"))
+    Integer numSwitchesI = numSwitches.toInteger()
+    
+    for (i in 1..numSwitchesI) {
+        cmds << getAction(getCommandString("Power$i", "0"))
+    }
+    //return delayBetween(cmds, 500)
     return cmds
 }
 
-
-/* These functions are unique to each driver */
 def parse(description) {
     // parse() Generic Tasmota-device header BEGINS here
     //log.debug "Parsing: ${description}"
@@ -207,6 +236,28 @@ def parse(description) {
                 state.uptime = result.Uptime
             }
             
+            // Standard TuyaSwitch Data parsing
+            if (result.containsKey("POWER1")) {
+                logging("POWER1: $result.POWER1",1)
+                childSendState("1", result.POWER1.toLowerCase())
+                events << createEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER1.toLowerCase() == "on"?1:0) && result.POWER1.toLowerCase() == "on"? "on" : "off"))
+            }
+            if (result.containsKey("POWER2")) {
+                logging("POWER2: $result.POWER2",1)
+                childSendState("2", result.POWER2.toLowerCase())
+                events << createEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER2.toLowerCase() == "on"?2:0) && result.POWER2.toLowerCase() == "on"? "on" : "off"))
+            }
+            if (result.containsKey("POWER3")) {
+                logging("POWER3: $result.POWER3",1)
+                childSendState("3", result.POWER3.toLowerCase())
+                events << createEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER3.toLowerCase() == "on"?3:0) && result.POWER3.toLowerCase() == "on"? "on" : "off"))
+            }
+            if (result.containsKey("POWER4")) {
+                logging("POWER4: $result.POWER4",1)
+                childSendState("4", result.POWER4.toLowerCase())
+                events << createEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER4.toLowerCase() == "on"?4:0) && result.POWER4.toLowerCase() == "on" ? "on" : "off"))
+            }
+            
             // Standard Wifi Data parsing
             if (result.containsKey("Wifi")) {
                 if (result.Wifi.containsKey("AP")) {
@@ -225,88 +276,6 @@ def parse(description) {
                     logging("SSId: $result.Wifi.SSId",99)
                 }
             }
-            
-            // Standard Energy Monitor Data parsing
-            if (result.containsKey("StatusSNS")) {
-                if (result.StatusSNS.containsKey("ENERGY")) {
-                    if (result.StatusSNS.ENERGY.containsKey("Total")) {
-                        logging("Total: $result.StatusSNS.ENERGY.Total kWh",99)
-                        events << createEvent(name: "energyTotal", value: "$result.StatusSNS.ENERGY.Total kWh")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Today")) {
-                        logging("Today: $result.StatusSNS.ENERGY.Today kWh",99)
-                        events << createEvent(name: "energyToday", value: "$result.StatusSNS.ENERGY.Today kWh")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Yesterday")) {
-                        logging("Yesterday: $result.StatusSNS.ENERGY.Yesterday kWh",99)
-                        events << createEvent(name: "energyYesterday", value: "$result.StatusSNS.ENERGY.Yesterday kWh")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Current")) {
-                        logging("Current: $result.StatusSNS.ENERGY.Current A",99)
-                        events << createEvent(name: "current", value: "$result.StatusSNS.ENERGY.Current A")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("ApparentPower")) {
-                        logging("apparentPower: $result.StatusSNS.ENERGY.ApparentPower VA",99)
-                        events << createEvent(name: "apparentPower", value: "$result.StatusSNS.ENERGY.ApparentPower VA")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("ReactivePower")) {
-                        logging("reactivePower: $result.StatusSNS.ENERGY.ReactivePower VAr",99)
-                        events << createEvent(name: "reactivePower", value: "$result.StatusSNS.ENERGY.ReactivePower VAr")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Factor")) {
-                        logging("powerFactor: $result.StatusSNS.ENERGY.Factor",99)
-                        events << createEvent(name: "powerFactor", value: "$result.StatusSNS.ENERGY.Factor")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Voltage")) {
-                        logging("Voltage: $result.StatusSNS.ENERGY.Voltage V",99)
-                        events << createEvent(name: "voltage", value: "$result.StatusSNS.ENERGY.Voltage V")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Power")) {
-                        logging("Power: $result.StatusSNS.ENERGY.Power W",99)
-                        events << createEvent(name: "power", value: "$result.StatusSNS.ENERGY.Power W")
-                    }
-                }
-            }
-            if (result.containsKey("ENERGY")) {
-                //logging("Has ENERGY...", 1)
-                if (result.ENERGY.containsKey("Total")) {
-                    logging("Total: $result.ENERGY.Total kWh",99)
-                    events << createEvent(name: "energyTotal", value: "$result.ENERGY.Total kWh")
-                }
-                if (result.ENERGY.containsKey("Today")) {
-                    logging("Today: $result.ENERGY.Today kWh",99)
-                    events << createEvent(name: "energyToday", value: "$result.ENERGY.Today kWh")
-                }
-                if (result.ENERGY.containsKey("Yesterday")) {
-                    logging("Yesterday: $result.ENERGY.Yesterday kWh",99)
-                    events << createEvent(name: "energyYesterday", value: "$result.ENERGY.Yesterday kWh")
-                }
-                if (result.ENERGY.containsKey("Current")) {
-                    logging("Current: $result.ENERGY.Current A",99)
-                    events << createEvent(name: "current", value: "$result.ENERGY.Current A")
-                }
-                if (result.ENERGY.containsKey("ApparentPower")) {
-                    logging("apparentPower: $result.ENERGY.ApparentPower VA",99)
-                    events << createEvent(name: "apparentPower", value: "$result.ENERGY.ApparentPower VA")
-                }
-                if (result.ENERGY.containsKey("ReactivePower")) {
-                    logging("reactivePower: $result.ENERGY.ReactivePower VAr",99)
-                    events << createEvent(name: "reactivePower", value: "$result.ENERGY.ReactivePower VAr")
-                }
-                if (result.ENERGY.containsKey("Factor")) {
-                    logging("powerFactor: $result.ENERGY.Factor",99)
-                    events << createEvent(name: "powerFactor", value: "$result.ENERGY.Factor")
-                }
-                if (result.ENERGY.containsKey("Voltage")) {
-                    logging("Voltage: $result.ENERGY.Voltage V",99)
-                    events << createEvent(name: "voltage", value: "$result.ENERGY.Voltage V")
-                }
-                if (result.ENERGY.containsKey("Power")) {
-                    logging("Power: $result.ENERGY.Power W",99)
-                    events << createEvent(name: "power", value: "$result.ENERGY.Power W")
-                }
-            }
-            // StatusPTH:[PowerDelta:0, PowerLow:0, PowerHigh:0, VoltageLow:0, VoltageHigh:0, CurrentLow:0, CurrentHigh:0]
         // parse() Generic Tasmota-device footer BEGINS here
         } else {
                 //log.debug "Response is not JSON: $body"
@@ -348,7 +317,7 @@ def update_needed_settings()
     cmds << getAction(getCommandString("Template", null))
     if(disableModuleSelection == null) disableModuleSelection = false
     moduleNumberUsed = moduleNumber
-    if(moduleNumber == null || moduleNumber == -1) moduleNumberUsed = 0
+    if(moduleNumber == null || moduleNumber == -1) moduleNumberUsed = 54
     useDefaultTemplate = false
     defaultDeviceTemplate = ''
     if(deviceTemplateInput != null && deviceTemplateInput == "0") {
@@ -358,7 +327,7 @@ def update_needed_settings()
     if(deviceTemplateInput == null || deviceTemplateInput == "") {
         // We should use the default of the driver
         useDefaultTemplate = true
-        defaultDeviceTemplate = '{"NAME":"SK03 Outdoor","GPIO":[17,0,0,0,133,132,0,0,131,57,56,21,0],"FLAG":0,"BASE":57}'
+        defaultDeviceTemplate = ''
     }
     if(deviceTemplateInput != null) deviceTemplateInput = deviceTemplateInput.replaceAll(' ','')
     if(disableModuleSelection == false && ((deviceTemplateInput != null && deviceTemplateInput != "") || 
@@ -399,14 +368,48 @@ def update_needed_settings()
         logging("Setting the Module has been disabled!", 10)
     }
 
-    //cmds << getAction(getCommandString("SetOption81", "1")) // Set PCF8574 component behavior for all ports as inverted (default=0)
-    //cmds << getAction(getCommandString("LedPower", "1"))  // 1 = turn LED ON and set LedState 8
-    //cmds << getAction(getCommandString("LedState", "8"))  // 8 = LED on when Wi-Fi and MQTT are connected.
+    // Update the TuyaMCU device with the correct number of switches
+    cmds << getAction(getCommandString("TuyaMCU", null))
+    if(device.currentValue('tuyaMCU') != null) {
+        tuyaMCU = device.currentValue('tuyaMCU')
+        logging("Got this tuyaMCU string ${tuyaMCU}",1)
+        Integer numSwitchesI = numSwitches.toInteger()
     
+        for (i in 1..numSwitchesI) {
+            if(tuyaMCU.indexOf("1$i") == -1) {
+                // Only send commands for missing buttons
+                cmds << getAction(getCommandString("TuyaMCU", "1$i,$i"))
+            } else {
+                logging("Already have button $i",10)
+            }
+        }
+        //Remove buttons we don't have
+        if (numSwitchesI < 4) {
+            n = numSwitchesI + 1
+            for (i in n..4) {
+                if(tuyaMCU.indexOf("1$i") != -1) {
+                    // Only send commands for buttons we have
+                    cmds << getAction(getCommandString("TuyaMCU", "1$i,0"))
+                } else {
+                    logging("Button $i already doesn't exist, just as expected...",10)
+                }
+            }
+        }
+    }
     
-    // updateNeededSettings() TelePeriod setting
-    cmds << getAction(getCommandString("TelePeriod", (telePeriod == '' || telePeriod == null ? "300" : telePeriod)))
-    
+    //
+    // https://github.com/arendst/Tasmota/wiki/commands
+    //SetOption66
+    //Set publishing TuyaReceived to MQTT  »6.7.0
+    //0 = disable publishing TuyaReceived over MQTT (default)
+    //1 = enable publishing TuyaReceived over MQTT
+    //cmds << getAction(getCommandString("SetOption66", "1"))
+
+    cmds << getAction(getCommandString("SetOption81", "0")) // Set PCF8574 component behavior for all ports as inverted (default=0)
+
+    // Make sure we have our child devices
+    recreateChildDevices()
+
     
     // updateNeededSettings() Generic footer BEGINS here
     cmds << getAction(getCommandString("SetOption113", "1")) // Hubitat Enabled
@@ -626,6 +629,104 @@ def configuration_model_debug()
 </Value>
 </configuration>
 '''
+}
+
+/* Helper functions included when needing Child devices */
+// Get the button number
+private channelNumber(String dni) {
+    def ch = dni.split("-")[-1] as Integer
+    return ch
+}
+
+def childOn(String dni) {
+    // Make sure to create an onOffCmd that sends the actual command
+    onOffCmd(1, channelNumber(dni))
+}
+
+def childOff(String dni) {
+    // Make sure to create an onOffCmd that sends the actual command
+    onOffCmd(0, channelNumber(dni))
+}
+
+private childSendState(String currentSwitchNumber, String state) {
+    def childDevice = childDevices.find{it.deviceNetworkId.endsWith("-${currentSwitchNumber}")}
+    if (childDevice) {
+        logging("childDevice.sendEvent ${currentSwitchNumber} ${state}",1)
+        childDevice.sendEvent(name: "switch", value: state, type: type)
+    } else {
+        logging("childDevice.sendEvent ${currentSwitchNumber} is missing!",1)
+    }
+}
+
+private areAllChildrenSwitchedOn(Integer skip = 0) {
+    def children = getChildDevices()
+    boolean status = true
+    Integer i = 1
+    // Enumerating this way may be incorrect if we have more children than actual switches
+    // due to having changed the number of switches in the config and not deleted the extra
+    // switches. Just delete unneeded children...
+    children.each {child->
+        if (i!=skip) {
+  		    if(child.currentState("switch")?.value == "off") {
+                status = false
+            }
+        }
+        i++
+    }
+    return status
+}
+
+private void createChildDevices() {
+    Integer numSwitchesI = numSwitches.toInteger()
+    logging("createChildDevices: creating $numSwitchesI device(s)",1)
+    
+    // If making changes here, don't forget that recreateDevices need to have the same settings set
+    for (i in 1..numSwitchesI) {
+        addChildDevice("${getDeviceInfoByName('namespace')}", "${getDeviceInfoByName('name')} (Child)", "$device.id-$i", [name: "$device.name #$i", label: "$device.displayName $i", isComponent: true])
+    }
+}
+
+def recreateChildDevices() {
+    Integer numSwitchesI = numSwitches.toInteger()
+    logging("recreateChildDevices: recreating $numSwitchesI device(s)",1)
+    def childDevice = null
+
+    for (i in 1..numSwitchesI) {
+        childDevice = childDevices.find{it.deviceNetworkId.endsWith("-$i")}
+        if (childDevice) {
+            // The device exists, just update it
+            childDevice.setName("${getDeviceInfoByName('name')} #$i")
+            childDevice.setDeviceNetworkId("$device.id-$i")  // This doesn't work right now...
+            logging(childDevice.getData(), 10)
+            // We leave the device Label alone, since that might be desired by the user to change
+            //childDevice.setLabel("$device.displayName $i")
+            //.setLabel doesn't seem to work on child devices???
+        } else {
+            // No such device, we should create it
+            addChildDevice("${getDeviceInfoByName('namespace')}", "${getDeviceInfoByName('name')} (Child)", "$device.id-$i", [name: "${getDeviceInfoByName('name')} #$i", label: "$device.displayName $i", isComponent: true])
+        }
+    }
+    if (numSwitchesI < 4) {
+        // Check if we should delete some devices
+        for (i in 1..4) {
+            if (i > numSwitchesI) {
+                childDevice = childDevices.find{it.deviceNetworkId.endsWith("-$i")}
+                if (childDevice) {
+                    logging("Removing child #$i!", 10)
+                    deleteChildDevice(childDevice.deviceNetworkId)
+                }
+            }
+        }
+    }
+}
+
+def deleteChildren() {
+	logging("deleteChildren",1)
+	def children = getChildDevices()
+    
+    children.each {child->
+  		deleteChildDevice(child.deviceNetworkId)
+    }
 }
 
 /* Helper functions included in all Tasmota drivers */

@@ -218,22 +218,7 @@ def main():
     usedDriversDict = {}
 
     driversFiles = [
-        {'id': 548, 'file': driverDir / 'tasmota-tuyamcu-wifi-touch-switch.groovy' },
-        {'id': 549, 'file': driverDir / 'tasmota-tuyamcu-wifi-touch-switch-child.groovy' },
-        {'id': 550, 'file': driverDir / 'tasmota-tuyamcu-wifi-touch-switch-child-test.groovy' },
-        {'id': 513, 'file': driverDir / 'tasmota-sonoff-powr2.groovy' },
-        {'id': 551, 'file': driverDir / 'tasmota-sonoff-s2x.groovy' },
-        {'id': 554, 'file': driverDir / 'tasmota-sonoff-mini.groovy'},
-        {'id': 560, 'file': driverDir / 'tasmota-sonoff-basic.groovy'},
-        {'id': 552, 'file': driverDir / 'tasmota-generic-wifi-switch-plug.groovy' },
-        {'id': 553, 'file': driverDir / 'tasmota-s120-plug.groovy' },
-        {'id': 557, 'file': driverDir / 'tasmota-ykyc-001-pm-plug.groovy' },
-        {'id': 559, 'file': driverDir / 'tasmota-brilliant-bl20925-pm-plug.groovy' },
-        {'id': 577, 'file': driverDir / 'tasmota-prime-ccrcwfii113pk-plug.groovy' },
-        {'id': 558, 'file': driverDir / 'tasmota-generic-pm-plug.groovy' },
-        {'id': 578, 'file': driverDir / 'tasmota-generic-thp-device.groovy' },
-        {'id': 579, 'file': driverDir / 'zigbee-generic-wifi-switch-plug.groovy' },
-        # Drivers without their own base-files:
+        # Drivers without their own base-file:
         {'id': 418, 'file': driverDir / 'tasmota-tuyamcu-wifi-touch-switch-child.groovy', \
          'alternateOutputFilename': 'tasmota-tuyamcu-wifi-touch-switch-legacy-child', \
          'alternateName': 'Tasmota - TuyaMCU Wifi Touch Switch Legacy (Child)', \
@@ -242,9 +227,9 @@ def main():
          'alternateOutputFilename': 'tasmota-sonoff-basic-r3', \
          'alternateName': 'Tasmota - Sonoff Basic R3'},
         # https://templates.blakadder.com/ce_smart_home-WF500D.html
-        {'id': 580, 'file': driverDir / 'tasmota-tuyamcu-wifi-touch-switch.groovy' , \
+        {'id': 580, 'file': driverDir / 'tasmota-tuyamcu-wifi-dimmer.groovy' , \
          'alternateOutputFilename': 'tasmota-tuyamcu-ce-wf500d-dimmer', \
-         'alternateName': 'Tasmota - TuyaMCU CE Smart Home WF500D Dimmer (NO DIMMING)', \
+         'alternateName': 'Tasmota - TuyaMCU CE Smart Home WF500D Dimmer (EXPERIMENTAL)', \
          'alternateTemplate': '{"NAME":"CE WF500D","GPIO":[255,255,255,255,255,255,0,0,255,108,255,107,255],"FLAG":0,"BASE":54}'},
         # https://templates.blakadder.com/ce_smart_home_LA-2-W3.html
         {'id': 581, 'file': driverDir / 'tasmota-generic-wifi-switch-plug.groovy' , \
@@ -281,12 +266,39 @@ def main():
          'alternateOutputFilename': 'tasmota-aoycocr-x10s-pm-plug', \
          'alternateName': 'Tasmota - Aoycocr X10S Power Monitor Plug', \
          'alternateTemplate': '{"NAME":"Aoycocr X10S","GPIO":[56,0,57,0,21,134,0,0,131,17,132,0,0],"FLAG":0,"BASE":45}'},
+        # https://templates.blakadder.com/brilliant_20699.html
+        {'id': 589, 'file': driverDir / 'tasmota-unbranded-rgb-controller-with-ir.groovy',
+         'alternateOutputFilename': 'tasmota-brilliant-20699-rgbw-bulb', \
+         'alternateName': 'Tasmota - Brilliant 20699 800lm RGBW (EXPERIMENTAL)', \
+         'alternateTemplate': '{"NAME":"Brilliant20699","GPIO":[0,0,0,0,141,140,0,0,37,142,0,0,0],"FLAG":0,"BASE":18}'},
+
+        # Drivers WITH their own base-file
+        {'id': 548, 'file': driverDir / 'tasmota-tuyamcu-wifi-touch-switch.groovy' },
+        {'id': 549, 'file': driverDir / 'tasmota-tuyamcu-wifi-touch-switch-child.groovy' },
+        {'id': 550, 'file': driverDir / 'tasmota-tuyamcu-wifi-touch-switch-child-test.groovy' },
+        {'id': 513, 'file': driverDir / 'tasmota-sonoff-powr2.groovy' },
+        {'id': 551, 'file': driverDir / 'tasmota-sonoff-s2x.groovy' },
+        {'id': 554, 'file': driverDir / 'tasmota-sonoff-mini.groovy'},
+        {'id': 560, 'file': driverDir / 'tasmota-sonoff-basic.groovy'},
+        {'id': 552, 'file': driverDir / 'tasmota-generic-wifi-switch-plug.groovy' },
+        {'id': 553, 'file': driverDir / 'tasmota-s120-plug.groovy' },
+        {'id': 557, 'file': driverDir / 'tasmota-ykyc-001-pm-plug.groovy' },
+        {'id': 559, 'file': driverDir / 'tasmota-brilliant-bl20925-pm-plug.groovy' },
+        {'id': 577, 'file': driverDir / 'tasmota-prime-ccrcwfii113pk-plug.groovy' },
+        {'id': 558, 'file': driverDir / 'tasmota-generic-pm-plug.groovy' },
+        {'id': 578, 'file': driverDir / 'tasmota-generic-thp-device.groovy' },
+        {'id': 579, 'file': driverDir / 'zigbee-generic-wifi-switch-plug.groovy' },
+        {'id': 590, 'file': driverDir / 'tasmota-tuyamcu-wifi-dimmer.groovy'},
+        
+         {'id': 588, 'file': driverDir / 'tasmota-unbranded-rgb-controller-with-ir.groovy' },
     ]
     
     # Example driver: https://github.com/hubitat/HubitatPublic/blob/master/examples/drivers/GenericZigbeeRGBWBulb.groovy
+    # RGB Example: https://github.com/damondins/hubitat/blob/master/Tasmota%20RGBW%20LED%20Light%20Bulb/Tasmota%20RGBW%20LED%20Light%20Bulb
 
     #driversFiles = [
-        
+    #    {'id': 588, 'file': driverDir / 'tasmota-unbranded-rgb-controller-with-ir.groovy' },
+    #    
     #]
 
     j=0
@@ -327,7 +339,7 @@ def main():
     for a in appsFiles:
         if(a['id'] != 97 or a['id'] != 163):
             expandGroovyFile(a['file'], expandedAppsDir, usedDriversDict)
-        if(a['id'] != 0 and len(usedDriversDict) >= 16):
+        if(a['id'] != 0 and len(usedDriversDict) >= 28):
             expandGroovyFile(a['file'], expandedAppsDir, usedDriversDict)
             print('Found ' + str(len(usedDriversDict)) + ' driver(s)...')
             r = hubitatAjax.push_app_code(a['id'], getOutputGroovyFile(a['file'], expandedAppsDir))

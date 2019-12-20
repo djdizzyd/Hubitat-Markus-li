@@ -19,17 +19,18 @@ import groovy.json.JsonSlurper
 
 
 metadata {
-	definition (name: "Tasmota - TuyaMCU CE Smart Home WF500D Dimmer (NO DIMMING)", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
-        capability "Actuator"
+	definition (name: "Tasmota - TuyaMCU CE Smart Home WF500D Dimmer (EXPERIMENTAL)", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
+        capability "Light"
 		capability "Switch"
-		capability "Sensor"
+		capability "SwitchLevel"
+        capability "ColorControl"
         
         // Default Capabilities
         capability "Refresh"
         capability "Configuration"
         capability "HealthCheck"
         
-        attribute   "checkInterval", "number"
+        attribute   "dimState", "number"
         attribute   "tuyaMCU", "string"
         
         // Default Attributes
@@ -40,12 +41,12 @@ metadata {
         attribute   "templateData", "string"
         attribute   "driverVersion", "string"
 
-        
-        // Commands for handling Child Devices
-        command "childOn"
-        command "childOff"
-        command "recreateChildDevices"
-        command "deleteChildren"
+        //
+          // Commands for handling Child Devices
+          command "childOn"
+          command "childOff"
+          command "recreateChildDevices"
+          command "deleteChildren"
         
         // Default Commands
         command "reboot"
@@ -59,7 +60,9 @@ metadata {
         // Default Preferences
         input(name: "runReset", description: "<i>For details and guidance, see the release thread in the <a href=\"https://community.hubitat.com/t/release-tasmota-7-x-firmware-with-hubitat-support/29368\"> Hubitat Forum</a>. For settings marked as ADVANCED, make sure you understand what they do before activating them. If settings are not reflected on the device, press the Configure button in this driver. Also make sure all settings really are saved and correct.<br/>Type RESET and then press 'Save Preferences' to DELETE all Preferences and return to DEFAULTS.</i>", title: "<b>Settings</b>", displayDuringSetup: false, type: "paragraph", element: "paragraph")
         generate_preferences(configuration_model_debug())
-        input(name: "numSwitches", type: "enum", title: "<b>Number of Switches</b>", description: "<i>Set the number of buttons on the switch (default 1)</i>", options: ["1", "2", "3", "4"], defaultValue: "1", displayDuringSetup: true, required: true)
+        //input(name: "numSwitches", type: "enum", title: "<b>Number of Switches</b>", description: "<i>Set the number of buttons on the switch (default 1)</i>", options: ["1", "2", "3", "4"], defaultValue: "1", displayDuringSetup: true, required: true)
+        input(name: "lowLevel", type: "string", title: "<b>Dimming Range (low)</b>", description: '<i>Used to calibrate the MINIMUM dimming level, see <a href="https://github.com/arendst/Tasmota/wiki/TuyaMCU-Configurations#dimming-range">here</a> for details.</i>', displayDuringSetup: true, required: false)
+        input(name: "highLevel", type: "string", title: "<b>Dimming Range (high)</b>", description: '<i>Used to calibrate the MINIMUM dimming level, see <a href="https://github.com/arendst/Tasmota/wiki/TuyaMCU-Configurations#dimming-range">here</a> for details.</i>', displayDuringSetup: true, required: false)
         
         // Default Preferences for Tasmota
         input(name: "ipAddress", type: "string", title: "<b>Device IP Address</b>", description: "<i>Set this as a default fallback for the auto-discovery feature.</i>", displayDuringSetup: true, required: false)
@@ -77,7 +80,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - TuyaMCU CE Smart Home WF500D Dimmer (NO DIMMING)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
+    deviceInfo = ['name': 'Tasmota - TuyaMCU CE Smart Home WF500D Dimmer (EXPERIMENTAL)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
     return(deviceInfo[infoName])
 }
 
@@ -492,7 +495,14 @@ void initialize()
     logging("initialize()", 50)
 	unschedule()
     // disable debug logs after 30 min, unless override is in place
-	if (logLevel != "0") runIn(1800, logsOff)
+	if (logLevel != "0") {
+        if(runReset != "DEBUG") {
+            log.warn "Debug logging will be disabled in 30 minutes..."
+        } else {
+            log.warn "Debug logging will NOT BE AUTOMATICALLY DISABLED!"
+        }
+        runIn(1800, logsOff)
+    }
 }
 
 def configure() {
@@ -851,6 +861,10 @@ private String convertIPtoHex(ipAddress) {
         }
     }
     return hex
+}
+
+private String urlEscape(url) {
+    return(URLEncoder.encode(url).replace("+", "%20"))
 }
 
 private String convertPortToHex(port) {

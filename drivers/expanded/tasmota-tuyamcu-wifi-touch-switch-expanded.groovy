@@ -24,12 +24,13 @@ metadata {
 		capability "Switch"
 		capability "Sensor"
         
+        
         // Default Capabilities
         capability "Refresh"
         capability "Configuration"
         capability "HealthCheck"
         
-        attribute   "checkInterval", "number"
+        //attribute   "checkInterval", "number"
         attribute   "tuyaMCU", "string"
         
         // Default Attributes
@@ -492,7 +493,14 @@ void initialize()
     logging("initialize()", 50)
 	unschedule()
     // disable debug logs after 30 min, unless override is in place
-	if (logLevel != "0") runIn(1800, logsOff)
+	if (logLevel != "0") {
+        if(runReset != "DEBUG") {
+            log.warn "Debug logging will be disabled in 30 minutes..."
+        } else {
+            log.warn "Debug logging will NOT BE AUTOMATICALLY DISABLED!"
+        }
+        runIn(1800, logsOff)
+    }
 }
 
 def configure() {
@@ -851,6 +859,10 @@ private String convertIPtoHex(ipAddress) {
         }
     }
     return hex
+}
+
+private String urlEscape(url) {
+    return(URLEncoder.encode(url).replace("+", "%20"))
 }
 
 private String convertPortToHex(port) {

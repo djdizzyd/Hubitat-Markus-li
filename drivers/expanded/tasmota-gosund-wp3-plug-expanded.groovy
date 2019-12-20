@@ -671,6 +671,10 @@ private String convertIPtoHex(ipAddress) {
     return hex
 }
 
+private String urlEscape(url) {
+    return(URLEncoder.encode(url).replace("+", "%20"))
+}
+
 private String convertPortToHex(port) {
 	String hexport = port.toString().format( '%04X', port.toInteger() )
     return hexport

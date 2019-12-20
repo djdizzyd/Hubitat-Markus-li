@@ -3,18 +3,18 @@
 #!include:getDefaultImports()
 
 metadata {
-	definition (name: "Tasmota - TuyaMCU Wifi Touch Switch", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
-        capability "Actuator"
+	definition (name: "Tasmota - TuyaMCU Wifi Dimmer (EXPERIMENTAL)", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
+        capability "Light"
 		capability "Switch"
-		capability "Sensor"
-        
+		capability "SwitchLevel"
+        capability "ColorControl"
         #!include:getDefaultMetadataCapabilities()
         
-        //attribute   "checkInterval", "number"
+        attribute   "dimState", "number"
         attribute   "tuyaMCU", "string"
         #!include:getDefaultMetadataAttributes()
 
-        #!include:getMetadataCommandsForHandlingChildDevices()
+        //#!include:getMetadataCommandsForHandlingChildDevices()
         #!include:getDefaultMetadataCommands()
 	}
 
@@ -23,7 +23,9 @@ metadata {
     
     preferences {
         #!include:getDefaultMetadataPreferences()
-        input(name: "numSwitches", type: "enum", title: "<b>Number of Switches</b>", description: "<i>Set the number of buttons on the switch (default 1)</i>", options: ["1", "2", "3", "4"], defaultValue: "1", displayDuringSetup: true, required: true)
+        //input(name: "numSwitches", type: "enum", title: "<b>Number of Switches</b>", description: "<i>Set the number of buttons on the switch (default 1)</i>", options: ["1", "2", "3", "4"], defaultValue: "1", displayDuringSetup: true, required: true)
+        input(name: "lowLevel", type: "string", title: "<b>Dimming Range (low)</b>", description: '<i>Used to calibrate the MINIMUM dimming level, see <a href="https://github.com/arendst/Tasmota/wiki/TuyaMCU-Configurations#dimming-range">here</a> for details.</i>', displayDuringSetup: true, required: false)
+        input(name: "highLevel", type: "string", title: "<b>Dimming Range (high)</b>", description: '<i>Used to calibrate the MINIMUM dimming level, see <a href="https://github.com/arendst/Tasmota/wiki/TuyaMCU-Configurations#dimming-range">here</a> for details.</i>', displayDuringSetup: true, required: false)
         #!include:getDefaultMetadataPreferencesForTasmota(True) # False = No TelePeriod setting
 	}
 }
