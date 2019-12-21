@@ -347,7 +347,7 @@ def main():
     # RGB Example: https://github.com/damondins/hubitat/blob/master/Tasmota%20RGBW%20LED%20Light%20Bulb/Tasmota%20RGBW%20LED%20Light%20Bulb
 
     #driversFiles = [
-    #    {'id': 588, 'file': driverDir / 'tasmota-unbranded-rgb-controller-with-ir.groovy' },
+    #    {'id': 578, 'file': driverDir / 'tasmota-generic-thp-device.groovy' },
     #    
     #]
 
@@ -395,7 +395,7 @@ def main():
         print('Making the driver list file...')
         makeDriverList(genericDrivers, specificDrivers, baseRepoURL, baseRawRepoURL)
     else:
-        print('SKIPPING making of the driver list file...')
+        print("SKIPPING making of the driver list file since we don't have enough drivers in the list...")
     #print('Generic drivers: ' + str(genericDrivers))
     #print('Specific drivers: ' + str(specificDrivers))
     #pp.pprint(usedDriversDict)

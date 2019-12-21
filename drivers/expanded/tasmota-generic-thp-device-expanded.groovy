@@ -229,54 +229,40 @@ def parse(description) {
             
             // Standard Energy Monitor Data parsing
             resultTH = null
-            if (result.containsKey("AM2301")) {
-                resultTH = result.AM2301
-            }
-            if (result.containsKey("BME280")) {
-                resultTH = result.BME280
-            }
-            if (result.containsKey("BMP280")) {
-                resultTH = result.BMP280
-            }
-            if (result.containsKey("StatusSNS")) {
-                logging("Using key StatusSNS in parse()",1)
-                if (result.StatusSNS.containsKey("AM2301")) {
-                    resultTH = result.StatusSNS.AM2301
+            // AM2301
+            // BME280
+            // BMP280
+            //logging("result instanceof Map: ${result instanceof Map}", 1)
+            for ( r in result ) {
+                //logging("${r.key} instanceof Map: ${r.value instanceof Map}", 1)
+                if(r.value instanceof Map && (r.value.containsKey("Humidity") || r.value.containsKey("Temperature") || r.value.containsKey("Pressure"))) {
+                    resultTH = r.value
+                    logging("Found resultTH in ${r.key}", 1)
                 }
-                if (result.StatusSNS.containsKey("BME280")) {
-                    resultTH = result.StatusSNS.BME280
-                }
-                if (result.StatusSNS.containsKey("BMP280")) {
-                    resultTH = result.StatusSNS.BMP280
-                }
-            }
-            if (result.containsKey("SENSOR")) {
-                logging("Using key SENSOR in parse()",1)
-                if (result.SENSOR.containsKey("AM2301")) {
-                    resultTH = result.StatusSNS.AM2301
-                }
-                if (result.SENSOR.containsKey("BME280")) {
-                    resultTH = result.SENSOR.BME280
-                }
-                if (result.SENSOR.containsKey("BMP280")) {
-                    resultTH = result.SENSOR.BMP280
+                if((r.key == 'StatusSNS' || r.key == 'SENSOR') && r.value instanceof Map) {
+                    for ( rs in r ) {
+                        if(rs.value instanceof Map && (rs.value.containsKey("Humidity") || rs.value.containsKey("Temperature") || rs.value.containsKey("Pressure"))) {
+                            resultTH = rs.value
+                            logging("Found resultTH in StatusSNS.${r.key}", 1)
+                        }
+                    }
                 }
             }
             if(resultTH != null) {
-                if (resultTH.containsKey("Humidity") && resultTH.Humidity.toLowerCase() != "nan") {
-                    logging("Humidity: RH $resultTH.Humidity %",99)
+                if (resultTH.containsKey("Humidity")) {
+                    logging("Humidity: RH $resultTH.Humidity %", 99)
                     state.realHumidity = Math.round((resultTH.Humidity as Double) * 100) / 100
                     events << createEvent(name: "humidity", value: "${getAdjustedHumidity(state.realHumidity)}", unit: "%")
                 }
-                if (resultTH.containsKey("Temperature") && resultTH.Temperature.toLowerCase() != "nan") {
+                if (resultTH.containsKey("Temperature")) {
                     //Probably need this line below
                     //state.realTemperature = convertTemperatureIfNeeded(resultTH.Temperature.toFloat(), result.TempUnit, 1)
                     state.realTemperature = resultTH.Temperature.toFloat()
-                    logging("Temperature: ${getAdjustedTemp(state.realTemperature? state.realTemperature:0)}",99)
+                    logging("Temperature: ${getAdjustedTemp(state.realTemperature? state.realTemperature:0)}", 99)
                     events << createEvent(name: "temperature", value: "${getAdjustedTemp(state.realTemperature)}", unit: "${location.temperatureScale}")
                 }
-                if (resultTH.containsKey("Pressure") && resultTH.Pressure.toLowerCase() != "nan") {
-                    logging("Pressure: $resultTH.Pressure $result.PressureUnit",99)
+                if (resultTH.containsKey("Pressure")) {
+                    logging("Pressure: $resultTH.Pressure $result.PressureUnit", 99)
                     state.realPressure = Math.round((resultTH.Pressure as Double) * 100) / 100
                     adjustedPressure = getAdjustedPressure(state.realPressure)
                     events << createEvent(name: "pressure", value: "${adjustedPressure}", unit: "${result.PressureUnit}")
