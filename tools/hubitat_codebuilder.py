@@ -21,10 +21,23 @@ import ruamel.yaml
 from hubitat_driver_snippets import *
 from hubitat_driver_snippets_parser import *
 
+class HubitatCodeBuilderError(Exception):
+   """HubitatCodeBuilder Base Exception Class"""
+   pass
+
 class HubitatCodeBuilder:
 
-    def __init__(self):
-        self.v = False
+    def __init__(self, app_dir = Path('./apps'), app_build_dir = Path('./apps/expanded'), \
+                 driver_dir = Path('./drivers'), driver_build_dir = Path('./drivers/expanded'), \
+                 build_suffix = '-expanded'    ):
+        self.app_dir = Path(app_dir)
+        self.app_build_dir = Path(app_build_dir)
+        self.driver_dir = Path(driver_dir)
+        self.driver_build_dir = Path(driver_build_dir)
+        self.build_suffix = build_suffix
+        my_locals = locals().copy()
+        my_locals.pop('self')
+        print('Init with these settings:' + str(my_locals))
 
     def getHelperFunctions(self, helper_function_type):
         r = ''
@@ -35,21 +48,22 @@ class HubitatCodeBuilder:
                     r += l
         else:
             # Yes, this should be specific, but it doesn't matter here...
-            raise Exception("Helper function type '" + helper_function_type + "' can't be included! File doesn't exist!")
+            raise HubitatCodeBuilderError("Helper function type '" + helper_function_type + "' can't be included! File doesn't exist!")
         return(r)
 
-    def getOutputGroovyFile(self, input_groovy_file, output_groovy_dir, alternate_output_filename = None):
+    def getOutputGroovyFile(self, input_groovy_file, alternate_output_filename = None):
         #print('Using "' + str(input_groovy_file) + '" to get path for "' + str(output_groovy_dir) + '"...')
         #print('Filename stem: ' + input_groovy_file.stem)
         #print('Filename suffix: ' + input_groovy_file.suffix)
+        input_groovy_file = Path(input_groovy_file)
         if(alternate_output_filename != None):
-            output_groovy_file = output_groovy_dir / str(alternate_output_filename + "-expanded" + input_groovy_file.suffix)
+            output_groovy_file = Path(str(alternate_output_filename) + self.build_suffix + str(input_groovy_file.suffix))
         else:
-            output_groovy_file = output_groovy_dir / str(input_groovy_file.stem + "-expanded" + input_groovy_file.suffix)
+            output_groovy_file = Path(str(input_groovy_file.stem) + self.build_suffix + str(input_groovy_file.suffix))
         #print('output_groovy_file: ' + str(output_groovy_file))
         return(output_groovy_file)
 
-    def _checkForDefinitionString(self, l, alternate_name = None, alternate_namespace = None, alternate_vid = None):
+    def _checkFordefinition_string(self, l, alternate_name = None, alternate_namespace = None, alternate_vid = None):
         definition_position = l.find('definition (')
         if(definition_position != -1):
             ds = l[definition_position+11:].strip()
@@ -102,96 +116,72 @@ class HubitatCodeBuilder:
         else:
             return(None)
 
-    def _makeTasmotaConnectDriverListV1(self, drivers_list):
-        ts_driver_list = '['
-        for d in drivers_list:
-            name = drivers_list[d]['name']
-            # If it's a child driver, we don't need it in this list
-            if ('child' not in name.lower() and drivers_list[d]['namespace'] == 'tasmota' and \
-                name.startswith('DO NOT USE') == False):
-                ts_driver_list += '"' + name + '",\n'
-        ts_driver_list += ']'
-        return(ts_driver_list)
-
-    def _makeTasmotaConnectDriverListV2(self, drivers_list):
-        short_driver_map = {
-            'Tasmota - Sonoff TH Wifi Switch': 'Sonoff TH',
-            'Tasmota - Sonoff PowR2': 'Sonoff POW',
-            'Tasmota - Sonoff 2CH Wifi Switch': 'Sonoff Dual',
-            'Tasmota - Sonoff 4CH Wifi Switch': 'Sonoff 4CH',
-            'Tasmota - Sonoff IFan02 Wifi Controller': 'Sonoff IFan02',
-            'Tasmota - Sonoff S31 Wifi Switch': 'Sonoff S31',
-            'Tasmota - Sonoff S2X': 'Sonoff S2',
-            'Tasmota - Sonoff SC': 'Sonoff SC',
-            'Tasmota - Sonoff Bridge': 'Sonoff Bridge',
-            'Tasmota - Tuya Wifi Touch Switch': 'Tuya',
-        }
-        i = 0
-        ts_driver_list = ''
-        for d in drivers_list:
-            name = drivers_list[d]['name']
+    def getBuildDir(self, code_type):
+        if(code_type == 'driver'):
+            return(self.driver_build_dir)
+        elif(code_type == 'app'):
+            return(self.app_build_dir)
+        else:
+            raise HubitatCodeBuilderError('Incorrect code_type: ' + str(code_type))
+    
+    def getInputDir(self, code_type):
+        if(code_type == 'driver'):
+            return(self.driver_dir)
+        elif(code_type == 'app'):
+            return(self.app_dir)
+        else:
+            raise HubitatCodeBuilderError('Incorrect code_type: ' + str(code_type))
+    
+    def _runEvalCmd(self, eval_cmd, definition_string, alternate_template, alternate_module):
+        output = eval_cmd
+        found = False
+        if(eval_cmd == 'getDeviceInfoFunction()'):
+            print("Executing getDeviceInfoFunction()...")
+            if(definition_string == None):
+                raise HubitatCodeBuilderError('ERROR: Missing/incorrect Definition in file!')
+            output = definition_string
+            found = True
+        else:
             try:
-                name_short = short_driver_map[name]
-            except Exception:
-                name_short = name
-            # If it's a child driver, we don't need it in this list
-            if ('child' not in name.lower() and drivers_list[d]['namespace'] == 'tasmota' and \
-                name.startswith('DO NOT USE') == False):
-                ts_driver_list += ('else ' if i > 0 else '') + \
-                    'if (selectedDevice?.value?.name?.startsWith("' + name_short + '"))\n' + \
-                    '    deviceHandlerName = "' + name + '"\n'
-        return(ts_driver_list)
+                (found, output) = self._runEvalCmdAdditional(eval_cmd, definition_string, alternate_template, alternate_module)
+                if(found == False):
+                    output = eval_cmd
+            except AttributeError as e:
+                #print(str(e))
+                found = False
+        if(found == False):
+            try:
+                output = eval(eval_cmd)
+            except NameError:
+                try:
+                    output = eval('self.' + eval_cmd)
+                except AttributeError:
+                    output = eval('self._' + eval_cmd)
+        return(output)
 
-    def expandGroovyFile(self, input_groovy_file, output_groovy_dir, extra_data = None, alternate_output_filename = None, \
+    def expandGroovyFile(self, input_groovy_file, code_type = 'driver', alternate_output_filename = None, \
                         alternate_name = None, alternate_namespace = None, alternate_vid = None, \
                         alternate_template = None, alternate_module = None):
-        output_groovy_file = self.getOutputGroovyFile(input_groovy_file, output_groovy_dir, alternate_output_filename)
+        input_groovy_file = Path(input_groovy_file)
+        output_groovy_file = self.getOutputGroovyFile(input_groovy_file, alternate_output_filename)
         r = {'file': output_groovy_file, 'name': ''}
         
         print('Expanding "' + str(input_groovy_file) + '" to "' + str(output_groovy_file) + '"...')
-        definitionString = None
-        with open (output_groovy_file, "w") as wd:
-            with open (input_groovy_file, "r") as rd:
+        definition_string = None
+        print('Build dir: ' + str(self.getBuildDir(code_type) / output_groovy_file))
+        with open (self.getBuildDir(code_type) / output_groovy_file, "w") as wd:
+            with open (self.getInputDir(code_type) / input_groovy_file, "r") as rd:
                 # Read lines in loop
                 for l in rd:
-                    if(definitionString == None):
-                        definitionString = self._checkForDefinitionString(l, alternate_name = alternate_name, alternate_namespace = alternate_namespace, alternate_vid = alternate_vid)
-                        if(definitionString != None):
-                            (l, definitionString, definition_dict_original) = definitionString
+                    if(definition_string == None):
+                        definition_string = self._checkFordefinition_string(l, alternate_name = alternate_name, alternate_namespace = alternate_namespace, alternate_vid = alternate_vid)
+                        if(definition_string != None):
+                            (l, definition_string, definition_dict_original) = definition_string
                             r['name'] = definition_dict_original['name']
                     includePosition = l.find('#!include:')
                     if(includePosition != -1):
-                        evalCmd = l[includePosition+10:].strip()
-                        if(evalCmd == 'getDeviceInfoFunction()'):
-                            print("Executing getDeviceInfoFunction()...")
-                            if(definitionString == None):
-                                print('ERROR: Missing Definition in file!')
-                            output = definitionString
-                        elif(evalCmd == 'makeTasmotaConnectDriverListV1()'):
-                            print("Executing makeTasmotaConnectDriverListV1()...")
-                            if(extra_data == None):
-                                print('ERROR: Missing extra_data!')
-                                output = ''
-                            else:
-                                output = self._makeTasmotaConnectDriverListV1(extra_data)
-                        elif(evalCmd == 'makeTasmotaConnectDriverListV2()'):
-                            print("Executing makeTasmotaConnectDriverListV2()...")
-                            if(extra_data == None):
-                                print('ERROR: Missing extra_data!')
-                                output = ''
-                            else:
-                                output = self._makeTasmotaConnectDriverListV2(extra_data)
-                        elif(alternate_template != None and alternate_template != '' and evalCmd.startswith('getUpdateNeededSettingsTasmotaDynamicModuleCommand(')):
-                            print("Executing getUpdateNeededSettingsTasmotaDynamicModuleCommand(0, '" + alternate_template + "')...")
-                            output = getUpdateNeededSettingsTasmotaDynamicModuleCommand(0, alternate_template)
-                        elif(alternate_module != None and alternate_module != '' and evalCmd.startswith('getUpdateNeededSettingsTasmotaDynamicModuleCommand(')):
-                            print("Executing getUpdateNeededSettingsTasmotaDynamicModuleCommand(" + alternate_module + ")...")
-                            output = getUpdateNeededSettingsTasmotaDynamicModuleCommand(alternate_module)
-                        else:
-                            try:
-                                output = eval(evalCmd)
-                            except NameError:
-                                output = eval('self.' + evalCmd)
+                        eval_cmd = l[includePosition+10:].strip()
+                        output = self._runEvalCmd(eval_cmd, definition_string, alternate_template, alternate_module)
                         if(includePosition > 0):
                             i = 0
                             wd.write(l[:includePosition])
@@ -209,17 +199,3 @@ class HubitatCodeBuilder:
         print('DONE expanding "' + input_groovy_file.name + '" to "' + output_groovy_file.name + '"!')
         return(r)
 
-    def makeDriverList(self, generic_drivers, specific_drivers, base_repo_url, base_raw_repo_url):
-        with open ('DRIVERLIST', "w") as wd:
-            wd.write('**Generic Drivers**\n')
-            for d in sorted(generic_drivers, key = lambda i: i['name']) :
-                url = base_repo_url + d['file']
-                urlRaw = base_raw_repo_url + d['file']
-                wd.write('* [' + d['name'] + '](' + url + ') - Import URL: [RAW](' + urlRaw + ')\n')
-            wd.write('\n**Device-specific Drivers**\n')
-            for d in sorted(specific_drivers, key = lambda i: i['name']):
-                url = base_repo_url + d['file']
-                urlRaw = base_raw_repo_url + d['file']
-                if(d['name'] != 'TuyaMCU Wifi Touch Switch Legacy (Child)' and \
-                    d['name'].startswith('DO NOT USE') == 0):
-                    wd.write('* [' + d['name'] + '](' + url + ') - Import URL: [RAW](' + urlRaw + ')\n')
