@@ -214,7 +214,7 @@ def makeDriverList(genericDrivers, specificDrivers, baseRepoURL, baseRawRepoURL)
         for d in sorted(genericDrivers, key = lambda i: i['name']) :
             url = baseRepoURL + d['file']
             urlRaw = baseRawRepoURL + d['file']
-            wd.write('* [' + d['name'] + '](' + url + ') [RAW](' + urlRaw + ')\n')
+            wd.write('* [' + d['name'] + '](' + url + ') - Import URL: [RAW](' + urlRaw + ')\n')
         wd.write('\n**Device-specific Drivers**\n')
         for d in sorted(specificDrivers, key = lambda i: i['name']):
             url = baseRepoURL + d['file']
