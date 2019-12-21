@@ -25,10 +25,11 @@ metadata {
 		capability "Sensor"
 
         
-        // Default Capabilities for Energy Monitor
-        capability "Voltage Measurement"
-        capability "Power Meter"
-        capability "Energy Meter"
+        // Default Capabilities for TH Monitor
+        capability "Sensor"
+        capability "Temperature Measurement"
+        capability "Relative Humidity Measurement"
+        capability "PressureMeasurement"
         
         // Default Capabilities
         capability "Refresh"
@@ -36,14 +37,8 @@ metadata {
         capability "HealthCheck"
         
         
-        // Default Attributes for Energy Monitor
-        attribute   "current", "string"
-        attribute   "apparentPower", "string"
-        attribute   "reactivePower", "string"
-        attribute   "powerFactor", "string"
-        attribute   "energyToday", "string"
-        attribute   "energyYesterday", "string"
-        attribute   "energyTotal", "string"
+        // Default Attributes for Temperature Humidity Monitor
+        attribute   "pressureWithUnit", "string"
         
         // Default Attributes
         attribute   "needUpdate", "string"
@@ -65,6 +60,12 @@ metadata {
         // Default Preferences
         input(name: "runReset", description: "<i>For details and guidance, see the release thread in the <a href=\"https://community.hubitat.com/t/release-tasmota-7-x-firmware-with-hubitat-support/29368\"> Hubitat Forum</a>. For settings marked as ADVANCED, make sure you understand what they do before activating them. If settings are not reflected on the device, press the Configure button in this driver. Also make sure all settings really are saved and correct.<br/>Type RESET and then press 'Save Preferences' to DELETE all Preferences and return to DEFAULTS.</i>", title: "<b>Settings</b>", displayDuringSetup: false, type: "paragraph", element: "paragraph")
         generate_preferences(configuration_model_debug())
+        
+        // Default Preferences for Temperature Humidity Monitor
+        input(name: "tempOffset", type: "decimal", title: "<b>Temperature Offset</b>", description: "<i>Adjust the temperature by this many degrees (in Celcius).</i>", displayDuringSetup: true, required: false, range: "*..*")
+        input(name: "humidityOffset", type: "decimal", title: "<b>Humidity Offset</b>", description: "<i>Adjust the humidity by this many percent.</i>", displayDuringSetup: true, required: false, range: "*..*")
+        input(name: "pressureOffset", type: "decimal", title: "<b>Pressure Offset</b>", description: "<i>Adjust the pressure value by this much.</i>", displayDuringSetup: true, required: false, range: "*..*")
+        input(name: "tempRes", type: "enum", title: "<b>Temperature Resolution</b>", description: "<i>Temperature sensor resolution (0..3 = maximum number of decimal places, default: 1)<br/>NOTE: If the 3rd decimal is a 0 (eg. 24.720) it will show without the last decimal (eg. 24.72).</i>", options: ["0", "1", "2", "3"], defaultValue: "1", displayDuringSetup: true, required: false)
         
         // Default Preferences for Tasmota
         input(name: "ipAddress", type: "string", title: "<b>Device IP Address</b>", description: "<i>Set this as a default fallback for the auto-discovery feature.</i>", displayDuringSetup: true, required: false)
@@ -227,86 +228,62 @@ def parse(description) {
             }
             
             // Standard Energy Monitor Data parsing
+            resultTH = null
+            if (result.containsKey("AM2301")) {
+                resultTH = result.AM2301
+            }
+            if (result.containsKey("BME280")) {
+                resultTH = result.BME280
+            }
+            if (result.containsKey("BMP280")) {
+                resultTH = result.BMP280
+            }
             if (result.containsKey("StatusSNS")) {
-                if (result.StatusSNS.containsKey("ENERGY")) {
-                    if (result.StatusSNS.ENERGY.containsKey("Total")) {
-                        logging("Total: $result.StatusSNS.ENERGY.Total kWh",99)
-                        events << createEvent(name: "energyTotal", value: "$result.StatusSNS.ENERGY.Total kWh")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Today")) {
-                        logging("Today: $result.StatusSNS.ENERGY.Today kWh",99)
-                        events << createEvent(name: "energyToday", value: "$result.StatusSNS.ENERGY.Today kWh")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Yesterday")) {
-                        logging("Yesterday: $result.StatusSNS.ENERGY.Yesterday kWh",99)
-                        events << createEvent(name: "energyYesterday", value: "$result.StatusSNS.ENERGY.Yesterday kWh")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Current")) {
-                        logging("Current: $result.StatusSNS.ENERGY.Current A",99)
-                        events << createEvent(name: "current", value: "$result.StatusSNS.ENERGY.Current A")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("ApparentPower")) {
-                        logging("apparentPower: $result.StatusSNS.ENERGY.ApparentPower VA",99)
-                        events << createEvent(name: "apparentPower", value: "$result.StatusSNS.ENERGY.ApparentPower VA")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("ReactivePower")) {
-                        logging("reactivePower: $result.StatusSNS.ENERGY.ReactivePower VAr",99)
-                        events << createEvent(name: "reactivePower", value: "$result.StatusSNS.ENERGY.ReactivePower VAr")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Factor")) {
-                        logging("powerFactor: $result.StatusSNS.ENERGY.Factor",99)
-                        events << createEvent(name: "powerFactor", value: "$result.StatusSNS.ENERGY.Factor")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Voltage")) {
-                        logging("Voltage: $result.StatusSNS.ENERGY.Voltage V",99)
-                        events << createEvent(name: "voltage", value: "$result.StatusSNS.ENERGY.Voltage V")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Power")) {
-                        logging("Power: $result.StatusSNS.ENERGY.Power W",99)
-                        events << createEvent(name: "power", value: "$result.StatusSNS.ENERGY.Power W")
-                    }
+                logging("Using key StatusSNS in parse()",1)
+                if (result.StatusSNS.containsKey("AM2301")) {
+                    resultTH = result.StatusSNS.AM2301
+                }
+                if (result.StatusSNS.containsKey("BME280")) {
+                    resultTH = result.StatusSNS.BME280
+                }
+                if (result.StatusSNS.containsKey("BMP280")) {
+                    resultTH = result.StatusSNS.BMP280
                 }
             }
-            if (result.containsKey("ENERGY")) {
-                //logging("Has ENERGY...", 1)
-                if (result.ENERGY.containsKey("Total")) {
-                    logging("Total: $result.ENERGY.Total kWh",99)
-                    events << createEvent(name: "energyTotal", value: "$result.ENERGY.Total kWh")
+            if (result.containsKey("SENSOR")) {
+                logging("Using key SENSOR in parse()",1)
+                if (result.SENSOR.containsKey("AM2301")) {
+                    resultTH = result.StatusSNS.AM2301
                 }
-                if (result.ENERGY.containsKey("Today")) {
-                    logging("Today: $result.ENERGY.Today kWh",99)
-                    events << createEvent(name: "energyToday", value: "$result.ENERGY.Today kWh")
+                if (result.SENSOR.containsKey("BME280")) {
+                    resultTH = result.SENSOR.BME280
                 }
-                if (result.ENERGY.containsKey("Yesterday")) {
-                    logging("Yesterday: $result.ENERGY.Yesterday kWh",99)
-                    events << createEvent(name: "energyYesterday", value: "$result.ENERGY.Yesterday kWh")
-                }
-                if (result.ENERGY.containsKey("Current")) {
-                    logging("Current: $result.ENERGY.Current A",99)
-                    events << createEvent(name: "current", value: "$result.ENERGY.Current A")
-                }
-                if (result.ENERGY.containsKey("ApparentPower")) {
-                    logging("apparentPower: $result.ENERGY.ApparentPower VA",99)
-                    events << createEvent(name: "apparentPower", value: "$result.ENERGY.ApparentPower VA")
-                }
-                if (result.ENERGY.containsKey("ReactivePower")) {
-                    logging("reactivePower: $result.ENERGY.ReactivePower VAr",99)
-                    events << createEvent(name: "reactivePower", value: "$result.ENERGY.ReactivePower VAr")
-                }
-                if (result.ENERGY.containsKey("Factor")) {
-                    logging("powerFactor: $result.ENERGY.Factor",99)
-                    events << createEvent(name: "powerFactor", value: "$result.ENERGY.Factor")
-                }
-                if (result.ENERGY.containsKey("Voltage")) {
-                    logging("Voltage: $result.ENERGY.Voltage V",99)
-                    events << createEvent(name: "voltage", value: "$result.ENERGY.Voltage V")
-                }
-                if (result.ENERGY.containsKey("Power")) {
-                    logging("Power: $result.ENERGY.Power W",99)
-                    events << createEvent(name: "power", value: "$result.ENERGY.Power W")
+                if (result.SENSOR.containsKey("BMP280")) {
+                    resultTH = result.SENSOR.BMP280
                 }
             }
-            // StatusPTH:[PowerDelta:0, PowerLow:0, PowerHigh:0, VoltageLow:0, VoltageHigh:0, CurrentLow:0, CurrentHigh:0]
+            if(resultTH != null) {
+                if (resultTH.containsKey("Humidity") && resultTH.Humidity.toLowerCase() != "nan") {
+                    logging("Humidity: RH $resultTH.Humidity %",99)
+                    state.realHumidity = Math.round((resultTH.Humidity as Double) * 100) / 100
+                    events << createEvent(name: "humidity", value: "${getAdjustedHumidity(state.realHumidity)}", unit: "%")
+                }
+                if (resultTH.containsKey("Temperature") && resultTH.Temperature.toLowerCase() != "nan") {
+                    //Probably need this line below
+                    //state.realTemperature = convertTemperatureIfNeeded(resultTH.Temperature.toFloat(), result.TempUnit, 1)
+                    state.realTemperature = resultTH.Temperature.toFloat()
+                    logging("Temperature: ${getAdjustedTemp(state.realTemperature? state.realTemperature:0)}",99)
+                    events << createEvent(name: "temperature", value: "${getAdjustedTemp(state.realTemperature)}", unit: "${location.temperatureScale}")
+                }
+                if (resultTH.containsKey("Pressure") && resultTH.Pressure.toLowerCase() != "nan") {
+                    logging("Pressure: $resultTH.Pressure $result.PressureUnit",99)
+                    state.realPressure = Math.round((resultTH.Pressure as Double) * 100) / 100
+                    adjustedPressure = getAdjustedPressure(state.realPressure)
+                    events << createEvent(name: "pressure", value: "${adjustedPressure}", unit: "${result.PressureUnit}")
+                    // Since there is no Pressure tile yet, we need an attribute with the unit...
+                    events << createEvent(name: "pressureWithUnit", value: "${adjustedPressure} ${result.PressureUnit}")
+                }
+            }
         // parse() Generic Tasmota-device footer BEGINS here
         } else {
                 //log.debug "Response is not JSON: $body"
@@ -342,6 +319,7 @@ def update_needed_settings()
     
     // updateNeededSettings() Generic header ENDS here
 
+    // Unless the User sets a Module or Template, we won't touch the Tasmota settings in this driver
     
     // Tasmota Module and Template selection command (autogenerated)
     cmds << getAction(getCommandString("Module", null))
@@ -406,6 +384,9 @@ def update_needed_settings()
     
     // updateNeededSettings() TelePeriod setting
     cmds << getAction(getCommandString("TelePeriod", (telePeriod == '' || telePeriod == null ? "300" : telePeriod)))
+    
+    // updateNeededSettings() Temperature/Humidity/Pressure setting
+    cmds << getAction(getCommandString("TempRes", (tempRes == '' || tempRes == null ? "1" : tempRes)))
     
     
     // updateNeededSettings() Generic footer BEGINS here
@@ -811,4 +792,39 @@ def configuration_model_tasmota()
 </Value>
 </configuration>
 '''
+}
+
+/* Helper functions included in all drivers with Temperature and Humidity */
+private getAdjustedTemp(value) {
+    if(tempRes == null || tempRes == '') {
+        decimalLimit = 10
+    } else {
+        decimalLimit = 10**(tempRes as Integer) // 10 to the power of tempRes
+    }
+    value = Math.round((value as Double) * decimalLimit) / decimalLimit
+	if (tempOffset) {
+	   return value =  value + Math.round(tempOffset * decimalLimit) / decimalLimit
+	} else {
+       return value
+    }
+}
+
+private getAdjustedHumidity(value) {
+    value = Math.round((value as Double) * 100) / 100
+
+	if (humidityOffset) {
+	   return value =  value + Math.round(humidityOffset * 100) / 100
+	} else {
+       return value
+    }
+}
+
+private getAdjustedPressure(value) {
+    value = Math.round((value as Double) * 100) / 100
+
+	if (pressureOffset) {
+	   return value =  value + Math.round(pressureOffset * 100) / 100
+	} else {
+       return value
+    }   
 }

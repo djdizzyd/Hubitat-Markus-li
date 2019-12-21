@@ -95,7 +95,7 @@ def manuallyAdd(){
                 "Tasmota - Sonoff POW",
                 "Tasmota - Sonoff S31",
                 "Tasmota - TuyaMCU Wifi Touch Switch",
-                "Tasmota - Sonoff Pow R2",
+                "Tasmota - Sonoff POW R2",
                 "Tasmota - Sonoff S2X",
                 "Tasmota - Sonoff Mini",
                 "Tasmota - Sonoff Basic",
@@ -408,8 +408,8 @@ def addDevices() {
                 deviceHandlerName = "Tasmota - Sonoff S31"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - TuyaMCU Wifi Touch Switch"))
                 deviceHandlerName = "Tasmota - TuyaMCU Wifi Touch Switch"
-            if (selectedDevice?.value?.name?.startsWith("Tasmota - Sonoff Pow R2"))
-                deviceHandlerName = "Tasmota - Sonoff Pow R2"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - Sonoff POW R2"))
+                deviceHandlerName = "Tasmota - Sonoff POW R2"
             if (selectedDevice?.value?.name?.startsWith("Sonoff S2"))
                 deviceHandlerName = "Tasmota - Sonoff S2X"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Sonoff Mini"))

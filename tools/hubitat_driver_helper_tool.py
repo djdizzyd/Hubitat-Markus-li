@@ -109,7 +109,8 @@ def makeTasmotaConnectDriverListV1(driversList):
     for d in driversList:
         name = driversList[d]['name']
         # If it's a child driver, we don't need it in this list
-        if ('child' not in name.lower() and driversList[d]['namespace'] == 'tasmota'):
+        if ('child' not in name.lower() and driversList[d]['namespace'] == 'tasmota' and \
+            name.startswith('DO NOT USE') == False):
             tsDriverList += '"' + name + '",\n'
     tsDriverList += ']'
     return(tsDriverList)
@@ -136,7 +137,8 @@ def makeTasmotaConnectDriverListV2(driversList):
         except Exception:
             nameShort = name
         # If it's a child driver, we don't need it in this list
-        if ('child' not in name.lower() and driversList[d]['namespace'] == 'tasmota'):
+        if ('child' not in name.lower() and driversList[d]['namespace'] == 'tasmota' and \
+            name.startswith('DO NOT USE') == False):
             tsDriverList += ('else ' if i > 0 else '') + \
                 'if (selectedDevice?.value?.name?.startsWith("' + nameShort + '"))\n' + \
                 '    deviceHandlerName = "' + name + '"\n'
@@ -218,7 +220,7 @@ def makeDriverList(genericDrivers, specificDrivers, baseRepoURL, baseRawRepoURL)
             url = baseRepoURL + d['file']
             urlRaw = baseRawRepoURL + d['file']
             if(d['name'] != 'TuyaMCU Wifi Touch Switch Legacy (Child)' and \
-                d['name'].startswith('DO NOT USE') == False):
+                d['name'].startswith('DO NOT USE') == 0):
                 wd.write('* [' + d['name'] + '](' + url + ') - Import URL: [RAW](' + urlRaw + ')\n')
 
 def main():
@@ -297,7 +299,7 @@ def main():
          'alternateOutputFilename': 'tasmota-sonoff-sv', \
          'alternateName': 'Tasmota - Sonoff SV', \
          'alternateModule': '3'},
-        {'id': 361, 'file': driverDir / 'tasmota-generic-pm-plug.groovy' , \
+        {'id': 361, 'file': driverDir / 'tasmota-generic-thp-device.groovy' , \
          'alternateOutputFilename': 'tasmota-sonoff-th', \
          'alternateName': 'Tasmota - Sonoff TH', \
          'alternateModule': '4'},
@@ -344,10 +346,10 @@ def main():
     # Example driver: https://github.com/hubitat/HubitatPublic/blob/master/examples/drivers/GenericZigbeeRGBWBulb.groovy
     # RGB Example: https://github.com/damondins/hubitat/blob/master/Tasmota%20RGBW%20LED%20Light%20Bulb/Tasmota%20RGBW%20LED%20Light%20Bulb
 
-    driversFiles = [
-        {'id': 579, 'file': driverDir / 'zigbee-generic-wifi-switch-plug.groovy' },
-        
-    ]
+    #driversFiles = [
+    #    {'id': 588, 'file': driverDir / 'tasmota-unbranded-rgb-controller-with-ir.groovy' },
+    #    
+    #]
 
     j=0
     genericDrivers = []
