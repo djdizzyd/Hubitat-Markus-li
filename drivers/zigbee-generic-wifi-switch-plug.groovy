@@ -3,7 +3,7 @@
 #!include:getDefaultImports()
 
 metadata {
-	definition (name: "Zigbee - Generic Wifi Switch/Plug", namespace: "markusl", author: "Markus Liljergren", vid: "generic-switch") {
+	definition (name: "Zigbee - DO NOT USE Generic Wifi Switch/Plug", namespace: "markusl", author: "Markus Liljergren", vid: "generic-switch") {
         capability "Actuator"
 		capability "Switch"
 		capability "Sensor"
@@ -46,7 +46,7 @@ def refresh() {
     zigbee.command(0x0001, 0, msgMap)
     zigbee.command(0x0001, 0, '')
     zigbee.enrollResponse()
-    return [
+    /*return [
             "he 0x0001 0x${device.endpointId} 0x00 {}","delay 200",  //light state
             "he rattr 0x${device.deviceNetworkId} 0x${device.endpointId} 0x0004 0 {}","delay 200",  //light state
             "he rattr 0x${device.deviceNetworkId} 0x${device.endpointId} 0x0000 0 {}","delay 200",  //light state
@@ -60,6 +60,9 @@ def refresh() {
             "he rattr 0x${device.deviceNetworkId} 0x${device.endpointId} 0x0300 0x0001 {}","delay 200", //sat
             "he rattr 0x${device.deviceNetworkId} 0x${device.endpointId} 0x0300 0x0007 {}","delay 200",	//color temp
             "he rattr 0x${device.deviceNetworkId} 0x${device.endpointId} 0x0300 0x0008 {}"  		//color mode
+    ]*/
+    return [
+        "he cmd 0x${device.deviceNetworkId} 0x${device.endpointId} 0x0006 0 {}"
     ]
 }
 

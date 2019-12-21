@@ -87,7 +87,7 @@ def checkForDefinitionString(l, alternateName = None, alternateNamespace = None,
         #                d[previousp2] = p2.strip('"')
         #            i += 1
         #print(d)
-        
+        definitionDictOrignal = definitionDict.copy()
         ds = '[' + str(definitionDict)[1:-1] + ']'
         for k in definitionDict:
             definitionDict[k] = '"x' + definitionDict[k] + 'x"'
@@ -100,7 +100,7 @@ def checkForDefinitionString(l, alternateName = None, alternateNamespace = None,
             '    return(deviceInfo[infoName])\n' + \
             '}'
         #newDefinition = l
-        return(newDefinition, output)
+        return(newDefinition, output, definitionDictOrignal)
     else:
         return(None)
 
@@ -146,6 +146,8 @@ def expandGroovyFile(inputGroovyFile, outputGroovyDir, extraData = None, alterna
                      alternateName = None, alternateNamespace = None, alternateVid = None, \
                      alternateTemplate = None, alternateModule = None):
     outputGroovyFile = getOutputGroovyFile(inputGroovyFile, outputGroovyDir, alternateOutputFilename)
+    r = {'file': outputGroovyFile, 'name': ''}
+    
     print('Expanding "' + str(inputGroovyFile) + '" to "' + str(outputGroovyFile) + '"...')
     definitionString = None
     with open (outputGroovyFile, "w") as wd:
@@ -155,7 +157,8 @@ def expandGroovyFile(inputGroovyFile, outputGroovyDir, extraData = None, alterna
                 if(definitionString == None):
                     definitionString = checkForDefinitionString(l, alternateName = alternateName, alternateNamespace = alternateNamespace, alternateVid = alternateVid)
                     if(definitionString != None):
-                        (l, definitionString) = definitionString
+                        (l, definitionString, definitionDictOrignal) = definitionString
+                        r['name'] = definitionDictOrignal['name']
                 includePosition = l.find('#!include:')
                 if(includePosition != -1):
                     evalCmd = l[includePosition+10:].strip()
@@ -201,6 +204,22 @@ def expandGroovyFile(inputGroovyFile, outputGroovyDir, extraData = None, alterna
                     wd.write(l)
                 #print(l.strip())
     print('DONE expanding "' + inputGroovyFile.name + '" to "' + outputGroovyFile.name + '"!')
+    return(r)
+
+def makeDriverList(genericDrivers, specificDrivers, baseRepoURL, baseRawRepoURL):
+    with open ('DRIVERLIST', "w") as wd:
+        wd.write('**Generic Drivers**\n')
+        for d in sorted(genericDrivers, key = lambda i: i['name']) :
+            url = baseRepoURL + d['file']
+            urlRaw = baseRawRepoURL + d['file']
+            wd.write('* [' + d['name'] + '](' + url + ') [RAW](' + urlRaw + ')\n')
+        wd.write('\n**Device-specific Drivers**\n')
+        for d in sorted(specificDrivers, key = lambda i: i['name']):
+            url = baseRepoURL + d['file']
+            urlRaw = baseRawRepoURL + d['file']
+            if(d['name'] != 'TuyaMCU Wifi Touch Switch Legacy (Child)' and \
+                d['name'].startswith('DO NOT USE') == False):
+                wd.write('* [' + d['name'] + '](' + url + ') - Import URL: [RAW](' + urlRaw + ')\n')
 
 def main():
     #startDir = os.getcwd()
@@ -308,22 +327,32 @@ def main():
         {'id': 577, 'file': driverDir / 'tasmota-prime-ccrcwfii113pk-plug.groovy' },
         {'id': 558, 'file': driverDir / 'tasmota-generic-pm-plug.groovy' },
         {'id': 578, 'file': driverDir / 'tasmota-generic-thp-device.groovy' },
-        {'id': 579, 'file': driverDir / 'zigbee-generic-wifi-switch-plug.groovy' },
         {'id': 590, 'file': driverDir / 'tasmota-tuyamcu-wifi-dimmer.groovy'},
         {'id': 588, 'file': driverDir / 'tasmota-unbranded-rgb-controller-with-ir.groovy' },
         {'id': 591, 'file': driverDir / 'tasmota-generic-rgb-rgbw-controller-bulb-dimmer.groovy' },
+
+        # Zigbee
+        {'id': 579, 'file': driverDir / 'zigbee-generic-wifi-switch-plug.groovy' },
+
         # The following can be overwritten: 555, 362
     ]
     
+    baseRepoURL = 'https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/'
+    baseRawRepoURL = 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/'
+    expectedNumDrivers = len(driversFiles)
+
     # Example driver: https://github.com/hubitat/HubitatPublic/blob/master/examples/drivers/GenericZigbeeRGBWBulb.groovy
     # RGB Example: https://github.com/damondins/hubitat/blob/master/Tasmota%20RGBW%20LED%20Light%20Bulb/Tasmota%20RGBW%20LED%20Light%20Bulb
 
-    #driversFiles = [
-    #    {'id': 588, 'file': driverDir / 'tasmota-unbranded-rgb-controller-with-ir.groovy' },
-    #    
-    #]
+    driversFiles = [
+        {'id': 579, 'file': driverDir / 'zigbee-generic-wifi-switch-plug.groovy' },
+        
+    ]
 
     j=0
+    genericDrivers = []
+    specificDrivers = []
+
     for d in driversFiles:
         aOF = None
         if('alternateOutputFilename' in d and d['alternateOutputFilename'] != ''):
@@ -331,27 +360,42 @@ def main():
             alternateNamespace = (d['alternateNamespace'] if 'alternateNamespace' in d else None)
             alternateTemplate = (d['alternateTemplate'] if 'alternateTemplate' in d else None)
             alternateModule = (d['alternateModule'] if 'alternateModule' in d else None)
-            expandGroovyFile(d['file'], expandedDriversDir, alternateOutputFilename=d['alternateOutputFilename'], \
+            expandedResult = expandGroovyFile(d['file'], expandedDriversDir, alternateOutputFilename=d['alternateOutputFilename'], \
                              alternateName=d['alternateName'], alternateNamespace=alternateNamespace, \
                              alternateVid=alternateVid, alternateTemplate=alternateTemplate, \
                              alternateModule=alternateModule)
             aOF = d['alternateOutputFilename']
         else:
-            expandGroovyFile(d['file'], expandedDriversDir)
+            expandedResult = expandGroovyFile(d['file'], expandedDriversDir)
+        print(expandedResult)
         if(d['id'] != 0):
             j += 1
             r = hubitatAjax.push_driver_code(d['id'], getOutputGroovyFile(d['file'], expandedDriversDir, alternateOutputFilename=aOF))
             try:
                 if 'source' in r:
                     r['source'] = '<hidden>'
-                print(r)
+                #print(r)
                 id = r['id']
+                if(expandedResult['name'].startswith('Tasmota - ')):
+                    newD = {'name': expandedResult['name'][10:], 'file': expandedResult['file'].stem + expandedResult['file'].suffix}
+                    if(newD['name'].startswith('Generic')):
+                        genericDrivers.append(newD)
+                    else:
+                        specificDrivers.append(newD)
+
                 usedDriversDict[id] = driversDict[id]
-            except Exception:
+            except Exception as e:
+                print('Exception when making driver list!: ' + str(e))
                 id = 0
             print("Just worked on Driver ID " + str(id))
     print('Had '+str(j)+' drivers to work on for the apps...')
-    
+    if(len(usedDriversDict) >= expectedNumDrivers):
+        print('Making the driver list file...')
+        makeDriverList(genericDrivers, specificDrivers, baseRepoURL, baseRawRepoURL)
+    else:
+        print('SKIPPING making of the driver list file...')
+    #print('Generic drivers: ' + str(genericDrivers))
+    #print('Specific drivers: ' + str(specificDrivers))
     #pp.pprint(usedDriversDict)
     #print(makeTasmotaConnectDriverListV1(usedDriversDict))
 
@@ -363,7 +407,7 @@ def main():
     for a in appsFiles:
         if(a['id'] != 97 or a['id'] != 163):
             expandGroovyFile(a['file'], expandedAppsDir, usedDriversDict)
-        if(a['id'] != 0 and len(usedDriversDict) >= 33):
+        if(a['id'] != 0 and len(usedDriversDict) >= expectedNumDrivers):
             expandGroovyFile(a['file'], expandedAppsDir, usedDriversDict)
             print('Found ' + str(len(usedDriversDict)) + ' driver(s)...')
             r = hubitatAjax.push_app_code(a['id'], getOutputGroovyFile(a['file'], expandedAppsDir))
