@@ -22,12 +22,12 @@ from colorama import init, Fore, Back, Style
 import winsound
 
 """
-  Hubitat AJAX helper class
+  Hubitat Hub Spider class
   This class can interact with the Hubitat hub...
   WARNING: Exceptions are not properly implemented in this code, use at your own risk!
 """
 
-class HubitatAJAXHelper:
+class HubitatHubSpider:
   hubitat_ip = None
   username = None
   password = None

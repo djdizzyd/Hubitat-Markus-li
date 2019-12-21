@@ -8,7 +8,7 @@
             "name": "Python: hubitat_driver_helper_tool.py",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/tools/hubitat_driver_helper_tool.py",
+            "program": "${workspaceFolder}/tools/hubitat_codebuilder_tool.py",
             "console": "integratedTerminal"
         }
     ]
