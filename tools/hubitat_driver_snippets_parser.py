@@ -303,19 +303,19 @@ if (result.containsKey("SENSOR")) {
     }
 }
 if(resultTH != null) {
-    if (resultTH.containsKey("Humidity")) {
+    if (resultTH.containsKey("Humidity") && resultTH.Humidity.toLowerCase() != "nan") {
         logging("Humidity: RH $resultTH.Humidity %",99)
         state.realHumidity = Math.round((resultTH.Humidity as Double) * 100) / 100
         events << createEvent(name: "humidity", value: "${getAdjustedHumidity(state.realHumidity)}", unit: "%")
     }
-    if (resultTH.containsKey("Temperature")) {
+    if (resultTH.containsKey("Temperature") && resultTH.Temperature.toLowerCase() != "nan") {
         //Probably need this line below
         //state.realTemperature = convertTemperatureIfNeeded(resultTH.Temperature.toFloat(), result.TempUnit, 1)
         state.realTemperature = resultTH.Temperature.toFloat()
         logging("Temperature: ${getAdjustedTemp(state.realTemperature? state.realTemperature:0)}",99)
         events << createEvent(name: "temperature", value: "${getAdjustedTemp(state.realTemperature)}", unit: "${location.temperatureScale}")
     }
-    if (resultTH.containsKey("Pressure")) {
+    if (resultTH.containsKey("Pressure") && resultTH.Pressure.toLowerCase() != "nan") {
         logging("Pressure: $resultTH.Pressure $result.PressureUnit",99)
         state.realPressure = Math.round((resultTH.Pressure as Double) * 100) / 100
         adjustedPressure = getAdjustedPressure(state.realPressure)

@@ -278,6 +278,20 @@ def main():
          'alternateOutputFilename': 'tasmota-sonoff-sv', \
          'alternateName': 'Tasmota - Sonoff SV', \
          'alternateModule': '3'},
+        {'id': 361, 'file': driverDir / 'tasmota-generic-pm-plug.groovy' , \
+         'alternateOutputFilename': 'tasmota-sonoff-th', \
+         'alternateName': 'Tasmota - Sonoff TH', \
+         'alternateModule': '4'},
+        {'id': 547, 'file': driverDir / 'tasmota-sonoff-powr2.groovy' , \
+         'alternateOutputFilename': 'tasmota-sonoff-pow', \
+         'alternateName': 'Tasmota - Sonoff POW', \
+         'alternateModule': '6'},
+        {'id': 359, 'file': driverDir / 'tasmota-sonoff-powr2.groovy' , \
+         'alternateOutputFilename': 'tasmota-sonoff-s31', \
+         'alternateName': 'Tasmota - Sonoff S31', \
+         'alternateModule': '41'},
+
+        # https://templates.blakadder.com/aoycocr_X10S.html
 
         # Drivers WITH their own base-file
         {'id': 548, 'file': driverDir / 'tasmota-tuyamcu-wifi-touch-switch.groovy' },
@@ -298,6 +312,7 @@ def main():
         {'id': 590, 'file': driverDir / 'tasmota-tuyamcu-wifi-dimmer.groovy'},
         {'id': 588, 'file': driverDir / 'tasmota-unbranded-rgb-controller-with-ir.groovy' },
         {'id': 591, 'file': driverDir / 'tasmota-generic-rgb-rgbw-controller-bulb-dimmer.groovy' },
+        # The following can be overwritten: 555, 362
     ]
     
     # Example driver: https://github.com/hubitat/HubitatPublic/blob/master/examples/drivers/GenericZigbeeRGBWBulb.groovy
@@ -348,7 +363,7 @@ def main():
     for a in appsFiles:
         if(a['id'] != 97 or a['id'] != 163):
             expandGroovyFile(a['file'], expandedAppsDir, usedDriversDict)
-        if(a['id'] != 0 and len(usedDriversDict) >= 28):
+        if(a['id'] != 0 and len(usedDriversDict) >= 33):
             expandGroovyFile(a['file'], expandedAppsDir, usedDriversDict)
             print('Found ' + str(len(usedDriversDict)) + ' driver(s)...')
             r = hubitatAjax.push_app_code(a['id'], getOutputGroovyFile(a['file'], expandedAppsDir))

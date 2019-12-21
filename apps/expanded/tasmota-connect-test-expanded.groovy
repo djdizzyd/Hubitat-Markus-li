@@ -91,6 +91,9 @@ def manuallyAdd(){
                 "Tasmota - Aoycocr X10S Power Monitor Plug",
                 "Tasmota - Brilliant 20699 800lm RGBW Bulb",
                 "Tasmota - Sonoff SV",
+                "Tasmota - Sonoff TH",
+                "Tasmota - Sonoff POW",
+                "Tasmota - Sonoff S31",
                 "Tasmota - TuyaMCU Wifi Touch Switch",
                 "Tasmota - Sonoff Pow R2",
                 "Tasmota - Sonoff S2X",
@@ -397,6 +400,12 @@ def addDevices() {
                 deviceHandlerName = "Tasmota - Brilliant 20699 800lm RGBW Bulb"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Sonoff SV"))
                 deviceHandlerName = "Tasmota - Sonoff SV"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - Sonoff TH"))
+                deviceHandlerName = "Tasmota - Sonoff TH"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - Sonoff POW"))
+                deviceHandlerName = "Tasmota - Sonoff POW"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - Sonoff S31"))
+                deviceHandlerName = "Tasmota - Sonoff S31"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - TuyaMCU Wifi Touch Switch"))
                 deviceHandlerName = "Tasmota - TuyaMCU Wifi Touch Switch"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Sonoff Pow R2"))
