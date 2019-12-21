@@ -14,6 +14,11 @@
  *  limitations under the License.
  */
 
+/* Acknowledgements:
+ * Inspired by work done by Eric Maycock (erocm123) and damondins.
+ */
+
+
 /* Default imports */
 import groovy.json.JsonSlurper
 
@@ -24,6 +29,7 @@ metadata {
 		capability "Switch"
 		capability "Sensor"
         capability "ColorControl"
+        capability "ColorTemperature"
         capability "SwitchLevel"
         
         // Default Capabilities
@@ -79,20 +85,44 @@ metadata {
 }
 
 def setColor(value) {
-    logging("setColor('${value}'", 10)
+    logging("setColor('${value}')", 10)
 	if (value != null && value instanceof Map) {
         def h = value.containsKey("hue") ? value.hue : 0
         def s = value.containsKey("saturation") ? value.saturation : 0
         def b = value.containsKey("level") ? value.level : 0
-        setHsb(h, s, b)
+        setHSB(h, s, b)
     } else {
-        log.warn "Invalid argument for setColor: ${value}"
+        logging("setColor('${value}') called with an INVALID argument!", 10)
     }
 }
 
-def setHsb(h,s,b)
-{   
-    logging("setHsb('${h}','${s}','${b}')", 10)
+def setColorTemperature(value) {
+    logging("setColorTemperature('${value}')", 10)
+    sendEvent(name: "colorTemperature", value: value)
+    // 153..500 = set color temperature from 153 (cold) to 500 (warm) for CT lights
+    // Tasmota use mired to measure color temperature
+    t = value != null ?  (value as Integer) : 0
+    // First make sure we have a Kelvin value we can more or less handle
+    // 153 mired is approx. 6536K
+    // 500 mired = 2000K
+    if(t > 6536) t = 6536
+    if(t < 2000) t = 2000
+    t = Math.round(1000000/t)
+    if(t < 153) t = 153
+    if(t > 500) t = 500
+    state.mired = t
+    logging("setColorTemperature('${t}') ADJUSTED to Mired", 10)
+    getAction(getCommandString("CT", "${t}"))
+    white()
+}
+
+def setHSB(h, s, b) {
+    logging("setHSB('${h}','${s}','${b}')", 10)
+    return(setHSB(h, s, b, true))
+}
+
+def setHSB(h, s, b, callWhite) {
+    logging("setHSB('${h}','${s}','${b}', callWhite=${String.valueOf(callWhite)})", 10)
     adjusted = False
     if(h == null || h == 'NaN') {
         h = state != null && state.containsKey("hue") ? state.hue : 0
@@ -107,7 +137,7 @@ def setHsb(h,s,b)
         adjusted = True
     }
     if(adjusted) {
-        logging("ADJUSTED setHsb('${h}','${s}','${b}'", 1)
+        logging("ADJUSTED setHSB('${h}','${s}','${b}'", 1)
     }
     adjustedH = Math.round(h*3.6)
     if( adjustedH > 360 ) { adjustedH = 360 }
@@ -120,18 +150,17 @@ def setHsb(h,s,b)
     state.level = b
     state.colorMode = "RGB"
     if (hsbcmd == "0,0,100") {
-        state.colorMode = "white"
+        //state.colorMode = "white"
         //sendEvent(name: "colorMode", value: "CT")
-        //white()
-        return(getAction(getCommandString("hsbcolor", hsbcmd)))
+        if(callWhite) return(white(false))
+        //return(getAction(getCommandString("hsbcolor", hsbcmd)))
     } else {
-        //sendEvent(name: "colorMode", value: "RGB")
-        return(getAction(getCommandString("hsbcolor", hsbcmd)))
+        sendEvent(name: "colorMode", value: "RGB")
+        return(getAction(getCommandString("HsbColor", hsbcmd)))
     }
 }
 
-def setRGB(r,g,b)
-{   
+def setRGB(r,g,b) {   
     logging("setRGB('${r}','${g}','${b}')", 10)
     adjusted = False
     if(r == null || r == 'NaN') {
@@ -149,7 +178,6 @@ def setRGB(r,g,b)
     if(adjusted) {
         logging("ADJUSTED setRGB('${r}','${g}','${b}')", 1)
     }
-    if( myh > 360 ) { myh = 360 }
     rgbcmd = "${r},${g},${b}"
     logging("rgbcmd = ${rgbcmd}", 1)
     state.red = r
@@ -167,43 +195,38 @@ def setRGB(r,g,b)
     return(getAction(getCommandString("Color1", rgbcmd)))
 }
 
-def setHue(h)
-{
+def setHue(h) {
     logging("setHue('${h}')", 10)
-    return(setHsb(h, null, null))
+    return(setHSB(h, null, null))
 }
 
-def setSaturation(s)
-{
+def setSaturation(s) {
     logging("setSaturation('${s}')", 10)
-    return(setHsb(null, s, null))
+    return(setHSB(null, s, null))
 }
 
-def setLevel(b)
-{
+def setLevel(b) {
     logging("setLevel('${b}')", 10)
-    //return(setHsb(null, null, b))
+    //return(setHSB(null, null, b))
     return(setLevel(b, 0))
 }
 
-def setLevel(v, duration)
-{
+def setLevel(l, duration) {
     if (duration == 0) {
         if (state.colorMode == "RGB") {
-            setHsb(null, null, v)    
-        }
-        else {
-            return(getAction(getCommandString("Dimmer", "${v}")))
+            return(setHSB(null, null, l))
+        } else {
+            state.level = l
+            return(getAction(getCommandString("Dimmer", "${l}")))
         }
     }
     else if (duration > 0) {
         if (state.colorMode == "RGB") {
-            setHsb(null, null, v)    
-        }
-        else {
-            if (duration > 7) {duration = 7}
+            return(setHSB(null, null, l))
+        } else {
+            if (duration > 10) {duration = 10}
             delay = duration * 10
-            fadeCommand = "Fade 1;Speed ${duration};Dimmer ${v};Delay ${delay};Fade 0"
+            fadeCommand = "Fade 1;Speed ${duration};Dimmer ${l};Delay ${delay};Fade 0"
             logging("fadeCommand: '" + fadeCommand + "'", 1)
             return(getAction(getCommandString("Backlog", urlEscape(fadeCommand))))
         }
@@ -225,7 +248,7 @@ def on() {
         s = null
         b = 100
     }
-    cmds << setHsb(h, s, b)
+    cmds << setHSB(h, s, b)
     cmds << getAction(getCommandString("Power", "On"))
     return cmds
 }
@@ -421,6 +444,8 @@ def parse(description) {
 }
 
 def rgbToHSB(red, green, blue) {
+    // All credits for this function goes to Joe Julian (joejulian):
+    // https://gist.github.com/joejulian/970fcd5ecf3b792bc78a6d6ebc59a55f
     float r = red / 255f
     float g = green / 255f
     float b = blue / 255f
@@ -469,7 +494,24 @@ def rgbToHSB(red, green, blue) {
 // Fixed colours
 def white() {
     logging("white()", 10)
-    return(setHsb(0, 0, 100))
+    return(white(true))
+}
+
+def white(callSetHSB) {
+    logging("white(callSetHSB=${String.valueOf(callSetHSB)})", 10)
+    //if(callSetHSB) setHSB(0, 0, 100, false)
+    l = state.level
+    state.colorMode = "white"
+    if (l < 0) l = 0
+    l = Math.round(l * 2.55).toInteger()
+    if (l > 255) l = 255
+    lHex = l.toHexString(l)
+    hexCmd = "#${lHex}${lHex}${lHex}${lHex}"
+    logging("hexCmd='${hexCmd}'", 1)
+    state.red = l
+    state.green = l
+    state.blue = l
+    return(getAction(getCommandString("Color1", hexCmd)))
 }
 
 def red() {
@@ -551,8 +593,7 @@ def modeRandomColors() {
     modeSet(state.mode)
 }
 
-def update_needed_settings()
-{
+def update_needed_settings() {
     // updateNeededSettings() Generic header BEGINS here
     def cmds = []
     def currentProperties = state.currentProperties ?: [:]
