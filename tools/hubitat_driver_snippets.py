@@ -108,6 +108,27 @@ command "recreateChildDevices"
 command "deleteChildren"
 """
 
+def getMetadataCommandsForHandlingRGBWDevices():
+    return """
+// Commands for handling RGBW Devices
+command "white"
+command "red"
+command "green"
+command "blue"
+"""
+
+def getMetadataCommandsForHandlingTasmotaRGBWDevices():
+    return """
+// Commands for handling Tasmota RGBW Devices
+command "modeNext"
+command "modePrevious"
+command "modeSingleColor"
+command "modeWakeUp"
+command "modeCycleUpColors"
+command "modeCycleDownColors"
+command "modeRandomColors"
+"""
+
 def getDefaultMetadataPreferences():
     #input(description: "Once you change values on this page, the corner of the 'configuration' icon will change to orange until all configuration parameters are updated.", title: "Settings", displayDuringSetup: false, type: "paragraph", element: "paragraph")
     return """
@@ -259,7 +280,7 @@ def getUpdateNeededSettingsTasmotaFooter():
 // updateNeededSettings() Generic footer BEGINS here
 cmds << getAction(getCommandString("SetOption113", "1")) // Hubitat Enabled
 // Disabling Emulation so that we don't flood the logs with upnp traffic
-cmds << getAction(getCommandString("Emulation", "0")) // Emulation Disabled
+//cmds << getAction(getCommandString("Emulation", "0")) // Emulation Disabled
 cmds << getAction(getCommandString("HubitatHost", device.hub.getDataValue("localIP")))
 cmds << getAction(getCommandString("HubitatPort", device.hub.getDataValue("localSrvPortTCP")))
 cmds << getAction(getCommandString("FriendlyName1", URLEncoder.encode(device.displayName.take(32)))) // Set to a maximum of 32 characters
@@ -303,6 +324,37 @@ def getGenericOnOffFunctions():
 def on() {
 	logging("on()", 50)
     def cmds = []
+    cmds << getAction(getCommandString("Power", "On"))
+    return cmds
+}
+
+def off() {
+    logging("off()", 50)
+	def cmds = []
+    cmds << getAction(getCommandString("Power", "Off"))
+    return cmds
+}
+"""
+
+def getRGBWOnOffFunctions():
+    return """
+/* RGBW On/Off functions used when only 1 switch/button exists */
+def on() {
+	logging("on()", 50)
+    def cmds = []
+    h = null
+    s = null
+    b = null
+    if(state != null) {
+        h = state.containsKey("hue") ? state.hue : null
+        s = state.containsKey("saturation") ? state.saturation : null
+        b = state.containsKey("level") ? state.level : 100
+    } else {
+        h = null
+        s = null
+        b = 100
+    }
+    cmds << setHSB(h, s, b)
     cmds << getAction(getCommandString("Power", "On"))
     return cmds
 }

@@ -267,9 +267,9 @@ def main():
          'alternateName': 'Tasmota - Aoycocr X10S Power Monitor Plug', \
          'alternateTemplate': '{"NAME":"Aoycocr X10S","GPIO":[56,0,57,0,21,134,0,0,131,17,132,0,0],"FLAG":0,"BASE":45}'},
         # https://templates.blakadder.com/brilliant_20699.html
-        {'id': 589, 'file': driverDir / 'tasmota-unbranded-rgb-controller-with-ir.groovy',
+        {'id': 589, 'file': driverDir / 'tasmota-generic-rgb-rgbw-controller-bulb-dimmer.groovy',
          'alternateOutputFilename': 'tasmota-brilliant-20699-rgbw-bulb', \
-         'alternateName': 'Tasmota - Brilliant 20699 800lm RGBW (EXPERIMENTAL)', \
+         'alternateName': 'Tasmota - Brilliant 20699 800lm RGBW Bulb', \
          'alternateTemplate': '{"NAME":"Brilliant20699","GPIO":[0,0,0,0,141,140,0,0,37,142,0,0,0],"FLAG":0,"BASE":18}'},
 
         # Drivers WITH their own base-file
@@ -289,8 +289,8 @@ def main():
         {'id': 578, 'file': driverDir / 'tasmota-generic-thp-device.groovy' },
         {'id': 579, 'file': driverDir / 'zigbee-generic-wifi-switch-plug.groovy' },
         {'id': 590, 'file': driverDir / 'tasmota-tuyamcu-wifi-dimmer.groovy'},
-        
-         {'id': 588, 'file': driverDir / 'tasmota-unbranded-rgb-controller-with-ir.groovy' },
+        {'id': 588, 'file': driverDir / 'tasmota-unbranded-rgb-controller-with-ir.groovy' },
+        {'id': 591, 'file': driverDir / 'tasmota-generic-rgb-rgbw-controller-bulb-dimmer.groovy' },
     ]
     
     # Example driver: https://github.com/hubitat/HubitatPublic/blob/master/examples/drivers/GenericZigbeeRGBWBulb.groovy

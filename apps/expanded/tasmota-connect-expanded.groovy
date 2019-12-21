@@ -89,7 +89,7 @@ def manuallyAdd(){
                 "Tasmota - Gosund WP3 Plug",
                 "Tasmota - SK03 Power Monitor Outdoor Plug",
                 "Tasmota - Aoycocr X10S Power Monitor Plug",
-                "Tasmota - Brilliant 20699 800lm RGBW (EXPERIMENTAL)",
+                "Tasmota - Brilliant 20699 800lm RGBW Bulb",
                 "Tasmota - TuyaMCU Wifi Touch Switch",
                 "Tasmota - Sonoff Pow R2",
                 "Tasmota - Sonoff S2X",
@@ -103,7 +103,8 @@ def manuallyAdd(){
                 "Tasmota - Generic Power Monitor Plug",
                 "Tasmota - Generic Temperature/Humidity/Pressure Device",
                 "Tasmota - TuyaMCU Wifi Dimmer (EXPERIMENTAL)",
-                "Tasmota - Unbranded RGB Controller with IR (EXPERIMENTAL)",
+                "Tasmota - Unbranded RGB Controller with IR",
+                "Tasmota - Generic RGB/RGBW Controller/Bulb/Dimmer",
                 ]
             input "ipAddress", "text", title:"IP Address", description: "", required: false 
 		}
@@ -391,8 +392,8 @@ def addDevices() {
                 deviceHandlerName = "Tasmota - SK03 Power Monitor Outdoor Plug"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Aoycocr X10S Power Monitor Plug"))
                 deviceHandlerName = "Tasmota - Aoycocr X10S Power Monitor Plug"
-            if (selectedDevice?.value?.name?.startsWith("Tasmota - Brilliant 20699 800lm RGBW (EXPERIMENTAL)"))
-                deviceHandlerName = "Tasmota - Brilliant 20699 800lm RGBW (EXPERIMENTAL)"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - Brilliant 20699 800lm RGBW Bulb"))
+                deviceHandlerName = "Tasmota - Brilliant 20699 800lm RGBW Bulb"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - TuyaMCU Wifi Touch Switch"))
                 deviceHandlerName = "Tasmota - TuyaMCU Wifi Touch Switch"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Sonoff Pow R2"))
@@ -419,8 +420,10 @@ def addDevices() {
                 deviceHandlerName = "Tasmota - Generic Temperature/Humidity/Pressure Device"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - TuyaMCU Wifi Dimmer (EXPERIMENTAL)"))
                 deviceHandlerName = "Tasmota - TuyaMCU Wifi Dimmer (EXPERIMENTAL)"
-            if (selectedDevice?.value?.name?.startsWith("Tasmota - Unbranded RGB Controller with IR (EXPERIMENTAL)"))
-                deviceHandlerName = "Tasmota - Unbranded RGB Controller with IR (EXPERIMENTAL)"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - Unbranded RGB Controller with IR"))
+                deviceHandlerName = "Tasmota - Unbranded RGB Controller with IR"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic RGB/RGBW Controller/Bulb/Dimmer"))
+                deviceHandlerName = "Tasmota - Generic RGB/RGBW Controller/Bulb/Dimmer"
 			else if (selectedDevice?.value?.name?.startsWith("quired"))
                 deviceHandlerName = "Tasmota - Generic Wifi Switch/Plug"
             else if (selectedDevice?.value?.name?.startsWith("Aquired"))

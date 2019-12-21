@@ -8,7 +8,7 @@
 #!include:getDefaultImports()
 
 metadata {
-	definition (name: "Tasmota - Unbranded RGB Controller with IR", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
+	definition (name: "Tasmota - Generic RGB/RGBW Controller/Bulb/Dimmer", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
         capability "Actuator"
 		capability "Switch"
 		capability "ColorControl"
@@ -41,7 +41,6 @@ def parse(description) {
     #!include:getGenericTasmotaParseHeader()
             #!include:getTasmotaParserForBasicData()
             #!include:getTasmotaParserForWifi()
-            #!include:getTasmotaParserForRGBWIRRemote()
             #!include:getTasmotaParserForRGBWDevice()
         #!include:getGenericTasmotaParseFooter()
 }
@@ -49,7 +48,7 @@ def parse(description) {
 def update_needed_settings() {
     #!include:getUpdateNeededSettingsTasmotaHeader()
 
-    #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand(0, '{"NAME":"RGB Controller","GPIO":[0,0,0,0,0,38,0,0,39,51,0,37,0],"FLAG":15,"BASE":18}')
+    #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand()  # With no arguments this will not set anything by default
 
     // Disabling these here, but leaving them if anyone needs them
     // If another driver has set SetOption81 to 1, the below might be needed, or you can use:

@@ -326,6 +326,55 @@ if(resultTH != null) {
 }
 """
 
+def getTasmotaParserForRGBWDevice():
+    return """
+// Standard RGBW Device Data parsing
+if (result.containsKey("HSBColor")) {
+    hsbColor = result.HSBColor.tokenize(",")
+    hsbColor[0] = Math.round((hsbColor[0] as Integer) / 3.6)
+    hsbColor[1] = hsbColor[1] as Integer
+    hsbColor[2] = hsbColor[2] as Integer
+    logging("hsbColor: ${hsbColor}", 1)
+    if(hue != hsbColor[0] ) events << createEvent(name: "hue", value: hsbColor[0])
+    if(saturation != hsbColor[1] ) events << createEvent(name: "saturation", value: hsbColor[1])
+    if(level != hsbColor[2] ) events << createEvent(name: "level", value: hsbColor[2])
+}
+if (result.containsKey("Color")) {
+    color = result.Color
+    logging("Color: ${color.tokenize(",")}", 1)
+}
+"""
+
+def getTasmotaParserForRGBWIRRemote():
+    return """
+// Standard RGBW IR Remote Data parsing
+if (result.containsKey("IrReceived")) {
+    logging("Found key IrReceived in parse()", 1)
+    if (result.IrReceived.containsKey("Data")) {
+        irData = result.IrReceived.Data
+        if(irData == '0x00F7C03F') events << on()
+        if(irData == '0x00F740BF') events << off()
+        if(irData == '0x00F7E01F') events << white()
+        if(irData == '0x00F720DF') events << red()
+        if(irData == '0x00F7A05F') events << green()
+        if(irData == '0x00F7609F') events << blue()
+        if(irData == '0x00F728D7') events << yellow()
+        if(irData == '0x00F7A857') events << lightBlue()
+        if(irData == '0x00F76897') events << pink()
+        if(irData == '0x00F7C837') events << setLevel(30, 6)  // Fade button
+        if(irData == '0x00F7E817') events << setLevel(100, 6)  // Smooth button
+        
+        if(state == null || !state.containsKey('level') || state.level == null) state.level = 0
+        if(irData == '0x00F700FF') {
+            events << setLevel(state.level + 5) // Brightness +
+        }
+        if(irData == '0x00F7807F') {
+            events << setLevel(state.level - 5) // Brightness -
+        }
+    }
+    
+}
+"""
 
 def getGenericZigbeeParseHeader():
     return """// parse() Generic Zigbee-device header BEGINS here

@@ -315,7 +315,7 @@ def update_needed_settings()
     // updateNeededSettings() Generic footer BEGINS here
     cmds << getAction(getCommandString("SetOption113", "1")) // Hubitat Enabled
     // Disabling Emulation so that we don't flood the logs with upnp traffic
-    cmds << getAction(getCommandString("Emulation", "0")) // Emulation Disabled
+    //cmds << getAction(getCommandString("Emulation", "0")) // Emulation Disabled
     cmds << getAction(getCommandString("HubitatHost", device.hub.getDataValue("localIP")))
     cmds << getAction(getCommandString("HubitatPort", device.hub.getDataValue("localSrvPortTCP")))
     cmds << getAction(getCommandString("FriendlyName1", URLEncoder.encode(device.displayName.take(32)))) // Set to a maximum of 32 characters
