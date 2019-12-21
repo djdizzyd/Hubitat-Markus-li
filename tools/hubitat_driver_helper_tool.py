@@ -144,7 +144,7 @@ def makeTasmotaConnectDriverListV2(driversList):
 
 def expandGroovyFile(inputGroovyFile, outputGroovyDir, extraData = None, alternateOutputFilename = None, \
                      alternateName = None, alternateNamespace = None, alternateVid = None, \
-                     alternateTemplate = None):
+                     alternateTemplate = None, alternateModule = None):
     outputGroovyFile = getOutputGroovyFile(inputGroovyFile, outputGroovyDir, alternateOutputFilename)
     print('Expanding "' + str(inputGroovyFile) + '" to "' + str(outputGroovyFile) + '"...')
     definitionString = None
@@ -181,6 +181,9 @@ def expandGroovyFile(inputGroovyFile, outputGroovyDir, extraData = None, alterna
                     elif(alternateTemplate != None and alternateTemplate != '' and evalCmd.startswith('getUpdateNeededSettingsTasmotaDynamicModuleCommand(')):
                         print("Executing getUpdateNeededSettingsTasmotaDynamicModuleCommand(0, '" + alternateTemplate + "')...")
                         output = getUpdateNeededSettingsTasmotaDynamicModuleCommand(0, alternateTemplate)
+                    elif(alternateModule != None and alternateModule != '' and evalCmd.startswith('getUpdateNeededSettingsTasmotaDynamicModuleCommand(')):
+                        print("Executing getUpdateNeededSettingsTasmotaDynamicModuleCommand(" + alternateModule + ")...")
+                        output = getUpdateNeededSettingsTasmotaDynamicModuleCommand(alternateModule)
                     else:
                         output = eval(evalCmd)
                     if(includePosition > 0):
@@ -271,6 +274,10 @@ def main():
          'alternateOutputFilename': 'tasmota-brilliant-20699-rgbw-bulb', \
          'alternateName': 'Tasmota - Brilliant 20699 800lm RGBW Bulb', \
          'alternateTemplate': '{"NAME":"Brilliant20699","GPIO":[0,0,0,0,141,140,0,0,37,142,0,0,0],"FLAG":0,"BASE":18}'},
+        {'id': 592, 'file': driverDir / 'tasmota-generic-wifi-switch-plug.groovy' , \
+         'alternateOutputFilename': 'tasmota-sonoff-sv', \
+         'alternateName': 'Tasmota - Sonoff SV', \
+         'alternateModule': '3'},
 
         # Drivers WITH their own base-file
         {'id': 548, 'file': driverDir / 'tasmota-tuyamcu-wifi-touch-switch.groovy' },
@@ -308,9 +315,11 @@ def main():
             alternateVid = (d['alternateVid'] if 'alternateVid' in d else None)
             alternateNamespace = (d['alternateNamespace'] if 'alternateNamespace' in d else None)
             alternateTemplate = (d['alternateTemplate'] if 'alternateTemplate' in d else None)
+            alternateModule = (d['alternateModule'] if 'alternateModule' in d else None)
             expandGroovyFile(d['file'], expandedDriversDir, alternateOutputFilename=d['alternateOutputFilename'], \
                              alternateName=d['alternateName'], alternateNamespace=alternateNamespace, \
-                             alternateVid=alternateVid, alternateTemplate=alternateTemplate)
+                             alternateVid=alternateVid, alternateTemplate=alternateTemplate, \
+                             alternateModule=alternateModule)
             aOF = d['alternateOutputFilename']
         else:
             expandGroovyFile(d['file'], expandedDriversDir)

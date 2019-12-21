@@ -31,19 +31,6 @@ metadata {
 #!include:getDeviceInfoFunction()
 
 /* These functions are unique to each driver */
-def getDeviceConfigByName(configName) {
-    // This is used for module specific settings and reused 
-    // by generated code
-    switch (configName) {
-        case "module": 
-            return('54')
-        case "template":
-            // This may contain a default Tasmota Template, if needed by this driver
-            return('')
-        break
-    }
-}
-
 def installedAdditional() {
     // This runs from installed()
 	logging("installedAdditional()",50)

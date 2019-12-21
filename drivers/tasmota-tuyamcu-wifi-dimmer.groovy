@@ -4,10 +4,8 @@
 
 metadata {
 	definition (name: "Tasmota - TuyaMCU Wifi Dimmer (EXPERIMENTAL)", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
-        capability "Light"
-		capability "Switch"
+        capability "Switch"
 		capability "SwitchLevel"
-        capability "ColorControl"
         #!include:getDefaultMetadataCapabilities()
         
         attribute   "dimState", "number"
@@ -33,19 +31,6 @@ metadata {
 #!include:getDeviceInfoFunction()
 
 /* These functions are unique to each driver */
-def getDeviceConfigByName(configName) {
-    // This is used for module specific settings and reused 
-    // by generated code
-    switch (configName) {
-        case "module": 
-            return('54')
-        case "template":
-            // This may contain a default Tasmota Template, if needed by this driver
-            return('')
-        break
-    }
-}
-
 def installedAdditional() {
     // This runs from installed()
 	logging("installedAdditional()",50)
