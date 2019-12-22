@@ -29,6 +29,7 @@ def mainPage() {
         section("Configure"){
            href "deviceDiscovery", title:"Discover Devices", description:""
            href "manuallyAdd", title:"Manually Add Device", description:""
+           //href "deviceDiscoveryCancel", title:"Cancel Discover Device", description:""
         }
         section("Installed Devices"){
             getChildDevices().sort({ a, b -> a["deviceNetworkId"] <=> b["deviceNetworkId"] }).each {
@@ -132,6 +133,11 @@ def changeName(){
 
 def discoveryPage(){
    return deviceDiscovery()
+}
+
+def deviceDiscoveryCancel() {
+    unsubscribe()
+    unschedule()
 }
 
 def deviceDiscovery(params=[:])
@@ -268,7 +274,7 @@ def ssdpHandler(evt) {
         if (child) {
             childIP = child.getDeviceDataByName("ip")
             childPort = child.getDeviceDataByName("port").toString()
-            log.debug "Device data: ($childIP:$childPort) - reporting data: (${convertHexToIP(parsedEvent.networkAddress)}:${convertHexToInt(parsedEvent.deviceAddress)})."
+            //log.debug "Device data: ($childIP:$childPort) - reporting data: (${convertHexToIP(parsedEvent.networkAddress)}:${convertHexToInt(parsedEvent.deviceAddress)})."
             if("${convertHexToIP(parsedEvent.networkAddress)}" != "0.0.0.0"){
                if(childIP != convertHexToIP(parsedEvent.networkAddress) || childPort != convertHexToInt(parsedEvent.deviceAddress).toString()){
                   log.debug "Device data (${child.getDeviceDataByName("ip")}) does not match what it is reporting(${convertHexToIP(parsedEvent.networkAddress)}). Attempting to update."
