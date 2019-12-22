@@ -69,19 +69,19 @@ class HubitatCodeBuilderTasmota(HubitatCodeBuilder):
     def _runEvalCmdAdditional(self, eval_cmd, definition_string, alternate_template, alternate_module):
         #print('alternate_template 1: ' + str(alternate_template))
         if(eval_cmd == 'makeTasmotaConnectDriverListV1()'):
-            print("Executing makeTasmotaConnectDriverListV1()...")
+            self.log.debug("Executing makeTasmotaConnectDriverListV1()...")
             output = self._makeTasmotaConnectDriverListV1()
             return(True, output)
         elif(eval_cmd == 'makeTasmotaConnectDriverListV2()'):
-            print("Executing makeTasmotaConnectDriverListV2()...")
+            self.log.debug("Executing makeTasmotaConnectDriverListV2()...")
             output = self._makeTasmotaConnectDriverListV2()
             return(True, output)
         elif(alternate_template != None and alternate_template != '' and eval_cmd.startswith('getUpdateNeededSettingsTasmotaDynamicModuleCommand(')):
-            print("Executing getUpdateNeededSettingsTasmotaDynamicModuleCommand(0, '" + alternate_template + "')...")
+            self.log.debug("Executing getUpdateNeededSettingsTasmotaDynamicModuleCommand(0, '" + alternate_template + "')...")
             output = getUpdateNeededSettingsTasmotaDynamicModuleCommand(0, alternate_template)
             return(True, output)
         elif(alternate_module != None and alternate_module != '' and eval_cmd.startswith('getUpdateNeededSettingsTasmotaDynamicModuleCommand(')):
-            print("Executing getUpdateNeededSettingsTasmotaDynamicModuleCommand(" + alternate_module + ")...")
+            self.log.debug("Executing getUpdateNeededSettingsTasmotaDynamicModuleCommand(" + alternate_module + ")...")
             output = getUpdateNeededSettingsTasmotaDynamicModuleCommand(alternate_module)
             return(True, output)
         else:

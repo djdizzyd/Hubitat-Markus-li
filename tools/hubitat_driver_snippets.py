@@ -344,16 +344,13 @@ def on() {
     def cmds = []
     h = null
     s = null
-    b = null
+    b = 100
     if(state != null) {
-        h = state.containsKey("hue") ? state.hue : null
-        s = state.containsKey("saturation") ? state.saturation : null
+        //h = state.containsKey("hue") ? state.hue : null
+        //s = state.containsKey("saturation") ? state.saturation : null
         b = state.containsKey("level") ? state.level : 100
-    } else {
-        h = null
-        s = null
-        b = 100
     }
+    if(b < 20) b = 20
     cmds << setHSB(h, s, b)
     cmds << getAction(getCommandString("Power", "On"))
     return cmds

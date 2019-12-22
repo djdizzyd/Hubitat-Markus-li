@@ -16,10 +16,63 @@ import re
 import pprint
 import yaml
 import ruamel.yaml
+import logging
+import winsound
+import datetime
+from colorama import init, Fore, Style
 
 # Local imports
 from hubitat_driver_snippets import *
 from hubitat_driver_snippets_parser import *
+
+# Custom formatter
+class HubitatCodeBuilderLogFormatter(logging.Formatter):
+
+    def __init__(self, fmt_default="%(time_elapsed)-11s:%(name)-20s:%(levelname)5s: %(msg)s", 
+                    fmt_debug="%(time_elapsed)-11s:%(name)-20s:%(levelname)5s:%(lineno)4d:%(funcName)s: %(msg)s", 
+                    fmt_error="%(time_elapsed)-11s:%(name)-20s:%(levelname)5s:%(lineno)4d:%(funcName)s: %(msg)s", 
+                    error_beep=True, default_color=Fore.GREEN, debug_color=Fore.YELLOW, error_color=Fore.RED,):
+        init() # This is the init for Colorama
+        # Another format to use: '%(asctime)s:%(name)20s:%(levelname)5s: %(message)s'
+        self._error_beep = error_beep
+        self._init_time = datetime.datetime.utcnow()
+        self._formatter_debug = logging.Formatter(fmt=fmt_debug)
+        self._formatter_error = logging.Formatter(fmt=fmt_error)
+        self._default_color = default_color
+        self._debug_color = debug_color
+        self._error_color = error_color
+        super().__init__(fmt=fmt_default)
+
+    def format(self, record):
+        now = datetime.datetime.utcnow()
+        try:
+            delta = now - self._init_time
+        except AttributeError:
+            delta = 0
+
+        # First add the elapsed time
+        record.time_elapsed = '{0:.2f}ms'.format(delta.total_seconds() * 1000)
+        
+        # Now add our colors
+        if record.levelno == logging.DEBUG:
+            if(self._debug_color != None):
+                res = self._debug_color + self._formatter_debug.format(record) + Style.RESET_ALL
+            else:
+                res = self._formatter_debug.format(record)
+        elif record.levelno == logging.ERROR:
+            if(self._error_color != None):
+                res = self._error_color + self._formatter_error.format(record) + Style.RESET_ALL
+            else:
+                res = self._formatter_error.format(record)
+            if(self._error_beep):
+                winsound.Beep(500, 300)
+        else:
+            if(self._default_color != None):
+                res = self._default_color + super().format(record) + Style.RESET_ALL
+            else:
+                res = super().format(record)
+
+        return(res)
 
 class HubitatCodeBuilderError(Exception):
    """HubitatCodeBuilder Base Exception Class"""
@@ -35,9 +88,10 @@ class HubitatCodeBuilder:
         self.driver_dir = Path(driver_dir)
         self.driver_build_dir = Path(driver_build_dir)
         self.build_suffix = build_suffix
+        self.log = logging.getLogger(__name__)
         my_locals = locals().copy()
         my_locals.pop('self')
-        print('Init with these settings:' + str(my_locals))
+        self.log.debug('Settings: {}'.format(str(my_locals)))
 
     def getHelperFunctions(self, helper_function_type):
         r = ''
@@ -52,9 +106,9 @@ class HubitatCodeBuilder:
         return(r)
 
     def getOutputGroovyFile(self, input_groovy_file, alternate_output_filename = None):
-        #print('Using "' + str(input_groovy_file) + '" to get path for "' + str(output_groovy_dir) + '"...')
-        #print('Filename stem: ' + input_groovy_file.stem)
-        #print('Filename suffix: ' + input_groovy_file.suffix)
+        #self.log.debug('Using "' + str(input_groovy_file) + '" to get path for "' + str(output_groovy_dir) + '"...')
+        #self.log.debug('Filename stem: ' + input_groovy_file.stem)
+        #self.log.debug('Filename suffix: ' + input_groovy_file.suffix)
         input_groovy_file = Path(input_groovy_file)
         if(alternate_output_filename != None):
             output_groovy_file = Path(str(alternate_output_filename) + self.build_suffix + str(input_groovy_file.suffix))
@@ -68,10 +122,10 @@ class HubitatCodeBuilder:
         if(definition_position != -1):
             ds = l[definition_position+11:].strip()
             # On all my drivers the definition row ends with ") {"
-            print('Parsing Definition statement')
+            self.log.debug('Parsing Definition statement')
             #print('{'+ds[1:-3]+'}')
             definition_dict = yaml.load(('{'+ds[1:-3]+' }').replace(':', ': '), Loader=yaml.FullLoader)
-            print(definition_dict)
+            self.log.debug(definition_dict)
             if(alternate_name != None):
                 definition_dict['name'] = alternate_name
             if(alternate_namespace != None):
@@ -95,10 +149,10 @@ class HubitatCodeBuilder:
             #            if(i==0):
             #                previousp2 = p2.strip('"')
             #            else:
-            #                #print('"' + previousp2 + '"="' + p2.strip('"') + '"')
+            #                #self.log.debug('"' + previousp2 + '"="' + p2.strip('"') + '"')
             #                d[previousp2] = p2.strip('"')
             #            i += 1
-            #print(d)
+            #self.log.debug(d)
             definition_dict_original = definition_dict.copy()
             ds = '[' + str(definition_dict)[1:-1] + ']'
             for k in definition_dict:
@@ -136,7 +190,7 @@ class HubitatCodeBuilder:
         output = eval_cmd
         found = False
         if(eval_cmd == 'getDeviceInfoFunction()'):
-            print("Executing getDeviceInfoFunction()...")
+            self.log.debug("Executing getDeviceInfoFunction()...")
             if(definition_string == None):
                 raise HubitatCodeBuilderError('ERROR: Missing/incorrect Definition in file!')
             output = definition_string
@@ -166,9 +220,9 @@ class HubitatCodeBuilder:
         output_groovy_file = self.getOutputGroovyFile(input_groovy_file, alternate_output_filename)
         r = {'file': output_groovy_file, 'name': ''}
         
-        print('Expanding "' + str(input_groovy_file) + '" to "' + str(output_groovy_file) + '"...')
+        self.log.debug('Expanding "' + str(input_groovy_file) + '" to "' + str(output_groovy_file) + '"...')
         definition_string = None
-        print('Build dir: ' + str(self.getBuildDir(code_type) / output_groovy_file))
+        self.log.debug('Build dir: ' + str(self.getBuildDir(code_type) / output_groovy_file))
         with open (self.getBuildDir(code_type) / output_groovy_file, "w") as wd:
             with open (self.getInputDir(code_type) / input_groovy_file, "r") as rd:
                 # Read lines in loop
@@ -196,6 +250,6 @@ class HubitatCodeBuilder:
                     else:
                         wd.write(l)
                     #print(l.strip())
-        print('DONE expanding "' + input_groovy_file.name + '" to "' + output_groovy_file.name + '"!')
+        self.log.info('DONE expanding "' + input_groovy_file.name + '" to "' + output_groovy_file.name + '"!')
         return(r)
 

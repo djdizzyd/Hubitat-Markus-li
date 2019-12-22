@@ -18,8 +18,7 @@ import requests
 import os
 import json
 import pickle
-from colorama import init, Fore, Back, Style
-import winsound
+import logging
 
 """
   Hubitat Hub Spider class
@@ -37,10 +36,10 @@ class HubitatHubSpider:
   is_logged_in = False
 
   def __init__(self, hubitatIP = None, configFile = None):
-    init() # This is the init for Colorama
+    self.log = logging.getLogger(__name__)
     if(hubitatIP == None):
       if(configFile != None):
-        print("Loading settings from config file")
+        self.log.info("Loading settings from config file")
         try:
           with open(configFile, 'rb') as f:
             data = pickle.load(f)
@@ -59,7 +58,8 @@ class HubitatHubSpider:
 
   @staticmethod
   def saveConfig(hubitatIP, username, password, configFile):
-    print("Saving data to config file: " + str(configFile))
+    log = logging.getLogger(__name__)
+    log.info("Saving data to config file: " + str(configFile))
     data = {
       'hubitatIP': hubitatIP,
       'username': username,
@@ -69,7 +69,7 @@ class HubitatHubSpider:
       with open(configFile, 'wb') as f:
         pickle.dump(data, f)
     except FileNotFoundError:
-      print("Couldn't save config to disk!")
+      log.error("Couldn't save config to disk!")
 
   def login(self, username = None, password = None):
     APIUrl = self.API_base_url + '/login'
@@ -88,26 +88,26 @@ class HubitatHubSpider:
       if(r.status_code == 200):
         try:
           r.json()
-          print("Already logged in, session restored!")
+          self.log.info("Already logged in, session restored!")
           self.test_login = False
           self.is_logged_in = True
         except json.decoder.JSONDecodeError:
-          print("NOT logged in! Session is old or logged out!")
+          self.log.info("NOT logged in! Session is old or logged out!")
           self.test_login = False
           self.is_logged_in = False
       else:
-        print("NOT logged in! Session is old or logged out! Status code: " + str(r.status_code))
+        self.log.info("NOT logged in! Session is old or logged out! Status code: " + str(r.status_code))
         self.test_login = False
         self.is_logged_in = False
     if(self.is_logged_in == False):
       r = self.session.post(APIUrl, data=data)
-      print(r)
+      self.log.debug(r)
       if(r.status_code == 200):
-        print("Login succeded!")
+        self.log.info("Login succeded!")
         self.is_logged_in = True
         self.test_login = False
       else:
-        print("Error: Login failed!")
+        self.log.error("Login failed!")
         self.is_logged_in = False
         self.test_login = False
   
@@ -117,7 +117,7 @@ class HubitatHubSpider:
     # Logout
     r = self.session.get(APIUrl)
     if(r.status_code == 302 or r.status_code == 200):
-      print("Logged out!")
+      self.log.info("Logged out!")
       self.test_login = False
       self.is_logged_in = False
   
@@ -140,7 +140,7 @@ class HubitatHubSpider:
         with open('__hubitat_session', 'wb') as f:
           pickle.dump(self.session, f)
       except FileNotFoundError:
-        print("Couldn't save session to disk!")
+        self.log.error("Couldn't save session to disk!")
 
   def get_app_current_code(self, codeID):
     return(self._get_current_code('app', codeID))
@@ -153,7 +153,7 @@ class HubitatHubSpider:
     try:
       return response['version']
     except (json.decoder.JSONDecodeError, TypeError) as e:
-      print("Not json in response, try to login first?")
+      self.log.error("Not json in response, try to login first?")
       return(-3)
 
   def get_driver_current_code_version(self, codeID):
@@ -161,7 +161,7 @@ class HubitatHubSpider:
     try:
       return response['version']
     except (json.decoder.JSONDecodeError, TypeError) as e:
-      print("Not json in response, try to login first?")
+      self.log.error("Not json in response, try to login first?")
       return(-3)
 
   def _get_current_code(self, codeType, codeID):
@@ -180,7 +180,7 @@ class HubitatHubSpider:
       try:
         return response.json()
       except json.decoder.JSONDecodeError:
-        print("Not json in response, try to login first?")
+        self.log.error("Not json in response, try to login first?")
         return(-3)
     else:
       return -1
@@ -189,7 +189,7 @@ class HubitatHubSpider:
     self._prepare_session()
     APIUrl = self.API_base_url + '/device/drivers'
     
-    #print(APIUrl)
+    #self.log.debug(APIUrl)
     
     response = self.session.get(APIUrl)
     if(response.status_code == 200):
@@ -200,10 +200,10 @@ class HubitatHubSpider:
           ndict[d['id']] = d
         return(ndict)
       except json.decoder.JSONDecodeError:
-        print("Not json in response for get_driver_list(), try to login first?")
+        self.log.error("Not json in response for get_driver_list(), try to login first?")
         return(-3)
     else:
-      print("Unknown problem occured in get_driver_list(): " + str(response))
+      self.log.error("Unknown problem occured in get_driver_list(): " + str(response))
       return -1
 
   # http://192.168.10.1/device/drivers
@@ -230,7 +230,7 @@ class HubitatHubSpider:
         source = f.read()
       # Compare current source to the old one
       if(currentCode['source'] == source):
-        print(Fore.GREEN + "The source for code ID '" + str(codeID) + "' is already up-to-date! No update needed!" + Fore.RESET)
+        self.log.info("The source for code ID '" + str(codeID) + "' is already up-to-date! No update needed!")
         return(currentCode)
       else:
         data = {
@@ -239,23 +239,21 @@ class HubitatHubSpider:
           'source': source
         }
         
-        print("Starting the publishing of '" + str(groovyFileToPublish) + "' to ID '" + str(codeID) + "' with current version being '" + str(codeVersion) + "'")
+        self.log.debug("Starting the publishing of '" + str(groovyFileToPublish) + "' to ID '" + str(codeID) + "' with current version being '" + str(codeVersion) + "'")
         response = self.session.post(APIUrl, data=data)
         try:
           jsonResponse = response.json()
         except json.decoder.JSONDecodeError:
-          print("ERROR: Not json in the response for publishing '" + str(groovyFileToPublish) + "' to ID '" + str(codeID) + "' with current version '" + str(codeVersion) + "'")
+          self.log.error("Not json in the response for publishing '" + str(groovyFileToPublish) + "' to ID '" + str(codeID) + "' with current version '" + str(codeVersion) + "'")
           return(-3)
         if(jsonResponse['status'] == 'success'):
-          print(Fore.GREEN + "The source for code ID '" + str(codeID) + "' has been UPDATED!" + Fore.RESET)
+          self.log.info("The source for code ID '" + str(codeID) + "' has been UPDATED!")
           return(jsonResponse)
         elif(jsonResponse['status'] == 'error'):
-          print(Fore.RED + "Failed to update code with error: '" + str(jsonResponse['errorMessage']).strip() + "'" + Fore.RESET)
-          #print('\a')
-          winsound.Beep(500, 300)
+          self.log.error("Failed to update code with error: '" + str(jsonResponse['errorMessage']).strip() + "'")
           return(-1)
         else:
-          print("Unknown problem occured: " + str(jsonResponse))
+          self.log.error("Unknown problem occured: " + str(jsonResponse))
           return(-2)
     else:
-      print("Can't get the code version for ID: " + str(codeID))
+      self.log.error("Can't get the code version for ID: " + str(codeID))

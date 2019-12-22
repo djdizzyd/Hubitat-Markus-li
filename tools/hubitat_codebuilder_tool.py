@@ -19,26 +19,51 @@
 """
 # External modules
 from pathlib import Path
+import logging
+from colorama import init, Fore, Style
+init()
+
+#logging.basicConfig(level=logging.DEBUG,
+#    format="%(asctime)s:%(levelname)s:%(message)s")
 
 # Internal modules
 from hubitat_hubspider import HubitatHubSpider
-from hubitat_codebuilder import HubitatCodeBuilder
+from hubitat_codebuilder import HubitatCodeBuilder, HubitatCodeBuilderLogFormatter
 from hubitat_codebuilder_tasmota import HubitatCodeBuilderTasmota
 
-# NOTE: All functions use mixedCaps since this is used with Groovy and it makes
-#       it less confusing to not changing style all the time. 
+# Setup the logger
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+log_cb = logging.getLogger(HubitatCodeBuilder.__module__)
+log_cb.setLevel(logging.DEBUG)
+log_hs = logging.getLogger(HubitatHubSpider.__module__)
+log_hs.setLevel(logging.DEBUG)
+h = logging.StreamHandler()
+h.setLevel(logging.DEBUG)
+h.setFormatter(HubitatCodeBuilderLogFormatter(error_beep=True))
+log.addHandler(h)
+log_cb.addHandler(h)
+log_hs.addHandler(h)
+
+
+# NOTE: All function names use mixedCaps since this is used with Groovy and it makes
+#       it less confusing not changing style all the time. 
 
 def main():
     # Get us a Code Builder
-    cb = HubitatCodeBuilderTasmota()
     
-    #HubitatAJAXHelper.saveConfig('192.168.1.1', 'username', 'password', 'hhs_sample.cfg')
+    log.debug('Getting started...')
+    #log.error('Test')
+    
+    cb = HubitatCodeBuilderTasmota()
+
+    #HubitatHubSpider.saveConfig('192.168.1.1', 'username', 'password', 'hhs_sample.cfg')
     hhs = HubitatHubSpider(None, 'hubitat_hubspider.cfg')
     # Check the result from login()
-    print(hhs.login())
+    log.debug(hhs.login())
 
     #code_version = hubitatAjax.get_driver_current_code_version(550)
-    #print(code_version)
+    #log.debug(code_version)
     
     drivers_dict = hhs.get_driver_list()
     #pp.pprint()
@@ -149,11 +174,16 @@ def main():
     # Example driver: https://github.com/hubitat/HubitatPublic/blob/master/examples/drivers/GenericZigbeeRGBWBulb.groovy
     # RGB Example: https://github.com/damondins/hubitat/blob/master/Tasmota%20RGBW%20LED%20Light%20Bulb/Tasmota%20RGBW%20LED%20Light%20Bulb
 
-    #driver_files = [
-    #    {'id': 578, 'file': 'tasmota-generic-thp-device.groovy' },
-        
-    #]
+    driver_files = [
+        {'id': 578, 'file': 'tasmota-generic-thp-device.groovy' },
+        #{'id': 589, 'file': 'tasmota-generic-rgb-rgbw-controller-bulb-dimmer.groovy',
+        # 'alternate_output_filename': 'tasmota-brilliant-20699-rgbw-bulb', \
+        # 'alternate_name': 'Tasmota - Brilliant 20699 800lm RGBW Bulb', \
+        # 'alternate_template': '{"NAME":"Brilliant20699","GPIO":[0,0,0,0,141,140,0,0,37,142,0,0,0],"FLAG":0,"BASE":18}'},
+        #{'id': 588, 'file': 'tasmota-unbranded-rgb-controller-with-ir.groovy' },
+    ]
     #expected_num_drivers = 1
+
 
     j=0
     generic_drivers = []
@@ -173,15 +203,15 @@ def main():
             aof = d['alternate_output_filename']
         else:
             expanded_result = cb.expandGroovyFile(d['file'])
-        print(expanded_result)
+        log.debug(expanded_result)
         if(d['id'] != 0):
             j += 1
-            print('push_to_dir:' + str(cb.getBuildDir('driver') / cb.getOutputGroovyFile(d['file'], alternate_output_filename=aof)))
+            log.debug('push_to_dir:' + str(cb.getBuildDir('driver') / cb.getOutputGroovyFile(d['file'], alternate_output_filename=aof)))
             r = hhs.push_driver_code(d['id'], cb.getBuildDir('driver') / cb.getOutputGroovyFile(d['file'], alternate_output_filename=aof))
             try:
                 if 'source' in r:
                     r['source'] = '<hidden>'
-                #print(r)
+                #log.debug(r)
                 id = r['id']
                 if(expanded_result['name'].startswith('Tasmota - ')):
                     newD = {'name': expanded_result['name'][10:], 'file': expanded_result['file'].stem + expanded_result['file'].suffix}
@@ -192,15 +222,15 @@ def main():
 
                 used_driver_list[id] = drivers_dict[id]
             except Exception as e:
-                print('Exception when making driver list!: ' + str(e))
+                log.error('Exception when making driver list!: ' + str(e))
                 id = 0
-            print("Just worked on Driver ID " + str(id))
-    print('Had '+str(j)+' drivers to work on for the apps...')
+            log.debug("Just worked on Driver ID " + str(id))
+    log.info('Had '+str(j)+' drivers to work on for the apps...')
     if(len(used_driver_list) >= expected_num_drivers):
-        print('Making the driver list file...')
+        log.info('Making the driver list file...')
         cb.makeDriverList(generic_drivers, specific_drivers, base_repo_url, base_raw_repo_url)
     else:
-        print("SKIPPING making of the driver list file since we don't have enough drivers in the list...")
+        log.info("SKIPPING making of the driver list file since we don't have enough drivers in the list...")
     #print('Generic drivers: ' + str(generic_drivers))
     #print('Specific drivers: ' + str(specific_drivers))
     #pp.pprint(used_driver_list)
@@ -215,18 +245,18 @@ def main():
             cb.expandGroovyFile(a['file'], 'app')
         if(a['id'] != 0 and len(used_driver_list) >= expected_num_drivers):
             cb.expandGroovyFile(a['file'], 'app')
-            print('Found ' + str(len(used_driver_list)) + ' driver(s)...')
+            log.info('Found ' + str(len(used_driver_list)) + ' driver(s)...')
             r = hhs.push_app_code(a['id'], cb.getBuildDir('app') / cb.getOutputGroovyFile(a['file']))
             try:
                 id = r['id']
             except Exception:
                 id = 0
-            print("Just worked on App ID " + str(id))
+            log.debug("Just worked on App ID " + str(id))
         else:
             if(a['id'] == 0):
-                print("Not making App updates since this app has no ID set yet! Skipped updating App with path: '" + str(a['file']) + "'")
+                log.info("Not making App updates since this app has no ID set yet! Skipped updating App with path: '" + str(a['file']) + "'")
             else:
-                print("Not ready for App updates! Only " + str(len(used_driver_list)) + " driver(s) currently active! Skipped updating App ID " + str(a['id']))
+                log.info("Not ready for App updates! Only " + str(len(used_driver_list)) + " driver(s) currently active! Skipped updating App ID " + str(a['id']))
     
     #cb.expandGroovyFile('tasmota-sonoff-powr2.groovy', expanded_dir)
     #hhs.push_driver_code(513, cb.getOutputGroovyFile('tasmota-sonoff-powr2.groovy', expanded_dir))
