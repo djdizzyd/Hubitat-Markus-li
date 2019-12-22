@@ -15,6 +15,7 @@
 """
   Hubitat driver and app developer tool
   WARNING: Do NOT run this script unless you know what it does, it may DELETE your data!
+           If you use this code, please contact me so I know there is interest in this!
   NOTE: This is a Work In Progress, feel free to use it, but don't rely on it not changing completely!
 """
 # External modules
@@ -56,10 +57,6 @@ log_hs.addHandler(hhs)
 
 # NOTE: All function names use mixedCaps since this is used with Groovy and it makes
 #       it less confusing not changing style all the time. 
-
-def test():
-    print('YAY2!')
-
 def main():
     # Get us a Code Builder...
     
@@ -181,7 +178,10 @@ def main():
     # Example driver: https://github.com/hubitat/HubitatPublic/blob/master/examples/drivers/GenericZigbeeRGBWBulb.groovy
     # RGB Example: https://github.com/damondins/hubitat/blob/master/Tasmota%20RGBW%20LED%20Light%20Bulb/Tasmota%20RGBW%20LED%20Light%20Bulb
 
-    #driver_files = [
+    
+    
+
+    driver_files = [
     #    {'id': 578, 'file': 'tasmota-generic-thp-device.groovy' },
     #    {'id': 550, 'file': 'tasmota-tuyamcu-wifi-touch-switch-child-test.groovy' },
     #    {'id': 589, 'file': 'tasmota-generic-rgb-rgbw-controller-bulb-dimmer.groovy',
@@ -189,12 +189,20 @@ def main():
     #     'alternate_name': 'Tasmota - Brilliant 20699 800lm RGBW Bulb', \
     #     'alternate_template': '{"NAME":"Brilliant20699","GPIO":[0,0,0,0,141,140,0,0,37,142,0,0,0],"FLAG":0,"BASE":18}'},
     #    {'id': 588, 'file': 'tasmota-unbranded-rgb-controller-with-ir.groovy' },
-    #    {'id': 361, 'file': 'tasmota-generic-thp-device.groovy' , \
+    #    {'id': 0, 'file': 'tasmota-generic-thp-device.groovy' , \
     #     'alternate_output_filename': 'tasmota-sonoff-th', \
-    #     'alternate_name': 'Tasmota - Sonoff TH', \
+    #     'alternate_name': 'WRONG Tasmota - Sonoff TH', \
     #     'alternate_module': '4'},
-    #]
+    ]
     #expected_num_drivers = 1
+
+    # Setting id to 0 will have the Code Builder submit the driver as a new one, don't forget to note the ID 
+    # and put it in before submitting again. Also, if there are code errors when submitting a NEW file
+    # there's no error messages explaining why, only that it failed... When UPDATING code, any failure messages
+    # normally seen in the web code editor, will be seen in the build console.
+
+    #log.debug('Testing to create a new driver...')
+    #new_id = hhs.push_new_driver(cb.getBuildDir('driver') / 'tasmota-unbranded-rgb-controller-with-ir-expanded.groovy')
 
     #cb.clearChecksums()
 
@@ -257,7 +265,6 @@ def main():
     filtered_app_files = []
     for a in app_files:
         if(a['id'] != 97 and a['id'] != 163):
-            
             filtered_app_files.append(a)
         if(a['id'] != 0 and len(used_driver_list) >= expected_num_drivers):
             filtered_app_files.append(a)
@@ -274,6 +281,14 @@ def main():
     #hhs.push_driver_code(513, cb.getOutputGroovyFile('tasmota-sonoff-powr2.groovy', expanded_dir))
     
     #hhs.logout()
+    if(len(cb.driver_new)>0):
+        log.error('These new drivers were created: \n{}'.format(cb.driver_new))
+    else:
+        log.info('No new drivers where created!')
+    if(len(cb.app_new)>0):
+        log.error('These new apps were created: \n{}'.format(cb.app_new))
+    else:
+        log.info('No new apps where created!')
     cb.saveChecksums()
     hhs.save_session()
 

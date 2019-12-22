@@ -19,6 +19,7 @@ import os
 import json
 import pickle
 import logging
+from urllib.parse import urlparse
 
 """
   Hubitat Hub Spider class
@@ -207,6 +208,53 @@ class HubitatHubSpider:
       return -1
 
   # http://192.168.10.1/device/drivers
+  def push_new_app(self, codeID, groovyFileToPublish):
+    return(self.push_new_code('app', groovyFileToPublish))
+  
+  def push_new_driver(self, groovyFileToPublish):
+    return(self.push_new_code('driver', groovyFileToPublish))
+
+  def push_new_code(self, codeType, groovyFileToPublish):
+    self._prepare_session()
+    if(codeType == 'driver'):
+      APIUrl = self.API_base_url + '/driver/save'
+    elif(codeType == 'app'):
+      APIUrl = self.API_base_url + '/app/save'
+    else:
+      raise Exception('Unknown code type: ' + str(codeType))
+
+    with open (groovyFileToPublish, "r") as f:
+      source = f.read()
+    # Compare current source to the old one
+    data = {
+        'id': '',
+        'version': '',
+        'create': '',
+        'source': source
+      }
+    #302 expected, with redirect to the driver id... Location example: http://192.168.10.1/driver/editor/611
+    #200 and webpage in content when failing...
+    self.log.debug("Starting the submission of '" + str(groovyFileToPublish) + "'")
+    response = self.session.post(APIUrl, data=data)
+    #self.log.debug(str(response))
+    #self.log.debug(str(response.headers))
+    #self.log.debug(str(response.links))
+    self.log.debug('url:' + str(response.url))
+    #self.log.debug('text: "' + str(response.text) + '"')
+    # If url is http://192.168.10.1/driver/save
+    # then saving failed!
+    # When a success, this is the URL: http://192.168.10.1/driver/editor/617
+    a = urlparse(response.url).path.split('/')[-1:][0]
+    self.log.debug('The response was: {}'.format(a))
+    if(a.isdigit()):
+      self.log.info("The code was submitted to {} with the new ID {}!".format(codeType, int(a)))
+      return(int(a))
+    elif(a == 'save'):
+      self.log.error("Failed to create new entry! No more is known about why!")
+      return(-1)
+    else:
+      self.log.error("Unknown problem occured!")
+      return(-2)
 
   def push_app_code(self, codeID, groovyFileToPublish):
     return(self.push_code('app', codeID, groovyFileToPublish))
@@ -215,6 +263,10 @@ class HubitatHubSpider:
     return(self.push_code('driver', codeID, groovyFileToPublish))
 
   def push_code(self, codeType, codeID, groovyFileToPublish):
+    #/driver/editor/update
+    # For DELETE:
+    # POST: id=615&_action_delete=Delete
+    # The response is empty with a redirect to /driver/list
     self._prepare_session()
     if(codeType == 'driver'):
       APIUrl = self.API_base_url + '/driver/ajax/update'

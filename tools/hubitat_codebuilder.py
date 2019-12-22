@@ -111,6 +111,8 @@ class HubitatCodeBuilder:
         #self.log.debug('he_drivers_dict: {}'.format(str(self.he_drivers_dict)))
         self.driver_checksums = {}
         self.app_checksums = {}
+        self.driver_new = {}
+        self.app_new = {}
         # Check if we have a saved session
         try:
             with open('__hubitat_checksums', 'rb') as f:
@@ -361,9 +363,9 @@ class HubitatCodeBuilder:
             else:
                 expanded_result = self.expandGroovyFile(d, code_type=code_type)
             self.log.debug(expanded_result)
+            output_groovy_file = str(self.getBuildDir(code_type) / self.getOutputGroovyFile(d['file'], alternate_output_filename=aof))
             if(d['id'] != 0):
                 j += 1
-                output_groovy_file = str(self.getBuildDir(code_type) / self.getOutputGroovyFile(d['file'], alternate_output_filename=aof))
                 output_groovy_file_md5 = self.getCheckSumOfFile(output_groovy_file)
                 self.log.debug('MD5 for file {}: {}'.format(d['id'], output_groovy_file_md5))
                 self.log.debug('push_to_dir:' + str(output_groovy_file))
@@ -392,6 +394,19 @@ class HubitatCodeBuilder:
                         used_driver_list[id] = self.he_drivers_dict[id]
                     #log.debug("code_files 2: {}".format(str(code_files[id])))
                     self.log.debug("Just worked on Driver ID " + str(id))
+            else:
+                self.log.debug("We don't have an ID for '{}' yet, so let us make one...".format(expanded_result['name']))
+                new_id = self.hubitat_hubspider.push_new_code(code_type, output_groovy_file)
+                if(new_id > 0):
+                    new_entry = {'id': new_id, 'name': expanded_result['name'], 'file': str(Path(output_groovy_file).name).replace(self.build_suffix + '.', '.')}
+                    if(code_type == 'driver'):
+                        self.driver_new[new_id] = new_entry
+                    if(code_type == 'app'):
+                        self.app_new[new_id] = new_entry
+                    self.log.info("Added '{}' with the new ID {}!".format(expanded_result['name'], new_id))
+                else:
+                    self.log.error("FAILED to add '{}'! Something unknown went wrong...".format(expanded_result['name']))
+
         self.log.info('Had '+str(j)+' {} files to work on...'.format(code_type))
         #self.setUsedDriverList(used_driver_list)
         return(used_driver_list)

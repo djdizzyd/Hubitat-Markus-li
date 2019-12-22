@@ -1,4 +1,4 @@
-These are the currently available drivers (updated: 2019-12-22)
+These are the currently available drivers (updated: 2019-12-23)
 
 **Generic Drivers**
 * [Generic Power Monitor Plug](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-generic-pm-plug-expanded.groovy) - Import URL: [RAW](https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-generic-pm-plug-expanded.groovy)
