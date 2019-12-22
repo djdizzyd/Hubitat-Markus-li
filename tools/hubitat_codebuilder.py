@@ -146,7 +146,7 @@ class HubitatCodeBuilder:
                 (found, output) = self._runEvalCmdAdditional(eval_cmd, definition_string, alternate_template, alternate_module)
                 if(found == False):
                     output = eval_cmd
-            except AttributeError as e:
+            except AttributeError:
                 #print(str(e))
                 found = False
         if(found == False):

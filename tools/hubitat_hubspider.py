@@ -129,7 +129,7 @@ class HubitatHubSpider:
           self.session = pickle.load(f)
         self.test_login = True
         self.is_logged_in = False
-      except (FileNotFoundError, pickle.UnpicklingError) as e:
+      except (FileNotFoundError, pickle.UnpicklingError):
         self.test_login = False
         self.is_logged_in = False
         self.session = requests.session()

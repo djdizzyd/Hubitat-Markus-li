@@ -973,7 +973,7 @@ def setHSB(h, s, b, callWhite) {
     if (hsbcmd == "0,0,100") {
         //state.colorMode = "white"
         //sendEvent(name: "colorMode", value: "CT")
-        if(callWhite) return(white(false))
+        return(white())
         //return(getAction(getCommandString("hsbcolor", hsbcmd)))
     } else {
         if(colorMode != "RGB" ) sendEvent(name: "colorMode", value: "RGB")
