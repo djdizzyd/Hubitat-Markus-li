@@ -52,7 +52,7 @@ def setHSB(h, s, b, callWhite) {
     state.saturation = s
     state.level = b
     state.colorMode = "RGB"
-    if (hsbcmd.startsWith("0,0,") {
+    if (hsbcmd.startsWith("0,0,")) {
         //state.colorMode = "white"
         //sendEvent(name: "colorMode", value: "CT")
         return(white())

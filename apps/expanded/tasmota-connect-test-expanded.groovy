@@ -81,6 +81,8 @@ def manuallyAdd(){
 			paragraph "This process will manually create a Tasmota-based Device based with the entered IP address. Tasmota Connect then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your wifi network."
             input "deviceType", "enum", title:"Device Type", description: "", required: false, options: 
                 ["Tasmota - Generic Temperature/Humidity/Pressure Device",
+                "Tasmota - Brilliant 20699 800lm RGBW Bulb",
+                "Tasmota - Unbranded RGB Controller with IR",
                 ]
             input "ipAddress", "text", title:"IP Address", description: "", required: false 
 		}
@@ -352,6 +354,10 @@ def addDevices() {
             def deviceHandlerName
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic Temperature/Humidity/Pressure Device"))
                 deviceHandlerName = "Tasmota - Generic Temperature/Humidity/Pressure Device"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - Brilliant 20699 800lm RGBW Bulb"))
+                deviceHandlerName = "Tasmota - Brilliant 20699 800lm RGBW Bulb"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - Unbranded RGB Controller with IR"))
+                deviceHandlerName = "Tasmota - Unbranded RGB Controller with IR"
 			else if (selectedDevice?.value?.name?.startsWith("quired"))
                 deviceHandlerName = "Tasmota - Generic Wifi Switch/Plug"
             else if (selectedDevice?.value?.name?.startsWith("Aquired"))

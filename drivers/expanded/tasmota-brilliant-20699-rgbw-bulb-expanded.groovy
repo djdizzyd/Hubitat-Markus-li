@@ -101,15 +101,11 @@ def on() {
     def cmds = []
     h = null
     s = null
-    b = null
+    b = 100
     if(state != null) {
-        h = state.containsKey("hue") ? state.hue : null
-        s = state.containsKey("saturation") ? state.saturation : null
+        //h = state.containsKey("hue") ? state.hue : null
+        //s = state.containsKey("saturation") ? state.saturation : null
         b = state.containsKey("level") ? state.level : 100
-    } else {
-        h = null
-        s = null
-        b = 100
     }
     cmds << setHSB(h, s, b)
     cmds << getAction(getCommandString("Power", "On"))
@@ -942,7 +938,7 @@ def setHSB(h, s, b, callWhite) {
     state.saturation = s
     state.level = b
     state.colorMode = "RGB"
-    if (hsbcmd == "0,0,100") {
+    if (hsbcmd.startsWith("0,0,")) {
         //state.colorMode = "white"
         //sendEvent(name: "colorMode", value: "CT")
         return(white())
@@ -1020,6 +1016,8 @@ def whiteForPlatform() {
     lHex = l.toHexString(l)
     hexCmd = "#${lHex}${lHex}${lHex}${lHex}"
     logging("hexCmd='${hexCmd}'", 1)
+    state.hue = 0
+    state.saturation = 0
     state.red = l
     state.green = l
     state.blue = l
