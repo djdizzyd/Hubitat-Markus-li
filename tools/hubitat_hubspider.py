@@ -247,6 +247,7 @@ class HubitatHubSpider:
           self.log.error("Not json in the response for publishing '" + str(groovyFileToPublish) + "' to ID '" + str(codeID) + "' with current version '" + str(codeVersion) + "'")
           return(-3)
         if(jsonResponse['status'] == 'success'):
+          jsonResponse['source'] = source
           self.log.info("The source for code ID '" + str(codeID) + "' has been UPDATED!")
           return(jsonResponse)
         elif(jsonResponse['status'] == 'error'):

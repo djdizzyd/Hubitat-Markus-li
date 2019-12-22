@@ -46,9 +46,12 @@ log_hs.setLevel(logging.DEBUG)
 h = logging.StreamHandler()
 h.setLevel(logging.DEBUG)
 h.setFormatter(HubitatCodeBuilderLogFormatter(error_beep=True))
+hhs = logging.StreamHandler()
+hhs.setLevel(logging.DEBUG)
+hhs.setFormatter(HubitatCodeBuilderLogFormatter(error_beep=True, debug_color=Fore.CYAN, default_color=Fore.MAGENTA))
 log.addHandler(h)
 log_cb.addHandler(h)
-log_hs.addHandler(h)
+log_hs.addHandler(hhs)
 
 
 # NOTE: All function names use mixedCaps since this is used with Groovy and it makes
@@ -186,9 +189,15 @@ def main():
     #     'alternate_name': 'Tasmota - Brilliant 20699 800lm RGBW Bulb', \
     #     'alternate_template': '{"NAME":"Brilliant20699","GPIO":[0,0,0,0,141,140,0,0,37,142,0,0,0],"FLAG":0,"BASE":18}'},
     #    {'id': 588, 'file': 'tasmota-unbranded-rgb-controller-with-ir.groovy' },
+    #    {'id': 361, 'file': 'tasmota-generic-thp-device.groovy' , \
+    #     'alternate_output_filename': 'tasmota-sonoff-th', \
+    #     'alternate_name': 'Tasmota - Sonoff TH', \
+    #     'alternate_module': '4'},
     #]
     #expected_num_drivers = 1
-    
+
+    #cb.clearChecksums()
+
     generic_drivers = []
     specific_drivers = []
     
@@ -244,7 +253,6 @@ def main():
         {'id': 163, 'file': 'tasmota-connect-test.groovy' },
     ]
 
-    used_driver_list = cb.expandGroovyFilesAndPush(driver_files, code_type='driver')
     cb.setUsedDriverList(used_driver_list)
     filtered_app_files = []
     for a in app_files:
@@ -266,6 +274,7 @@ def main():
     #hhs.push_driver_code(513, cb.getOutputGroovyFile('tasmota-sonoff-powr2.groovy', expanded_dir))
     
     #hhs.logout()
+    cb.saveChecksums()
     hhs.save_session()
 
 if(Path('DEVELOPER').exists()):

@@ -20,6 +20,8 @@ import logging
 import winsound
 import datetime
 import inspect
+import pickle
+import hashlib
 from colorama import init, Fore, Style
 
 # Local imports
@@ -106,11 +108,33 @@ class HubitatCodeBuilder:
         self.log = logging.getLogger(__name__)
         self.hubitat_hubspider = hubitat_hubspider
         self.he_drivers_dict = self.hubitat_hubspider.get_driver_list()
+        #self.log.debug('he_drivers_dict: {}'.format(str(self.he_drivers_dict)))
+        self.driver_checksums = {}
+        self.app_checksums = {}
+        # Check if we have a saved session
+        try:
+            with open('__hubitat_checksums', 'rb') as f:
+                (self.driver_checksums, self.app_checksums) = pickle.load(f)
+        except (FileNotFoundError, pickle.UnpicklingError) as e:
+            self.log.error("Couldn't restore checksums! {}".format(str(e)))
+            self.driver_checksums = {}
+            self.app_checksums = {}
         my_locals = locals().copy()
         my_locals.pop('self')
         # Save the calling namespace for future use...
         self.calling_namespace = calling_namespace
         self.log.debug('Settings: {}'.format(str(my_locals)))
+
+    def saveChecksums(self):
+        try:
+            with open('__hubitat_checksums', 'wb') as f:
+                pickle.dump((self.driver_checksums, self.app_checksums), f)
+        except FileNotFoundError:
+            self.log.error("Couldn't save session to disk!")
+
+    def clearChecksums(self):
+        self.driver_checksums = {}
+        self.app_checksums = {}
 
     def getHelperFunctions(self, helper_function_type):
         r = ''
@@ -254,6 +278,16 @@ class HubitatCodeBuilder:
     def setUsedDriverList(self, used_driver_list):
         self.used_driver_list = used_driver_list
     
+    def getCheckSumOfFile(self, file_to_check):
+        m = hashlib.md5()
+        with open(file_to_check, 'r', encoding='utf-8') as file:
+            block = file.read(512)
+            while block:
+                m.update(block.encode('utf-8'))
+                block = file.read(512)
+        
+        return(m.hexdigest())
+
     def expandGroovyFile(self, config_dict, code_type = 'driver'):
         # Process the params
         input_groovy_file = Path(config_dict['file'])
@@ -293,7 +327,7 @@ class HubitatCodeBuilder:
                             (l, self._definition_string, definition_dict_original) = self._definition_string
                             # self._definition_string contains a function that can be 
                             # inserted into a driver to retrieve driver info from.
-                            self.log.debug(self._definition_string)
+                            #self.log.debug(self._definition_string)
                             r['name'] = definition_dict_original['name']
                     includePosition = l.find('#!include:')
                     if(includePosition != -1):
@@ -329,18 +363,33 @@ class HubitatCodeBuilder:
             self.log.debug(expanded_result)
             if(d['id'] != 0):
                 j += 1
-                self.log.debug('push_to_dir:' + str(self.getBuildDir(code_type) / self.getOutputGroovyFile(d['file'], alternate_output_filename=aof)))
-                r = self.hubitat_hubspider.push_code(code_type, d['id'], self.getBuildDir(code_type) / self.getOutputGroovyFile(d['file'], alternate_output_filename=aof))
-                try:
-                    if 'source' in r:
-                        r['source'] = '<hidden>'
-                except TypeError:
-                    self.log.error(r)
-                id = r['id']
+                output_groovy_file = str(self.getBuildDir(code_type) / self.getOutputGroovyFile(d['file'], alternate_output_filename=aof))
+                output_groovy_file_md5 = self.getCheckSumOfFile(output_groovy_file)
+                self.log.debug('MD5 for file {}: {}'.format(d['id'], output_groovy_file_md5))
+                self.log.debug('push_to_dir:' + str(output_groovy_file))
+                if(code_type == 'driver' and d['id'] in self.driver_checksums and output_groovy_file_md5 == self.driver_checksums[d['id']]):
+                    self.log.debug('Skipping updating code id {} since the MD5 matches.'.format(d['id']))
+                elif(code_type == 'app' and d['id'] in self.app_checksums and output_groovy_file_md5 == self.app_checksums[d['id']]):
+                    self.log.debug('Skipping updating app id {} since the MD5 matches.'.format(d['id']))
+                else:
+                    r = self.hubitat_hubspider.push_code(code_type, d['id'], self.getBuildDir(code_type) / self.getOutputGroovyFile(d['file'], alternate_output_filename=aof))
+                    if(isinstance(r, int) != True and 'source' in r):
+                        # We got a successful update, save the checksum
+                        if(code_type == 'driver'):
+                            self.driver_checksums[d['id']] = output_groovy_file_md5
+                            self.log.debug('MD5 for returned code {}: {}'.format(d['id'], self.driver_checksums[d['id']]))
+                        else:
+                            self.app_checksums[d['id']] = output_groovy_file_md5
+                            self.log.debug('MD5 for returned code {}: {}'.format(d['id'], self.app_checksums[d['id']]))
+                    
+
                 if(code_type == 'driver'):
+                    id = int(d['id'])
                     #log.debug("code_files 1: {}".format(str(code_files[id])))
+                    #self.log.debug(str(self.he_drivers_dict))
                     self.he_drivers_dict[id].update(expanded_result)
-                    used_driver_list[id] = self.he_drivers_dict[id]
+                    if(id in self.he_drivers_dict):
+                        used_driver_list[id] = self.he_drivers_dict[id]
                     #log.debug("code_files 2: {}".format(str(code_files[id])))
                     self.log.debug("Just worked on Driver ID " + str(id))
         self.log.info('Had '+str(j)+' {} files to work on...'.format(code_type))

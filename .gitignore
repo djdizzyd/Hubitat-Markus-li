@@ -4,3 +4,4 @@ hubitat_hubspider.cfg
 /DEVELOPER
 /drivers/expanded/tasmota-tuya-wifi-touch-switch-legacy-child-expanded.groovy
 /drivers/OLD_drivers
+/__hubitat_checksums
