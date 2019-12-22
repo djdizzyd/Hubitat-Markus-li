@@ -107,6 +107,7 @@ def on() {
         //s = state.containsKey("saturation") ? state.saturation : null
         b = state.containsKey("level") ? state.level : 100
     }
+    if(b < 20) b = 20
     cmds << setHSB(h, s, b)
     cmds << getAction(getCommandString("Power", "On"))
     return cmds
