@@ -14,8 +14,12 @@
 # Local imports
 from hubitat_driver_snippets import *
 from hubitat_driver_snippets_parser import *
-from hubitat_codebuilder import HubitatCodeBuilder
+from hubitat_codebuilder import HubitatCodeBuilder, PrintFormatter, PrintRecord
 
+# This class extends HubitatCodeBuilder with functions specific for my 
+# Tasmota Drivers and Apps. It should not be used directly, but can serve as
+# an example of how to use HubitatCodeBuilder for your own code
+#
 class HubitatCodeBuilderTasmota(HubitatCodeBuilder):
 
     #def __init__(self, **kwargs):
@@ -66,8 +70,9 @@ class HubitatCodeBuilderTasmota(HubitatCodeBuilder):
                     '    deviceHandlerName = "' + name + '"\n'
         return(ts_driver_list)
 
-    def _runEvalCmdAdditional(self, eval_cmd, definition_string, alternate_template, alternate_module):
-        #print('alternate_template 1: ' + str(alternate_template))
+    def _runEvalCmdAdditional(self, eval_cmd):
+        # Here we can filter eval commands we want special handling of
+        # Anything not handled here will run in eval...
         if(eval_cmd == 'makeTasmotaConnectDriverListV1()'):
             self.log.debug("Executing makeTasmotaConnectDriverListV1()...")
             output = self._makeTasmotaConnectDriverListV1()
@@ -76,29 +81,25 @@ class HubitatCodeBuilderTasmota(HubitatCodeBuilder):
             self.log.debug("Executing makeTasmotaConnectDriverListV2()...")
             output = self._makeTasmotaConnectDriverListV2()
             return(True, output)
-        elif(alternate_template != None and alternate_template != '' and eval_cmd.startswith('getUpdateNeededSettingsTasmotaDynamicModuleCommand(')):
-            self.log.debug("Executing getUpdateNeededSettingsTasmotaDynamicModuleCommand(0, '" + alternate_template + "')...")
-            output = getUpdateNeededSettingsTasmotaDynamicModuleCommand(0, alternate_template)
+        elif(self._alternate_template != None and self._alternate_template != '' and eval_cmd.startswith('getUpdateNeededSettingsTasmotaDynamicModuleCommand(')):
+            self.log.debug("Executing getUpdateNeededSettingsTasmotaDynamicModuleCommand(0, '" + self._alternate_template + "')...")
+            output = getUpdateNeededSettingsTasmotaDynamicModuleCommand(0, self._alternate_template)
             return(True, output)
-        elif(alternate_module != None and alternate_module != '' and eval_cmd.startswith('getUpdateNeededSettingsTasmotaDynamicModuleCommand(')):
-            self.log.debug("Executing getUpdateNeededSettingsTasmotaDynamicModuleCommand(" + alternate_module + ")...")
-            output = getUpdateNeededSettingsTasmotaDynamicModuleCommand(alternate_module)
+        elif(self._alternate_module != None and self._alternate_module != '' and eval_cmd.startswith('getUpdateNeededSettingsTasmotaDynamicModuleCommand(')):
+            self.log.debug("Executing getUpdateNeededSettingsTasmotaDynamicModuleCommand(" + self._alternate_module + ")...")
+            output = getUpdateNeededSettingsTasmotaDynamicModuleCommand(self._alternate_module)
             return(True, output)
         else:
             return(False, None)
 
-    def makeDriverList(self, generic_drivers, specific_drivers, base_repo_url, base_raw_repo_url):
-            with open ('DRIVERLIST', "w") as wd:
-                wd.write('**Generic Drivers**\n')
-                for d in sorted(generic_drivers, key = lambda i: i['name']) :
-                    url = base_repo_url + d['file']
-                    urlRaw = base_raw_repo_url + d['file']
-                    wd.write('* [' + d['name'] + '](' + url + ') - Import URL: [RAW](' + urlRaw + ')\n')
-                wd.write('\n**Device-specific Drivers**\n')
-                for d in sorted(specific_drivers, key = lambda i: i['name']):
-                    url = base_repo_url + d['file']
-                    urlRaw = base_raw_repo_url + d['file']
-                    if(d['name'] != 'TuyaMCU Wifi Touch Switch Legacy (Child)' and \
-                        d['name'].startswith('DO NOT USE') == 0):
-                        wd.write('* [' + d['name'] + '](' + url + ') - Import URL: [RAW](' + urlRaw + ')\n')
+    def makeDriverListFilter(self, dict_to_check, section):
+        # Filter for the DriverList
+        if(dict_to_check['name'] != 'TuyaMCU Wifi Touch Switch Legacy (Child)' and \
+            dict_to_check['name'].startswith('DO NOT USE') == 0):
+            return True
+        else:
+            return False
+
+    
+ 
     

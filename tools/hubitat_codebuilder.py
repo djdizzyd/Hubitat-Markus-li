@@ -25,7 +25,20 @@ from colorama import init, Fore, Style
 from hubitat_driver_snippets import *
 from hubitat_driver_snippets_parser import *
 
-# Custom formatter
+# (Ab)using the Log formatter for other things...
+class PrintFormatter(logging.Formatter):
+    def __init__(self, fmt="%(name)s - (%(url)s) - (%(url_raw)s)", datefmt="%Y-%m-%d"):
+        super().__init__(fmt=fmt, datefmt=datefmt)
+
+class PrintRecord(logging.LogRecord):
+    def __init__(self):
+        super().__init__('',0,'',0,'',{},'')
+    
+    def update(self, dictToAdd):
+        for key in dictToAdd:
+            setattr(self, key, dictToAdd[key])
+
+# Custom Log Formatter
 class HubitatCodeBuilderLogFormatter(logging.Formatter):
 
     def __init__(self, fmt_default="%(time_elapsed)-11s:%(name)-20s:%(levelname)5s: %(msg)s", 
@@ -117,7 +130,7 @@ class HubitatCodeBuilder:
         #print('output_groovy_file: ' + str(output_groovy_file))
         return(output_groovy_file)
 
-    def _checkFordefinition_string(self, l, alternate_name = None, alternate_namespace = None, alternate_vid = None):
+    def _checkFordefinition_string(self, l):
         definition_position = l.find('definition (')
         if(definition_position != -1):
             ds = l[definition_position+11:].strip()
@@ -126,12 +139,12 @@ class HubitatCodeBuilder:
             #print('{'+ds[1:-3]+'}')
             definition_dict = yaml.load(('{'+ds[1:-3]+' }').replace(':', ': '), Loader=yaml.FullLoader)
             self.log.debug(definition_dict)
-            if(alternate_name != None):
-                definition_dict['name'] = alternate_name
-            if(alternate_namespace != None):
-                definition_dict['namespace'] = alternate_namespace
-            if(alternate_vid != None):
-                definition_dict['vid'] = alternate_vid
+            if(self._alternate_name != None):
+                definition_dict['name'] = self._alternate_name
+            if(self._alternate_namespace != None):
+                definition_dict['namespace'] = self._alternate_namespace
+            if(self._alternate_vid != None):
+                definition_dict['vid'] = self._alternate_vid
             #print(definition_dict)
             # Process this string
             # (name: "Tasmota - Tuya Wifi Touch Switch TEST (Child)", namespace: "tasmota", author: "Markus Liljergren") {
@@ -186,23 +199,34 @@ class HubitatCodeBuilder:
         else:
             raise HubitatCodeBuilderError('Incorrect code_type: ' + str(code_type))
     
-    def _runEvalCmd(self, eval_cmd, definition_string, alternate_template, alternate_module):
+    def _runEvalCmd(self, eval_cmd):
+        # This will run the eval command and return the output
+        # Overrides should be implemented by overriding _runEvalCmdAdditional
+        # Overriding this method is not recommended.
+
         output = eval_cmd
         found = False
-        if(eval_cmd == 'getDeviceInfoFunction()'):
+        try:
+            (found, output) = self._runEvalCmdAdditional(eval_cmd)
+            if(found == False):
+                output = eval_cmd
+        except AttributeError:
+            #print(str(e))
+            found = False
+        # This if can be overriden in self._runEvalCmdAdditional()
+        if(found == False and eval_cmd == 'getDeviceInfoFunction()'):
             self.log.debug("Executing getDeviceInfoFunction()...")
-            if(definition_string == None):
+            if(self._definition_string == None):
                 raise HubitatCodeBuilderError('ERROR: Missing/incorrect Definition in file!')
-            output = definition_string
+            # self._definition_string contains a function that can be 
+            # inserted into a driver to retrieve driver info from.
+            output = self._definition_string
             found = True
-        else:
-            try:
-                (found, output) = self._runEvalCmdAdditional(eval_cmd, definition_string, alternate_template, alternate_module)
-                if(found == False):
-                    output = eval_cmd
-            except AttributeError:
-                #print(str(e))
-                found = False
+        # If no special handling is needed, just run eval...
+        # 1. Try if it runs without prepending anything...
+        # 2. See if it works with a method in the class instance
+        # 3. See if it works with a "private" method in the class instance
+        # 4. If all fails, throw an exception!
         if(found == False):
             try:
                 output = eval(eval_cmd)
@@ -221,21 +245,35 @@ class HubitatCodeBuilder:
         r = {'file': output_groovy_file, 'name': ''}
         
         self.log.debug('Expanding "' + str(input_groovy_file) + '" to "' + str(output_groovy_file) + '"...')
-        definition_string = None
+        
+        self._alternate_output_filename = alternate_output_filename
+        self._alternate_name = alternate_name
+        self._alternate_namespace = alternate_namespace
+        self._alternate_vid = alternate_vid
+        self._alternate_template = alternate_template
+        self._alternate_module = alternate_module
+        
+        # Reset the definition string
+        self._definition_string = None
+
         self.log.debug('Build dir: ' + str(self.getBuildDir(code_type) / output_groovy_file))
         with open (self.getBuildDir(code_type) / output_groovy_file, "w") as wd:
             with open (self.getInputDir(code_type) / input_groovy_file, "r") as rd:
                 # Read lines in loop
                 for l in rd:
-                    if(definition_string == None):
-                        definition_string = self._checkFordefinition_string(l, alternate_name = alternate_name, alternate_namespace = alternate_namespace, alternate_vid = alternate_vid)
-                        if(definition_string != None):
-                            (l, definition_string, definition_dict_original) = definition_string
+                    if(self._definition_string == None):
+                        self._definition_string = self._checkFordefinition_string(l)
+                        if(self._definition_string != None):
+
+                            (l, self._definition_string, definition_dict_original) = self._definition_string
+                            # self._definition_string contains a function that can be 
+                            # inserted into a driver to retrieve driver info from.
+                            self.log.debug(self._definition_string)
                             r['name'] = definition_dict_original['name']
                     includePosition = l.find('#!include:')
                     if(includePosition != -1):
                         eval_cmd = l[includePosition+10:].strip()
-                        output = self._runEvalCmd(eval_cmd, definition_string, alternate_template, alternate_module)
+                        output = self._runEvalCmd(eval_cmd)
                         if(includePosition > 0):
                             i = 0
                             wd.write(l[:includePosition])
@@ -253,3 +291,26 @@ class HubitatCodeBuilder:
         self.log.info('DONE expanding "' + input_groovy_file.name + '" to "' + output_groovy_file.name + '"!')
         return(r)
 
+    def makeDriverList(self, driver_list, output_file='DRIVERLIST', base_data={}, 
+                        filter_function=(lambda dict_to_check, section: True)):
+        # (Ab)using the logger Format class here...
+        # This will generate a file that can be used as part of documentation or for posting in a Forum
+        # Usage examples in hubitat_codebuilder_tool.py
+        #generic_format = "* [%(name)s](%(url)s) - Imp1rt URL: [RAW](%(url_raw)s)\n"
+        #generic_format = "* [%(name)s](%(base_url)s%(file)s) - Import URL: [RAW](%(base_raw_url)s%(file)s)\n"
+        record = PrintRecord()
+        record.update(base_data)
+        with open (output_file, "w") as wd:
+            for section in driver_list:
+                section_formatter = PrintFormatter(fmt=section['format'])
+                record.name = section['name']
+                wd.write(section_formatter.format(record))
+                if('items_format' in section):
+                    items_formatter = PrintFormatter(fmt=section['items_format'])
+                    for d in sorted( section['items'], key = lambda i: i['name']) :
+                        record.update(d)
+                        if(filter_function(d, section)):
+                            wd.write(items_formatter.format(record))
+                else:
+                    if('items' in section):
+                        self.log.error('"items" without "items_format"! skipping items in section "{}"'.format(section['name']))

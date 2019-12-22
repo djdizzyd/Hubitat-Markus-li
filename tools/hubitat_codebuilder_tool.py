@@ -174,21 +174,22 @@ def main():
     # Example driver: https://github.com/hubitat/HubitatPublic/blob/master/examples/drivers/GenericZigbeeRGBWBulb.groovy
     # RGB Example: https://github.com/damondins/hubitat/blob/master/Tasmota%20RGBW%20LED%20Light%20Bulb/Tasmota%20RGBW%20LED%20Light%20Bulb
 
-    driver_files = [
-        {'id': 578, 'file': 'tasmota-generic-thp-device.groovy' },
+    #driver_files = [
+    #    {'id': 578, 'file': 'tasmota-generic-thp-device.groovy' },
+    #    {'id': 550, 'file': 'tasmota-tuyamcu-wifi-touch-switch-child-test.groovy' },
         #{'id': 589, 'file': 'tasmota-generic-rgb-rgbw-controller-bulb-dimmer.groovy',
         # 'alternate_output_filename': 'tasmota-brilliant-20699-rgbw-bulb', \
         # 'alternate_name': 'Tasmota - Brilliant 20699 800lm RGBW Bulb', \
         # 'alternate_template': '{"NAME":"Brilliant20699","GPIO":[0,0,0,0,141,140,0,0,37,142,0,0,0],"FLAG":0,"BASE":18}'},
-        #{'id': 588, 'file': 'tasmota-unbranded-rgb-controller-with-ir.groovy' },
-    ]
-    #expected_num_drivers = 1
+    #    {'id': 588, 'file': 'tasmota-unbranded-rgb-controller-with-ir.groovy' },
+    #]
+    expected_num_drivers = 1
 
 
     j=0
     generic_drivers = []
     specific_drivers = []
-
+    
     for d in driver_files:
         aof = None
         if('alternate_output_filename' in d and d['alternate_output_filename'] != ''):
@@ -196,6 +197,7 @@ def main():
             alternate_namespace = (d['alternate_namespace'] if 'alternate_namespace' in d else None)
             alternate_template = (d['alternate_template'] if 'alternate_template' in d else None)
             alternate_module = (d['alternate_module'] if 'alternate_module' in d else None)
+            
             expanded_result = cb.expandGroovyFile(d['file'], code_type='driver', alternate_output_filename=d['alternate_output_filename'], \
                              alternate_name=d['alternate_name'], alternate_namespace=alternate_namespace, \
                              alternate_vid=alternate_vid, alternate_template=alternate_template, \
@@ -228,7 +230,35 @@ def main():
     log.info('Had '+str(j)+' drivers to work on for the apps...')
     if(len(used_driver_list) >= expected_num_drivers):
         log.info('Making the driver list file...')
-        cb.makeDriverList(generic_drivers, specific_drivers, base_repo_url, base_raw_repo_url)
+        my_driver_list_1 = [
+            {'name': '', 
+             'format': 'These are the currently available drivers (updated: %(asctime)s)\n\n'},
+            {'name': 'Generic Drivers',
+             'format': '**%(name)s**\n',
+             'items': generic_drivers,
+             'items_format': "* [%(name)s](%(base_url)s%(file)s) - Import URL: [RAW](%(base_raw_url)s%(file)s)\n"},
+            {'name': '\n', 'format': '%(name)s'},
+            {'name': 'Specific Drivers',
+             'format': '**%(name)s**\n',
+             'items': specific_drivers,
+             'items_format': "* [%(name)s](%(base_url)s%(file)s) - Import URL: [RAW](%(base_raw_url)s%(file)s)\n"}]
+        cb.makeDriverList(my_driver_list_1, filter_function=cb.makeDriverListFilter,
+            base_data={'base_url': base_repo_url, 'base_raw_url': base_raw_repo_url})
+        my_driver_list_2 = [
+            {'name': 'Driver List', 'format': '#%(name)s#\n'},
+            {'name': '', 
+             'format': 'These are the currently available drivers (updated: %(asctime)s)\n\n'},
+            {'name': 'Tasmota - Generic Drivers',
+             'format': '**%(name)s**\n',
+             'items': generic_drivers,
+             'items_format': "* [%(name)s](%(base_url)s%(file)s)\n"},
+            {'name': '\n', 'format': '%(name)s'},
+            {'name': 'Tasmota - Specific Device Drivers',
+             'format': '**%(name)s**\n',
+             'items': specific_drivers,
+             'items_format': "* [%(name)s](%(base_url)s%(file)s)\n"}]
+        cb.makeDriverList(my_driver_list_2, output_file='DRIVERLIST.md', filter_function=cb.makeDriverListFilter, 
+            base_data={'base_url': base_repo_url, 'base_raw_url': base_raw_repo_url})
     else:
         log.info("SKIPPING making of the driver list file since we don't have enough drivers in the list...")
     #print('Generic drivers: ' + str(generic_drivers))
