@@ -27,9 +27,6 @@ class HubitatCodeBuilderTasmota(HubitatCodeBuilder):
         #self.data = kwargs.pop('data', True)
     #    super().__init__(**kwargs)
 
-    def setUsedDriverList(self, used_driver_list):
-        self.used_driver_list = used_driver_list
-
     def _makeTasmotaConnectDriverListV1(self):
         ts_driver_list = '['
         for d in self.used_driver_list:

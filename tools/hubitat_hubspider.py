@@ -209,12 +209,12 @@ class HubitatHubSpider:
   # http://192.168.10.1/device/drivers
 
   def push_app_code(self, codeID, groovyFileToPublish):
-    return(self._push_code('app', codeID, groovyFileToPublish))
+    return(self.push_code('app', codeID, groovyFileToPublish))
   
   def push_driver_code(self, codeID, groovyFileToPublish):
-    return(self._push_code('driver', codeID, groovyFileToPublish))
+    return(self.push_code('driver', codeID, groovyFileToPublish))
 
-  def _push_code(self, codeType, codeID, groovyFileToPublish):
+  def push_code(self, codeType, codeID, groovyFileToPublish):
     self._prepare_session()
     if(codeType == 'driver'):
       APIUrl = self.API_base_url + '/driver/ajax/update'

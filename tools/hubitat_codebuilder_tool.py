@@ -21,6 +21,7 @@
 from pathlib import Path
 import logging
 from colorama import init, Fore, Style
+import sys
 init()
 
 #logging.basicConfig(level=logging.DEBUG,
@@ -30,6 +31,10 @@ init()
 from hubitat_hubspider import HubitatHubSpider
 from hubitat_codebuilder import HubitatCodeBuilder, HubitatCodeBuilderLogFormatter
 from hubitat_codebuilder_tasmota import HubitatCodeBuilderTasmota
+
+# Internal functions
+from hubitat_driver_snippets import *
+from hubitat_driver_snippets_parser import *
 
 # Setup the logger
 log = logging.getLogger(__name__)
@@ -49,25 +54,24 @@ log_hs.addHandler(h)
 # NOTE: All function names use mixedCaps since this is used with Groovy and it makes
 #       it less confusing not changing style all the time. 
 
+def test():
+    print('YAY2!')
+
 def main():
-    # Get us a Code Builder
+    # Get us a Code Builder...
     
     log.debug('Getting started...')
-    #log.error('Test')
-    
-    cb = HubitatCodeBuilderTasmota()
-
     #HubitatHubSpider.saveConfig('192.168.1.1', 'username', 'password', 'hhs_sample.cfg')
     hhs = HubitatHubSpider(None, 'hubitat_hubspider.cfg')
     # Check the result from login()
     log.debug(hhs.login())
 
-    #code_version = hubitatAjax.get_driver_current_code_version(550)
-    #log.debug(code_version)
+    # By including our namespace, anything we import in this file is available
+    # to call by the include tags in the .groovy files when we process them
+    cb = HubitatCodeBuilderTasmota(hhs, calling_namespace=sys.modules[__name__])
+    #cb = HubitatCodeBuilderTasmota()
     
-    drivers_dict = hhs.get_driver_list()
-    #pp.pprint()
-    used_driver_list = {}
+    #log.debug(code_version)
 
     driver_files = [
         # Drivers without their own base-file:
@@ -177,57 +181,27 @@ def main():
     #driver_files = [
     #    {'id': 578, 'file': 'tasmota-generic-thp-device.groovy' },
     #    {'id': 550, 'file': 'tasmota-tuyamcu-wifi-touch-switch-child-test.groovy' },
-        #{'id': 589, 'file': 'tasmota-generic-rgb-rgbw-controller-bulb-dimmer.groovy',
-        # 'alternate_output_filename': 'tasmota-brilliant-20699-rgbw-bulb', \
-        # 'alternate_name': 'Tasmota - Brilliant 20699 800lm RGBW Bulb', \
-        # 'alternate_template': '{"NAME":"Brilliant20699","GPIO":[0,0,0,0,141,140,0,0,37,142,0,0,0],"FLAG":0,"BASE":18}'},
+    #    {'id': 589, 'file': 'tasmota-generic-rgb-rgbw-controller-bulb-dimmer.groovy',
+    #     'alternate_output_filename': 'tasmota-brilliant-20699-rgbw-bulb', \
+    #     'alternate_name': 'Tasmota - Brilliant 20699 800lm RGBW Bulb', \
+    #     'alternate_template': '{"NAME":"Brilliant20699","GPIO":[0,0,0,0,141,140,0,0,37,142,0,0,0],"FLAG":0,"BASE":18}'},
     #    {'id': 588, 'file': 'tasmota-unbranded-rgb-controller-with-ir.groovy' },
     #]
-    expected_num_drivers = 1
-
-
-    j=0
+    #expected_num_drivers = 1
+    
     generic_drivers = []
     specific_drivers = []
     
-    for d in driver_files:
-        aof = None
-        if('alternate_output_filename' in d and d['alternate_output_filename'] != ''):
-            alternate_vid = (d['alternate_vid'] if 'alternate_vid' in d else None)
-            alternate_namespace = (d['alternate_namespace'] if 'alternate_namespace' in d else None)
-            alternate_template = (d['alternate_template'] if 'alternate_template' in d else None)
-            alternate_module = (d['alternate_module'] if 'alternate_module' in d else None)
-            
-            expanded_result = cb.expandGroovyFile(d['file'], code_type='driver', alternate_output_filename=d['alternate_output_filename'], \
-                             alternate_name=d['alternate_name'], alternate_namespace=alternate_namespace, \
-                             alternate_vid=alternate_vid, alternate_template=alternate_template, \
-                             alternate_module=alternate_module)
-            aof = d['alternate_output_filename']
-        else:
-            expanded_result = cb.expandGroovyFile(d['file'])
-        log.debug(expanded_result)
-        if(d['id'] != 0):
-            j += 1
-            log.debug('push_to_dir:' + str(cb.getBuildDir('driver') / cb.getOutputGroovyFile(d['file'], alternate_output_filename=aof)))
-            r = hhs.push_driver_code(d['id'], cb.getBuildDir('driver') / cb.getOutputGroovyFile(d['file'], alternate_output_filename=aof))
-            try:
-                if 'source' in r:
-                    r['source'] = '<hidden>'
-                #log.debug(r)
-                id = r['id']
-                if(expanded_result['name'].startswith('Tasmota - ')):
-                    newD = {'name': expanded_result['name'][10:], 'file': expanded_result['file'].stem + expanded_result['file'].suffix}
-                    if(newD['name'].startswith('Generic')):
-                        generic_drivers.append(newD)
-                    else:
-                        specific_drivers.append(newD)
-
-                used_driver_list[id] = drivers_dict[id]
-            except Exception as e:
-                log.error('Exception when making driver list!: ' + str(e))
-                id = 0
-            log.debug("Just worked on Driver ID " + str(id))
-    log.info('Had '+str(j)+' drivers to work on for the apps...')
+    used_driver_list = cb.expandGroovyFilesAndPush(driver_files, code_type='driver')
+    for d in used_driver_list:
+        if(used_driver_list[d]['name'].startswith('Tasmota - ')):
+            newD = {'name': used_driver_list[d]['name'][10:], 'file': used_driver_list[d]['file'].stem + used_driver_list[d]['file'].suffix}
+            if(newD['name'].startswith('Generic')):
+                generic_drivers.append(newD)
+            else:
+                specific_drivers.append(newD)
+    
+    # Make Driver Lists if we have all files we expect...
     if(len(used_driver_list) >= expected_num_drivers):
         log.info('Making the driver list file...')
         my_driver_list_1 = [
@@ -242,7 +216,7 @@ def main():
              'format': '**%(name)s**\n',
              'items': specific_drivers,
              'items_format': "* [%(name)s](%(base_url)s%(file)s) - Import URL: [RAW](%(base_raw_url)s%(file)s)\n"}]
-        cb.makeDriverList(my_driver_list_1, filter_function=cb.makeDriverListFilter,
+        cb.makeDriverListDoc(my_driver_list_1, filter_function=cb.makeDriverListFilter,
             base_data={'base_url': base_repo_url, 'base_raw_url': base_raw_repo_url})
         my_driver_list_2 = [
             {'name': 'Driver List', 'format': '#%(name)s#\n'},
@@ -257,7 +231,7 @@ def main():
              'format': '**%(name)s**\n',
              'items': specific_drivers,
              'items_format': "* [%(name)s](%(base_url)s%(file)s)\n"}]
-        cb.makeDriverList(my_driver_list_2, output_file='DRIVERLIST.md', filter_function=cb.makeDriverListFilter, 
+        cb.makeDriverListDoc(my_driver_list_2, output_file='DRIVERLIST.md', filter_function=cb.makeDriverListFilter, 
             base_data={'base_url': base_repo_url, 'base_raw_url': base_raw_repo_url})
     else:
         log.info("SKIPPING making of the driver list file since we don't have enough drivers in the list...")
@@ -265,29 +239,29 @@ def main():
     #print('Specific drivers: ' + str(specific_drivers))
     #pp.pprint(used_driver_list)
     
-    apps_files = [
+    app_files = [
         {'id': 97, 'file': 'tasmota-connect.groovy' },
         {'id': 163, 'file': 'tasmota-connect-test.groovy' },
     ]
+
+    used_driver_list = cb.expandGroovyFilesAndPush(driver_files, code_type='driver')
     cb.setUsedDriverList(used_driver_list)
-    for a in apps_files:
-        if(a['id'] != 97 or a['id'] != 163):
-            cb.expandGroovyFile(a['file'], 'app')
+    filtered_app_files = []
+    for a in app_files:
+        if(a['id'] != 97 and a['id'] != 163):
+            
+            filtered_app_files.append(a)
         if(a['id'] != 0 and len(used_driver_list) >= expected_num_drivers):
-            cb.expandGroovyFile(a['file'], 'app')
+            filtered_app_files.append(a)
             log.info('Found ' + str(len(used_driver_list)) + ' driver(s)...')
-            r = hhs.push_app_code(a['id'], cb.getBuildDir('app') / cb.getOutputGroovyFile(a['file']))
-            try:
-                id = r['id']
-            except Exception:
-                id = 0
-            log.debug("Just worked on App ID " + str(id))
+            log.debug("Just found App ID " + str(id))
         else:
             if(a['id'] == 0):
                 log.info("Not making App updates since this app has no ID set yet! Skipped updating App with path: '" + str(a['file']) + "'")
             else:
                 log.info("Not ready for App updates! Only " + str(len(used_driver_list)) + " driver(s) currently active! Skipped updating App ID " + str(a['id']))
-    
+    used_app_list = cb.expandGroovyFilesAndPush(filtered_app_files, code_type='app')
+
     #cb.expandGroovyFile('tasmota-sonoff-powr2.groovy', expanded_dir)
     #hhs.push_driver_code(513, cb.getOutputGroovyFile('tasmota-sonoff-powr2.groovy', expanded_dir))
     

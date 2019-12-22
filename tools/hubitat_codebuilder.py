@@ -19,11 +19,13 @@ import ruamel.yaml
 import logging
 import winsound
 import datetime
+import inspect
 from colorama import init, Fore, Style
 
 # Local imports
-from hubitat_driver_snippets import *
-from hubitat_driver_snippets_parser import *
+#from hubitat_driver_snippets import *
+#from hubitat_driver_snippets_parser import *
+from hubitat_hubspider import HubitatHubSpider
 
 # (Ab)using the Log formatter for other things...
 class PrintFormatter(logging.Formatter):
@@ -93,7 +95,7 @@ class HubitatCodeBuilderError(Exception):
 
 class HubitatCodeBuilder:
 
-    def __init__(self, app_dir = Path('./apps'), app_build_dir = Path('./apps/expanded'), \
+    def __init__(self, hubitat_hubspider, calling_namespace=None, app_dir = Path('./apps'), app_build_dir = Path('./apps/expanded'), \
                  driver_dir = Path('./drivers'), driver_build_dir = Path('./drivers/expanded'), \
                  build_suffix = '-expanded'    ):
         self.app_dir = Path(app_dir)
@@ -102,8 +104,12 @@ class HubitatCodeBuilder:
         self.driver_build_dir = Path(driver_build_dir)
         self.build_suffix = build_suffix
         self.log = logging.getLogger(__name__)
+        self.hubitat_hubspider = hubitat_hubspider
+        self.he_drivers_dict = self.hubitat_hubspider.get_driver_list()
         my_locals = locals().copy()
         my_locals.pop('self')
+        # Save the calling namespace for future use...
+        self.calling_namespace = calling_namespace
         self.log.debug('Settings: {}'.format(str(my_locals)))
 
     def getHelperFunctions(self, helper_function_type):
@@ -232,16 +238,35 @@ class HubitatCodeBuilder:
                 output = eval(eval_cmd)
             except NameError:
                 try:
-                    output = eval('self.' + eval_cmd)
+                    output = eval('self.calling_namespace.' + eval_cmd)
                 except AttributeError:
-                    output = eval('self._' + eval_cmd)
+                    try:
+                        output = eval('self.' + eval_cmd)
+                    except AttributeError:
+                        try:
+                            output = eval('self._' + eval_cmd)
+                        except AttributeError:
+                            self.log.error('The call "{}" was needed when parsing, but it was not available in the namespace! Have you included the required namespaces?'.format(eval_cmd))
+                            raise
+
         return(output)
 
-    def expandGroovyFile(self, input_groovy_file, code_type = 'driver', alternate_output_filename = None, \
-                        alternate_name = None, alternate_namespace = None, alternate_vid = None, \
-                        alternate_template = None, alternate_module = None):
-        input_groovy_file = Path(input_groovy_file)
+    def setUsedDriverList(self, used_driver_list):
+        self.used_driver_list = used_driver_list
+    
+    def expandGroovyFile(self, config_dict, code_type = 'driver'):
+        # Process the params
+        input_groovy_file = Path(config_dict['file'])
+        alternate_output_filename = (config_dict['alternate_output_filename'] if 'alternate_output_filename' in config_dict else None)
+        
+        alternate_name = (config_dict['alternate_name'] if 'alternate_name' in config_dict else None)
+        alternate_module = (config_dict['alternate_module'] if 'alternate_module' in config_dict else None)
+        alternate_namespace = (config_dict['alternate_namespace'] if 'alternate_namespace' in config_dict else None)
+        alternate_template = (config_dict['alternate_template'] if 'alternate_template' in config_dict else None)
+        alternate_vid = (config_dict['alternate_vid'] if 'alternate_vid' in config_dict else None)
+
         output_groovy_file = self.getOutputGroovyFile(input_groovy_file, alternate_output_filename)
+
         r = {'file': output_groovy_file, 'name': ''}
         
         self.log.debug('Expanding "' + str(input_groovy_file) + '" to "' + str(output_groovy_file) + '"...')
@@ -291,7 +316,38 @@ class HubitatCodeBuilder:
         self.log.info('DONE expanding "' + input_groovy_file.name + '" to "' + output_groovy_file.name + '"!')
         return(r)
 
-    def makeDriverList(self, driver_list, output_file='DRIVERLIST', base_data={}, 
+    def expandGroovyFilesAndPush(self, code_files, code_type = 'driver'):
+        j=0
+        used_driver_list = {}
+        for d in code_files:
+            aof = None
+            if('alternate_output_filename' in d and d['alternate_output_filename'] != ''):
+                expanded_result = self.expandGroovyFile(d, code_type=code_type)
+                aof = d['alternate_output_filename']
+            else:
+                expanded_result = self.expandGroovyFile(d, code_type=code_type)
+            self.log.debug(expanded_result)
+            if(d['id'] != 0):
+                j += 1
+                self.log.debug('push_to_dir:' + str(self.getBuildDir(code_type) / self.getOutputGroovyFile(d['file'], alternate_output_filename=aof)))
+                r = self.hubitat_hubspider.push_code(code_type, d['id'], self.getBuildDir(code_type) / self.getOutputGroovyFile(d['file'], alternate_output_filename=aof))
+                try:
+                    if 'source' in r:
+                        r['source'] = '<hidden>'
+                except TypeError:
+                    self.log.error(r)
+                id = r['id']
+                if(code_type == 'driver'):
+                    #log.debug("code_files 1: {}".format(str(code_files[id])))
+                    self.he_drivers_dict[id].update(expanded_result)
+                    used_driver_list[id] = self.he_drivers_dict[id]
+                    #log.debug("code_files 2: {}".format(str(code_files[id])))
+                    self.log.debug("Just worked on Driver ID " + str(id))
+        self.log.info('Had '+str(j)+' {} files to work on...'.format(code_type))
+        #self.setUsedDriverList(used_driver_list)
+        return(used_driver_list)
+    
+    def makeDriverListDoc(self, driver_list, output_file='DRIVERLIST', base_data={}, 
                         filter_function=(lambda dict_to_check, section: True)):
         # (Ab)using the logger Format class here...
         # This will generate a file that can be used as part of documentation or for posting in a Forum
