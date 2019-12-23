@@ -160,6 +160,13 @@ input(name: "pressureOffset", type: "decimal", title: "<b>Pressure Offset</b>", 
 input(name: "tempRes", type: "enum", title: "<b>Temperature Resolution</b>", description: "<i>Temperature sensor resolution (0..3 = maximum number of decimal places, default: 1)<br/>NOTE: If the 3rd decimal is a 0 (eg. 24.720) it will show without the last decimal (eg. 24.72).</i>", options: ["0", "1", "2", "3"], defaultValue: "1", displayDuringSetup: true, required: false)
 """
 
+def getDefaultMetadataPreferencesForParentDevices(numSwitches=1):
+    return '''
+// Default Preferences for Parent Devices
+input(name: "numSwitches", type: "enum", title: "<b>Number of Relays</b>", description: "<i>Set the number of buttons/relays on the device (default 1)</i>", options: ["1", "2", "3", "4"], defaultValue: "''' + str(numSwitches) + '''", displayDuringSetup: true, required: true)
+'''
+
+
 def getUpdateNeededSettingsTasmotaHeader():
     return """// updateNeededSettings() Generic header BEGINS here
 def cmds = []

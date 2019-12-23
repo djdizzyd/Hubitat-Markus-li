@@ -155,7 +155,7 @@ if (result.containsKey("Wifi")) {
 }
 """
 
-def getTasmotaParserForTuyaSwitch():
+def getTasmotaParserForParentSwitch():
     return """
 // Standard TuyaSwitch Data parsing
 if (result.containsKey("POWER1")) {

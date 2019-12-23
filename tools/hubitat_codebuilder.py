@@ -313,6 +313,7 @@ class HubitatCodeBuilder:
         self._alternate_vid = alternate_vid
         self._alternate_template = alternate_template
         self._alternate_module = alternate_module
+        self._config_dict = config_dict
         
         # Reset the definition string
         self._definition_string = None

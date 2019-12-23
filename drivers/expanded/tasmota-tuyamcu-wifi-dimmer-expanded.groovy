@@ -661,13 +661,24 @@ private areAllChildrenSwitchedOn(Integer skip = 0) {
     return status
 }
 
+def getChildDriverName() {
+    deviceDriverName = getDeviceInfoByName('name')
+    if(deviceDriverName.toLowerCase().endsWith(' (parent)')) {
+        deviceDriverName = deviceDriverName.substring(0, deviceDriverName.length()-9)
+    }
+    childDriverName = "${deviceDriverName} (Child)"
+    logging("childDriverName = '$childDriverName'", 1)
+    return(childDriverName)
+}
+
 private void createChildDevices() {
     Integer numSwitchesI = numSwitches.toInteger()
     logging("createChildDevices: creating $numSwitchesI device(s)",1)
     
     // If making changes here, don't forget that recreateDevices need to have the same settings set
     for (i in 1..numSwitchesI) {
-        addChildDevice("${getDeviceInfoByName('namespace')}", "${getDeviceInfoByName('name')} (Child)", "$device.id-$i", [name: "$device.name #$i", label: "$device.displayName $i", isComponent: true])
+        // https://community.hubitat.com/t/composite-devices-parent-child-devices/1925
+        addChildDevice("${getDeviceInfoByName('namespace')}", "${getChildDriverName()}", "$device.id-$i", [name: "$device.name #$i", label: "$device.displayName $i", isComponent: true])
     }
 }
 
@@ -688,7 +699,7 @@ def recreateChildDevices() {
             //.setLabel doesn't seem to work on child devices???
         } else {
             // No such device, we should create it
-            addChildDevice("${getDeviceInfoByName('namespace')}", "${getDeviceInfoByName('name')} (Child)", "$device.id-$i", [name: "${getDeviceInfoByName('name')} #$i", label: "$device.displayName $i", isComponent: true])
+            addChildDevice("${getDeviceInfoByName('namespace')}", "${getChildDriverName()}", "$device.id-$i", [name: "${getDeviceInfoByName('name')} #$i", label: "$device.displayName $i", isComponent: true])
         }
     }
     if (numSwitchesI < 4) {

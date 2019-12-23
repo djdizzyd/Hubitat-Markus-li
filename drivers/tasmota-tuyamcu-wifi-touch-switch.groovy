@@ -23,7 +23,7 @@ metadata {
     
     preferences {
         #!include:getDefaultMetadataPreferences()
-        input(name: "numSwitches", type: "enum", title: "<b>Number of Switches</b>", description: "<i>Set the number of buttons on the switch (default 1)</i>", options: ["1", "2", "3", "4"], defaultValue: "1", displayDuringSetup: true, required: true)
+        #!include:getDefaultMetadataPreferencesForParentDevices()
         #!include:getDefaultMetadataPreferencesForTasmota(True) # False = No TelePeriod setting
 	}
 }
@@ -69,7 +69,7 @@ def off() {
 def parse(description) {
     #!include:getGenericTasmotaParseHeader()
             #!include:getTasmotaParserForBasicData()
-            #!include:getTasmotaParserForTuyaSwitch()
+            #!include:getTasmotaParserForParentSwitch()
             #!include:getTasmotaParserForWifi()
         #!include:getGenericTasmotaParseFooter()
 }

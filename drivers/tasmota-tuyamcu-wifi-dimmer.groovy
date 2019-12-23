@@ -69,7 +69,7 @@ def off() {
 def parse(description) {
     #!include:getGenericTasmotaParseHeader()
             #!include:getTasmotaParserForBasicData()
-            #!include:getTasmotaParserForTuyaSwitch()
+            #!include:getTasmotaParserForParentSwitch()
             #!include:getTasmotaParserForWifi()
         #!include:getGenericTasmotaParseFooter()
 }

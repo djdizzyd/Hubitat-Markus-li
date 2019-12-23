@@ -19,19 +19,31 @@ import groovy.json.JsonSlurper
 
 
 metadata {
-	definition (name: "Tasmota - TuyaMCU Wifi Touch Switch", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
+	definition (name: "Tasmota - Generic Power Monitor Plug (Parent)", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
         capability "Actuator"
 		capability "Switch"
 		capability "Sensor"
+
         
+        // Default Capabilities for Energy Monitor
+        capability "Voltage Measurement"
+        capability "Power Meter"
+        capability "Energy Meter"
         
         // Default Capabilities
         capability "Refresh"
         capability "Configuration"
         capability "HealthCheck"
         
-        //attribute   "checkInterval", "number"
-        attribute   "tuyaMCU", "string"
+        
+        // Default Attributes for Energy Monitor
+        attribute   "current", "string"
+        attribute   "apparentPower", "string"
+        attribute   "reactivePower", "string"
+        attribute   "powerFactor", "string"
+        attribute   "energyToday", "string"
+        attribute   "energyYesterday", "string"
+        attribute   "energyTotal", "string"
         
         // Default Attributes
         attribute   "needUpdate", "string"
@@ -40,7 +52,6 @@ metadata {
         attribute   "module", "string"
         attribute   "templateData", "string"
         attribute   "driverVersion", "string"
-
         
         // Commands for handling Child Devices
         command "childOn"
@@ -80,7 +91,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - TuyaMCU Wifi Touch Switch', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
+    deviceInfo = ['name': 'Tasmota - Generic Power Monitor Plug (Parent)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
     return(deviceInfo[infoName])
 }
 
@@ -95,8 +106,7 @@ def on() {
 	logging("on()",50)
     //logging("device.namespace: ${getDeviceInfoByName('namespace')}, device.driverName: ${getDeviceInfoByName('name')}", 50)
     def cmds = []
-    // Power0 doesn't work correctly for Tuya devices yet
-    //cmds << getAction(getCommandString("Power0", "1"))
+    cmds << getAction(getCommandString("Power0", "1"))
     Integer numSwitchesI = numSwitches.toInteger()
     
     for (i in 1..numSwitchesI) {
@@ -109,8 +119,8 @@ def on() {
 def off() {
     logging("off()",50)
     def cmds = []
-    // Power0 doesn't work correctly for Tuya devices yet
-    //cmds << getAction(getCommandString("Power0", "0"))
+    
+    cmds << getAction(getCommandString("Power0", "0"))
     Integer numSwitchesI = numSwitches.toInteger()
     
     for (i in 1..numSwitchesI) {
@@ -223,6 +233,25 @@ def parse(description) {
                 state.uptime = result.Uptime
             }
             
+            // Standard Wifi Data parsing
+            if (result.containsKey("Wifi")) {
+                if (result.Wifi.containsKey("AP")) {
+                    logging("AP: $result.Wifi.AP",99)
+                }
+                if (result.Wifi.containsKey("BSSId")) {
+                    logging("BSSId: $result.Wifi.BSSId",99)
+                }
+                if (result.Wifi.containsKey("Channel")) {
+                    logging("Channel: $result.Wifi.Channel",99)
+                }
+                if (result.Wifi.containsKey("RSSI")) {
+                    logging("RSSI: $result.Wifi.RSSI",99)
+                }
+                if (result.Wifi.containsKey("SSId")) {
+                    logging("SSId: $result.Wifi.SSId",99)
+                }
+            }
+            
             // Standard TuyaSwitch Data parsing
             if (result.containsKey("POWER1")) {
                 logging("POWER1: $result.POWER1",1)
@@ -245,24 +274,87 @@ def parse(description) {
                 events << createEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER4.toLowerCase() == "on"?4:0) && result.POWER4.toLowerCase() == "on" ? "on" : "off"))
             }
             
-            // Standard Wifi Data parsing
-            if (result.containsKey("Wifi")) {
-                if (result.Wifi.containsKey("AP")) {
-                    logging("AP: $result.Wifi.AP",99)
-                }
-                if (result.Wifi.containsKey("BSSId")) {
-                    logging("BSSId: $result.Wifi.BSSId",99)
-                }
-                if (result.Wifi.containsKey("Channel")) {
-                    logging("Channel: $result.Wifi.Channel",99)
-                }
-                if (result.Wifi.containsKey("RSSI")) {
-                    logging("RSSI: $result.Wifi.RSSI",99)
-                }
-                if (result.Wifi.containsKey("SSId")) {
-                    logging("SSId: $result.Wifi.SSId",99)
+            // Standard Energy Monitor Data parsing
+            if (result.containsKey("StatusSNS")) {
+                if (result.StatusSNS.containsKey("ENERGY")) {
+                    if (result.StatusSNS.ENERGY.containsKey("Total")) {
+                        logging("Total: $result.StatusSNS.ENERGY.Total kWh",99)
+                        events << createEvent(name: "energyTotal", value: "$result.StatusSNS.ENERGY.Total kWh")
+                    }
+                    if (result.StatusSNS.ENERGY.containsKey("Today")) {
+                        logging("Today: $result.StatusSNS.ENERGY.Today kWh",99)
+                        events << createEvent(name: "energyToday", value: "$result.StatusSNS.ENERGY.Today kWh")
+                    }
+                    if (result.StatusSNS.ENERGY.containsKey("Yesterday")) {
+                        logging("Yesterday: $result.StatusSNS.ENERGY.Yesterday kWh",99)
+                        events << createEvent(name: "energyYesterday", value: "$result.StatusSNS.ENERGY.Yesterday kWh")
+                    }
+                    if (result.StatusSNS.ENERGY.containsKey("Current")) {
+                        logging("Current: $result.StatusSNS.ENERGY.Current A",99)
+                        events << createEvent(name: "current", value: "$result.StatusSNS.ENERGY.Current A")
+                    }
+                    if (result.StatusSNS.ENERGY.containsKey("ApparentPower")) {
+                        logging("apparentPower: $result.StatusSNS.ENERGY.ApparentPower VA",99)
+                        events << createEvent(name: "apparentPower", value: "$result.StatusSNS.ENERGY.ApparentPower VA")
+                    }
+                    if (result.StatusSNS.ENERGY.containsKey("ReactivePower")) {
+                        logging("reactivePower: $result.StatusSNS.ENERGY.ReactivePower VAr",99)
+                        events << createEvent(name: "reactivePower", value: "$result.StatusSNS.ENERGY.ReactivePower VAr")
+                    }
+                    if (result.StatusSNS.ENERGY.containsKey("Factor")) {
+                        logging("powerFactor: $result.StatusSNS.ENERGY.Factor",99)
+                        events << createEvent(name: "powerFactor", value: "$result.StatusSNS.ENERGY.Factor")
+                    }
+                    if (result.StatusSNS.ENERGY.containsKey("Voltage")) {
+                        logging("Voltage: $result.StatusSNS.ENERGY.Voltage V",99)
+                        events << createEvent(name: "voltage", value: "$result.StatusSNS.ENERGY.Voltage V")
+                    }
+                    if (result.StatusSNS.ENERGY.containsKey("Power")) {
+                        logging("Power: $result.StatusSNS.ENERGY.Power W",99)
+                        events << createEvent(name: "power", value: "$result.StatusSNS.ENERGY.Power W")
+                    }
                 }
             }
+            if (result.containsKey("ENERGY")) {
+                //logging("Has ENERGY...", 1)
+                if (result.ENERGY.containsKey("Total")) {
+                    logging("Total: $result.ENERGY.Total kWh",99)
+                    events << createEvent(name: "energyTotal", value: "$result.ENERGY.Total kWh")
+                }
+                if (result.ENERGY.containsKey("Today")) {
+                    logging("Today: $result.ENERGY.Today kWh",99)
+                    events << createEvent(name: "energyToday", value: "$result.ENERGY.Today kWh")
+                }
+                if (result.ENERGY.containsKey("Yesterday")) {
+                    logging("Yesterday: $result.ENERGY.Yesterday kWh",99)
+                    events << createEvent(name: "energyYesterday", value: "$result.ENERGY.Yesterday kWh")
+                }
+                if (result.ENERGY.containsKey("Current")) {
+                    logging("Current: $result.ENERGY.Current A",99)
+                    events << createEvent(name: "current", value: "$result.ENERGY.Current A")
+                }
+                if (result.ENERGY.containsKey("ApparentPower")) {
+                    logging("apparentPower: $result.ENERGY.ApparentPower VA",99)
+                    events << createEvent(name: "apparentPower", value: "$result.ENERGY.ApparentPower VA")
+                }
+                if (result.ENERGY.containsKey("ReactivePower")) {
+                    logging("reactivePower: $result.ENERGY.ReactivePower VAr",99)
+                    events << createEvent(name: "reactivePower", value: "$result.ENERGY.ReactivePower VAr")
+                }
+                if (result.ENERGY.containsKey("Factor")) {
+                    logging("powerFactor: $result.ENERGY.Factor",99)
+                    events << createEvent(name: "powerFactor", value: "$result.ENERGY.Factor")
+                }
+                if (result.ENERGY.containsKey("Voltage")) {
+                    logging("Voltage: $result.ENERGY.Voltage V",99)
+                    events << createEvent(name: "voltage", value: "$result.ENERGY.Voltage V")
+                }
+                if (result.ENERGY.containsKey("Power")) {
+                    logging("Power: $result.ENERGY.Power W",99)
+                    events << createEvent(name: "power", value: "$result.ENERGY.Power W")
+                }
+            }
+            // StatusPTH:[PowerDelta:0, PowerLow:0, PowerHigh:0, VoltageLow:0, VoltageHigh:0, CurrentLow:0, CurrentHigh:0]
         // parse() Generic Tasmota-device footer BEGINS here
         } else {
                 //log.debug "Response is not JSON: $body"
@@ -304,7 +396,7 @@ def update_needed_settings()
     cmds << getAction(getCommandString("Template", null))
     if(disableModuleSelection == null) disableModuleSelection = false
     moduleNumberUsed = moduleNumber
-    if(moduleNumber == null || moduleNumber == -1) moduleNumberUsed = 54
+    if(moduleNumber == null || moduleNumber == -1) moduleNumberUsed = -1
     useDefaultTemplate = false
     defaultDeviceTemplate = ''
     if(deviceTemplateInput != null && deviceTemplateInput == "0") {
@@ -355,48 +447,14 @@ def update_needed_settings()
         logging("Setting the Module has been disabled!", 10)
     }
 
-    // Update the TuyaMCU device with the correct number of switches
-    cmds << getAction(getCommandString("TuyaMCU", null))
-    if(device.currentValue('tuyaMCU') != null) {
-        tuyaMCU = device.currentValue('tuyaMCU')
-        logging("Got this tuyaMCU string ${tuyaMCU}",1)
-        Integer numSwitchesI = numSwitches.toInteger()
+    //cmds << getAction(getCommandString("SetOption81", "1")) // Set PCF8574 component behavior for all ports as inverted (default=0)
+    //cmds << getAction(getCommandString("LedPower", "1"))  // 1 = turn LED ON and set LedState 8
+    //cmds << getAction(getCommandString("LedState", "8"))  // 8 = LED on when Wi-Fi and MQTT are connected.
     
-        for (i in 1..numSwitchesI) {
-            if(tuyaMCU.indexOf("1$i") == -1) {
-                // Only send commands for missing buttons
-                cmds << getAction(getCommandString("TuyaMCU", "1$i,$i"))
-            } else {
-                logging("Already have button $i",10)
-            }
-        }
-        //Remove buttons we don't have
-        if (numSwitchesI < 4) {
-            n = numSwitchesI + 1
-            for (i in n..4) {
-                if(tuyaMCU.indexOf("1$i") != -1) {
-                    // Only send commands for buttons we have
-                    cmds << getAction(getCommandString("TuyaMCU", "1$i,0"))
-                } else {
-                    logging("Button $i already doesn't exist, just as expected...",10)
-                }
-            }
-        }
-    }
     
-    //
-    // https://github.com/arendst/Tasmota/wiki/commands
-    //SetOption66
-    //Set publishing TuyaReceived to MQTT  »6.7.0
-    //0 = disable publishing TuyaReceived over MQTT (default)
-    //1 = enable publishing TuyaReceived over MQTT
-    //cmds << getAction(getCommandString("SetOption66", "1"))
-
-    cmds << getAction(getCommandString("SetOption81", "0")) // Set PCF8574 component behavior for all ports as inverted (default=0)
-
-    // Make sure we have our child devices
-    recreateChildDevices()
-
+    // updateNeededSettings() TelePeriod setting
+    cmds << getAction(getCommandString("TelePeriod", (telePeriod == '' || telePeriod == null ? "300" : telePeriod)))
+    
     
     // updateNeededSettings() Generic footer BEGINS here
     cmds << getAction(getCommandString("SetOption113", "1")) // Hubitat Enabled

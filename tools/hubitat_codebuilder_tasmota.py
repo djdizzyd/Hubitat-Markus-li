@@ -70,6 +70,15 @@ class HubitatCodeBuilderTasmota(HubitatCodeBuilder):
     def _runEvalCmdAdditional(self, eval_cmd):
         # Here we can filter eval commands we want special handling of
         # Anything not handled here will run in eval...
+        # We have access to the following, just so we don't forget:
+        #self._alternate_output_filename = alternate_output_filename
+        #self._alternate_name = alternate_name
+        #self._alternate_namespace = alternate_namespace
+        #self._alternate_vid = alternate_vid
+        #self._alternate_template = alternate_template
+        #self._alternate_module = alternate_module
+        #self._config_dict = config_dict
+
         if(eval_cmd == 'makeTasmotaConnectDriverListV1()'):
             self.log.debug("Executing makeTasmotaConnectDriverListV1()...")
             output = self._makeTasmotaConnectDriverListV1()
@@ -77,6 +86,10 @@ class HubitatCodeBuilderTasmota(HubitatCodeBuilder):
         elif(eval_cmd == 'makeTasmotaConnectDriverListV2()'):
             self.log.debug("Executing makeTasmotaConnectDriverListV2()...")
             output = self._makeTasmotaConnectDriverListV2()
+            return(True, output)
+        elif('numSwitches' in self._config_dict and eval_cmd.startswith('getDefaultMetadataPreferencesForParentDevices(')):
+            self.log.debug("Executing getDefaultMetadataPreferencesForParentDevices({})...".format(self._config_dict['numSwitches']))
+            output = self.calling_namespace.getDefaultMetadataPreferencesForParentDevices(self._config_dict['numSwitches'])
             return(True, output)
         elif(self._alternate_template != None and self._alternate_template != '' and eval_cmd.startswith('getUpdateNeededSettingsTasmotaDynamicModuleCommand(')):
             self.log.debug("Executing getUpdateNeededSettingsTasmotaDynamicModuleCommand(0, '" + self._alternate_template + "')...")

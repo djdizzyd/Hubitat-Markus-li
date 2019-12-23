@@ -143,6 +143,15 @@ def main():
          'alternate_output_filename': 'tasmota-sonoff-s31', \
          'alternate_name': 'Tasmota - Sonoff S31', \
          'alternate_module': '41'},
+        # https://templates.blakadder.com/kmc-4.html
+        {'id': 643, 'file': 'tasmota-generic-pm-plug-parent.groovy' , \
+         'alternate_output_filename': 'tasmota-kmc-4-pm-plug', \
+         'alternate_name': 'Tasmota - KMC 4 Power Monitor Plug', \
+         'alternate_template': '{"NAME":"KMC 4 Plug","GPIO":[0,56,0,0,133,132,0,0,130,22,23,21,17],"FLAG":0,"BASE":36}',
+         'numSwitches': 3},
+        {'id': 644, 'file': 'tasmota-generic-pm-plug-child.groovy' , \
+         'alternate_output_filename': 'tasmota-kmc-4-pm-plug-child', \
+         'alternate_name': 'Tasmota - KMC 4 Power Monitor Plug (Child)'},
 
         # https://templates.blakadder.com/aoycocr_X10S.html
 
@@ -164,6 +173,8 @@ def main():
         {'id': 590, 'file': 'tasmota-tuyamcu-wifi-dimmer.groovy'},
         {'id': 588, 'file': 'tasmota-unbranded-rgb-controller-with-ir.groovy' },
         {'id': 591, 'file': 'tasmota-generic-rgb-rgbw-controller-bulb-dimmer.groovy' },
+        {'id': 641, 'file': 'tasmota-generic-pm-plug-parent.groovy' },
+        {'id': 642, 'file': 'tasmota-generic-pm-plug-child.groovy' },
 
         # Zigbee
         {'id': 579, 'file': 'zigbee-generic-wifi-switch-plug.groovy' },
