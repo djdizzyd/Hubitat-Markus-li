@@ -95,6 +95,7 @@ def manuallyAdd(){
                 "Tasmota - Sonoff POW",
                 "Tasmota - Sonoff S31",
                 "Tasmota - KMC 4 Power Monitor Plug",
+                "Tasmota - AWP04L Power Monitor Plug",
                 "Tasmota - TuyaMCU Wifi Touch Switch",
                 "Tasmota - Sonoff POW R2",
                 "Tasmota - Sonoff S2X",
@@ -410,6 +411,8 @@ def addDevices() {
                 deviceHandlerName = "Tasmota - Sonoff S31"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - KMC 4 Power Monitor Plug"))
                 deviceHandlerName = "Tasmota - KMC 4 Power Monitor Plug"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - AWP04L Power Monitor Plug"))
+                deviceHandlerName = "Tasmota - AWP04L Power Monitor Plug"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - TuyaMCU Wifi Touch Switch"))
                 deviceHandlerName = "Tasmota - TuyaMCU Wifi Touch Switch"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Sonoff POW R2"))

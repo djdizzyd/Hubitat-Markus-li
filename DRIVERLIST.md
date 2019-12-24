@@ -1,5 +1,5 @@
 #Driver List#
-These are the currently available drivers (updated: 2019-12-23)
+These are the currently available drivers (updated: 2019-12-24)
 
 **Tasmota - Generic Drivers**
 * [Generic Power Monitor Plug](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-generic-pm-plug-expanded.groovy)
@@ -11,6 +11,7 @@ These are the currently available drivers (updated: 2019-12-23)
 
 **Tasmota - Specific Device Drivers**
 * [AWP02L-N Plug](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-awp02l-n-plug-expanded.groovy)
+* [AWP04L Power Monitor Plug](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-awp04l-pm-plug-expanded.groovy)
 * [Aoycocr X10S Power Monitor Plug](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-aoycocr-x10s-pm-plug-expanded.groovy)
 * [Brilliant 20699 800lm RGBW Bulb](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-brilliant-20699-rgbw-bulb-expanded.groovy)
 * [Brilliant BL20925 Power Monitor Plug](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-brilliant-bl20925-pm-plug-expanded.groovy)
