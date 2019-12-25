@@ -1,5 +1,5 @@
 #Driver List#
-These are the currently available drivers (updated: 2019-12-25)
+These are the currently available drivers (updated: 2019-12-25):
 
 **Tasmota - Generic Drivers**
 * [Generic Power Monitor Plug](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-generic-pm-plug-expanded.groovy)
@@ -26,6 +26,8 @@ These are the currently available drivers (updated: 2019-12-25)
 * [SK03 Power Monitor Outdoor Plug](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-sk03-pm-outdoor-plug-expanded.groovy) - [Device Info](https://templates.blakadder.com/SK03_outdoor.html)
 * [Sonoff 4CH (Child)](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-sonoff-4ch-child-expanded.groovy)
 * [Sonoff 4CH (Parent)](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-sonoff-4ch-parent-expanded.groovy) (UNTESTED driver) - [Device Info](https://templates.blakadder.com/sonoff_4CH.html)
+* [Sonoff 4CH Pro (Child)](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-sonoff-4ch-pro-child-expanded.groovy)
+* [Sonoff 4CH Pro (Parent)](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-sonoff-4ch-pro-parent-expanded.groovy) (UNTESTED driver) - [Device Info](https://templates.blakadder.com/sonoff_4CH_Pro.html)
 * [Sonoff Basic](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-sonoff-basic-expanded.groovy) - [Device Info](https://templates.blakadder.com/sonoff_basic.html)
 * [Sonoff Basic R3](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-sonoff-basic-r3-expanded.groovy) - [Device Info](https://templates.blakadder.com/sonoff_basic_R3.html)
 * [Sonoff Mini](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-sonoff-mini-expanded.groovy) - [Device Info](https://templates.blakadder.com/sonoff_mini.html)

@@ -161,6 +161,15 @@ def main():
          'alternate_name': 'Tasmota - AWP04L Power Monitor Plug', \
          'alternate_template': '{"NAME":"AWP04L","GPIO":[57,255,255,131,255,134,0,0,21,17,132,56,255],"FLAG":0,"BASE":18}',
          'deviceLink': 'https://templates.blakadder.com/awp04l.html'},
+        {'id': 646, 'file': 'tasmota-sonoff-4ch-parent.groovy' , \
+         'alternate_output_filename': 'tasmota-sonoff-4ch-pro-parent', \
+         'alternate_name': 'Tasmota - Sonoff 4CH Pro (Parent)', \
+         'alternate_template': '{"NAME":"Sonoff 4CH Pro","GPIO":[17,255,255,255,23,22,18,19,21,56,20,24,0],"FLAG":0,"BASE":23}',
+         'comment': 'UNTESTED driver', 'numSwitches': 4,
+         'deviceLink': 'https://templates.blakadder.com/sonoff_4CH_Pro.html'},
+        {'id': 647, 'file': 'tasmota-generic-pm-plug-child.groovy' , \
+         'alternate_output_filename': 'tasmota-sonoff-4ch-pro-child', \
+         'alternate_name': 'Tasmota - Sonoff 4CH Pro (Child)'},
 
         # Drivers WITH their own base-file
         {'id': 548, 'file': 'tasmota-tuyamcu-wifi-touch-switch.groovy' },
@@ -215,6 +224,7 @@ def main():
     
     # As long as we have an id, we can just supply that here instead of the whole config...
     driver_files_testing = [
+        
     #     {'id':551},{'id':578}, {'id':362}, {'id':645}, {'id':590}, {'id':588}, 
     #    {'id': 0, 'file': 'tasmota-generic-thp-device.groovy' , \
     #     'alternate_output_filename': 'tasmota-sonoff-th', \
@@ -274,7 +284,7 @@ def main():
         log.info('Making the driver list file...')
         my_driver_list_1 = [
             {'name': '', 
-             'format': 'These are the currently available drivers (updated: %(asctime)s)\n\n'},
+             'format': 'These are the currently available drivers (updated: %(asctime)s):\n\n'},
             {'name': 'Generic Drivers',
              'format': '**%(name)s**\n',
              'items': generic_drivers,
@@ -296,7 +306,7 @@ def main():
         my_driver_list_2 = [
             {'name': 'Driver List', 'format': '#%(name)s#\n'},
             {'name': '', 
-             'format': 'These are the currently available drivers (updated: %(asctime)s)\n\n'},
+             'format': 'These are the currently available drivers (updated: %(asctime)s):\n\n'},
             {'name': 'Tasmota - Generic Drivers',
              'format': '**%(name)s**\n',
              'items': generic_drivers,
