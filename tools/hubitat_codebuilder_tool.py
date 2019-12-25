@@ -206,11 +206,12 @@ def main():
         # The following can be overwritten: 
     ]
     # Future devices to implement support for:
-    # https://templates.blakadder.com/sonoff_4CH.html
-    # https://templates.blakadder.com/sonoff_4CH_Pro.html
     # https://templates.blakadder.com/sonoff_RF_bridge.html
     # https://templates.blakadder.com/maxcio_400ml_diffuser.html
     # https://templates.blakadder.com/ytf_ir_bridge.html
+
+    # Still not fully functional (or BROKEN):
+    # https://templates.blakadder.com/ce_smart_home-WF500D.html
 
 
     base_repo_url = 'https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/'
@@ -304,7 +305,7 @@ def main():
         cb.makeDriverListDoc(my_driver_list_1, filter_function=cb.makeDriverListFilter,
             base_data={'base_url': base_repo_url, 'base_raw_url': base_raw_repo_url})
         my_driver_list_2 = [
-            {'name': 'Driver List', 'format': '#%(name)s#\n'},
+            {'name': 'Driver List', 'format': '#%(name)s# \n\n'},
             {'name': '', 
              'format': 'These are the currently available drivers (updated: %(asctime)s):\n\n'},
             {'name': 'Tasmota - Generic Drivers',
