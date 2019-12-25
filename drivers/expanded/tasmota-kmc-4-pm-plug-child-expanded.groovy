@@ -47,7 +47,9 @@ void off() {
 private def getDriverVersion() {
     logging("getDriverVersion()", 50)
 	def cmds = []
-    sendEvent(name: "driverVersion", value: "v0.9.1 for Tasmota 7.x (Hubitat version)")
+    comment = ""
+    if(comment != "") state.comment = comment
+    sendEvent(name: "driverVersion", value: "v0.9.2 for Tasmota 7.x (Hubitat version)")
     return cmds
 }
 

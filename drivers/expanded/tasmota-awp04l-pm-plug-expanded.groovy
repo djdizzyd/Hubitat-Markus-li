@@ -49,6 +49,7 @@ metadata {
         attribute   "needUpdate", "string"
         //attribute   "uptime", "string"  // This floods the event log!
         attribute   "ip", "string"
+        attribute   "ipLink", "string"
         attribute   "module", "string"
         attribute   "templateData", "string"
         attribute   "driverVersion", "string"
@@ -146,6 +147,11 @@ def parse(description) {
                 logging("POWER: $result.POWER",99)
                 events << createEvent(name: "switch", value: result.POWER.toLowerCase())
             }
+            if (result.containsKey("StatusNET")) {
+                logging("StatusNET: $result.StatusNET",99)
+                result << result.StatusNET
+                //logging("result: ${result}",0)
+            }
             if (result.containsKey("LoadAvg")) {
                 logging("LoadAvg: $result.LoadAvg",99)
             }
@@ -161,9 +167,11 @@ def parse(description) {
             if (result.containsKey("Hostname")) {
                 logging("Hostname: $result.Hostname",99)
             }
-            if (result.containsKey("IPAddress") && override == false) {
+            if (result.containsKey("IPAddress") && (override == false || override == null)) {
                 logging("IPAddress: $result.IPAddress",99)
                 events << createEvent(name: "ip", value: "$result.IPAddress")
+                //logging("ipLink: <a target=\"device\" href=\"http://$result.IPAddress\">$result.IPAddress</a>",10)
+                events << createEvent(name: "ipLink", value: "<a target=\"device\" href=\"http://$result.IPAddress\">$result.IPAddress</a>")
             }
             if (result.containsKey("WebServerMode")) {
                 logging("WebServerMode: $result.WebServerMode",99)
@@ -202,7 +210,7 @@ def parse(description) {
             }
             if (result.containsKey("Uptime")) {
                 logging("Uptime: $result.Uptime",99)
-                // Even with "displayed: false, archivable: false" these events still show up under events...
+                // Even with "displayed: false, archivable: false" these events still show up under events... There is no way of NOT having it that way...
                 //events << createEvent(name: 'uptime', value: result.Uptime, displayed: false, archivable: false)
                 state.uptime = result.Uptime
             }
@@ -228,50 +236,14 @@ def parse(description) {
             
             // Standard Energy Monitor Data parsing
             if (result.containsKey("StatusSNS")) {
-                if (result.StatusSNS.containsKey("ENERGY")) {
-                    if (result.StatusSNS.ENERGY.containsKey("Total")) {
-                        logging("Total: $result.StatusSNS.ENERGY.Total kWh",99)
-                        events << createEvent(name: "energyTotal", value: "$result.StatusSNS.ENERGY.Total kWh")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Today")) {
-                        logging("Today: $result.StatusSNS.ENERGY.Today kWh",99)
-                        events << createEvent(name: "energyToday", value: "$result.StatusSNS.ENERGY.Today kWh")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Yesterday")) {
-                        logging("Yesterday: $result.StatusSNS.ENERGY.Yesterday kWh",99)
-                        events << createEvent(name: "energyYesterday", value: "$result.StatusSNS.ENERGY.Yesterday kWh")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Current")) {
-                        logging("Current: $result.StatusSNS.ENERGY.Current A",99)
-                        events << createEvent(name: "current", value: "$result.StatusSNS.ENERGY.Current A")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("ApparentPower")) {
-                        logging("apparentPower: $result.StatusSNS.ENERGY.ApparentPower VA",99)
-                        events << createEvent(name: "apparentPower", value: "$result.StatusSNS.ENERGY.ApparentPower VA")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("ReactivePower")) {
-                        logging("reactivePower: $result.StatusSNS.ENERGY.ReactivePower VAr",99)
-                        events << createEvent(name: "reactivePower", value: "$result.StatusSNS.ENERGY.ReactivePower VAr")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Factor")) {
-                        logging("powerFactor: $result.StatusSNS.ENERGY.Factor",99)
-                        events << createEvent(name: "powerFactor", value: "$result.StatusSNS.ENERGY.Factor")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Voltage")) {
-                        logging("Voltage: $result.StatusSNS.ENERGY.Voltage V",99)
-                        events << createEvent(name: "voltage", value: "$result.StatusSNS.ENERGY.Voltage V")
-                    }
-                    if (result.StatusSNS.ENERGY.containsKey("Power")) {
-                        logging("Power: $result.StatusSNS.ENERGY.Power W",99)
-                        events << createEvent(name: "power", value: "$result.StatusSNS.ENERGY.Power W")
-                    }
-                }
+                result << result.StatusSNS
             }
             if (result.containsKey("ENERGY")) {
                 //logging("Has ENERGY...", 1)
+                //if (!state.containsKey('energy')) state.energy = {}
                 if (result.ENERGY.containsKey("Total")) {
                     logging("Total: $result.ENERGY.Total kWh",99)
-                    events << createEvent(name: "energyTotal", value: "$result.ENERGY.Total kWh")
+                    events << createEvent(name: "energyTotal", value: "$result.ENERGY.Total kWh")  
                 }
                 if (result.ENERGY.containsKey("Today")) {
                     logging("Today: $result.ENERGY.Today kWh",99)
@@ -304,6 +276,7 @@ def parse(description) {
                 if (result.ENERGY.containsKey("Power")) {
                     logging("Power: $result.ENERGY.Power W",99)
                     events << createEvent(name: "power", value: "$result.ENERGY.Power W")
+                    //state.energy.power = result.ENERGY.Power
                 }
             }
             // StatusPTH:[PowerDelta:0, PowerLow:0, PowerHigh:0, VoltageLow:0, VoltageHigh:0, CurrentLow:0, CurrentHigh:0]
@@ -313,7 +286,12 @@ def parse(description) {
             }
         }
         
-        if (!device.currentValue("ip") || (device.currentValue("ip") != getDataValue("ip"))) events << createEvent(name: 'ip', value: getDataValue("ip"))
+        if (!device.currentValue("ip") || (device.currentValue("ip") != getDataValue("ip"))) {
+            curIP = getDataValue("ip")
+            logging("Setting IP: $curIP", 1)
+            events << createEvent(name: 'ip', value: curIP)
+            events << createEvent(name: "ipLink", value: "<a target=\"device\" href=\"http://$curIP\">$curIP</a>")
+        }
         
         return events
         // parse() Generic footer ENDS here
@@ -430,7 +408,9 @@ def update_needed_settings()
 private def getDriverVersion() {
     logging("getDriverVersion()", 50)
 	def cmds = []
-    sendEvent(name: "driverVersion", value: "v0.9.1 for Tasmota 7.x (Hubitat version)")
+    comment = "<a target=\"blakadder\" href=\"https://templates.blakadder.com/awp04l.html\">Device Info</a>"
+    if(comment != "") state.comment = comment
+    sendEvent(name: "driverVersion", value: "v0.9.2 for Tasmota 7.x (Hubitat version)")
     return cmds
 }
 
@@ -507,9 +487,9 @@ def configure() {
     def cmds = []
     cmds = update_needed_settings()
     try {
-        // Try to run the getDriverVersion() command
+        // Run the getDriverVersion() command
         newCmds = getDriverVersion()
-        if (newCmds != []) cmds = cmds + newCmds
+        if (newCmds != null && newCmds != []) cmds = cmds + newCmds
     } catch (MissingMethodException e) {
         // ignore
     }
@@ -793,6 +773,7 @@ def sync(ip, port = null) {
     if (ip && ip != existingIp) {
         updateDataValue("ip", ip)
         sendEvent(name: 'ip', value: ip)
+        sendEvent(name: "ipLink", value: "<a target=\"device\" href=\"http://$ip\">$ip</a>")
         logging("IP set to ${ip}", 1)
     }
     if (port && port != existingPort) {

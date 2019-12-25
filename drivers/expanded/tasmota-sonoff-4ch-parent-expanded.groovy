@@ -19,17 +19,17 @@ import groovy.json.JsonSlurper
 
 
 metadata {
-	definition (name: "Tasmota - TuyaMCU CE Smart Home WF500D Dimmer (EXPERIMENTAL)", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
-        capability "Switch"
-		capability "SwitchLevel"
+	definition (name: "Tasmota - Sonoff 4CH (Parent)", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
+        capability "Actuator"
+		capability "Switch"
+		capability "Sensor"
+
         
         // Default Capabilities
         capability "Refresh"
         capability "Configuration"
         capability "HealthCheck"
         
-        attribute   "dimState", "number"
-        attribute   "tuyaMCU", "string"
         
         // Default Attributes
         attribute   "needUpdate", "string"
@@ -39,13 +39,12 @@ metadata {
         attribute   "module", "string"
         attribute   "templateData", "string"
         attribute   "driverVersion", "string"
-
-        //
-          // Commands for handling Child Devices
-          command "childOn"
-          command "childOff"
-          command "recreateChildDevices"
-          command "deleteChildren"
+        
+        // Commands for handling Child Devices
+        command "childOn"
+        command "childOff"
+        command "recreateChildDevices"
+        command "deleteChildren"
         
         // Default Commands
         command "reboot"
@@ -59,9 +58,9 @@ metadata {
         // Default Preferences
         input(name: "runReset", description: "<i>For details and guidance, see the release thread in the <a href=\"https://community.hubitat.com/t/release-tasmota-7-x-firmware-with-hubitat-support/29368\"> Hubitat Forum</a>. For settings marked as ADVANCED, make sure you understand what they do before activating them. If settings are not reflected on the device, press the Configure button in this driver. Also make sure all settings really are saved and correct.<br/>Type RESET and then press 'Save Preferences' to DELETE all Preferences and return to DEFAULTS.</i>", title: "<b>Settings</b>", displayDuringSetup: false, type: "paragraph", element: "paragraph")
         generate_preferences(configuration_model_debug())
-        //input(name: "numSwitches", type: "enum", title: "<b>Number of Switches</b>", description: "<i>Set the number of buttons on the switch (default 1)</i>", options: ["1", "2", "3", "4"], defaultValue: "1", displayDuringSetup: true, required: true)
-        input(name: "lowLevel", type: "string", title: "<b>Dimming Range (low)</b>", description: '<i>Used to calibrate the MINIMUM dimming level, see <a href="https://github.com/arendst/Tasmota/wiki/TuyaMCU-Configurations#dimming-range">here</a> for details.</i>', displayDuringSetup: true, required: false)
-        input(name: "highLevel", type: "string", title: "<b>Dimming Range (high)</b>", description: '<i>Used to calibrate the MINIMUM dimming level, see <a href="https://github.com/arendst/Tasmota/wiki/TuyaMCU-Configurations#dimming-range">here</a> for details.</i>', displayDuringSetup: true, required: false)
+        
+        // Default Preferences for Parent Devices
+        input(name: "numSwitches", type: "enum", title: "<b>Number of Relays</b>", description: "<i>Set the number of buttons/relays on the device (default 1)</i>", options: ["1", "2", "3", "4"], defaultValue: "4", displayDuringSetup: true, required: true)
         
         // Default Preferences for Tasmota
         input(name: "ipAddress", type: "string", title: "<b>Device IP Address</b>", description: "<i>Set this as a default fallback for the auto-discovery feature.</i>", displayDuringSetup: true, required: false)
@@ -79,7 +78,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - TuyaMCU CE Smart Home WF500D Dimmer (EXPERIMENTAL)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
+    deviceInfo = ['name': 'Tasmota - Sonoff 4CH (Parent)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
     return(deviceInfo[infoName])
 }
 
@@ -94,8 +93,7 @@ def on() {
 	logging("on()",50)
     //logging("device.namespace: ${getDeviceInfoByName('namespace')}, device.driverName: ${getDeviceInfoByName('name')}", 50)
     def cmds = []
-    // Power0 doesn't work correctly for Tuya devices yet
-    //cmds << getAction(getCommandString("Power0", "1"))
+    cmds << getAction(getCommandString("Power0", "1"))
     Integer numSwitchesI = numSwitches.toInteger()
     
     for (i in 1..numSwitchesI) {
@@ -108,8 +106,8 @@ def on() {
 def off() {
     logging("off()",50)
     def cmds = []
-    // Power0 doesn't work correctly for Tuya devices yet
-    //cmds << getAction(getCommandString("Power0", "0"))
+    
+    cmds << getAction(getCommandString("Power0", "0"))
     Integer numSwitchesI = numSwitches.toInteger()
     
     for (i in 1..numSwitchesI) {
@@ -229,6 +227,25 @@ def parse(description) {
                 state.uptime = result.Uptime
             }
             
+            // Standard Wifi Data parsing
+            if (result.containsKey("Wifi")) {
+                if (result.Wifi.containsKey("AP")) {
+                    logging("AP: $result.Wifi.AP",99)
+                }
+                if (result.Wifi.containsKey("BSSId")) {
+                    logging("BSSId: $result.Wifi.BSSId",99)
+                }
+                if (result.Wifi.containsKey("Channel")) {
+                    logging("Channel: $result.Wifi.Channel",99)
+                }
+                if (result.Wifi.containsKey("RSSI")) {
+                    logging("RSSI: $result.Wifi.RSSI",99)
+                }
+                if (result.Wifi.containsKey("SSId")) {
+                    logging("SSId: $result.Wifi.SSId",99)
+                }
+            }
+            
             // Standard TuyaSwitch Data parsing
             if (result.containsKey("POWER1")) {
                 logging("POWER1: $result.POWER1",1)
@@ -249,25 +266,6 @@ def parse(description) {
                 logging("POWER4: $result.POWER4",1)
                 childSendState("4", result.POWER4.toLowerCase())
                 events << createEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER4.toLowerCase() == "on"?4:0) && result.POWER4.toLowerCase() == "on" ? "on" : "off"))
-            }
-            
-            // Standard Wifi Data parsing
-            if (result.containsKey("Wifi")) {
-                if (result.Wifi.containsKey("AP")) {
-                    logging("AP: $result.Wifi.AP",99)
-                }
-                if (result.Wifi.containsKey("BSSId")) {
-                    logging("BSSId: $result.Wifi.BSSId",99)
-                }
-                if (result.Wifi.containsKey("Channel")) {
-                    logging("Channel: $result.Wifi.Channel",99)
-                }
-                if (result.Wifi.containsKey("RSSI")) {
-                    logging("RSSI: $result.Wifi.RSSI",99)
-                }
-                if (result.Wifi.containsKey("SSId")) {
-                    logging("SSId: $result.Wifi.SSId",99)
-                }
             }
         // parse() Generic Tasmota-device footer BEGINS here
         } else {
@@ -325,7 +323,7 @@ def update_needed_settings()
     if(deviceTemplateInput == null || deviceTemplateInput == "") {
         // We should use the default of the driver
         useDefaultTemplate = true
-        defaultDeviceTemplate = '{"NAME":"CE WF500D","GPIO":[255,255,255,255,255,255,0,0,255,108,255,107,255],"FLAG":0,"BASE":54}'
+        defaultDeviceTemplate = '{"NAME":"Sonoff 4CH","GPIO":[17,255,255,255,23,22,18,19,21,56,20,24,0],"FLAG":0,"BASE":7}'
     }
     if(deviceTemplateInput != null) deviceTemplateInput = deviceTemplateInput.replaceAll(' ','')
     if(disableModuleSelection == false && ((deviceTemplateInput != null && deviceTemplateInput != "") || 
@@ -366,48 +364,14 @@ def update_needed_settings()
         logging("Setting the Module has been disabled!", 10)
     }
 
-    // Update the TuyaMCU device with the correct number of switches
-    cmds << getAction(getCommandString("TuyaMCU", null))
-    if(device.currentValue('tuyaMCU') != null) {
-        tuyaMCU = device.currentValue('tuyaMCU')
-        logging("Got this tuyaMCU string ${tuyaMCU}",1)
-        Integer numSwitchesI = numSwitches.toInteger()
+    //cmds << getAction(getCommandString("SetOption81", "1")) // Set PCF8574 component behavior for all ports as inverted (default=0)
+    //cmds << getAction(getCommandString("LedPower", "1"))  // 1 = turn LED ON and set LedState 8
+    //cmds << getAction(getCommandString("LedState", "8"))  // 8 = LED on when Wi-Fi and MQTT are connected.
     
-        for (i in 1..numSwitchesI) {
-            if(tuyaMCU.indexOf("1$i") == -1) {
-                // Only send commands for missing buttons
-                cmds << getAction(getCommandString("TuyaMCU", "1$i,$i"))
-            } else {
-                logging("Already have button $i",10)
-            }
-        }
-        //Remove buttons we don't have
-        if (numSwitchesI < 4) {
-            n = numSwitchesI + 1
-            for (i in n..4) {
-                if(tuyaMCU.indexOf("1$i") != -1) {
-                    // Only send commands for buttons we have
-                    cmds << getAction(getCommandString("TuyaMCU", "1$i,0"))
-                } else {
-                    logging("Button $i already doesn't exist, just as expected...",10)
-                }
-            }
-        }
-    }
     
-    //
-    // https://github.com/arendst/Tasmota/wiki/commands
-    //SetOption66
-    //Set publishing TuyaReceived to MQTT  »6.7.0
-    //0 = disable publishing TuyaReceived over MQTT (default)
-    //1 = enable publishing TuyaReceived over MQTT
-    //cmds << getAction(getCommandString("SetOption66", "1"))
-
-    cmds << getAction(getCommandString("SetOption81", "0")) // Set PCF8574 component behavior for all ports as inverted (default=0)
-
-    // Make sure we have our child devices
-    recreateChildDevices()
-
+    // updateNeededSettings() TelePeriod setting
+    cmds << getAction(getCommandString("TelePeriod", (telePeriod == '' || telePeriod == null ? "300" : telePeriod)))
+    
     
     // updateNeededSettings() Generic footer BEGINS here
     cmds << getAction(getCommandString("SetOption113", "1")) // Hubitat Enabled
@@ -431,7 +395,7 @@ def update_needed_settings()
 private def getDriverVersion() {
     logging("getDriverVersion()", 50)
 	def cmds = []
-    comment = "<a target=\"blakadder\" href=\"https://templates.blakadder.com/ce_smart_home-WF500D.html\">Device Info</a>"
+    comment = "UNTESTED driver - <a target=\"blakadder\" href=\"https://templates.blakadder.com/sonoff_4CH.html\">Device Info</a>"
     if(comment != "") state.comment = comment
     sendEvent(name: "driverVersion", value: "v0.9.2 for Tasmota 7.x (Hubitat version)")
     return cmds

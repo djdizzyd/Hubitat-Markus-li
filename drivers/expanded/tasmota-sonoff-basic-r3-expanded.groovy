@@ -35,6 +35,7 @@ metadata {
         attribute   "needUpdate", "string"
         //attribute   "uptime", "string"  // This floods the event log!
         attribute   "ip", "string"
+        attribute   "ipLink", "string"
         attribute   "module", "string"
         attribute   "templateData", "string"
         attribute   "driverVersion", "string"
@@ -132,6 +133,11 @@ def parse(description) {
                 logging("POWER: $result.POWER",99)
                 events << createEvent(name: "switch", value: result.POWER.toLowerCase())
             }
+            if (result.containsKey("StatusNET")) {
+                logging("StatusNET: $result.StatusNET",99)
+                result << result.StatusNET
+                //logging("result: ${result}",0)
+            }
             if (result.containsKey("LoadAvg")) {
                 logging("LoadAvg: $result.LoadAvg",99)
             }
@@ -147,9 +153,11 @@ def parse(description) {
             if (result.containsKey("Hostname")) {
                 logging("Hostname: $result.Hostname",99)
             }
-            if (result.containsKey("IPAddress") && override == false) {
+            if (result.containsKey("IPAddress") && (override == false || override == null)) {
                 logging("IPAddress: $result.IPAddress",99)
                 events << createEvent(name: "ip", value: "$result.IPAddress")
+                //logging("ipLink: <a target=\"device\" href=\"http://$result.IPAddress\">$result.IPAddress</a>",10)
+                events << createEvent(name: "ipLink", value: "<a target=\"device\" href=\"http://$result.IPAddress\">$result.IPAddress</a>")
             }
             if (result.containsKey("WebServerMode")) {
                 logging("WebServerMode: $result.WebServerMode",99)
@@ -188,7 +196,7 @@ def parse(description) {
             }
             if (result.containsKey("Uptime")) {
                 logging("Uptime: $result.Uptime",99)
-                // Even with "displayed: false, archivable: false" these events still show up under events...
+                // Even with "displayed: false, archivable: false" these events still show up under events... There is no way of NOT having it that way...
                 //events << createEvent(name: 'uptime', value: result.Uptime, displayed: false, archivable: false)
                 state.uptime = result.Uptime
             }
@@ -217,7 +225,12 @@ def parse(description) {
             }
         }
         
-        if (!device.currentValue("ip") || (device.currentValue("ip") != getDataValue("ip"))) events << createEvent(name: 'ip', value: getDataValue("ip"))
+        if (!device.currentValue("ip") || (device.currentValue("ip") != getDataValue("ip"))) {
+            curIP = getDataValue("ip")
+            logging("Setting IP: $curIP", 1)
+            events << createEvent(name: 'ip', value: curIP)
+            events << createEvent(name: "ipLink", value: "<a target=\"device\" href=\"http://$curIP\">$curIP</a>")
+        }
         
         return events
         // parse() Generic footer ENDS here
@@ -334,7 +347,9 @@ def update_needed_settings()
 private def getDriverVersion() {
     logging("getDriverVersion()", 50)
 	def cmds = []
-    sendEvent(name: "driverVersion", value: "v0.9.1 for Tasmota 7.x (Hubitat version)")
+    comment = "<a target=\"blakadder\" href=\"https://templates.blakadder.com/sonoff_basic_R3.html\">Device Info</a>"
+    if(comment != "") state.comment = comment
+    sendEvent(name: "driverVersion", value: "v0.9.2 for Tasmota 7.x (Hubitat version)")
     return cmds
 }
 
@@ -411,9 +426,9 @@ def configure() {
     def cmds = []
     cmds = update_needed_settings()
     try {
-        // Try to run the getDriverVersion() command
+        // Run the getDriverVersion() command
         newCmds = getDriverVersion()
-        if (newCmds != []) cmds = cmds + newCmds
+        if (newCmds != null && newCmds != []) cmds = cmds + newCmds
     } catch (MissingMethodException e) {
         // ignore
     }
@@ -697,6 +712,7 @@ def sync(ip, port = null) {
     if (ip && ip != existingIp) {
         updateDataValue("ip", ip)
         sendEvent(name: 'ip', value: ip)
+        sendEvent(name: "ipLink", value: "<a target=\"device\" href=\"http://$ip\">$ip</a>")
         logging("IP set to ${ip}", 1)
     }
     if (port && port != existingPort) {

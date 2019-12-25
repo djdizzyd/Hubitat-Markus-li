@@ -11,7 +11,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-driverVersion = "v0.9.1 for Tasmota 7.x (Hubitat version)"
+driverVersion = "v0.9.2 for Tasmota 7.x (Hubitat version)"
 
 """
   Snippets used by hubitat-driver-helper-tool
@@ -70,6 +70,7 @@ def getDefaultMetadataAttributes():
 attribute   "needUpdate", "string"
 //attribute   "uptime", "string"  // This floods the event log!
 attribute   "ip", "string"
+attribute   "ipLink", "string"
 attribute   "module", "string"
 attribute   "templateData", "string"
 attribute   "driverVersion", "string"
@@ -371,11 +372,13 @@ def off() {
 }
 """
 
-def getDefaultFunctions():
+def getDefaultFunctions(comment=""):
     return '''/* Default functions go here */
 private def getDriverVersion() {
     logging("getDriverVersion()", 50)
 	def cmds = []
+    comment = "''' + comment + '''"
+    if(comment != "") state.comment = comment
     sendEvent(name: "driverVersion", value: "''' + driverVersion + '''")
     return cmds
 }

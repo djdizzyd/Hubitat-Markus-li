@@ -88,8 +88,19 @@ class HubitatCodeBuilderTasmota(HubitatCodeBuilder):
             output = self._makeTasmotaConnectDriverListV2()
             return(True, output)
         elif('numSwitches' in self._config_dict and eval_cmd.startswith('getDefaultMetadataPreferencesForParentDevices(')):
-            self.log.debug("Executing getDefaultMetadataPreferencesForParentDevices({})...".format(self._config_dict['numSwitches']))
+            self.log.debug("Executing getDefaultMetadataPreferencesForParentDevices(numSwitches={})...".format(self._config_dict['numSwitches']))
             output = self.calling_namespace.getDefaultMetadataPreferencesForParentDevices(self._config_dict['numSwitches'])
+            return(True, output)
+        elif(('comment' in self._config_dict or 'deviceLink' in self._config_dict) and eval_cmd.startswith('getDefaultFunctions(')):
+            comment = ''
+            separator = ''
+            if('comment' in self._config_dict):
+                comment = self._config_dict['comment']
+                separator = ' - '
+            if('deviceLink' in self._config_dict):
+                comment = '{}{}<a target=\\"blakadder\\" href=\\"{}\\">Device Info</a>'.format(comment, separator, self._config_dict['deviceLink'])
+            self.log.debug("Executing getDefaultFunctions(comment={})...".format(comment))
+            output = self.calling_namespace.getDefaultFunctions(comment=comment)
             return(True, output)
         elif(self._alternate_template != None and self._alternate_template != '' and eval_cmd.startswith('getUpdateNeededSettingsTasmotaDynamicModuleCommand(')):
             self.log.debug("Executing getUpdateNeededSettingsTasmotaDynamicModuleCommand(0, '" + self._alternate_template + "')...")

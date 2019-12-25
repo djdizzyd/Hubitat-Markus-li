@@ -112,6 +112,7 @@ def manuallyAdd(){
                 "Tasmota - Unbranded RGB Controller with IR",
                 "Tasmota - Generic RGB/RGBW Controller/Bulb/Dimmer",
                 "Tasmota - Generic Power Monitor Plug (Parent)",
+                "Tasmota - Sonoff 4CH (Parent)",
                 ]
             input "ipAddress", "text", title:"IP Address", description: "", required: false 
 		}
@@ -445,6 +446,8 @@ def addDevices() {
                 deviceHandlerName = "Tasmota - Generic RGB/RGBW Controller/Bulb/Dimmer"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic Power Monitor Plug (Parent)"))
                 deviceHandlerName = "Tasmota - Generic Power Monitor Plug (Parent)"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - Sonoff 4CH (Parent)"))
+                deviceHandlerName = "Tasmota - Sonoff 4CH (Parent)"
 			else if (selectedDevice?.value?.name?.startsWith("quired"))
                 deviceHandlerName = "Tasmota - Generic Wifi Switch/Plug"
             else if (selectedDevice?.value?.name?.startsWith("Aquired"))

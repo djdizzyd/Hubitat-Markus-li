@@ -83,6 +83,13 @@ class HubitatCodeBuilderLogFormatter(logging.Formatter):
                 res = self._formatter_error.format(record)
             if(self._error_beep):
                 winsound.Beep(500, 300)
+        elif record.levelno == logging.WARN:
+            if(self._error_color != None):
+                res = self._error_color + self._formatter_error.format(record) + Style.RESET_ALL
+            else:
+                res = self._formatter_error.format(record)
+            if(self._error_beep):
+                winsound.Beep(500, 300)
         else:
             if(self._default_color != None):
                 res = self._default_color + super().format(record) + Style.RESET_ALL
@@ -419,19 +426,42 @@ class HubitatCodeBuilder:
         # Usage examples in hubitat_codebuilder_tool.py
         #generic_format = "* [%(name)s](%(url)s) - Imp1rt URL: [RAW](%(url_raw)s)\n"
         #generic_format = "* [%(name)s](%(base_url)s%(file)s) - Import URL: [RAW](%(base_raw_url)s%(file)s)\n"
-        record = PrintRecord()
-        record.update(base_data)
         with open (output_file, "w") as wd:
             for section in driver_list:
                 section_formatter = PrintFormatter(fmt=section['format'])
+                record = PrintRecord()
+                record.update(base_data)
                 record.name = section['name']
                 wd.write(section_formatter.format(record))
                 if('items_format' in section):
-                    items_formatter = PrintFormatter(fmt=section['items_format'])
+                    items_formatter = []
+                    #self.log.debug('items_format type: {}'.format(str(type(section['items_format']))))
+                    if(type(section['items_format']) is list):
+                        i = 0
+                        for fmt in section['items_format']:
+                            #self.log.debug('Found format {}: {}'.format(i, fmt))
+                            items_formatter.append(PrintFormatter(fmt=fmt))
+                            i += 1
+                    else:
+                        items_formatter.append(PrintFormatter(fmt=section['items_format']))
                     for d in sorted( section['items'], key = lambda i: i['name']) :
+                        record = PrintRecord()
+                        record.update(base_data)
                         record.update(d)
                         if(filter_function(d, section)):
-                            wd.write(items_formatter.format(record))
+                            # Try formatters until we run out
+                            for i in range(0, len(items_formatter)):
+                                try:
+                                    #self.log.debug('Trying formatter: {}'.format(i))
+                                    wd.write(items_formatter[i].format(record))
+                                    #self.log.debug('OK formatter for {}: {} "{}"'.format(d['name'], i, items_formatter[i].format(record)))
+                                    #self.log.debug(d)
+                                    # If that format worked, we're done
+                                    break
+                                except ValueError as e:
+                                    #self.log.debug('Incorrect formatter: {}'.format(i))
+                                    if(i+1 >= len(items_formatter)):
+                                        raise ValueError(e)
                 else:
                     if('items' in section):
                         self.log.error('"items" without "items_format"! skipping items in section "{}"'.format(section['name']))

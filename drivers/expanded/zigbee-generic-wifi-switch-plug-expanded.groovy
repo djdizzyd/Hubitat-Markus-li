@@ -35,6 +35,7 @@ metadata {
         attribute   "needUpdate", "string"
         //attribute   "uptime", "string"  // This floods the event log!
         attribute   "ip", "string"
+        attribute   "ipLink", "string"
         attribute   "module", "string"
         attribute   "templateData", "string"
         attribute   "driverVersion", "string"
@@ -159,7 +160,9 @@ def update_needed_settings()
 private def getDriverVersion() {
     logging("getDriverVersion()", 50)
 	def cmds = []
-    sendEvent(name: "driverVersion", value: "v0.9.1 for Tasmota 7.x (Hubitat version)")
+    comment = ""
+    if(comment != "") state.comment = comment
+    sendEvent(name: "driverVersion", value: "v0.9.2 for Tasmota 7.x (Hubitat version)")
     return cmds
 }
 
@@ -236,9 +239,9 @@ def configure() {
     def cmds = []
     cmds = update_needed_settings()
     try {
-        // Try to run the getDriverVersion() command
+        // Run the getDriverVersion() command
         newCmds = getDriverVersion()
-        if (newCmds != []) cmds = cmds + newCmds
+        if (newCmds != null && newCmds != []) cmds = cmds + newCmds
     } catch (MissingMethodException e) {
         // ignore
     }

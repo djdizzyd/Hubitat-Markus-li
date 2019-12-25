@@ -42,7 +42,7 @@ def update_needed_settings()
 {
     #!include:getUpdateNeededSettingsTasmotaHeader()
 
-    #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand(43)
+    #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand(0, '{"NAME":"Sonoff Pow R2","GPIO":[17,145,0,146,0,0,0,0,21,56,0,0,0],"FLAG":0,"BASE":43}')
 
     cmds << getAction(getCommandString("SetOption81", "1")) // Set PCF8574 component behavior for all ports as inverted (default=0)
     cmds << getAction(getCommandString("LedPower", "1"))  // 1 = turn LED ON and set LedState 8

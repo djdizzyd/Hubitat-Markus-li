@@ -163,6 +163,7 @@ def sync(ip, port = null) {
     if (ip && ip != existingIp) {
         updateDataValue("ip", ip)
         sendEvent(name: 'ip', value: ip)
+        sendEvent(name: "ipLink", value: "<a target=\"device\" href=\"http://$ip\">$ip</a>")
         logging("IP set to ${ip}", 1)
     }
     if (port && port != existingPort) {

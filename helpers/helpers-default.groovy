@@ -41,9 +41,9 @@ def configure() {
     def cmds = []
     cmds = update_needed_settings()
     try {
-        // Try to run the getDriverVersion() command
+        // Run the getDriverVersion() command
         newCmds = getDriverVersion()
-        if (newCmds != []) cmds = cmds + newCmds
+        if (newCmds != null && newCmds != []) cmds = cmds + newCmds
     } catch (MissingMethodException e) {
         // ignore
     }
