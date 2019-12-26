@@ -157,6 +157,7 @@ def configuration_model_debug()
     <Item label="Verbose" value="10" />
     <Item label="Reports+Status" value="50" />
     <Item label="Reports" value="99" />
+    #!include:getSpecialDebugEntry()
 </Value>
 </configuration>
 '''

@@ -352,7 +352,7 @@ def update_needed_settings()
 private def getDriverVersion() {
     logging("getDriverVersion()", 50)
 	def cmds = []
-    comment = "<a target=\"blakadder\" href=\"https://templates.blakadder.com/ce_smart_home_LQ-2-W3.html\">Device Info</a>"
+    comment = "<a target=\"blakadder\" href=\"https://templates.blakadder.com/ce_smart_home_LQ-2-W3.html\">Device Model Info</a>"
     if(comment != "") state.comment = comment
     sendEvent(name: "driverVersion", value: "v0.9.2 for Tasmota 7.x (Hubitat version)")
     return cmds
@@ -364,15 +364,15 @@ private def logging(message, level) {
     if (logLevel != "0"){
         switch (logLevel) {
         case "-1": // Insanely verbose
-            if (level >= 0 && level < 99)
+            if (level >= 0 && level < 99 || level == 100)
                 log.debug "$message"
         break
         case "1": // Very verbose
-            if (level >= 1 && level < 99)
+            if (level >= 1 && level < 99 || level == 100)
                 log.debug "$message"
         break
         case "10": // A little less
-            if (level >= 10 && level < 99)
+            if (level >= 10 && level < 99 || level == 100)
                 log.debug "$message"
         break
         case "50": // Rather chatty
@@ -547,7 +547,7 @@ def configuration_model_debug()
     <Item label="Verbose" value="10" />
     <Item label="Reports+Status" value="50" />
     <Item label="Reports" value="99" />
-</Value>
+    </Value>
 </configuration>
 '''
 }

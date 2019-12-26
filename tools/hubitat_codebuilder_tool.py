@@ -71,10 +71,8 @@ def main():
     cb = HubitatCodeBuilderTasmota(hhs, calling_namespace=sys.modules[__name__])
     #cb = HubitatCodeBuilderTasmota()
     
-    #log.debug(code_version)
-
     driver_files = [
-        # Drivers without their own base-file:
+        # Tasmota drivers WITHOUT their own base-file:
         {'id': 418, 'file': 'tasmota-tuyamcu-wifi-touch-switch-child.groovy', \
          'alternate_output_filename': 'tasmota-tuyamcu-wifi-touch-switch-legacy-child', \
          'alternate_name': 'Tasmota - TuyaMCU Wifi Touch Switch Legacy (Child)', \
@@ -171,27 +169,21 @@ def main():
          'alternate_output_filename': 'tasmota-sonoff-4ch-pro-child', \
          'alternate_name': 'Tasmota - Sonoff 4CH Pro (Child)'},
 
-        # Drivers WITH their own base-file
+        # Tasmota Drivers WITH their own base-file
         {'id': 548, 'file': 'tasmota-tuyamcu-wifi-touch-switch.groovy' },
         {'id': 549, 'file': 'tasmota-tuyamcu-wifi-touch-switch-child.groovy' },
         {'id': 550, 'file': 'tasmota-tuyamcu-wifi-touch-switch-child-test.groovy' },
         {'id': 513, 'file': 'tasmota-sonoff-powr2.groovy', 'deviceLink': 'https://templates.blakadder.com/sonoff_Pow_R2.html'},
-        {'id': 551, 'file': 'tasmota-sonoff-s2x.groovy', 'comment': 'Works with both Sonoff S20 and Sonoff S26.',
+        {'id': 551, 'file': 'tasmota-sonoff-s2x.groovy', 'comment': 'Works with both Sonoff S20 and S26.',
         'deviceLink': 'https://templates.blakadder.com/sonoff_S20.html'},
         {'id': 554, 'file': 'tasmota-sonoff-mini.groovy', 'deviceLink': 'https://templates.blakadder.com/sonoff_mini.html'},
         {'id': 560, 'file': 'tasmota-sonoff-basic.groovy', 'deviceLink': 'https://templates.blakadder.com/sonoff_basic.html'},
-        {'id': 552, 'file': 'tasmota-generic-wifi-switch-plug.groovy' },
         {'id': 553, 'file': 'tasmota-s120-plug.groovy' },
         {'id': 557, 'file': 'tasmota-ykyc-001-pm-plug.groovy' },
         {'id': 559, 'file': 'tasmota-brilliant-bl20925-pm-plug.groovy', 'deviceLink': 'https://templates.blakadder.com/brilliant_BL20925.html'},
         {'id': 577, 'file': 'tasmota-prime-ccrcwfii113pk-plug.groovy', 'deviceLink': 'https://templates.blakadder.com/prime_CCRCWFII113PK.html'},
-        {'id': 558, 'file': 'tasmota-generic-pm-plug.groovy'},
-        {'id': 578, 'file': 'tasmota-generic-thp-device.groovy' },
         {'id': 590, 'file': 'tasmota-tuyamcu-wifi-dimmer.groovy'},
         {'id': 588, 'file': 'tasmota-unbranded-rgb-controller-with-ir.groovy' },
-        {'id': 591, 'file': 'tasmota-generic-rgb-rgbw-controller-bulb-dimmer.groovy' },
-        {'id': 641, 'file': 'tasmota-generic-pm-plug-parent.groovy', 'comment': 'Multi-relay support'},
-        {'id': 642, 'file': 'tasmota-generic-pm-plug-child.groovy' },
         {'id': 362, 'file': 'tasmota-sonoff-4ch-parent.groovy' , 
          'comment': 'UNTESTED driver',
          'deviceLink': 'https://templates.blakadder.com/sonoff_4CH.html',
@@ -199,6 +191,20 @@ def main():
         {'id': 645, 'file': 'tasmota-generic-pm-plug-child.groovy' , \
          'alternate_output_filename': 'tasmota-sonoff-4ch-child', \
          'alternate_name': 'Tasmota - Sonoff 4CH (Child)'},
+        # https://tasmota.github.io/docs/#/devices/Sonoff-RF-Bridge-433pi 
+        {'id': 648, 'file': 'tasmota-sonoff-rf-bridge-parent.groovy' , 
+         'comment': 'UNTESTED driver',
+         'deviceLink': 'https://templates.blakadder.com/sonoff_RF_bridge.html',
+         'numSwitches': 1, 'specialDebugLabel': 'RF Codes'},
+        {'id': 649, 'file': 'tasmota-sonoff-rf-bridge-child.groovy'},
+
+        # Generic Tasmota Devices:
+        {'id': 552, 'file': 'tasmota-generic-wifi-switch-plug.groovy' },
+        {'id': 591, 'file': 'tasmota-generic-rgb-rgbw-controller-bulb-dimmer.groovy' },
+        {'id': 578, 'file': 'tasmota-generic-thp-device.groovy' },
+        {'id': 558, 'file': 'tasmota-generic-pm-plug.groovy'},
+        {'id': 641, 'file': 'tasmota-generic-pm-plug-parent.groovy', 'comment': 'Multi-relay support'},
+        {'id': 642, 'file': 'tasmota-generic-pm-plug-child.groovy' },
 
         # Zigbee
         {'id': 579, 'file': 'zigbee-generic-wifi-switch-plug.groovy' },
@@ -209,6 +215,7 @@ def main():
     # https://templates.blakadder.com/sonoff_RF_bridge.html
     # https://templates.blakadder.com/maxcio_400ml_diffuser.html
     # https://templates.blakadder.com/ytf_ir_bridge.html
+    # https://templates.blakadder.com/sonoff_SC.html
 
     # Still not fully functional (or BROKEN):
     # https://templates.blakadder.com/ce_smart_home-WF500D.html
@@ -225,7 +232,7 @@ def main():
     
     # As long as we have an id, we can just supply that here instead of the whole config...
     driver_files_testing = [
-        
+    #    {'id':648},{'id':649}
     #     {'id':551},{'id':578}, {'id':362}, {'id':645}, {'id':590}, {'id':588}, 
     #    {'id': 0, 'file': 'tasmota-generic-thp-device.groovy' , \
     #     'alternate_output_filename': 'tasmota-sonoff-th', \
@@ -298,14 +305,14 @@ def main():
              'items': specific_drivers,
              # Make sure the format requesting the most amount of data is first in the list
              'items_format': [
-                 "* [%(name)s](%(base_url)s%(file)s) (%(comment)s) - Import URL: [RAW](%(base_raw_url)s%(file)s) - [Device Info](%(deviceLink)s)\n",
-                 "* [%(name)s](%(base_url)s%(file)s) - Import URL: [RAW](%(base_raw_url)s%(file)s) - [Device Info](%(deviceLink)s)\n",
+                 "* [%(name)s](%(base_url)s%(file)s) (%(comment)s) - Import URL: [RAW](%(base_raw_url)s%(file)s) - [Device Model Info](%(deviceLink)s)\n",
+                 "* [%(name)s](%(base_url)s%(file)s) - Import URL: [RAW](%(base_raw_url)s%(file)s) - [Device Model Info](%(deviceLink)s)\n",
                  "* [%(name)s](%(base_url)s%(file)s) (%(comment)s) - Import URL: [RAW](%(base_raw_url)s%(file)s)\n",
                  "* [%(name)s](%(base_url)s%(file)s) - Import URL: [RAW](%(base_raw_url)s%(file)s)\n"]}]
         cb.makeDriverListDoc(my_driver_list_1, filter_function=cb.makeDriverListFilter,
             base_data={'base_url': base_repo_url, 'base_raw_url': base_raw_repo_url})
         my_driver_list_2 = [
-            {'name': 'Driver List', 'format': '#%(name)s# \n\n'},
+            {'name': 'Driver List', 'format': '# %(name)s \n'},
             {'name': '', 
              'format': 'These are the currently available drivers (updated: %(asctime)s):\n\n'},
             {'name': 'Tasmota - Generic Drivers',
@@ -320,8 +327,8 @@ def main():
              'items': specific_drivers,
              # Make sure the format requesting the most amount of data is first in the list
              'items_format': [
-                 "* [%(name)s](%(base_url)s%(file)s) (%(comment)s) - [Device Info](%(deviceLink)s)\n", 
-                 "* [%(name)s](%(base_url)s%(file)s) - [Device Info](%(deviceLink)s)\n", 
+                 "* [%(name)s](%(base_url)s%(file)s) (%(comment)s) - [Device Model Info](%(deviceLink)s)\n", 
+                 "* [%(name)s](%(base_url)s%(file)s) - [Device Model Info](%(deviceLink)s)\n", 
                  "* [%(name)s](%(base_url)s%(file)s) (%(comment)s)\n", 
                  "* [%(name)s](%(base_url)s%(file)s)\n"]}]
         cb.makeDriverListDoc(my_driver_list_2, output_file='DRIVERLIST.md', filter_function=cb.makeDriverListFilter, 
@@ -365,6 +372,9 @@ def main():
         log.warn('These new apps were created: \n{}'.format(cb.app_new))
     else:
         log.info('No new apps where created!')
+
+    log.info('Current version: {}'.format(driverVersion))
+
     cb.saveChecksums()
     hhs.save_session()
 

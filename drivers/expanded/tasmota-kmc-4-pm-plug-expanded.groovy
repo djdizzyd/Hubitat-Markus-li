@@ -74,7 +74,7 @@ metadata {
         generate_preferences(configuration_model_debug())
         
         // Default Preferences for Parent Devices
-        input(name: "numSwitches", type: "enum", title: "<b>Number of Relays</b>", description: "<i>Set the number of buttons/relays on the device (default 1)</i>", options: ["1", "2", "3", "4"], defaultValue: "3", displayDuringSetup: true, required: true)
+        input(name: "numSwitches", type: "enum", title: "<b>Number of Relays</b>", description: "<i>Set the number of buttons/relays on the device (default 3)</i>", options: ["1", "2", "3", "4"], defaultValue: "3", displayDuringSetup: true, required: true)
         
         // Default Preferences for Tasmota
         input(name: "ipAddress", type: "string", title: "<b>Device IP Address</b>", description: "<i>Set this as a default fallback for the auto-discovery feature.</i>", displayDuringSetup: true, required: false)
@@ -456,7 +456,7 @@ def update_needed_settings()
 private def getDriverVersion() {
     logging("getDriverVersion()", 50)
 	def cmds = []
-    comment = "<a target=\"blakadder\" href=\"https://templates.blakadder.com/kmc-4.html\">Device Info</a>"
+    comment = "<a target=\"blakadder\" href=\"https://templates.blakadder.com/kmc-4.html\">Device Model Info</a>"
     if(comment != "") state.comment = comment
     sendEvent(name: "driverVersion", value: "v0.9.2 for Tasmota 7.x (Hubitat version)")
     return cmds
@@ -468,15 +468,15 @@ private def logging(message, level) {
     if (logLevel != "0"){
         switch (logLevel) {
         case "-1": // Insanely verbose
-            if (level >= 0 && level < 99)
+            if (level >= 0 && level < 99 || level == 100)
                 log.debug "$message"
         break
         case "1": // Very verbose
-            if (level >= 1 && level < 99)
+            if (level >= 1 && level < 99 || level == 100)
                 log.debug "$message"
         break
         case "10": // A little less
-            if (level >= 10 && level < 99)
+            if (level >= 10 && level < 99 || level == 100)
                 log.debug "$message"
         break
         case "50": // Rather chatty
@@ -651,7 +651,7 @@ def configuration_model_debug()
     <Item label="Verbose" value="10" />
     <Item label="Reports+Status" value="50" />
     <Item label="Reports" value="99" />
-</Value>
+    </Value>
 </configuration>
 '''
 }

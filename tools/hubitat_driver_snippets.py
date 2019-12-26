@@ -164,9 +164,14 @@ input(name: "tempRes", type: "enum", title: "<b>Temperature Resolution</b>", des
 def getDefaultMetadataPreferencesForParentDevices(numSwitches=1):
     return '''
 // Default Preferences for Parent Devices
-input(name: "numSwitches", type: "enum", title: "<b>Number of Relays</b>", description: "<i>Set the number of buttons/relays on the device (default 1)</i>", options: ["1", "2", "3", "4"], defaultValue: "''' + str(numSwitches) + '''", displayDuringSetup: true, required: true)
+input(name: "numSwitches", type: "enum", title: "<b>Number of Relays</b>", description: "<i>Set the number of buttons/relays on the device (default ''' + str(numSwitches) + ''')</i>", options: ["1", "2", "3", "4"], defaultValue: "''' + str(numSwitches) + '''", displayDuringSetup: true, required: true)
 '''
 
+def getDefaultMetadataPreferencesForParentDevicesWithUnlimitedChildren(numSwitches=1):
+    return '''
+// Default Preferences for Parent Devices
+input(name: "numSwitches", type: "number", title: "<b>Number of Children</b>", description: "<i>Set the number of children (default ''' + str(numSwitches) + ''')</i>", defaultValue: "''' + str(numSwitches) + '''", displayDuringSetup: true, required: true)
+'''
 
 def getUpdateNeededSettingsTasmotaHeader():
     return """// updateNeededSettings() Generic header BEGINS here
@@ -384,21 +389,30 @@ private def getDriverVersion() {
 }
 '''
 
-def getLoggingFunction():
+def getLoggingFunction(specialDebugLevel=False):
+    extraDebug = ""
+    if(specialDebugLevel):
+        extraDebug = """
+        case "100": // Only special debug messages, eg IR and RF codes
+            if (level == 100 )
+                log.debug "$message"
+        break
+        """
+
     return """/* Logging function included in all drivers */
 private def logging(message, level) {
     if (logLevel != "0"){
         switch (logLevel) {
         case "-1": // Insanely verbose
-            if (level >= 0 && level < 99)
+            if (level >= 0 && level < 99 || level == 100)
                 log.debug "$message"
         break
         case "1": // Very verbose
-            if (level >= 1 && level < 99)
+            if (level >= 1 && level < 99 || level == 100)
                 log.debug "$message"
         break
         case "10": // A little less
-            if (level >= 10 && level < 99)
+            if (level >= 10 && level < 99 || level == 100)
                 log.debug "$message"
         break
         case "50": // Rather chatty
@@ -409,7 +423,13 @@ private def logging(message, level) {
             if (level >= 99 )
                 log.debug "$message"
         break
-        }
+        """ + extraDebug + """}
     }
 }
 """
+
+def getSpecialDebugEntry(label=None):
+    if(label==None):
+        return("")
+    else:
+        return '<Item label="' + label + '" value="100" />'

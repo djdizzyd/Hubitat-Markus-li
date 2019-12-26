@@ -10,6 +10,13 @@
             "request": "launch",
             "program": "${workspaceFolder}/tools/hubitat_codebuilder_tool.py",
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: BitBucketConverterMinimal.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/BitBucketConverterMinimal.py",
+            "console": "integratedTerminal"
         }
     ]
 }

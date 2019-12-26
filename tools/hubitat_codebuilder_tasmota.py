@@ -98,9 +98,14 @@ class HubitatCodeBuilderTasmota(HubitatCodeBuilder):
                 comment = self._config_dict['comment']
                 separator = ' - '
             if('deviceLink' in self._config_dict):
-                comment = '{}{}<a target=\\"blakadder\\" href=\\"{}\\">Device Info</a>'.format(comment, separator, self._config_dict['deviceLink'])
+                comment = '{}{}<a target=\\"blakadder\\" href=\\"{}\\">Device Model Info</a>'.format(comment, separator, self._config_dict['deviceLink'])
             self.log.debug("Executing getDefaultFunctions(comment={})...".format(comment))
             output = self.calling_namespace.getDefaultFunctions(comment=comment)
+            return(True, output)
+        #getSpecialDebugEntry
+        elif(('specialDebugLabel' in self._config_dict) and eval_cmd.startswith('getSpecialDebugEntry(')):
+            self.log.debug("Executing getSpecialDebugEntry(label={})...".format(self._config_dict['specialDebugLabel']))
+            output = self.calling_namespace.getSpecialDebugEntry(label=self._config_dict['specialDebugLabel'])
             return(True, output)
         elif(self._alternate_template != None and self._alternate_template != '' and eval_cmd.startswith('getUpdateNeededSettingsTasmotaDynamicModuleCommand(')):
             self.log.debug("Executing getUpdateNeededSettingsTasmotaDynamicModuleCommand(0, '" + self._alternate_template + "')...")

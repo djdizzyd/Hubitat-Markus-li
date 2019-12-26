@@ -19,7 +19,7 @@ import groovy.json.JsonSlurper
 
 
 metadata {
-    definition (name: "Tasmota - Generic Power Monitor Plug (Child)", namespace: "tasmota", author: "Markus Liljergren") {
+    definition (name: "Tasmota - DO NOT USE Sonoff RF Bridge (Child)", namespace: "tasmota", author: "Markus Liljergren") {
         capability "Switch"
         capability "Actuator"
     }
@@ -28,7 +28,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - Generic Power Monitor Plug (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren']
+    deviceInfo = ['name': 'Tasmota - DO NOT USE Sonoff RF Bridge (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren']
     return(deviceInfo[infoName])
 }
 

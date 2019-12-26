@@ -19,6 +19,7 @@ import ruamel.yaml
 import logging
 import winsound
 import datetime
+import io
 import inspect
 import pickle
 import hashlib
@@ -149,9 +150,9 @@ class HubitatCodeBuilder:
         r = ''
         f = './helpers/helpers-' + helper_function_type + '.groovy'
         if(os.path.isfile(f)):
-            with open (f, "r") as rd:
-                for l in rd:
-                    r += l
+            # This could become an infinite loop if you include a file that includes itself directly or indirectly through another file... 
+            # Keep track of what you import!
+            r = self._innerExpandGroovyFile(f, None)
         else:
             # Yes, this should be specific, but it doesn't matter here...
             raise HubitatCodeBuilderError("Helper function type '" + helper_function_type + "' can't be included! File doesn't exist!")
@@ -325,40 +326,57 @@ class HubitatCodeBuilder:
         # Reset the definition string
         self._definition_string = None
 
-        self.log.debug('Build dir: ' + str(self.getBuildDir(code_type) / output_groovy_file))
-        with open (self.getBuildDir(code_type) / output_groovy_file, "w") as wd:
-            with open (self.getInputDir(code_type) / input_groovy_file, "r") as rd:
-                # Read lines in loop
-                for l in rd:
-                    if(self._definition_string == None):
-                        self._definition_string = self._checkFordefinition_string(l)
-                        if(self._definition_string != None):
-
-                            (l, self._definition_string, definition_dict_original) = self._definition_string
-                            # self._definition_string contains a function that can be 
-                            # inserted into a driver to retrieve driver info from.
-                            #self.log.debug(self._definition_string)
-                            r['name'] = definition_dict_original['name']
-                    includePosition = l.find('#!include:')
-                    if(includePosition != -1):
-                        eval_cmd = l[includePosition+10:].strip()
-                        output = self._runEvalCmd(eval_cmd)
-                        if(includePosition > 0):
-                            i = 0
-                            wd.write(l[:includePosition])
-                            for nl in output.splitlines():
-                                if i != 0:
-                                    wd.write(' ' * (includePosition) + nl + '\n')
-                                else:
-                                    wd.write(nl + '\n')
-                                i += 1
-                        else:
-                            wd.write(output + '\n')
-                    else:
-                        wd.write(l)
-                    #print(l.strip())
+        r_extra = self._innerExpandGroovyFile(self.getInputDir(code_type) / input_groovy_file, self.getBuildDir(code_type) / output_groovy_file)
+        r.update(r_extra)
+        
         self.log.info('DONE expanding "' + input_groovy_file.name + '" to "' + output_groovy_file.name + '"!')
         return(r)
+
+    def _innerExpandGroovyFile(self, input_groovy_file, output_groovy_file):
+        r = {}
+        self.log.debug('Build dir: ' + str(output_groovy_file))
+        if(output_groovy_file != None):
+            wd = open (output_groovy_file, "w")
+        else:
+            wd = io.StringIO()
+        with open (input_groovy_file, "r") as rd:
+            # Read lines in loop
+            for l in rd:
+                if(self._definition_string == None):
+                    self._definition_string = self._checkFordefinition_string(l)
+                    if(self._definition_string != None):
+
+                        (l, self._definition_string, definition_dict_original) = self._definition_string
+                        # self._definition_string contains a function that can be 
+                        # inserted into a driver to retrieve driver info from.
+                        #self.log.debug(self._definition_string)
+                        r['name'] = definition_dict_original['name']
+                includePosition = l.find('#!include:')
+                if(includePosition != -1):
+                    eval_cmd = l[includePosition+10:].strip()
+                    output = self._runEvalCmd(eval_cmd)
+                    if(includePosition > 0):
+                        i = 0
+                        wd.write(l[:includePosition])
+                        for nl in output.splitlines():
+                            if i != 0:
+                                wd.write(' ' * (includePosition) + nl + '\n')
+                            else:
+                                wd.write(nl + '\n')
+                            i += 1
+                    else:
+                        wd.write(output + '\n')
+                else:
+                    wd.write(l)
+                #print(l.strip())
+        
+        if(output_groovy_file != None):
+            wd.close()
+            return(r)
+        else:
+            content = wd.getvalue()
+            wd.close()
+            return(content)
 
     def expandGroovyFilesAndPush(self, code_files, code_type = 'driver'):
         j=0

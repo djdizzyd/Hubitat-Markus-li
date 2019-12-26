@@ -103,18 +103,19 @@ def manuallyAdd(){
                 "Tasmota - Sonoff S2X",
                 "Tasmota - Sonoff Mini",
                 "Tasmota - Sonoff Basic",
-                "Tasmota - Generic Wifi Switch/Plug",
                 "Tasmota - S120 Plug",
                 "Tasmota - YKYC-001 Power Monitor Plug",
                 "Tasmota - Brilliant BL20925 Power Monitor Plug",
                 "Tasmota - Prime CCRCWFII113PK Plug",
-                "Tasmota - Generic Power Monitor Plug",
-                "Tasmota - Generic Temperature/Humidity/Pressure Device",
                 "Tasmota - TuyaMCU Wifi Dimmer (EXPERIMENTAL)",
                 "Tasmota - Unbranded RGB Controller with IR",
-                "Tasmota - Generic RGB/RGBW Controller/Bulb/Dimmer",
-                "Tasmota - Generic Power Monitor Plug (Parent)",
                 "Tasmota - Sonoff 4CH (Parent)",
+                "Tasmota - DO NOT USE Sonoff RF Bridge (Parent)",
+                "Tasmota - Generic Wifi Switch/Plug",
+                "Tasmota - Generic RGB/RGBW Controller/Bulb/Dimmer",
+                "Tasmota - Generic Temperature/Humidity/Pressure Device",
+                "Tasmota - Generic Power Monitor Plug",
+                "Tasmota - Generic Power Monitor Plug (Parent)",
                 ]
             input "ipAddress", "text", title:"IP Address", description: "", required: false 
 		}
@@ -433,8 +434,6 @@ def addDevices() {
                 deviceHandlerName = "Tasmota - Sonoff Mini"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Sonoff Basic"))
                 deviceHandlerName = "Tasmota - Sonoff Basic"
-            if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic Wifi Switch/Plug"))
-                deviceHandlerName = "Tasmota - Generic Wifi Switch/Plug"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - S120 Plug"))
                 deviceHandlerName = "Tasmota - S120 Plug"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - YKYC-001 Power Monitor Plug"))
@@ -443,20 +442,24 @@ def addDevices() {
                 deviceHandlerName = "Tasmota - Brilliant BL20925 Power Monitor Plug"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Prime CCRCWFII113PK Plug"))
                 deviceHandlerName = "Tasmota - Prime CCRCWFII113PK Plug"
-            if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic Power Monitor Plug"))
-                deviceHandlerName = "Tasmota - Generic Power Monitor Plug"
-            if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic Temperature/Humidity/Pressure Device"))
-                deviceHandlerName = "Tasmota - Generic Temperature/Humidity/Pressure Device"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - TuyaMCU Wifi Dimmer (EXPERIMENTAL)"))
                 deviceHandlerName = "Tasmota - TuyaMCU Wifi Dimmer (EXPERIMENTAL)"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Unbranded RGB Controller with IR"))
                 deviceHandlerName = "Tasmota - Unbranded RGB Controller with IR"
-            if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic RGB/RGBW Controller/Bulb/Dimmer"))
-                deviceHandlerName = "Tasmota - Generic RGB/RGBW Controller/Bulb/Dimmer"
-            if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic Power Monitor Plug (Parent)"))
-                deviceHandlerName = "Tasmota - Generic Power Monitor Plug (Parent)"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Sonoff 4CH (Parent)"))
                 deviceHandlerName = "Tasmota - Sonoff 4CH (Parent)"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - DO NOT USE Sonoff RF Bridge (Parent)"))
+                deviceHandlerName = "Tasmota - DO NOT USE Sonoff RF Bridge (Parent)"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic Wifi Switch/Plug"))
+                deviceHandlerName = "Tasmota - Generic Wifi Switch/Plug"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic RGB/RGBW Controller/Bulb/Dimmer"))
+                deviceHandlerName = "Tasmota - Generic RGB/RGBW Controller/Bulb/Dimmer"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic Temperature/Humidity/Pressure Device"))
+                deviceHandlerName = "Tasmota - Generic Temperature/Humidity/Pressure Device"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic Power Monitor Plug"))
+                deviceHandlerName = "Tasmota - Generic Power Monitor Plug"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic Power Monitor Plug (Parent)"))
+                deviceHandlerName = "Tasmota - Generic Power Monitor Plug (Parent)"
 			else if (selectedDevice?.value?.name?.startsWith("quired"))
                 deviceHandlerName = "Tasmota - Generic Wifi Switch/Plug"
             else if (selectedDevice?.value?.name?.startsWith("Aquired"))
