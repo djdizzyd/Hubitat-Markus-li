@@ -19,7 +19,7 @@ import groovy.json.JsonSlurper
 
 
 metadata {
-	definition (name: "Tasmota - TuyaMCU Wifi Touch Switch", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
+	definition (name: "Tasmota - TuyaMCU Wifi Touch Switch", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-tuyamcu-wifi-touch-switch-expanded.groovy") {
         capability "Actuator"
 		capability "Switch"
 		capability "Sensor"
@@ -81,7 +81,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - TuyaMCU Wifi Touch Switch', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
+    deviceInfo = ['name': 'Tasmota - TuyaMCU Wifi Touch Switch', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-tuyamcu-wifi-touch-switch-expanded.groovy']
     return(deviceInfo[infoName])
 }
 
@@ -695,7 +695,7 @@ private void createChildDevices() {
     // If making changes here, don't forget that recreateDevices need to have the same settings set
     for (i in 1..numSwitchesI) {
         // https://community.hubitat.com/t/composite-devices-parent-child-devices/1925
-        addChildDevice("${getDeviceInfoByName('namespace')}", "${getChildDriverName()}", "$device.id-$i", [name: "$device.name #$i", label: "$device.displayName $i", isComponent: true])
+        addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getDeviceInfoByName("name")} #$i", label: "$device.displayName $i", isComponent: true])
     }
 }
 
@@ -716,7 +716,7 @@ def recreateChildDevices() {
             //.setLabel doesn't seem to work on child devices???
         } else {
             // No such device, we should create it
-            addChildDevice("${getDeviceInfoByName('namespace')}", "${getChildDriverName()}", "$device.id-$i", [name: "${getDeviceInfoByName('name')} #$i", label: "$device.displayName $i", isComponent: true])
+            addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getDeviceInfoByName("name")} #$i", label: "$device.displayName $i", isComponent: true])
         }
     }
     if (numSwitchesI < 4) {

@@ -21,7 +21,7 @@ import groovy.json.JsonSlurper
 // THIS IS NOT A REAL DRIVER AND IS ONLY USED FOR TESTING THE GENERATOR AND AUTO-PUBLISHING SYSTEM!
 
 metadata {
-    definition (name: "Tasmota - DO NOT USE Tuya Wifi Touch Switch TEST (Child)", namespace: "tasmota", author: "Markus Liljergren") {
+    definition (name: "Tasmota - DO NOT USE Tuya Wifi Touch Switch TEST (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-tuyamcu-wifi-touch-switch-child-test-expanded.groovy") {
         capability "Switch"
         capability "Actuator"
     }
@@ -30,7 +30,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - DO NOT USE Tuya Wifi Touch Switch TEST (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren']
+    deviceInfo = ['name': 'Tasmota - DO NOT USE Tuya Wifi Touch Switch TEST (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-tuyamcu-wifi-touch-switch-child-test-expanded.groovy']
     return(deviceInfo[infoName])
 }
 

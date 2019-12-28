@@ -24,7 +24,7 @@ import groovy.json.JsonSlurper
 
 
 metadata {
-	definition (name: "Tasmota - Brilliant 20699 800lm RGBW Bulb", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
+	definition (name: "Tasmota - Brilliant 20699 800lm RGBW Bulb", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-brilliant-20699-rgbw-bulb-expanded.groovy") {
         capability "Actuator"
 		capability "Switch"
 		capability "ColorControl"
@@ -91,7 +91,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - Brilliant 20699 800lm RGBW Bulb', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
+    deviceInfo = ['name': 'Tasmota - Brilliant 20699 800lm RGBW Bulb', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-brilliant-20699-rgbw-bulb-expanded.groovy']
     return(deviceInfo[infoName])
 }
 

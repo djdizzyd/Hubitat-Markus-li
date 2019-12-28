@@ -107,6 +107,10 @@ class HubitatCodeBuilderTasmota(HubitatCodeBuilder):
             self.log.debug("Executing getSpecialDebugEntry(label={})...".format(self._config_dict['specialDebugLabel']))
             output = self.calling_namespace.getSpecialDebugEntry(label=self._config_dict['specialDebugLabel'])
             return(True, output)
+        elif(('childType' in self._config_dict) and eval_cmd.startswith('getCreateChildDevicesCommand(')):
+            self.log.debug("Executing getCreateChildDevicesCommand(childType={})...".format(self._config_dict['childType']))
+            output = self.calling_namespace.getCreateChildDevicesCommand(childType=self._config_dict['childType'])
+            return(True, output)
         elif(self._alternate_template != None and self._alternate_template != '' and eval_cmd.startswith('getUpdateNeededSettingsTasmotaDynamicModuleCommand(')):
             self.log.debug("Executing getUpdateNeededSettingsTasmotaDynamicModuleCommand(0, '" + self._alternate_template + "')...")
             output = getUpdateNeededSettingsTasmotaDynamicModuleCommand(0, self._alternate_template)

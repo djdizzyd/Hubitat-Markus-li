@@ -60,7 +60,7 @@ private void createChildDevices() {
     // If making changes here, don't forget that recreateDevices need to have the same settings set
     for (i in 1..numSwitchesI) {
         // https://community.hubitat.com/t/composite-devices-parent-child-devices/1925
-        addChildDevice("${getDeviceInfoByName('namespace')}", "${getChildDriverName()}", "$device.id-$i", [name: "$device.name #$i", label: "$device.displayName $i", isComponent: true])
+        #!include:getCreateChildDevicesCommand()
     }
 }
 
@@ -81,7 +81,7 @@ def recreateChildDevices() {
             //.setLabel doesn't seem to work on child devices???
         } else {
             // No such device, we should create it
-            addChildDevice("${getDeviceInfoByName('namespace')}", "${getChildDriverName()}", "$device.id-$i", [name: "${getDeviceInfoByName('name')} #$i", label: "$device.displayName $i", isComponent: true])
+            #!include:getCreateChildDevicesCommand()
         }
     }
     if (numSwitchesI < 4) {

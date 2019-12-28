@@ -19,7 +19,7 @@ import groovy.json.JsonSlurper
 
 
 metadata {
-	definition (name: "Tasmota - Sonoff Basic R3", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
+	definition (name: "Tasmota - Sonoff Basic R3", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-sonoff-basic-r3-expanded.groovy") {
         capability "Actuator"
 		capability "Switch"
 		capability "Sensor"
@@ -69,7 +69,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - Sonoff Basic R3', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
+    deviceInfo = ['name': 'Tasmota - Sonoff Basic R3', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-sonoff-basic-r3-expanded.groovy']
     return(deviceInfo[infoName])
 }
 

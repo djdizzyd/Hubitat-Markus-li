@@ -105,9 +105,9 @@ class HubitatCodeBuilderError(Exception):
 
 class HubitatCodeBuilder:
 
-    def __init__(self, hubitat_hubspider, calling_namespace=None, app_dir = Path('./apps'), app_build_dir = Path('./apps/expanded'), \
-                 driver_dir = Path('./drivers'), driver_build_dir = Path('./drivers/expanded'), \
-                 build_suffix = '-expanded'    ):
+    def __init__(self, hubitat_hubspider, calling_namespace=None, app_dir=Path('./apps'), app_build_dir=Path('./apps/expanded'), \
+                 driver_dir=Path('./drivers'), driver_build_dir=Path('./drivers/expanded'), \
+                 build_suffix='-expanded', driver_raw_repo_url=None):
         self.app_dir = Path(app_dir)
         self.app_build_dir = Path(app_build_dir)
         self.driver_dir = Path(driver_dir)
@@ -121,6 +121,10 @@ class HubitatCodeBuilder:
         self.app_checksums = {}
         self.driver_new = {}
         self.app_new = {}
+        self.driver_raw_repo_url = driver_raw_repo_url
+        if (self.driver_raw_repo_url[-1] != '/'):
+            self.driver_raw_repo_url += '/'
+            self.log.warn("Had to add a '/' to the self.driver_raw_repo_url! You should specify it with a '/' at the end!")
         # Check if we have a saved session
         try:
             with open('__hubitat_checksums', 'rb') as f:
@@ -185,6 +189,8 @@ class HubitatCodeBuilder:
                 definition_dict['namespace'] = self._alternate_namespace
             if(self._alternate_vid != None):
                 definition_dict['vid'] = self._alternate_vid
+            if(self.driver_raw_repo_url != None):
+                definition_dict['importURL'] = self.driver_raw_repo_url + str(self._output_groovy_file)
             #print(definition_dict)
             # Process this string
             # (name: "Tasmota - Tuya Wifi Touch Switch TEST (Child)", namespace: "tasmota", author: "Markus Liljergren") {
@@ -310,6 +316,7 @@ class HubitatCodeBuilder:
         alternate_vid = (config_dict['alternate_vid'] if 'alternate_vid' in config_dict else None)
 
         output_groovy_file = self.getOutputGroovyFile(input_groovy_file, alternate_output_filename)
+        self._output_groovy_file = output_groovy_file
 
         r = {'file': output_groovy_file, 'name': ''}
         

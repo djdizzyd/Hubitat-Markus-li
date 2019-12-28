@@ -13,6 +13,8 @@
 
 driverVersion = "v0.9.2 for Tasmota 7.x (Hubitat version)"
 
+from hubitat_codebuilder import HubitatCodeBuilderError
+
 """
   Snippets used by hubitat-driver-helper-tool
 """
@@ -433,3 +435,13 @@ def getSpecialDebugEntry(label=None):
         return("")
     else:
         return '<Item label="' + label + '" value="100" />'
+
+def getCreateChildDevicesCommand(childType='component'):
+    #childType == 'not_component' should 
+    if(childType=='component'):
+        #return('addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "$device.name #$i", label: "$device.displayName $i", isComponent: true])')
+        return('addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getDeviceInfoByName("name")} #$i", label: "$device.displayName $i", isComponent: true])')
+    elif(childType=='not_component'):
+        return('addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getDeviceInfoByName("name")} #$i", label: "$device.displayName $i", isComponent: false])')
+    else:
+        raise HubitatCodeBuilderError('Unknown childType specified in getcreateChildDevicesCommand(childType={})'.format(str(childType)))

@@ -58,6 +58,9 @@ log_hs.addHandler(hhs)
 # NOTE: All function names use mixedCaps since this is used with Groovy and it makes
 #       it less confusing not changing style all the time. 
 def main():
+    base_repo_url = 'https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/'
+    base_raw_repo_url = 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/'
+
     # Get us a Code Builder...
     
     log.debug('Getting started...')
@@ -68,7 +71,7 @@ def main():
 
     # By including our namespace, anything we import in this file is available
     # to call by the include tags in the .groovy files when we process them
-    cb = HubitatCodeBuilderTasmota(hhs, calling_namespace=sys.modules[__name__])
+    cb = HubitatCodeBuilderTasmota(hhs, calling_namespace=sys.modules[__name__], driver_raw_repo_url=base_raw_repo_url)
     #cb = HubitatCodeBuilderTasmota()
     
     driver_files = [
@@ -195,7 +198,7 @@ def main():
         {'id': 648, 'file': 'tasmota-sonoff-rf-bridge-parent.groovy' , 
          'comment': 'UNTESTED driver',
          'deviceLink': 'https://templates.blakadder.com/sonoff_RF_bridge.html',
-         'numSwitches': 1, 'specialDebugLabel': 'RF Codes'},
+         'numSwitches': 1, 'specialDebugLabel': 'RF Codes', 'childType': 'not_component'},
         {'id': 649, 'file': 'tasmota-sonoff-rf-bridge-child.groovy'},
 
         # Generic Tasmota Devices:
@@ -220,19 +223,33 @@ def main():
     # Still not fully functional (or BROKEN):
     # https://templates.blakadder.com/ce_smart_home-WF500D.html
 
+    # RF Bridge functions to implement:
+    # * Motion Sensor (receive)
+    # * Button (receive)
+    # * RF Remote??? (receive)
+    # * Door/Window Sensor (receive)
+    # * Smoke Alarm (receive)
+    # * Water Sensor (receive)
+    # * On/Off signal transmitter (send)
+    # * Custom Signal Transmitter??? (send)
 
-    base_repo_url = 'https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/'
-    base_raw_repo_url = 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/'
+    # IR Bridge functions to implement
+    # * Custom IR Remote Control Button (receive, each button as a Child) 
+    # * Specific IR Remote Control with full button support (SEND, many buttons per Child)
+    # * IR Repeater (in on one device, out on another or same, select output device in Child?)
+    # * Send Custom IR command (implement as toggle/button?)
+    # 
+
+
+    
     expected_num_drivers = len(driver_files)
     
     # Example driver: https://github.com/hubitat/HubitatPublic/blob/master/examples/drivers/GenericZigbeeRGBWBulb.groovy
     # RGB Example: https://github.com/damondins/hubitat/blob/master/Tasmota%20RGBW%20LED%20Light%20Bulb/Tasmota%20RGBW%20LED%20Light%20Bulb
 
-    
-    
     # As long as we have an id, we can just supply that here instead of the whole config...
     driver_files_testing = [
-    #    {'id':648},{'id':649}
+        {'id':648},{'id':649}
     #     {'id':551},{'id':578}, {'id':362}, {'id':645}, {'id':590}, {'id':588}, 
     #    {'id': 0, 'file': 'tasmota-generic-thp-device.groovy' , \
     #     'alternate_output_filename': 'tasmota-sonoff-th', \
