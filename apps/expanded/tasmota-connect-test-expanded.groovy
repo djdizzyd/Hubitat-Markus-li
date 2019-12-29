@@ -110,6 +110,7 @@ def manuallyAdd(){
                 "Tasmota - Unbranded RGB Controller with IR",
                 "Tasmota - Sonoff 4CH (Parent)",
                 "Tasmota - DO NOT USE Sonoff RF Bridge (Parent)",
+                "Tasmota - DO NOT USE RFLink (Parent)",
                 "Tasmota - Generic Wifi Switch/Plug",
                 "Tasmota - Generic RGB/RGBW Controller/Bulb/Dimmer",
                 "Tasmota - Generic Temperature/Humidity/Pressure Device",
@@ -444,6 +445,8 @@ def addDevices() {
                 deviceHandlerName = "Tasmota - Sonoff 4CH (Parent)"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - DO NOT USE Sonoff RF Bridge (Parent)"))
                 deviceHandlerName = "Tasmota - DO NOT USE Sonoff RF Bridge (Parent)"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - DO NOT USE RFLink (Parent)"))
+                deviceHandlerName = "Tasmota - DO NOT USE RFLink (Parent)"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic Wifi Switch/Plug"))
                 deviceHandlerName = "Tasmota - Generic Wifi Switch/Plug"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic RGB/RGBW Controller/Bulb/Dimmer"))

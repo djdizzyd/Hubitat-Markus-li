@@ -28,17 +28,7 @@ if (!state.mac || state.mac != descMap["mac"]) {
     state.mac = descMap["mac"]
 }
 
-if (useIPAsID) {
-    hexIPAddress = setDeviceNetworkId(ipAddress, true)
-    if(hexIPAddress != null && state.dni != hexIPAddress) {
-        state.dni = hexIPAddress
-        updateDNI()
-    }
-}
-else if (state.mac != null && state.dni != state.mac) { 
-    state.dni = setDeviceNetworkId(state.mac)
-    updateDNI()
-}
+prepareDNI()
 
 if (descMap["body"] && descMap["body"] != "T04=") body = new String(descMap["body"].decodeBase64())
 

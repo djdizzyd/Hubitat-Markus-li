@@ -104,17 +104,7 @@ def parse(description) {
         state.mac = descMap["mac"]
     }
     
-    if (useIPAsID) {
-        hexIPAddress = setDeviceNetworkId(ipAddress, true)
-        if(hexIPAddress != null && state.dni != hexIPAddress) {
-            state.dni = hexIPAddress
-            updateDNI()
-        }
-    }
-    else if (state.mac != null && state.dni != state.mac) { 
-        state.dni = setDeviceNetworkId(state.mac)
-        updateDNI()
-    }
+    prepareDNI()
     
     if (descMap["body"] && descMap["body"] != "T04=") body = new String(descMap["body"].decodeBase64())
     
@@ -257,6 +247,8 @@ def update_needed_settings()
         }
     }
     
+    prepareDNI()
+    
     // updateNeededSettings() Generic header ENDS here
 
     
@@ -286,15 +278,18 @@ def update_needed_settings()
             usedDeviceTemplate = defaultDeviceTemplate
         }
         logging("Setting the Template soon...", 10)
-        logging(device.currentValue('templateData'), 10)
+        logging("templateData = ${device.currentValue('templateData')}", 10)
         if(usedDeviceTemplate != '') moduleNumberUsed = 0  // This activates the Template when set
-        if(device.currentValue('templateData') != null && device.currentValue('templateData') != usedDeviceTemplate) {
+        if(usedDeviceTemplate != null && device.currentValue('templateData') != null && device.currentValue('templateData') != usedDeviceTemplate) {
             logging("The template is NOT set to '${usedDeviceTemplate}', it is set to '${device.currentValue('templateData')}'",10)
             urlencodedTemplate = URLEncoder.encode(usedDeviceTemplate).replace("+", "%20")
             // The NAME part of th Device Template can't exceed 14 characters! More than that and they will be truncated.
             // TODO: Parse and limit the size of NAME
             cmds << getAction(getCommandString("Template", "${urlencodedTemplate}"))
-        } else {
+        } else if (device.currentValue('module') == null){
+            // Update our stored value!
+            cmds << getAction(getCommandString("Template", null))
+        }else if (usedDeviceTemplate != null) {
             logging("The template is set to '${usedDeviceTemplate}' already!",10)
         }
     } else {
@@ -306,11 +301,16 @@ def update_needed_settings()
     if(disableModuleSelection == false && moduleNumberUsed != null && moduleNumberUsed >= 0) {
         logging("Setting the Module soon...", 10)
         logging("device.currentValue('module'): '${device.currentValue('module')}'", 10)
-        if(device.currentValue('module') != null && !device.currentValue('module').startsWith("[${moduleNumberUsed}:")) {
+        if(moduleNumberUsed != null && device.currentValue('module') != null && !device.currentValue('module').startsWith("[${moduleNumberUsed}:")) {
             logging("This DOESN'T start with [${moduleNumberUsed} ${device.currentValue('module')}",10)
             cmds << getAction(getCommandString("Module", "${moduleNumberUsed}"))
-        } else {
+        } else if (moduleNumberUsed != null && device.currentValue('module') != null){
             logging("This starts with [${moduleNumberUsed} ${device.currentValue('module')}",10)
+        } else if (device.currentValue('module') == null){
+            // Update our stored value!
+            cmds << getAction(getCommandString("Module", null))
+        } else {
+            logging("Module is set to '${device.currentValue('module')}', and it's set to be null, report this to the creator of this driver!",10)
         }
     } else {
         logging("Setting the Module has been disabled!", 10)
@@ -335,6 +335,7 @@ def update_needed_settings()
     // Disabling Emulation so that we don't flood the logs with upnp traffic
     //cmds << getAction(getCommandString("Emulation", "0")) // Emulation Disabled
     cmds << getAction(getCommandString("HubitatHost", device.hub.getDataValue("localIP")))
+    logging("HubitatPort: ${device.hub.getDataValue("localSrvPortTCP")}", 1)
     cmds << getAction(getCommandString("HubitatPort", device.hub.getDataValue("localSrvPortTCP")))
     cmds << getAction(getCommandString("FriendlyName1", URLEncoder.encode(device.displayName.take(32)))) // Set to a maximum of 32 characters
     
@@ -582,6 +583,22 @@ def updated()
     if (cmds != [] && cmds != null) cmds
 }
 
+def prepareDNI() {
+    if (useIPAsID) {
+        hexIPAddress = setDeviceNetworkId(ipAddress, true)
+        if(hexIPAddress != null && state.dni != hexIPAddress) {
+            state.dni = hexIPAddress
+            updateDNI()
+        }
+    }
+    else if (state.mac != null && state.dni != state.mac) { 
+        state.dni = setDeviceNetworkId(state.mac)
+        updateDNI()
+    }
+}
+
+
+
 def getCommandString(command, value) {
     def uri = "/cm?"
     if (password) {
@@ -606,10 +623,15 @@ def parseDescriptionAsMap(description) {
 }
 
 private getAction(uri){ 
+    logging("Using getAction for '${uri}'...", 0)
+    return httpGetAction(uri)
+}
+
+private httpGetAction(uri){ 
   updateDNI()
   
   def headers = getHeader()
-  
+  //logging("Using httpGetAction for '${uri}'...", 0)
   def hubAction = new hubitat.device.HubAction(
     method: "GET",
     path: uri,

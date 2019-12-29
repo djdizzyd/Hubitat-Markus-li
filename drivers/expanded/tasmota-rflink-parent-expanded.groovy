@@ -19,17 +19,34 @@ import groovy.json.JsonSlurper
 
 
 metadata {
-	definition (name: "Tasmota - Prime CCRCWFII113PK Plug", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-prime-ccrcwfii113pk-plug-expanded.groovy") {
+	definition (name: "Tasmota - DO NOT USE RFLink (Parent)", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-rflink-parent-expanded.groovy") {
         capability "Actuator"
 		capability "Switch"
 		capability "Sensor"
 
+        
+        // Default Capabilities for Energy Monitor
+        capability "Voltage Measurement"
+        capability "Power Meter"
+        capability "Energy Meter"
         
         // Default Capabilities
         capability "Refresh"
         capability "Configuration"
         capability "HealthCheck"
         
+        
+        // Default Attributes for Energy Monitor
+        attribute   "current", "string"
+        attribute   "apparentPower", "string"
+        attribute   "reactivePower", "string"
+        attribute   "powerFactor", "string"
+        attribute   "energyToday", "string"
+        attribute   "energyYesterday", "string"
+        attribute   "energyTotal", "string"
+        attribute   "voltageStr", "string"
+        attribute   "powerStr", "string"
+        //attribute   "b0Code", "string"
         
         // Default Attributes
         attribute   "needUpdate", "string"
@@ -39,6 +56,12 @@ metadata {
         attribute   "module", "string"
         attribute   "templateData", "string"
         attribute   "driverVersion", "string"
+        
+        // Commands for handling Child Devices
+        command "childOn"
+        command "childOff"
+        command "recreateChildDevices"
+        command "deleteChildren"
         
         // Default Commands
         command "reboot"
@@ -52,6 +75,12 @@ metadata {
         // Default Preferences
         input(name: "runReset", description: "<i>For details and guidance, see the release thread in the <a href=\"https://community.hubitat.com/t/release-tasmota-7-x-firmware-with-hubitat-support/29368\"> Hubitat Forum</a>. For settings marked as ADVANCED, make sure you understand what they do before activating them. If settings are not reflected on the device, press the Configure button in this driver. Also make sure all settings really are saved and correct.<br/>Type RESET and then press 'Save Preferences' to DELETE all Preferences and return to DEFAULTS.</i>", title: "<b>Settings</b>", displayDuringSetup: false, type: "paragraph", element: "paragraph")
         generate_preferences(configuration_model_debug())
+        //input(name: "b1Code", type: "string", title: "<b>B1 code (received)</b>", description: "<i>Set this to a B1 code and save and the driver will calculate the B0 code.</i>", displayDuringSetup: true, required: false)
+        //input(name: "b0Code", type: "string", title: "<b>B0 code (command)</b>", description: "<i>Set this to a B0 code or input a B1 code and this will be calculated!</i>", displayDuringSetup: true, required: false)
+        //input(name: "rfRawMode", type: "bool", title: "<b>RF Raw Mode</b>", description: '<i>Set RF mode to RAW, only works with <a target="portisch" href="https://tasmota.github.io/docs/#/devices/Sonoff-RF-Bridge-433?id=rf-firmware">Portisch</a>. MAY be slower than Standard RF mode, but can handle more signals.</i>', displayDuringSetup: true, required: false)
+        
+        // Default Preferences for Parent Devices
+        input(name: "numSwitches", type: "number", title: "<b>Number of Children</b>", description: "<i>Set the number of children (default 1)</i>", defaultValue: "1", displayDuringSetup: true, required: true)
         
         // Default Preferences for Tasmota
         input(name: "ipAddress", type: "string", title: "<b>Device IP Address</b>", description: "<i>Set this as a default fallback for the auto-discovery feature.</i>", displayDuringSetup: true, required: false)
@@ -69,28 +98,77 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - Prime CCRCWFII113PK Plug', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-prime-ccrcwfii113pk-plug-expanded.groovy']
+    deviceInfo = ['name': 'Tasmota - DO NOT USE RFLink (Parent)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-rflink-parent-expanded.groovy']
     return(deviceInfo[infoName])
 }
 
+/* These functions are unique to each driver */
+def installedAdditional() {
+    // This runs from installed()
+	logging("installedAdditional()",50)
+    createChildDevices()
+}
 
-/* Generic On/Off functions used when only 1 switch/button exists */
 def on() {
-	logging("on()", 50)
+	logging("on()",50)
+    //logging("device.namespace: ${getDeviceInfoByName('namespace')}, device.driverName: ${getDeviceInfoByName('name')}", 50)
     def cmds = []
-    cmds << getAction(getCommandString("Power", "On"))
+    cmds << getAction(getCommandString("Power0", "1"))
+    Integer numSwitchesI = numSwitches.toInteger()
+    
+    for (i in 1..numSwitchesI) {
+        cmds << getAction(getCommandString("Power$i", "1"))
+    }
+    //return delayBetween(cmds, 500)
     return cmds
 }
 
 def off() {
-    logging("off()", 50)
-	def cmds = []
-    cmds << getAction(getCommandString("Power", "Off"))
+    logging("off()",50)
+    def cmds = []
+    
+    cmds << getAction(getCommandString("Power0", "0"))
+    Integer numSwitchesI = numSwitches.toInteger()
+    
+    for (i in 1..numSwitchesI) {
+        cmds << getAction(getCommandString("Power$i", "0"))
+    }
+    //return delayBetween(cmds, 500)
     return cmds
 }
 
+def updateRFMode() {
+    def cmds = []
+    logging("Initializing RFLink...", 100)
+    cmds << getAction(getCommandString("Baudrate", "57600"))
+    cmds << getAction(getCommandString("SerialSend1", "10;PING;"))
+    return cmds
+}
 
-/* These functions are unique to each driver */
+def splitRFLinkData(rawRFLinkData) {
+    parsedData = []
+    rawRFLinkData.split('20;').each { cmd ->
+        if(cmd != null && cmd != '') {
+            c = cmd.split(';')
+            r = c[2..(c.size()-1)].inject([:]) { map, token ->
+                token.split('=').with {
+                    try {
+                        map[it[0].trim()] = it[1].trim() 
+                    } catch(ArrayIndexOutOfBoundsException ex) {
+                        // Do nothing, we don't want these values...
+                    }
+                } 
+                map
+            }
+            
+            d =['counter': c[0], 'type': c[1]]
+            d << r
+            parsedData << d
+        }
+    }
+    return parsedData
+}
+
 def parse(description) {
     // parse() Generic Tasmota-device header BEGINS here
     //log.debug "Parsing: ${description}"
@@ -190,6 +268,13 @@ def parse(description) {
                 //events << createEvent(name: 'uptime', value: result.Uptime, displayed: false, archivable: false)
                 state.uptime = result.Uptime
             }
+            // All commands received are separated by 20, then it's the counter (00 to FF, then it wraps around).
+            // After that is the name of the encoding, after which key->data pairs come
+            if (result.containsKey("SerialReceived")) {
+                logging("SerialReceived: $result.SerialReceived", 100)
+                logging("Split RFLink Data: '${splitRFLinkData(result.SerialReceived)}'", 100)
+
+            }
             
             // Standard Wifi Data parsing
             if (result.containsKey("Wifi")) {
@@ -209,6 +294,80 @@ def parse(description) {
                     logging("SSId: $result.Wifi.SSId",99)
                 }
             }
+            
+            // Standard TuyaSwitch Data parsing
+            if (result.containsKey("POWER1")) {
+                logging("POWER1: $result.POWER1",1)
+                childSendState("1", result.POWER1.toLowerCase())
+                events << createEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER1.toLowerCase() == "on"?1:0) && result.POWER1.toLowerCase() == "on"? "on" : "off"))
+            }
+            if (result.containsKey("POWER2")) {
+                logging("POWER2: $result.POWER2",1)
+                childSendState("2", result.POWER2.toLowerCase())
+                events << createEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER2.toLowerCase() == "on"?2:0) && result.POWER2.toLowerCase() == "on"? "on" : "off"))
+            }
+            if (result.containsKey("POWER3")) {
+                logging("POWER3: $result.POWER3",1)
+                childSendState("3", result.POWER3.toLowerCase())
+                events << createEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER3.toLowerCase() == "on"?3:0) && result.POWER3.toLowerCase() == "on"? "on" : "off"))
+            }
+            if (result.containsKey("POWER4")) {
+                logging("POWER4: $result.POWER4",1)
+                childSendState("4", result.POWER4.toLowerCase())
+                events << createEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER4.toLowerCase() == "on"?4:0) && result.POWER4.toLowerCase() == "on" ? "on" : "off"))
+            }
+            
+            // Standard Energy Monitor Data parsing
+            if (result.containsKey("StatusSNS")) {
+                result << result.StatusSNS
+            }
+            if (result.containsKey("ENERGY")) {
+                //logging("Has ENERGY...", 1)
+                //if (!state.containsKey('energy')) state.energy = {}
+                if (result.ENERGY.containsKey("Total")) {
+                    logging("Total: $result.ENERGY.Total kWh",99)
+                    events << createEvent(name: "energyTotal", value: "$result.ENERGY.Total kWh")  
+                }
+                if (result.ENERGY.containsKey("Today")) {
+                    logging("Today: $result.ENERGY.Today kWh",99)
+                    events << createEvent(name: "energyToday", value: "$result.ENERGY.Today kWh")
+                }
+                if (result.ENERGY.containsKey("Yesterday")) {
+                    logging("Yesterday: $result.ENERGY.Yesterday kWh",99)
+                    events << createEvent(name: "energyYesterday", value: "$result.ENERGY.Yesterday kWh")
+                }
+                if (result.ENERGY.containsKey("Current")) {
+                    logging("Current: $result.ENERGY.Current A",99)
+                    r = (result.ENERGY.Current == null) ? 0 : result.ENERGY.Current
+                    events << createEvent(name: "current", value: "$r A")
+                }
+                if (result.ENERGY.containsKey("ApparentPower")) {
+                    logging("apparentPower: $result.ENERGY.ApparentPower VA",99)
+                    events << createEvent(name: "apparentPower", value: "$result.ENERGY.ApparentPower VA")
+                }
+                if (result.ENERGY.containsKey("ReactivePower")) {
+                    logging("reactivePower: $result.ENERGY.ReactivePower VAr",99)
+                    events << createEvent(name: "reactivePower", value: "$result.ENERGY.ReactivePower VAr")
+                }
+                if (result.ENERGY.containsKey("Factor")) {
+                    logging("powerFactor: $result.ENERGY.Factor",99)
+                    events << createEvent(name: "powerFactor", value: "$result.ENERGY.Factor")
+                }
+                if (result.ENERGY.containsKey("Voltage")) {
+                    logging("Voltage: $result.ENERGY.Voltage V",99)
+                    r = (result.ENERGY.Voltage == null) ? 0 : result.ENERGY.Voltage
+                    events << createEvent(name: "voltageWithUnit", value: "$r V")
+                    events << createEvent(name: "voltage", value: r, unit: "V")
+                }
+                if (result.ENERGY.containsKey("Power")) {
+                    logging("Power: $result.ENERGY.Power W",99)
+                    r = (result.ENERGY.Power == null) ? 0 : result.ENERGY.Power
+                    events << createEvent(name: "powerWithUnit", value: "$r W")
+                    events << createEvent(name: "power", value: r, unit: "W")
+                    //state.energy.power = r
+                }
+            }
+            // StatusPTH:[PowerDelta:0, PowerLow:0, PowerHigh:0, VoltageLow:0, VoltageHigh:0, CurrentLow:0, CurrentHigh:0]
         // parse() Generic Tasmota-device footer BEGINS here
         } else {
                 //log.debug "Response is not JSON: $body"
@@ -251,7 +410,17 @@ def update_needed_settings()
     
     // updateNeededSettings() Generic header ENDS here
 
-    // https://blakadder.github.io/templates/prime_CCRCWFII113PK.html
+    /*logging('Just saved...', 10)
+    if((b0Code == null || b0Code == '') && b1Code != null && b1Code != '') {
+        b0CodeTmp = calculateB0(b1Code, 0)
+        b0Code = b0CodeTmp.replace(' ', '')
+        sendEvent(name: "b0Code", value: b0CodeTmp)
+        state.b0Code = b0Code
+        logging('Calculated b0Code! ', 10)
+    }*/
+
+    cmds << updateRFMode()
+
     
     // Tasmota Module and Template selection command (autogenerated)
     cmds << getAction(getCommandString("Module", null))
@@ -268,7 +437,7 @@ def update_needed_settings()
     if(deviceTemplateInput == null || deviceTemplateInput == "") {
         // We should use the default of the driver
         useDefaultTemplate = true
-        defaultDeviceTemplate = '{"NAME":"PrimeCCRC13PK","GPIO":[0,0,0,0,57,56,0,0,21,122,0,0,0],"FLAG":0,"BASE":18}'
+        defaultDeviceTemplate = '{"NAME":"RFLink Bridge","GPIO":[0,149,0,148,0,0,0,0,0,0,0,0,0],"FLAG":15,"BASE":18}'
     }
     if(deviceTemplateInput != null) deviceTemplateInput = deviceTemplateInput.replaceAll(' ','')
     if(disableModuleSelection == false && ((deviceTemplateInput != null && deviceTemplateInput != "") || 
@@ -317,14 +486,9 @@ def update_needed_settings()
         logging("Setting the Module has been disabled!", 10)
     }
 
-    // Disabling these here, but leaving them if anyone needs them
-    // If another driver has set SetOption81 to 1, the below might be needed, or you can use:
-    // http://<device IP>/cm?user=admin&password=<your password>&cmnd=SetOption81%200
-    // or without username and password:
-    // http://<device IP>/cm?cmnd=SetOption81%200
-    //cmds << getAction(getCommandString("SetOption81", "0")) // Set PCF8574 component behavior for all ports as inverted (default=0)
+    //cmds << getAction(getCommandString("SetOption81", "1")) // Set PCF8574 component behavior for all ports as inverted (default=0)
     //cmds << getAction(getCommandString("LedPower", "1"))  // 1 = turn LED ON and set LedState 8
-    //mds << getAction(getCommandString("LedState", "8"))  // 8 = LED on when Wi-Fi and MQTT are connected.
+    //cmds << getAction(getCommandString("LedState", "8"))  // 8 = LED on when Wi-Fi and MQTT are connected.
     
     
     // updateNeededSettings() TelePeriod setting
@@ -354,7 +518,7 @@ def update_needed_settings()
 private def getDriverVersion() {
     logging("getDriverVersion()", 50)
 	def cmds = []
-    comment = "<a target=\"blakadder\" href=\"https://templates.blakadder.com/prime_CCRCWFII113PK.html\">Device Model Info</a>"
+    comment = "UNTESTED driver - <a target=\"blakadder\" href=\"http://www.rflink.nl/blog2/wiring\">Device Model Info</a>"
     if(comment != "") state.comment = comment
     sendEvent(name: "driverVersion", value: "v0.9.2 for Tasmota 7.x (Hubitat version)")
     return cmds
@@ -383,6 +547,11 @@ private def logging(message, level) {
         break
         case "99": // Only parsing reports
             if (level >= 99 )
+                log.debug "$message"
+        break
+        
+        case "100": // Only special debug messages, eg IR and RF codes
+            if (level == 100 )
                 log.debug "$message"
         break
         }
@@ -549,9 +718,119 @@ def configuration_model_debug()
     <Item label="Verbose" value="10" />
     <Item label="Reports+Status" value="50" />
     <Item label="Reports" value="99" />
-    </Value>
+    <Item label="RF Codes" value="100" />
+</Value>
 </configuration>
 '''
+}
+
+/* Helper functions included when needing Child devices */
+// Get the button number
+private channelNumber(String dni) {
+    def ch = dni.split("-")[-1] as Integer
+    return ch
+}
+
+def childOn(String dni) {
+    // Make sure to create an onOffCmd that sends the actual command
+    onOffCmd(1, channelNumber(dni))
+}
+
+def childOff(String dni) {
+    // Make sure to create an onOffCmd that sends the actual command
+    onOffCmd(0, channelNumber(dni))
+}
+
+private childSendState(String currentSwitchNumber, String state) {
+    def childDevice = childDevices.find{it.deviceNetworkId.endsWith("-${currentSwitchNumber}")}
+    if (childDevice) {
+        logging("childDevice.sendEvent ${currentSwitchNumber} ${state}",1)
+        childDevice.sendEvent(name: "switch", value: state, type: type)
+    } else {
+        logging("childDevice.sendEvent ${currentSwitchNumber} is missing!",1)
+    }
+}
+
+private areAllChildrenSwitchedOn(Integer skip = 0) {
+    def children = getChildDevices()
+    boolean status = true
+    Integer i = 1
+    // Enumerating this way may be incorrect if we have more children than actual switches
+    // due to having changed the number of switches in the config and not deleted the extra
+    // switches. Just delete unneeded children...
+    children.each {child->
+        if (i!=skip) {
+  		    if(child.currentState("switch")?.value == "off") {
+                status = false
+            }
+        }
+        i++
+    }
+    return status
+}
+
+def getChildDriverName() {
+    deviceDriverName = getDeviceInfoByName('name')
+    if(deviceDriverName.toLowerCase().endsWith(' (parent)')) {
+        deviceDriverName = deviceDriverName.substring(0, deviceDriverName.length()-9)
+    }
+    childDriverName = "${deviceDriverName} (Child)"
+    logging("childDriverName = '$childDriverName'", 1)
+    return(childDriverName)
+}
+
+private void createChildDevices() {
+    Integer numSwitchesI = numSwitches.toInteger()
+    logging("createChildDevices: creating $numSwitchesI device(s)",1)
+    
+    // If making changes here, don't forget that recreateDevices need to have the same settings set
+    for (i in 1..numSwitchesI) {
+        // https://community.hubitat.com/t/composite-devices-parent-child-devices/1925
+        addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getDeviceInfoByName("name")} #$i", label: "$device.displayName $i", isComponent: false])
+    }
+}
+
+def recreateChildDevices() {
+    Integer numSwitchesI = numSwitches.toInteger()
+    logging("recreateChildDevices: recreating $numSwitchesI device(s)",1)
+    def childDevice = null
+
+    for (i in 1..numSwitchesI) {
+        childDevice = childDevices.find{it.deviceNetworkId.endsWith("-$i")}
+        if (childDevice) {
+            // The device exists, just update it
+            childDevice.setName("${getDeviceInfoByName('name')} #$i")
+            childDevice.setDeviceNetworkId("$device.id-$i")  // This doesn't work right now...
+            logging(childDevice.getData(), 10)
+            // We leave the device Label alone, since that might be desired by the user to change
+            //childDevice.setLabel("$device.displayName $i")
+            //.setLabel doesn't seem to work on child devices???
+        } else {
+            // No such device, we should create it
+            addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getDeviceInfoByName("name")} #$i", label: "$device.displayName $i", isComponent: false])
+        }
+    }
+    if (numSwitchesI < 4) {
+        // Check if we should delete some devices
+        for (i in 1..4) {
+            if (i > numSwitchesI) {
+                childDevice = childDevices.find{it.deviceNetworkId.endsWith("-$i")}
+                if (childDevice) {
+                    logging("Removing child #$i!", 10)
+                    deleteChildDevice(childDevice.deviceNetworkId)
+                }
+            }
+        }
+    }
+}
+
+def deleteChildren() {
+	logging("deleteChildren",1)
+	def children = getChildDevices()
+    
+    children.each {child->
+  		deleteChildDevice(child.deviceNetworkId)
+    }
 }
 
 /* Helper functions included in all Tasmota drivers */

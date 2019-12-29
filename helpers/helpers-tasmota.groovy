@@ -28,6 +28,22 @@ def updated()
     if (cmds != [] && cmds != null) cmds
 }
 
+def prepareDNI() {
+    if (useIPAsID) {
+        hexIPAddress = setDeviceNetworkId(ipAddress, true)
+        if(hexIPAddress != null && state.dni != hexIPAddress) {
+            state.dni = hexIPAddress
+            updateDNI()
+        }
+    }
+    else if (state.mac != null && state.dni != state.mac) { 
+        state.dni = setDeviceNetworkId(state.mac)
+        updateDNI()
+    }
+}
+
+
+
 def getCommandString(command, value) {
     def uri = "/cm?"
     if (password) {
@@ -52,10 +68,15 @@ def parseDescriptionAsMap(description) {
 }
 
 private getAction(uri){ 
+    logging("Using getAction for '${uri}'...", 0)
+    return httpGetAction(uri)
+}
+
+private httpGetAction(uri){ 
   updateDNI()
   
   def headers = getHeader()
-  
+  //logging("Using httpGetAction for '${uri}'...", 0)
   def hubAction = new hubitat.device.HubAction(
     method: "GET",
     path: uri,
