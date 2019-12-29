@@ -19,7 +19,7 @@ import groovy.json.JsonSlurper
 
 
 metadata {
-	definition (name: "Tasmota - DO NOT USE Sonoff RF Bridge (Parent)", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
+	definition (name: "Tasmota - DO NOT USE Sonoff RF Bridge (Parent)", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-sonoff-rf-bridge-parent-expanded.groovy") {
         capability "Actuator"
 		capability "Switch"
 		capability "Sensor"
@@ -44,6 +44,8 @@ metadata {
         attribute   "energyToday", "string"
         attribute   "energyYesterday", "string"
         attribute   "energyTotal", "string"
+        attribute   "voltageStr", "string"
+        attribute   "powerStr", "string"
         attribute   "b0Code", "string"
         
         // Default Attributes
@@ -75,6 +77,7 @@ metadata {
         generate_preferences(configuration_model_debug())
         input(name: "b1Code", type: "string", title: "<b>B1 code (received)</b>", description: "<i>Set this to a B1 code and save and the driver will calculate the B0 code.</i>", displayDuringSetup: true, required: false)
         input(name: "b0Code", type: "string", title: "<b>B0 code (command)</b>", description: "<i>Set this to a B0 code or input a B1 code and this will be calculated!</i>", displayDuringSetup: true, required: false)
+        input(name: "rfRawMode", type: "bool", title: "<b>RF Raw Mode</b>", description: '<i>Set RF mode to RAW, only works with <a target="portisch" href="https://tasmota.github.io/docs/#/devices/Sonoff-RF-Bridge-433?id=rf-firmware">Portisch</a>. MAY be slower than Standard RF mode, but can handle more signals.</i>', displayDuringSetup: true, required: false)
         
         // Default Preferences for Parent Devices
         input(name: "numSwitches", type: "number", title: "<b>Number of Children</b>", description: "<i>Set the number of children (default 1)</i>", defaultValue: "1", displayDuringSetup: true, required: true)
@@ -95,7 +98,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - DO NOT USE Sonoff RF Bridge (Parent)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch']
+    deviceInfo = ['name': 'Tasmota - DO NOT USE Sonoff RF Bridge (Parent)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-sonoff-rf-bridge-parent-expanded.groovy']
     return(deviceInfo[infoName])
 }
 
@@ -131,6 +134,18 @@ def off() {
         cmds << getAction(getCommandString("Power$i", "0"))
     }
     //return delayBetween(cmds, 500)
+    return cmds
+}
+
+def updateRFMode() {
+    def cmds = []
+    if(rfRawMode == true) {
+        logging("Switching to RAW RF mode...", 100)
+        cmds << getAction(getCommandString("rfraw", "177"))
+    } else {
+        logging("Switching to Standard RF mode...", 100)
+        cmds << getAction(getCommandString("rfraw", "0"))
+    }
     return cmds
 }
 
@@ -243,6 +258,36 @@ def parse(description) {
                 //events << createEvent(name: 'uptime', value: result.Uptime, displayed: false, archivable: false)
                 state.uptime = result.Uptime
             }
+            if (result.containsKey("RestartReason")) {
+                events << updateRFMode()
+            }
+            if (result.containsKey("RfReceived")) {
+                logging("RfReceived: $result.RfReceived", 100)
+                if(rfRawMode == true) {
+                    logging("Switching to RAW RF mode...", 100)
+                    events << getAction(getCommandString("rfraw", "177"))
+                }
+            }
+            if (result.containsKey("RfRaw")) {
+                logging("RfRaw: $result.RfRaw", 100)
+                if (!(result.RfRaw instanceof String) && result.RfRaw.containsKey("Data")) {
+                    rawData = result.RfRaw.Data.toString()
+                    
+                    if(rawData.substring(3,5) != 'B1' && rawData != "AAA055") {
+                        // We have RAW data and it is NOT B1 data, fix it:
+                        logging("Incorrect RAW mode, fixing it now...", 100) 
+                        events << getAction(getCommandString("rfraw", "177"))
+                    }
+                    // Save CPU:
+                    if (logLevel == "100" && rawData.substring(3,5) == 'B1' ) {
+                        logging("Calculated B0: ${calculateB0(rawData, 0).replace(' ', '')}", 100)
+                    }
+                }
+                if(rfRawMode != true) {
+                    logging("Switching to Standard RF mode...", 100)
+                    events << getAction(getCommandString("rfraw", "0"))
+                }
+            }
             
             // Standard Wifi Data parsing
             if (result.containsKey("Wifi")) {
@@ -306,7 +351,8 @@ def parse(description) {
                 }
                 if (result.ENERGY.containsKey("Current")) {
                     logging("Current: $result.ENERGY.Current A",99)
-                    events << createEvent(name: "current", value: "$result.ENERGY.Current A")
+                    r = (result.ENERGY.Current == null) ? 0 : result.ENERGY.Current
+                    events << createEvent(name: "current", value: "$r A")
                 }
                 if (result.ENERGY.containsKey("ApparentPower")) {
                     logging("apparentPower: $result.ENERGY.ApparentPower VA",99)
@@ -322,12 +368,16 @@ def parse(description) {
                 }
                 if (result.ENERGY.containsKey("Voltage")) {
                     logging("Voltage: $result.ENERGY.Voltage V",99)
-                    events << createEvent(name: "voltage", value: "$result.ENERGY.Voltage V")
+                    r = (result.ENERGY.Voltage == null) ? 0 : result.ENERGY.Voltage
+                    events << createEvent(name: "voltageWithUnit", value: "$r V")
+                    events << createEvent(name: "voltage", value: r, unit: "V")
                 }
                 if (result.ENERGY.containsKey("Power")) {
                     logging("Power: $result.ENERGY.Power W",99)
-                    events << createEvent(name: "power", value: "$result.ENERGY.Power W")
-                    //state.energy.power = result.ENERGY.Power
+                    r = (result.ENERGY.Power == null) ? 0 : result.ENERGY.Power
+                    events << createEvent(name: "powerWithUnit", value: "$r W")
+                    events << createEvent(name: "power", value: r, unit: "W")
+                    //state.energy.power = r
                 }
             }
             // StatusPTH:[PowerDelta:0, PowerLow:0, PowerHigh:0, VoltageLow:0, VoltageHigh:0, CurrentLow:0, CurrentHigh:0]
@@ -351,6 +401,7 @@ def parse(description) {
 def calculateB0(inputStr, repeats) {
     // This calculates the B0 value from the B1 for use with the Sonoff RF Bridge
     logging('inputStr: ' + inputStr, 0)
+    inputStr = inputStr.replace(' ', '')
     //logging('inputStr.substring(4,6): ' + inputStr.substring(4,6), 0)
     numBuckets = Integer.parseInt(inputStr.substring(4,6), 16)
     buckets = []
@@ -404,14 +455,16 @@ def update_needed_settings()
     
     // updateNeededSettings() Generic header ENDS here
 
-    logging('Just saved...', 10)
+    /*logging('Just saved...', 10)
     if((b0Code == null || b0Code == '') && b1Code != null && b1Code != '') {
         b0CodeTmp = calculateB0(b1Code, 0)
         b0Code = b0CodeTmp.replace(' ', '')
         sendEvent(name: "b0Code", value: b0CodeTmp)
         state.b0Code = b0Code
         logging('Calculated b0Code! ', 10)
-    }
+    }*/
+
+    cmds << updateRFMode()
 
     
     // Tasmota Module and Template selection command (autogenerated)
@@ -769,7 +822,7 @@ private void createChildDevices() {
     // If making changes here, don't forget that recreateDevices need to have the same settings set
     for (i in 1..numSwitchesI) {
         // https://community.hubitat.com/t/composite-devices-parent-child-devices/1925
-        addChildDevice("${getDeviceInfoByName('namespace')}", "${getChildDriverName()}", "$device.id-$i", [name: "$device.name #$i", label: "$device.displayName $i", isComponent: true])
+        addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getDeviceInfoByName("name")} #$i", label: "$device.displayName $i", isComponent: false])
     }
 }
 
@@ -790,7 +843,7 @@ def recreateChildDevices() {
             //.setLabel doesn't seem to work on child devices???
         } else {
             // No such device, we should create it
-            addChildDevice("${getDeviceInfoByName('namespace')}", "${getChildDriverName()}", "$device.id-$i", [name: "${getDeviceInfoByName('name')} #$i", label: "$device.displayName $i", isComponent: true])
+            addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getDeviceInfoByName("name")} #$i", label: "$device.displayName $i", isComponent: false])
         }
     }
     if (numSwitchesI < 4) {

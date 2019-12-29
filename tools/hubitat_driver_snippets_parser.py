@@ -215,7 +215,8 @@ if (result.containsKey("ENERGY")) {
     }
     if (result.ENERGY.containsKey("Current")) {
         logging("Current: $result.ENERGY.Current A",99)
-        events << createEvent(name: "current", value: "$result.ENERGY.Current A")
+        r = (result.ENERGY.Current == null) ? 0 : result.ENERGY.Current
+        events << createEvent(name: "current", value: "$r A")
     }
     if (result.ENERGY.containsKey("ApparentPower")) {
         logging("apparentPower: $result.ENERGY.ApparentPower VA",99)
@@ -231,12 +232,16 @@ if (result.containsKey("ENERGY")) {
     }
     if (result.ENERGY.containsKey("Voltage")) {
         logging("Voltage: $result.ENERGY.Voltage V",99)
-        events << createEvent(name: "voltage", value: "$result.ENERGY.Voltage V")
+        r = (result.ENERGY.Voltage == null) ? 0 : result.ENERGY.Voltage
+        events << createEvent(name: "voltageWithUnit", value: "$r V")
+        events << createEvent(name: "voltage", value: r, unit: "V")
     }
     if (result.ENERGY.containsKey("Power")) {
         logging("Power: $result.ENERGY.Power W",99)
-        events << createEvent(name: "power", value: "$result.ENERGY.Power W")
-        //state.energy.power = result.ENERGY.Power
+        r = (result.ENERGY.Power == null) ? 0 : result.ENERGY.Power
+        events << createEvent(name: "powerWithUnit", value: "$r W")
+        events << createEvent(name: "power", value: r, unit: "W")
+        //state.energy.power = r
     }
 }
 // StatusPTH:[PowerDelta:0, PowerLow:0, PowerHigh:0, VoltageLow:0, VoltageHigh:0, CurrentLow:0, CurrentHigh:0]

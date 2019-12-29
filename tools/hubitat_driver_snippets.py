@@ -88,6 +88,8 @@ attribute   "powerFactor", "string"
 attribute   "energyToday", "string"
 attribute   "energyYesterday", "string"
 attribute   "energyTotal", "string"
+attribute   "voltageStr", "string"
+attribute   "powerStr", "string"
 """
 
 def getDefaultMetadataAttributesForTHMonitor():
