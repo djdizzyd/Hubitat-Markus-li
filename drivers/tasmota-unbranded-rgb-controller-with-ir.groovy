@@ -50,7 +50,7 @@ def update_needed_settings() {
     #!include:getUpdateNeededSettingsTasmotaHeader()
 
     #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand(0, '{"NAME":"RGB Controller","GPIO":[0,0,0,0,0,38,0,0,39,51,0,37,0],"FLAG":15,"BASE":18}')
-
+    
     // Disabling these here, but leaving them if anyone needs them
     // If another driver has set SetOption81 to 1, the below might be needed, or you can use:
     // http://<device IP>/cm?user=admin&password=<your password>&cmnd=SetOption81%200

@@ -285,6 +285,11 @@ def parse(description) {
                 color = result.Color
                 logging("Color: ${color.tokenize(",")}", 1)
             }
+            if (result.containsKey("CT")) {
+                t = Math.round(1000000/result.CT)
+                if(colorTemperature != t ) events << createEvent(name: "colorTemperature", value: t)
+                logging("CT: $result.CT",99)
+            }
         // parse() Generic Tasmota-device footer BEGINS here
         } else {
                 //log.debug "Response is not JSON: $body"
@@ -390,7 +395,7 @@ def update_needed_settings() {
     } else {
         logging("Setting the Module has been disabled!", 10)
     }
-
+    
     // Disabling these here, but leaving them if anyone needs them
     // If another driver has set SetOption81 to 1, the below might be needed, or you can use:
     // http://<device IP>/cm?user=admin&password=<your password>&cmnd=SetOption81%200

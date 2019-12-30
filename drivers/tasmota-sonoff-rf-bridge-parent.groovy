@@ -168,7 +168,7 @@ def update_needed_settings()
     }*/
 
     
-
+    // Don't send any other commands until AFTER setting the correct Module/Template
     #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand(0,'{"NAME":"Sonoff Bridge","GPIO":[17,148,255,149,255,255,0,0,255,56,255,0,0],"FLAG":0,"BASE":25}')
 
     //cmds << getAction(getCommandString("SetOption81", "1")) // Set PCF8574 component behavior for all ports as inverted (default=0)
@@ -177,6 +177,7 @@ def update_needed_settings()
     
     #!include:getUpdateNeededSettingsTelePeriod()
     
+    // Don't send these types of commands until AFTER setting the correct Module/Template
     cmds << updateRFMode()
 
     #!include:getUpdateNeededSettingsTasmotaFooter()

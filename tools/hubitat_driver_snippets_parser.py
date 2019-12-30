@@ -301,6 +301,11 @@ if (result.containsKey("Color")) {
     color = result.Color
     logging("Color: ${color.tokenize(",")}", 1)
 }
+if (result.containsKey("CT")) {
+    t = Math.round(1000000/result.CT)
+    if(colorTemperature != t ) events << createEvent(name: "colorTemperature", value: t)
+    logging("CT: $result.CT",99)
+}
 """
 
 def getTasmotaParserForRGBWIRRemote():

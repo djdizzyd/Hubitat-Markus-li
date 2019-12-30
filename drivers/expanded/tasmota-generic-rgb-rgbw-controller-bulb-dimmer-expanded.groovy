@@ -257,6 +257,11 @@ def parse(description) {
                 color = result.Color
                 logging("Color: ${color.tokenize(",")}", 1)
             }
+            if (result.containsKey("CT")) {
+                t = Math.round(1000000/result.CT)
+                if(colorTemperature != t ) events << createEvent(name: "colorTemperature", value: t)
+                logging("CT: $result.CT",99)
+            }
         // parse() Generic Tasmota-device footer BEGINS here
         } else {
                 //log.debug "Response is not JSON: $body"
@@ -402,7 +407,7 @@ def update_needed_settings() {
 private def getDriverVersion() {
     logging("getDriverVersion()", 50)
 	def cmds = []
-    comment = ""
+    comment = "RGBWW lights only PARTIALLY supported for now"
     if(comment != "") state.comment = comment
     sendEvent(name: "driverVersion", value: "v0.9.2 for Tasmota 7.x (Hubitat version)")
     return cmds

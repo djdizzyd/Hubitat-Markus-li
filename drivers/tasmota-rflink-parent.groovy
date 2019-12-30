@@ -129,9 +129,8 @@ def update_needed_settings()
         logging('Calculated b0Code! ', 10)
     }*/
 
-    cmds << updateRFMode()
-
-    #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand(0,'{"NAME":"RFLink Bridge","GPIO":[0,149,0,148,0,0,0,0,0,0,0,0,0],"FLAG":15,"BASE":18}')
+    // Don't send any other commands until AFTER setting the correct Module/Template
+    #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand(0,'{"NAME":"RFLink Bridge","GPIO":[0,149,0,148,0,0,0,0,0,0,0,0,0],"FLAG":0,"BASE":18}')
 
     //cmds << getAction(getCommandString("SetOption81", "1")) // Set PCF8574 component behavior for all ports as inverted (default=0)
     //cmds << getAction(getCommandString("LedPower", "1"))  // 1 = turn LED ON and set LedState 8
@@ -139,6 +138,9 @@ def update_needed_settings()
     
     #!include:getUpdateNeededSettingsTelePeriod()
     
+    // Don't send these types of commands until AFTER setting the correct Module/Template
+    cmds << updateRFMode()
+
     #!include:getUpdateNeededSettingsTasmotaFooter()
 }
 
