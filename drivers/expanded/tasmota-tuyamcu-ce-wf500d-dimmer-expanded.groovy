@@ -432,7 +432,7 @@ def update_needed_settings()
 private def getDriverVersion() {
     logging("getDriverVersion()", 50)
 	def cmds = []
-    comment = "<a target=\"blakadder\" href=\"https://templates.blakadder.com/ce_smart_home-WF500D.html\">Device Model Info</a>"
+    comment = "BROKEN, need feedback from users - <a target=\"blakadder\" href=\"https://templates.blakadder.com/ce_smart_home-WF500D.html\">Device Model Info</a>"
     if(comment != "") state.comment = comment
     sendEvent(name: "driverVersion", value: "v0.9.2 for Tasmota 7.x (Hubitat version)")
     return cmds

@@ -432,7 +432,7 @@ def update_needed_settings()
 private def getDriverVersion() {
     logging("getDriverVersion()", 50)
 	def cmds = []
-    comment = ""
+    comment = "BROKEN, need feedback from users"
     if(comment != "") state.comment = comment
     sendEvent(name: "driverVersion", value: "v0.9.2 for Tasmota 7.x (Hubitat version)")
     return cmds
