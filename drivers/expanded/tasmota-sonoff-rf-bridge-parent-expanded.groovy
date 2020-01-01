@@ -16,10 +16,11 @@
 
 /* Default imports */
 import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
 
 
 metadata {
-	definition (name: "Tasmota - DO NOT USE Sonoff RF Bridge (Parent)", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-sonoff-rf-bridge-parent-expanded.groovy") {
+	definition (name: "Tasmota - Sonoff RF Bridge (Parent)", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-sonoff-rf-bridge-parent-expanded.groovy") {
         capability "Actuator"
 		capability "Switch"
 		capability "Sensor"
@@ -71,13 +72,17 @@ metadata {
 	}
     
     preferences {
+        input(name: "doNothing", description: "<i>This driver/device could be considered COMPLICATED, read about it in the <a href=\"https://community.hubitat.com/t/release-tasmota-7-x-firmware-with-hubitat-support/29368\"> Hubitat Forum</a>. Be sure to understand how this driver works, read everything, then ask if still not clear.</i>", title: "<b>Settings</b>", displayDuringSetup: false, type: "paragraph", element: "paragraph")
         
         // Default Preferences
         input(name: "runReset", description: "<i>For details and guidance, see the release thread in the <a href=\"https://community.hubitat.com/t/release-tasmota-7-x-firmware-with-hubitat-support/29368\"> Hubitat Forum</a>. For settings marked as ADVANCED, make sure you understand what they do before activating them. If settings are not reflected on the device, press the Configure button in this driver. Also make sure all settings really are saved and correct.<br/>Type RESET and then press 'Save Preferences' to DELETE all Preferences and return to DEFAULTS.</i>", title: "<b>Settings</b>", displayDuringSetup: false, type: "paragraph", element: "paragraph")
         generate_preferences(configuration_model_debug())
+
+        // Device specific preferences
         input(name: "b1Code", type: "string", title: "<b>B1 code (received)</b>", description: "<i>Set this to a B1 code and save and the driver will calculate the B0 code.</i>", displayDuringSetup: true, required: false)
         input(name: "b0Code", type: "string", title: "<b>B0 code (command)</b>", description: "<i>Set this to a B0 code or input a B1 code and this will be calculated!</i>", displayDuringSetup: true, required: false)
-        input(name: "rfRawMode", type: "bool", title: "<b>RF Raw Mode</b>", description: '<i>Set RF mode to RAW, only works with <a target="portisch" href="https://tasmota.github.io/docs/#/devices/Sonoff-RF-Bridge-433?id=rf-firmware">Portisch</a>. MAY be slower than Standard RF mode, but can handle more signals.</i>', displayDuringSetup: true, required: false)
+        input(name: "rfRawMode", type: "bool", title: "<b>RF Raw Mode</b>", description: '<i>Set RF mode to RAW, only works with <a target="portisch" href="https://tasmota.github.io/docs/#/devices/Sonoff-RF-Bridge-433?id=rf-firmware">Portisch</a>. MAY be slower than Standard RF mode, but can handle more signals. Using the Portisch firmware is ALWAYS NOTICABLY faster than the original firmware, but RAW mode might be slower. With non-raw mode the risk is that you will miss events. DO NOT CHANGE THIS once you have paired child devices, they will stop working!</i>', displayDuringSetup: true, required: false)
+
         
         // Default Preferences for Parent Devices
         input(name: "numSwitches", type: "number", title: "<b>Number of Children</b>", description: "<i>Set the number of children (default 1)</i>", defaultValue: "1", displayDuringSetup: true, required: true)
@@ -98,7 +103,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - DO NOT USE Sonoff RF Bridge (Parent)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-sonoff-rf-bridge-parent-expanded.groovy']
+    deviceInfo = ['name': 'Tasmota - Sonoff RF Bridge (Parent)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-sonoff-rf-bridge-parent-expanded.groovy']
     return(deviceInfo[infoName])
 }
 
@@ -148,6 +153,13 @@ def updateRFMode() {
         cmds << getAction(getCommandString("rfraw", "0"))
     }
     return cmds
+}
+
+def getRawDataMain(rawData) {
+    rawDataSplit = rawData.split()
+    numBytes = Integer.parseInt(rawDataSplit[2], 16)
+    // We only want this section, since it is what identifies each signal
+    return rawDataSplit[ 3+numBytes..-2 ].join('')
 }
 
 def parse(description) {
@@ -257,21 +269,37 @@ def parse(description) {
                 if(rfRawMode == true) {
                     logging("Switching to RAW RF mode...", 100)
                     events << getAction(getCommandString("rfraw", "177"))
+                } else {
+                    result.RfReceived.type = 'parsed_portisch'
+                    events << sendParseEventToChildren(result.RfReceived)
                 }
             }
             if (result.containsKey("RfRaw")) {
                 logging("RfRaw: $result.RfRaw", 100)
+                
                 if (!(result.RfRaw instanceof String) && result.RfRaw.containsKey("Data")) {
                     rawData = result.RfRaw.Data.toString()
-                    
+                    childData = [:]
                     if(rawData.substring(3,5) != 'B1' && rawData != "AAA055") {
                         // We have RAW data and it is NOT B1 data, fix it:
                         logging("Incorrect RAW mode, fixing it now...", 100) 
                         events << getAction(getCommandString("rfraw", "177"))
+                    } 
+                    if(rawData.substring(3,5) == 'B1') {
+                        childData['type'] = 'raw_portisch'
+                        childData['b1'] = rawData
+                        // We always need to include 'Data' as well
+                        childData['Data'] = getRawDataMain(rawData)
                     }
-                    // Save CPU:
+                    // Save CPU, only run this if needed:
                     if (logLevel == "100" && rawData.substring(3,5) == 'B1' ) {
-                        logging("Calculated B0: ${calculateB0(rawData, 0).replace(' ', '')}", 100)
+                        b0 = calculateB0(rawData, 0)
+                        childData['b0'] = b0
+                        logging("Calculated B0: ${b0.replace(' ', '')}", 100)
+                    }
+                    logging("childData: '${childData}'", 100)
+                    if (childData) {
+                        events << sendParseEventToChildren(childData)
                     }
                 }
                 if(rfRawMode != true) {
@@ -456,7 +484,6 @@ def update_needed_settings()
         state.b0Code = b0Code
         logging('Calculated b0Code! ', 10)
     }*/
-
     
     // Don't send any other commands until AFTER setting the correct Module/Template
     
@@ -531,7 +558,7 @@ def update_needed_settings()
     
     // updateNeededSettings() TelePeriod setting
     cmds << getAction(getCommandString("TelePeriod", (telePeriod == '' || telePeriod == null ? "300" : telePeriod)))
-    
+
     // Don't send these types of commands until AFTER setting the correct Module/Template
     cmds << updateRFMode()
 
@@ -796,9 +823,6 @@ private areAllChildrenSwitchedOn(Integer skip = 0) {
     def children = getChildDevices()
     boolean status = true
     Integer i = 1
-    // Enumerating this way may be incorrect if we have more children than actual switches
-    // due to having changed the number of switches in the config and not deleted the extra
-    // switches. Just delete unneeded children...
     children.each {child->
         if (i!=skip) {
   		    if(child.currentState("switch")?.value == "off") {
@@ -806,6 +830,14 @@ private areAllChildrenSwitchedOn(Integer skip = 0) {
             }
         }
         i++
+    }
+    return status
+}
+
+private sendParseEventToChildren(data) {
+    def children = getChildDevices()
+    children.each {child->
+        child.parseParentData(data)
     }
     return status
 }

@@ -39,6 +39,7 @@ def getHeaderLicense():
 def getDefaultImports():
     return """/* Default imports */
 import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
 """
 
 def getDefaultMetadataCapabilities():
@@ -98,6 +99,14 @@ def getDefaultMetadataAttributesForTHMonitor():
 attribute   "pressureWithUnit", "string"
 """
 
+def getLearningModeAttributes():
+    return """
+// Attributes used for Learning Mode
+attribute   "status", "string"
+attribute   "actionSeen", "number"
+attribute   "actionData", "json_object"
+"""
+
 def getDefaultMetadataCommands():
     return """
 // Default Commands
@@ -132,6 +141,14 @@ command "modeWakeUp"
 command "modeCycleUpColors"
 command "modeCycleDownColors"
 command "modeRandomColors"
+"""
+
+def getLearningModeCommands():
+    return """
+// Commands used for Learning Mode
+command("actionStartLearning")
+command("actionSave")
+command("actionPauseUnpauseLearning")
 """
 
 def getDefaultMetadataPreferences():
@@ -458,3 +475,73 @@ def getCreateChildDevicesCommand(childType='component'):
         return('addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getDeviceInfoByName("name")} #$i", label: "$device.displayName $i", isComponent: false])')
     else:
         raise HubitatCodeBuilderError('Unknown childType specified in getcreateChildDevicesCommand(childType={})'.format(str(childType)))
+
+def getCalculateB0():
+    return """def calculateB0(inputStr, repeats) {
+    // This calculates the B0 value from the B1 for use with the Sonoff RF Bridge
+    logging('inputStr: ' + inputStr, 0)
+    inputStr = inputStr.replace(' ', '')
+    //logging('inputStr.substring(4,6): ' + inputStr.substring(4,6), 0)
+    numBuckets = Integer.parseInt(inputStr.substring(4,6), 16)
+    buckets = []
+
+    logging('numBuckets: ' + numBuckets.toString(), 0)
+
+    outAux = String.format(' %02X ', numBuckets.toInteger())
+    outAux = outAux + String.format(' %02X ', repeats.toInteger())
+    
+    logging('outAux1: ' + outAux, 0)
+    
+    j = 0
+    for(i in (0..numBuckets-1)){
+        outAux = outAux + inputStr.substring(6+i*4,10+i*4) + " "
+        j = i
+    }
+    logging('outAux2: ' + outAux, 0)
+    outAux = outAux + inputStr.substring(10+j*4, inputStr.length()-2)
+    logging('outAux3: ' + outAux, 0)
+
+    dataStr = outAux.replace(' ', '')
+    outAux = outAux + ' 55'
+    length = (dataStr.length() / 2).toInteger()
+    outAux = "AA B0 " + String.format(' %02X ', length.toInteger()) + outAux
+    logging('outAux4: ' + outAux, 0)
+    logging('outAux: ' + outAux.replace(' ', ''), 10)
+
+    return(outAux)
+}"""
+
+def getGenerateLearningPreferences(types='["Default", "Toggle", "Push", "On", "Off"]', default_type='Default'):
+    return '''// Methods for displaying the correct Learning Preferences and returning the 
+// current Action Name
+def generateLearningPreferences() {
+    input(name: "learningMode", type: "bool", title: "<b>Learning Mode</b>", description: '<i>Activate this to enter Learning Mode. DO NOT ACTIVATE THIS once you have learned the codes of a device, they will have to be re-learned!</i>', displayDuringSetup: false, required: false)
+    if(learningMode) {
+        input(name: "actionCurrentName", type: "enum", title: "<b>Action To Learn</b>", 
+              description: "<i>Select which Action to save to in Learn Mode.</i>", 
+              options: ''' + types + ''', defaultValue: "''' + default_type + '''", 
+              displayDuringSetup: false, required: false)
+        input(name: "learningModeAdvanced", type: "bool", title: "<b>Advanced Learning Mode</b>", 
+              description: '<i>Activate this to enable setting Advanced settings. Normally this is NOT needed, be careful!</i>', 
+              defaultValue: false, displayDuringSetup: false, required: false)
+        if(learningModeAdvanced) {
+            input(name: "actionCodeSetManual", type: "string", title: "<b>Set Action Code Manually</b>", 
+              description: '<i>WARNING! For ADVANCED users only!</i>', 
+              displayDuringSetup: false, required: false)
+            input(name: "actionResetAll", type: "bool", title: "<b>RESET all Saved Actions</b>", 
+              description: '<i>WARNING! This will DELETE all saved/learned Actions!</i>', 
+              defaultValue: false, displayDuringSetup: false, required: false)
+        }
+    }
+}
+
+def getCurrentActionName() {
+    if(!binding.hasVariable('actionCurrentName') || 
+      (binding.hasVariable('actionCurrentName') && actionCurrentName == null)) {
+        logging("Doesn't have the action name defined... Using ''' + default_type + '''!", 1)
+        actionName = "''' + default_type + '''"
+    } else {
+        actionName = actionCurrentName
+    }
+    return(actionName)
+}'''

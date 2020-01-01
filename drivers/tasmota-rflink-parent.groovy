@@ -103,6 +103,9 @@ def splitRFLinkData(rawRFLinkData) {
 def parse(description) {
     #!include:getGenericTasmotaParseHeader()
             #!include:getTasmotaParserForBasicData()
+            if (result.containsKey("RestartReason")) {
+                events << updateRFMode()
+            }
             // All commands received are separated by 20, then it's the counter (00 to FF, then it wraps around).
             // After that is the name of the encoding, after which key->data pairs come
             if (result.containsKey("SerialReceived")) {

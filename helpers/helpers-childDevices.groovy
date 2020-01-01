@@ -29,9 +29,6 @@ private areAllChildrenSwitchedOn(Integer skip = 0) {
     def children = getChildDevices()
     boolean status = true
     Integer i = 1
-    // Enumerating this way may be incorrect if we have more children than actual switches
-    // due to having changed the number of switches in the config and not deleted the extra
-    // switches. Just delete unneeded children...
     children.each {child->
         if (i!=skip) {
   		    if(child.currentState("switch")?.value == "off") {
@@ -39,6 +36,14 @@ private areAllChildrenSwitchedOn(Integer skip = 0) {
             }
         }
         i++
+    }
+    return status
+}
+
+private sendParseEventToChildren(data) {
+    def children = getChildDevices()
+    children.each {child->
+        child.parseParentData(data)
     }
     return status
 }

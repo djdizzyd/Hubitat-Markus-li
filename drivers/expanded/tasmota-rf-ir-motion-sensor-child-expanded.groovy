@@ -20,10 +20,8 @@ import groovy.json.JsonOutput
 
 
 metadata {
-    definition (name: "Tasmota - Sonoff RF Bridge (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-sonoff-rf-bridge-child-expanded.groovy") {
-        capability "Switch"
-        capability "Actuator"
-        capability "Momentary"
+    definition (name: "Tasmota - RF/IR Motion Sensor (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-rf-ir-motion-sensor-child-expanded.groovy") {
+        capability "MotionSensor"
 
         
         // Attributes used for Learning Mode
@@ -43,6 +41,7 @@ metadata {
         // Default Preferences
         input(name: "runReset", description: "<i>For details and guidance, see the release thread in the <a href=\"https://community.hubitat.com/t/release-tasmota-7-x-firmware-with-hubitat-support/29368\"> Hubitat Forum</a>. For settings marked as ADVANCED, make sure you understand what they do before activating them. If settings are not reflected on the device, press the Configure button in this driver. Also make sure all settings really are saved and correct.<br/>Type RESET and then press 'Save Preferences' to DELETE all Preferences and return to DEFAULTS.</i>", title: "<b>Settings</b>", displayDuringSetup: false, type: "paragraph", element: "paragraph")
         generate_preferences(configuration_model_debug())
+        input(name: "recoveryTime", type: "number", title: "<b>Recovery Time</b>", description: "<i>Set the number of seconds before returning to Inactive (default: 5)</i>", defaultValue: "5", displayDuringSetup: true, required: true)
         generateLearningPreferences()
     }
 }
@@ -50,7 +49,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - Sonoff RF Bridge (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-sonoff-rf-bridge-child-expanded.groovy']
+    deviceInfo = ['name': 'Tasmota - RF/IR Motion Sensor (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-rf-ir-motion-sensor-child-expanded.groovy']
     return(deviceInfo[infoName])
 }
 
@@ -61,7 +60,7 @@ def generateLearningPreferences() {
     if(learningMode) {
         input(name: "actionCurrentName", type: "enum", title: "<b>Action To Learn</b>", 
               description: "<i>Select which Action to save to in Learn Mode.</i>", 
-              options: ["Toggle", "Push", "On", "Off"], defaultValue: "Toggle", 
+              options: ["Active", "Inactive"], defaultValue: "Active", 
               displayDuringSetup: false, required: false)
         input(name: "learningModeAdvanced", type: "bool", title: "<b>Advanced Learning Mode</b>", 
               description: '<i>Activate this to enable setting Advanced settings. Normally this is NOT needed, be careful!</i>', 
@@ -80,8 +79,8 @@ def generateLearningPreferences() {
 def getCurrentActionName() {
     if(!binding.hasVariable('actionCurrentName') || 
       (binding.hasVariable('actionCurrentName') && actionCurrentName == null)) {
-        logging("Doesn't have the action name defined... Using Toggle!", 1)
-        actionName = "Toggle"
+        logging("Doesn't have the action name defined... Using Active!", 1)
+        actionName = "Active"
     } else {
         actionName = actionCurrentName
     }
@@ -89,47 +88,27 @@ def getCurrentActionName() {
 }
 
 /* These functions are unique to each driver */
-
-
-void on() {
-    logging("on()", 1)
-    sendEvent(name: "switch", value: "on", isStateChange: true)
+void active() {
+    logging("active()", 1)
+    sendEvent(name: "motion", value: "active", isStateChange: true)
+    logging("Recovery time: ${recoveryTime ?: 5}", 100)
+    runIn(recoveryTime ?: 5, inactive)
 }
 
-void off() {
-    logging("off()", 1)
-    sendEvent(name: "switch", value: "off", isStateChange: true)
-}
-
-void push() {
-    logging("$device pushed button", 1)
-    sendEvent(name: "switch", value: "on", isStateChange: true)
-    runIn(1, off)
+void inactive() {
+    logging("inactive()", 1)
+    sendEvent(name: "motion", value: "inactive", isStateChange: true)
 }
 
 // These are called when Action occurs, called from actionHandler()
-def pushAction() {
-    logging("pushAction()", 1)
-    push()
+def activeAction() {
+    logging("activeAction()", 1)
+    active()
 }
 
-def onAction() {
-    logging("onAction()", 1)
-    on()
-}
-
-def offAction() {
-    logging("offAction()", 1)
-    off()
-}
-
-def toggleAction() {
-    logging("togglection()", 1)
-    if(device.currentValue('switch', true) == 'on') {
-        off()
-    } else {
-        on()
-    }
+def inactiveAction() {
+    logging("inactiveAction()", 1)
+    inactive()
 }
 
 /* Helper functions for Code Learning */

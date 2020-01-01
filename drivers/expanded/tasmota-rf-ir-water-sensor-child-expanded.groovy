@@ -20,10 +20,8 @@ import groovy.json.JsonOutput
 
 
 metadata {
-    definition (name: "Tasmota - Sonoff RF Bridge (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-sonoff-rf-bridge-child-expanded.groovy") {
-        capability "Switch"
-        capability "Actuator"
-        capability "Momentary"
+    definition (name: "Tasmota - RF/IR Water Sensor (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-rf-ir-water-sensor-child-expanded.groovy") {
+        capability "WaterSensor"
 
         
         // Attributes used for Learning Mode
@@ -36,6 +34,7 @@ metadata {
         command("actionStartLearning")
         command("actionSave")
         command("actionPauseUnpauseLearning")
+        command "resetAlert"
     }
 
     preferences {
@@ -50,7 +49,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - Sonoff RF Bridge (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-sonoff-rf-bridge-child-expanded.groovy']
+    deviceInfo = ['name': 'Tasmota - RF/IR Water Sensor (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-rf-ir-water-sensor-child-expanded.groovy']
     return(deviceInfo[infoName])
 }
 
@@ -61,7 +60,7 @@ def generateLearningPreferences() {
     if(learningMode) {
         input(name: "actionCurrentName", type: "enum", title: "<b>Action To Learn</b>", 
               description: "<i>Select which Action to save to in Learn Mode.</i>", 
-              options: ["Toggle", "Push", "On", "Off"], defaultValue: "Toggle", 
+              options: ["Dry", "Wet"], defaultValue: "Wet", 
               displayDuringSetup: false, required: false)
         input(name: "learningModeAdvanced", type: "bool", title: "<b>Advanced Learning Mode</b>", 
               description: '<i>Activate this to enable setting Advanced settings. Normally this is NOT needed, be careful!</i>', 
@@ -80,8 +79,8 @@ def generateLearningPreferences() {
 def getCurrentActionName() {
     if(!binding.hasVariable('actionCurrentName') || 
       (binding.hasVariable('actionCurrentName') && actionCurrentName == null)) {
-        logging("Doesn't have the action name defined... Using Toggle!", 1)
-        actionName = "Toggle"
+        logging("Doesn't have the action name defined... Using Wet!", 1)
+        actionName = "Wet"
     } else {
         actionName = actionCurrentName
     }
@@ -89,47 +88,30 @@ def getCurrentActionName() {
 }
 
 /* These functions are unique to each driver */
-
-
-void on() {
-    logging("on()", 1)
-    sendEvent(name: "switch", value: "on", isStateChange: true)
+void dry() {
+    logging("dry()", 1)
+    sendEvent(name: "water", value: "dry", isStateChange: true)
 }
 
-void off() {
-    logging("off()", 1)
-    sendEvent(name: "switch", value: "off", isStateChange: true)
+void wet() {
+    logging("wet()", 1)
+    sendEvent(name: "water", value: "wet", isStateChange: true)
 }
 
-void push() {
-    logging("$device pushed button", 1)
-    sendEvent(name: "switch", value: "on", isStateChange: true)
-    runIn(1, off)
+void resetAlert() {
+    logging("resetAlert()", 1)
+    dry()
 }
 
 // These are called when Action occurs, called from actionHandler()
-def pushAction() {
-    logging("pushAction()", 1)
-    push()
+def dryAction() {
+    logging("dryAction()", 1)
+    dry()
 }
 
-def onAction() {
-    logging("onAction()", 1)
-    on()
-}
-
-def offAction() {
-    logging("offAction()", 1)
-    off()
-}
-
-def toggleAction() {
-    logging("togglection()", 1)
-    if(device.currentValue('switch', true) == 'on') {
-        off()
-    } else {
-        on()
-    }
+def wetAction() {
+    logging("wetAction()", 1)
+    wet()
 }
 
 /* Helper functions for Code Learning */

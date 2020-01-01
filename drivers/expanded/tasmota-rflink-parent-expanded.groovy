@@ -268,6 +268,9 @@ def parse(description) {
                 //events << createEvent(name: 'uptime', value: result.Uptime, displayed: false, archivable: false)
                 state.uptime = result.Uptime
             }
+            if (result.containsKey("RestartReason")) {
+                events << updateRFMode()
+            }
             // All commands received are separated by 20, then it's the counter (00 to FF, then it wraps around).
             // After that is the name of the encoding, after which key->data pairs come
             if (result.containsKey("SerialReceived")) {
@@ -757,9 +760,6 @@ private areAllChildrenSwitchedOn(Integer skip = 0) {
     def children = getChildDevices()
     boolean status = true
     Integer i = 1
-    // Enumerating this way may be incorrect if we have more children than actual switches
-    // due to having changed the number of switches in the config and not deleted the extra
-    // switches. Just delete unneeded children...
     children.each {child->
         if (i!=skip) {
   		    if(child.currentState("switch")?.value == "off") {
@@ -767,6 +767,14 @@ private areAllChildrenSwitchedOn(Integer skip = 0) {
             }
         }
         i++
+    }
+    return status
+}
+
+private sendParserEventToChildren() {
+    def children = getChildDevices()
+    children.each {child->
+        child.parseParentData('Parent Data')
     }
     return status
 }
