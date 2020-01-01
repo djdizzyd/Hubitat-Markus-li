@@ -3,7 +3,7 @@
 #!include:getDefaultImports()
 
 metadata {
-    definition (name: "Tasmota - Sonoff RF Bridge (Child)", namespace: "tasmota", author: "Markus Liljergren") {
+    definition (name: "Tasmota - RF/IR Switch/Toggle/Push (Child)", namespace: "tasmota", author: "Markus Liljergren") {
         capability "Switch"
         capability "Actuator"
         capability "Momentary"
@@ -24,7 +24,6 @@ metadata {
 #!include:getGenerateLearningPreferences(types='["Toggle", "Push", "On", "Off"]', default_type='Toggle')
 
 /* These functions are unique to each driver */
-
 
 void on() {
     logging("on()", 1)

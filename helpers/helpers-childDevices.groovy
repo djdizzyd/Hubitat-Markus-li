@@ -48,16 +48,6 @@ private sendParseEventToChildren(data) {
     return status
 }
 
-def getChildDriverName() {
-    deviceDriverName = getDeviceInfoByName('name')
-    if(deviceDriverName.toLowerCase().endsWith(' (parent)')) {
-        deviceDriverName = deviceDriverName.substring(0, deviceDriverName.length()-9)
-    }
-    childDriverName = "${deviceDriverName} (Child)"
-    logging("childDriverName = '$childDriverName'", 1)
-    return(childDriverName)
-}
-
 private void createChildDevices() {
     Integer numSwitchesI = numSwitches.toInteger()
     logging("createChildDevices: creating $numSwitchesI device(s)",1)

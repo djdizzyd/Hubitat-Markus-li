@@ -586,12 +586,18 @@ def update_needed_settings()
 private def getDriverVersion() {
     logging("getDriverVersion()", 50)
 	def cmds = []
-    comment = "UNTESTED driver - <a target=\"blakadder\" href=\"https://templates.blakadder.com/sonoff_RF_bridge.html\">Device Model Info</a>"
+    comment = "Functional - Need feedback - <a target=\"blakadder\" href=\"https://templates.blakadder.com/sonoff_RF_bridge.html\">Device Model Info</a>"
     if(comment != "") state.comment = comment
     sendEvent(name: "driverVersion", value: "v0.9.2 for Tasmota 7.x (Hubitat version)")
     return cmds
 }
 
+
+def getChildDriverName() {
+    childDriverName = 'Tasmota - RF/IR Switch/Toggle/Push (Child)'
+    logging("childDriverName = '$childDriverName'", 1)
+    return(childDriverName)
+}
 
 /* Logging function included in all drivers */
 private def logging(message, level) {
@@ -773,6 +779,19 @@ void logsOff(){
     }
 }
 
+private def getFilteredDeviceDriverName() {
+    deviceDriverName = getDeviceInfoByName('name')
+    if(deviceDriverName.toLowerCase().endsWith(' (parent)')) {
+        deviceDriverName = deviceDriverName.substring(0, deviceDriverName.length()-9)
+    }
+    return deviceDriverName
+}
+
+private def getFilteredDeviceDisplayName() {
+    device_display_name = device.displayName.replace(' (parent)', '').replace(' (Parent)', '')
+    return device_display_name
+}
+
 def configuration_model_debug()
 {
 '''
@@ -842,16 +861,6 @@ private sendParseEventToChildren(data) {
     return status
 }
 
-def getChildDriverName() {
-    deviceDriverName = getDeviceInfoByName('name')
-    if(deviceDriverName.toLowerCase().endsWith(' (parent)')) {
-        deviceDriverName = deviceDriverName.substring(0, deviceDriverName.length()-9)
-    }
-    childDriverName = "${deviceDriverName} (Child)"
-    logging("childDriverName = '$childDriverName'", 1)
-    return(childDriverName)
-}
-
 private void createChildDevices() {
     Integer numSwitchesI = numSwitches.toInteger()
     logging("createChildDevices: creating $numSwitchesI device(s)",1)
@@ -859,7 +868,7 @@ private void createChildDevices() {
     // If making changes here, don't forget that recreateDevices need to have the same settings set
     for (i in 1..numSwitchesI) {
         // https://community.hubitat.com/t/composite-devices-parent-child-devices/1925
-        addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getDeviceInfoByName("name")} #$i", label: "$device.displayName $i", isComponent: false])
+        addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getFilteredDeviceDriverName()} #$i", label: "${getFilteredDeviceDisplayName()} $i", isComponent: false])
     }
 }
 
@@ -880,7 +889,7 @@ def recreateChildDevices() {
             //.setLabel doesn't seem to work on child devices???
         } else {
             // No such device, we should create it
-            addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getDeviceInfoByName("name")} #$i", label: "$device.displayName $i", isComponent: false])
+            addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getFilteredDeviceDriverName()} #$i", label: "${getFilteredDeviceDisplayName()} $i", isComponent: false])
         }
     }
     if (numSwitchesI < 4) {

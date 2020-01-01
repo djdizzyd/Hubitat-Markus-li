@@ -9,7 +9,7 @@ metadata {
         #!include:getLearningModeAttributes()
         
         #!include:getLearningModeCommands()
-        command "resetAlert"
+        command "clear"
     }
 
     preferences {
@@ -33,8 +33,8 @@ void wet() {
     sendEvent(name: "water", value: "wet", isStateChange: true)
 }
 
-void resetAlert() {
-    logging("resetAlert()", 1)
+void clear() {
+    logging("clear()", 1)
     dry()
 }
 

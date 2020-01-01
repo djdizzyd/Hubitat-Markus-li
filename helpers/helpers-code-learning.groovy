@@ -153,7 +153,8 @@ def parseParentData(parentData) {
     //logging("parseParentData(parentData=${parentData})", 100)
     if (parentData.containsKey("type")) {
         if(parentData.type == 'parsed_portisch' || 
-           parentData.type == 'raw_portisch') {
+           parentData.type == 'raw_portisch' || 
+           parentData.type == 'rflink') {
             logging("${parentData.type}=${parentData}", 100)
             if(learningMode) {
                 cmds << actionLearn(parentData)

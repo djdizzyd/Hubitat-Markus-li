@@ -20,7 +20,7 @@ import groovy.json.JsonOutput
 
 
 metadata {
-    definition (name: "Tasmota - Sonoff RF Bridge (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-sonoff-rf-bridge-child-expanded.groovy") {
+    definition (name: "Tasmota - RF/IR Switch/Toggle/Push (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-rf-ir-switch-toggle-push-child-expanded.groovy") {
         capability "Switch"
         capability "Actuator"
         capability "Momentary"
@@ -50,7 +50,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - Sonoff RF Bridge (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-sonoff-rf-bridge-child-expanded.groovy']
+    deviceInfo = ['name': 'Tasmota - RF/IR Switch/Toggle/Push (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-rf-ir-switch-toggle-push-child-expanded.groovy']
     return(deviceInfo[infoName])
 }
 
@@ -89,7 +89,6 @@ def getCurrentActionName() {
 }
 
 /* These functions are unique to each driver */
-
 
 void on() {
     logging("on()", 1)
@@ -287,7 +286,8 @@ def parseParentData(parentData) {
     //logging("parseParentData(parentData=${parentData})", 100)
     if (parentData.containsKey("type")) {
         if(parentData.type == 'parsed_portisch' || 
-           parentData.type == 'raw_portisch') {
+           parentData.type == 'raw_portisch' || 
+           parentData.type == 'rflink') {
             logging("${parentData.type}=${parentData}", 100)
             if(learningMode) {
                 cmds << actionLearn(parentData)
@@ -524,6 +524,19 @@ void logsOff(){
         log.warn "OVERRIDE: Disabling Debug logging will not execute with 'DEBUG' set..."
         if (logLevel != "0") runIn(1800, logsOff)
     }
+}
+
+private def getFilteredDeviceDriverName() {
+    deviceDriverName = getDeviceInfoByName('name')
+    if(deviceDriverName.toLowerCase().endsWith(' (parent)')) {
+        deviceDriverName = deviceDriverName.substring(0, deviceDriverName.length()-9)
+    }
+    return deviceDriverName
+}
+
+private def getFilteredDeviceDisplayName() {
+    device_display_name = device.displayName.replace(' (parent)', '').replace(' (Parent)', '')
+    return device_display_name
 }
 
 def configuration_model_debug()

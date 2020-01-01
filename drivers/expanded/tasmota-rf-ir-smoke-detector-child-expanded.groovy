@@ -20,8 +20,8 @@ import groovy.json.JsonOutput
 
 
 metadata {
-    definition (name: "Tasmota - RF/IR Motion Sensor (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-rf-ir-motion-sensor-child-expanded.groovy") {
-        capability "MotionSensor"
+    definition (name: "Tasmota - RF/IR Smoke Detector (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-rf-ir-smoke-detector-child-expanded.groovy") {
+        capability "SmokeDetector"
 
         
         // Attributes used for Learning Mode
@@ -34,6 +34,8 @@ metadata {
         command("actionStartLearning")
         command("actionSave")
         command("actionPauseUnpauseLearning")
+        command "clear"
+        command "tested"
     }
 
     preferences {
@@ -41,7 +43,6 @@ metadata {
         // Default Preferences
         input(name: "runReset", description: "<i>For details and guidance, see the release thread in the <a href=\"https://community.hubitat.com/t/release-tasmota-7-x-firmware-with-hubitat-support/29368\"> Hubitat Forum</a>. For settings marked as ADVANCED, make sure you understand what they do before activating them. If settings are not reflected on the device, press the Configure button in this driver. Also make sure all settings really are saved and correct.<br/>Type RESET and then press 'Save Preferences' to DELETE all Preferences and return to DEFAULTS.</i>", title: "<b>Settings</b>", displayDuringSetup: false, type: "paragraph", element: "paragraph")
         generate_preferences(configuration_model_debug())
-        input(name: "recoveryTime", type: "number", title: "<b>Recovery Time</b>", description: "<i>Set the number of seconds before returning to Inactive (default: 5)</i>", defaultValue: "5", displayDuringSetup: true, required: true)
         generateLearningPreferences()
     }
 }
@@ -49,7 +50,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - RF/IR Motion Sensor (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-rf-ir-motion-sensor-child-expanded.groovy']
+    deviceInfo = ['name': 'Tasmota - RF/IR Smoke Detector (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-rf-ir-smoke-detector-child-expanded.groovy']
     return(deviceInfo[infoName])
 }
 
@@ -60,7 +61,7 @@ def generateLearningPreferences() {
     if(learningMode) {
         input(name: "actionCurrentName", type: "enum", title: "<b>Action To Learn</b>", 
               description: "<i>Select which Action to save to in Learn Mode.</i>", 
-              options: ["Active", "Inactive"], defaultValue: "Active", 
+              options: ["Clear", "Tested", "Detected"], defaultValue: "Detected", 
               displayDuringSetup: false, required: false)
         input(name: "learningModeAdvanced", type: "bool", title: "<b>Advanced Learning Mode</b>", 
               description: '<i>Activate this to enable setting Advanced settings. Normally this is NOT needed, be careful!</i>', 
@@ -79,8 +80,8 @@ def generateLearningPreferences() {
 def getCurrentActionName() {
     if(!binding.hasVariable('actionCurrentName') || 
       (binding.hasVariable('actionCurrentName') && actionCurrentName == null)) {
-        logging("Doesn't have the action name defined... Using Active!", 1)
-        actionName = "Active"
+        logging("Doesn't have the action name defined... Using Detected!", 1)
+        actionName = "Detected"
     } else {
         actionName = actionCurrentName
     }
@@ -88,27 +89,35 @@ def getCurrentActionName() {
 }
 
 /* These functions are unique to each driver */
-void active() {
-    logging("active()", 1)
-    sendEvent(name: "motion", value: "active", isStateChange: true)
-    logging("Recovery time: ${recoveryTime ?: 5}", 100)
-    runIn(recoveryTime ?: 5, inactive)
+void detected() {
+    logging("detected()", 1)
+    sendEvent(name: "smoke", value: "detected", isStateChange: true)
 }
 
-void inactive() {
-    logging("inactive()", 1)
-    sendEvent(name: "motion", value: "inactive", isStateChange: true)
+void clear() {
+    logging("clear()", 1)
+    sendEvent(name: "smoke", value: "clear", isStateChange: true)
+}
+
+void tested() {
+    logging("tested()", 1)
+    sendEvent(name: "smoke", value: "tested", isStateChange: true)
 }
 
 // These are called when Action occurs, called from actionHandler()
-def activeAction() {
-    logging("activeAction()", 1)
-    active()
+def detectedAction() {
+    logging("detectedAction()", 1)
+    detected()
 }
 
-def inactiveAction() {
-    logging("inactiveAction()", 1)
-    inactive()
+def clearAction() {
+    logging("clearAction()", 1)
+    clear()
+}
+
+def testedAction() {
+    logging("testedAction()", 1)
+    tested()
 }
 
 /* Helper functions for Code Learning */

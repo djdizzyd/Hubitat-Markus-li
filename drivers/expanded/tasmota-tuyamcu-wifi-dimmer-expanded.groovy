@@ -16,6 +16,7 @@
 
 /* Default imports */
 import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
 
 
 metadata {
@@ -614,6 +615,19 @@ void logsOff(){
     }
 }
 
+private def getFilteredDeviceDriverName() {
+    deviceDriverName = getDeviceInfoByName('name')
+    if(deviceDriverName.toLowerCase().endsWith(' (parent)')) {
+        deviceDriverName = deviceDriverName.substring(0, deviceDriverName.length()-9)
+    }
+    return deviceDriverName
+}
+
+private def getFilteredDeviceDisplayName() {
+    device_display_name = device.displayName.replace(' (parent)', '').replace(' (Parent)', '')
+    return device_display_name
+}
+
 def configuration_model_debug()
 {
 '''
@@ -663,9 +677,6 @@ private areAllChildrenSwitchedOn(Integer skip = 0) {
     def children = getChildDevices()
     boolean status = true
     Integer i = 1
-    // Enumerating this way may be incorrect if we have more children than actual switches
-    // due to having changed the number of switches in the config and not deleted the extra
-    // switches. Just delete unneeded children...
     children.each {child->
         if (i!=skip) {
   		    if(child.currentState("switch")?.value == "off") {
@@ -677,14 +688,12 @@ private areAllChildrenSwitchedOn(Integer skip = 0) {
     return status
 }
 
-def getChildDriverName() {
-    deviceDriverName = getDeviceInfoByName('name')
-    if(deviceDriverName.toLowerCase().endsWith(' (parent)')) {
-        deviceDriverName = deviceDriverName.substring(0, deviceDriverName.length()-9)
+private sendParseEventToChildren(data) {
+    def children = getChildDevices()
+    children.each {child->
+        child.parseParentData(data)
     }
-    childDriverName = "${deviceDriverName} (Child)"
-    logging("childDriverName = '$childDriverName'", 1)
-    return(childDriverName)
+    return status
 }
 
 private void createChildDevices() {
@@ -694,7 +703,7 @@ private void createChildDevices() {
     // If making changes here, don't forget that recreateDevices need to have the same settings set
     for (i in 1..numSwitchesI) {
         // https://community.hubitat.com/t/composite-devices-parent-child-devices/1925
-        addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getDeviceInfoByName("name")} #$i", label: "$device.displayName $i", isComponent: true])
+        addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getFilteredDeviceDriverName()} #$i", label: "${getFilteredDeviceDisplayName()} $i", isComponent: true])
     }
 }
 
@@ -715,7 +724,7 @@ def recreateChildDevices() {
             //.setLabel doesn't seem to work on child devices???
         } else {
             // No such device, we should create it
-            addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getDeviceInfoByName("name")} #$i", label: "$device.displayName $i", isComponent: true])
+            addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getFilteredDeviceDriverName()} #$i", label: "${getFilteredDeviceDisplayName()} $i", isComponent: true])
         }
     }
     if (numSwitchesI < 4) {

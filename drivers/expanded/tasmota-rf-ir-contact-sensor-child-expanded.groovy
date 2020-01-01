@@ -267,7 +267,8 @@ def parseParentData(parentData) {
     //logging("parseParentData(parentData=${parentData})", 100)
     if (parentData.containsKey("type")) {
         if(parentData.type == 'parsed_portisch' || 
-           parentData.type == 'raw_portisch') {
+           parentData.type == 'raw_portisch' || 
+           parentData.type == 'rflink') {
             logging("${parentData.type}=${parentData}", 100)
             if(learningMode) {
                 cmds << actionLearn(parentData)
@@ -504,6 +505,19 @@ void logsOff(){
         log.warn "OVERRIDE: Disabling Debug logging will not execute with 'DEBUG' set..."
         if (logLevel != "0") runIn(1800, logsOff)
     }
+}
+
+private def getFilteredDeviceDriverName() {
+    deviceDriverName = getDeviceInfoByName('name')
+    if(deviceDriverName.toLowerCase().endsWith(' (parent)')) {
+        deviceDriverName = deviceDriverName.substring(0, deviceDriverName.length()-9)
+    }
+    return deviceDriverName
+}
+
+private def getFilteredDeviceDisplayName() {
+    device_display_name = device.displayName.replace(' (parent)', '').replace(' (Parent)', '')
+    return device_display_name
 }
 
 def configuration_model_debug()

@@ -87,6 +87,8 @@ def update_needed_settings()
 
 #!include:getDefaultFunctions()
 
+#!include:getGetChildDriverNameMethod()
+
 #!include:getLoggingFunction()
 
 #!include:getHelperFunctions('default')

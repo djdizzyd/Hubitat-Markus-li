@@ -179,6 +179,8 @@ def update_needed_settings()
 
 #!include:getDefaultFunctions()
 
+#!include:getGetChildDriverNameMethod(childDriverName='Tasmota - RF/IR Switch/Toggle/Push')
+
 #!include:getLoggingFunction(specialDebugLevel=True)
 
 #!include:getHelperFunctions('default')

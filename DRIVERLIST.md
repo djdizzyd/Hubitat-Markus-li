@@ -1,5 +1,5 @@
 # Driver List 
-These are the currently available drivers (updated: 2019-12-31):
+These are the currently available drivers (updated: 2020-01-02):
 
 **Tasmota - Generic Drivers**
 * [Generic Power Monitor Plug](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-generic-pm-plug-expanded.groovy)
@@ -22,6 +22,12 @@ These are the currently available drivers (updated: 2019-12-31):
 * [KMC 4 Power Monitor Plug](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-kmc-4-pm-plug-expanded.groovy) - [Device Model Info](https://templates.blakadder.com/kmc-4.html)
 * [KMC 4 Power Monitor Plug (Child)](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-kmc-4-pm-plug-child-expanded.groovy)
 * [Prime CCRCWFII113PK Plug](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-prime-ccrcwfii113pk-plug-expanded.groovy) - [Device Model Info](https://templates.blakadder.com/prime_CCRCWFII113PK.html)
+* [RF/IR Contact Sensor (Child)](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-rf-ir-contact-sensor-child-expanded.groovy)
+* [RF/IR Motion Sensor (Child)](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-rf-ir-motion-sensor-child-expanded.groovy)
+* [RF/IR Smoke Detector (Child)](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-rf-ir-smoke-detector-child-expanded.groovy)
+* [RF/IR Switch/Toggle/Push (Child)](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-rf-ir-switch-toggle-push-child-expanded.groovy)
+* [RF/IR Water Sensor (Child)](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-rf-ir-water-sensor-child-expanded.groovy)
+* [RFLink (Parent)](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-rflink-parent-expanded.groovy) (Functional - Need feedback) - [Device Model Info](http://www.rflink.nl/blog2/wiring)
 * [S120 Plug](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-s120-plug-expanded.groovy)
 * [SK03 Power Monitor Outdoor Plug](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-sk03-pm-outdoor-plug-expanded.groovy) - [Device Model Info](https://templates.blakadder.com/SK03_outdoor.html)
 * [Sonoff 4CH (Child)](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-sonoff-4ch-child-expanded.groovy)
@@ -33,6 +39,7 @@ These are the currently available drivers (updated: 2019-12-31):
 * [Sonoff Mini](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-sonoff-mini-expanded.groovy) - [Device Model Info](https://templates.blakadder.com/sonoff_mini.html)
 * [Sonoff POW](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-sonoff-pow-expanded.groovy) - [Device Model Info](https://templates.blakadder.com/sonoff_Pow.html)
 * [Sonoff POW R2](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-sonoff-powr2-expanded.groovy) - [Device Model Info](https://templates.blakadder.com/sonoff_Pow_R2.html)
+* [Sonoff RF Bridge (Parent)](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-sonoff-rf-bridge-parent-expanded.groovy) (Functional - Need feedback) - [Device Model Info](https://templates.blakadder.com/sonoff_RF_bridge.html)
 * [Sonoff S2X](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-sonoff-s2x-expanded.groovy) (Works with both Sonoff S20 and S26.) - [Device Model Info](https://templates.blakadder.com/sonoff_S20.html)
 * [Sonoff S31](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-sonoff-s31-expanded.groovy) - [Device Model Info](https://templates.blakadder.com/sonoff_S31.html)
 * [Sonoff SV](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-sonoff-sv-expanded.groovy) - [Device Model Info](https://templates.blakadder.com/sonoff_SV.html)

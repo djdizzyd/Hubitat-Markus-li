@@ -16,6 +16,7 @@
 
 /* Default imports */
 import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
 
 
 metadata {

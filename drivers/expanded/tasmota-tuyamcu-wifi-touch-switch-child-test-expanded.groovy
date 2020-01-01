@@ -16,6 +16,7 @@
 
 /* Default imports */
 import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
 
 
 // THIS IS NOT A REAL DRIVER AND IS ONLY USED FOR TESTING THE GENERATOR AND AUTO-PUBLISHING SYSTEM!

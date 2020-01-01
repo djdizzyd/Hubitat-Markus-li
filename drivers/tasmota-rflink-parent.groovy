@@ -3,7 +3,7 @@
 #!include:getDefaultImports()
 
 metadata {
-	definition (name: "Tasmota - DO NOT USE RFLink (Parent)", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
+	definition (name: "Tasmota - RFLink (Parent)", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
         capability "Actuator"
 		capability "Switch"
 		capability "Sensor"
@@ -92,12 +92,22 @@ def splitRFLinkData(rawRFLinkData) {
                 map
             }
             
-            d =['counter': c[0], 'type': c[1]]
+            d =['counter': c[0], 'etype': c[1]]
             d << r
             parsedData << d
         }
     }
     return parsedData
+}
+
+def makeRFLinkDataString(splitRFLinkData) {
+    childData = ''
+    splitRFLinkData.each { 
+        if(it.key != 'counter') {
+            childData = childData + "${it.key.toUpperCase()}=${it.value};"
+        }
+    }
+    return(childData)
 }
 
 def parse(description) {
@@ -108,10 +118,25 @@ def parse(description) {
             }
             // All commands received are separated by 20, then it's the counter (00 to FF, then it wraps around).
             // After that is the name of the encoding, after which key->data pairs come
+            
             if (result.containsKey("SerialReceived")) {
                 logging("SerialReceived: $result.SerialReceived", 100)
-                logging("Split RFLink Data: '${splitRFLinkData(result.SerialReceived)}'", 100)
-
+                splitRFLinkData = splitRFLinkData(result.SerialReceived)
+                logging("Split RFLink Data: '${splitRFLinkData}'", 100)
+                
+                splitRFLinkData.each {
+                    logging("it=${it}", 100)
+                    if(it.containsKey('counter')) {
+                        //if(it.containsKey('seen') && it['seen'] >= maxActionNumSeen) {
+                        //    maxActionNumSeen = it['seen']
+                        //    frequentData = it['data']
+                        //}
+                        it['Data'] = makeRFLinkDataString(it)
+                        it['type'] = 'rflink'
+                        logging("Split RFLink Data field: '${it['Data']}'", 100)
+                        events << sendParseEventToChildren(it)
+                    }
+                }
             }
             #!include:getTasmotaParserForWifi()
             #!include:getTasmotaParserForParentSwitch()
@@ -148,6 +173,8 @@ def update_needed_settings()
 }
 
 #!include:getDefaultFunctions()
+
+#!include:getGetChildDriverNameMethod(childDriverName='Tasmota - RF/IR Switch/Toggle/Push')
 
 #!include:getLoggingFunction(specialDebugLevel=True)
 

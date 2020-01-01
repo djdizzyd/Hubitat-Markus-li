@@ -207,23 +207,26 @@ def main():
          'alternate_name': 'Tasmota - Sonoff 4CH (Child)'},
         # https://tasmota.github.io/docs/#/devices/Sonoff-RF-Bridge-433pi 
         {'id': 648, 'file': 'tasmota-sonoff-rf-bridge-parent.groovy' , 
-         'comment': 'UNTESTED driver',
+         'comment': 'Functional - Need feedback',
          'deviceLink': 'https://templates.blakadder.com/sonoff_RF_bridge.html',
          'numSwitches': 1, 'specialDebugLabel': 'RF Codes', 'childType': 'not_component'},
-        {'id': 649, 'file': 'tasmota-sonoff-rf-bridge-child.groovy', 
-         'specialDebugLabel': 'Code Learning'},
+        
         {'id': 650, 'file': 'tasmota-rflink-parent.groovy' , 
-         'comment': 'UNTESTED driver',
+         'comment': 'Functional - Need feedback',
          'deviceLink': 'http://www.rflink.nl/blog2/wiring',
          'numSwitches': 1, 'specialDebugLabel': 'RF Codes', 'childType': 'not_component'},
-        {'id': 651, 'file': 'tasmota-sonoff-rf-bridge-child.groovy' , \
-         'alternate_output_filename': 'tasmota-rflink-child', \
-         'alternate_name': 'Tasmota - DO NOT USE RFLink (Child)'},
+        #{'id': 651, 'file': 'tasmota-sonoff-rf-bridge-child.groovy' , \
+        # 'alternate_output_filename': 'tasmota-rflink-child', \
+        # 'alternate_name': 'Tasmota - DO NOT USE RFLink (Child)'},
+        {'id': 649, 'file': 'tasmota-rf-ir-switch-toggle-push-child.groovy', 
+         'specialDebugLabel': 'Code Learning'},
         {'id': 673, 'file': 'tasmota-rf-ir-motion-sensor-child.groovy', 
          'specialDebugLabel': 'Code Learning'},
         {'id': 674, 'file': 'tasmota-rf-ir-contact-sensor-child.groovy', 
          'specialDebugLabel': 'Code Learning'},
         {'id': 675, 'file': 'tasmota-rf-ir-water-sensor-child.groovy', 
+         'specialDebugLabel': 'Code Learning'},
+        {'id': 676, 'file': 'tasmota-rf-ir-smoke-detector-child.groovy', 
          'specialDebugLabel': 'Code Learning'},
         
         # Generic Tasmota Devices:
@@ -251,12 +254,12 @@ def main():
     # https://templates.blakadder.com/ce_smart_home-WF500D.html
 
     # RF Bridge functions to implement:
-    # * Motion Sensor (receive)
-    # * Button (receive)
-    # * RF Remote??? (receive)
-    # * Door/Window Sensor (receive)
+    # * Motion Sensor (receive) - DONE
+    # * Button (receive) - DONE
+    # * RF Remote??? (receive) - DONE
+    # * Door/Window Sensor (receive) - DONE
     # * Smoke Alarm (receive)
-    # * Water Sensor (receive)
+    # * Water Sensor (receive) - DONE
     # * On/Off signal transmitter (send)
     # * Custom Signal Transmitter??? (send)
 
@@ -275,12 +278,13 @@ def main():
     # RGB Example: https://github.com/damondins/hubitat/blob/master/Tasmota%20RGBW%20LED%20Light%20Bulb/Tasmota%20RGBW%20LED%20Light%20Bulb
 
     # As long as we have an id, we can just supply that here instead of the whole config...
-    # 674 for door sensor
+    # 651 left over from RF Link Child
     driver_files_testing = [
-        {'id':673}, {'id':674}, {'id':675},  # RF/IR Children
+        
+    #    {'id':649}, {'id':673}, {'id':674}, {'id':675}, {'id':676}, # RF/IR Children
     #    {'id':588},
-    #    {'id':650},{'id':651},  # RFLink
-        {'id':648},{'id':649},  # Sonoff RF Bridgle
+    #   {'id':650},{'id':651},  # RFLink
+    #    {'id':648},  # Sonoff RF Bridgle
     #     {'id':551},{'id':578}, {'id':362}, {'id':645}, {'id':590}, {'id':588}, 
     #    {'id': 0, 'file': 'tasmota-generic-thp-device.groovy' , \
     #     'alternate_output_filename': 'tasmota-sonoff-th', \

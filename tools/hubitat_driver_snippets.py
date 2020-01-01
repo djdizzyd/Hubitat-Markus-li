@@ -468,13 +468,33 @@ def getSpecialDebugEntry(label=None):
 
 def getCreateChildDevicesCommand(childType='component'):
     #childType == 'not_component' should 
+    
     if(childType=='component'):
         #return('addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "$device.name #$i", label: "$device.displayName $i", isComponent: true])')
-        return('addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getDeviceInfoByName("name")} #$i", label: "$device.displayName $i", isComponent: true])')
+
+        return('addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getFilteredDeviceDriverName()} #$i", label: "${getFilteredDeviceDisplayName()} $i", isComponent: true])')
     elif(childType=='not_component'):
-        return('addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getDeviceInfoByName("name")} #$i", label: "$device.displayName $i", isComponent: false])')
+        return('addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getFilteredDeviceDriverName()} #$i", label: "${getFilteredDeviceDisplayName()} $i", isComponent: false])')
     else:
         raise HubitatCodeBuilderError('Unknown childType specified in getcreateChildDevicesCommand(childType={})'.format(str(childType)))
+
+def getGetChildDriverNameMethod(childDriverName='default'):
+    if(childDriverName == 'default'):
+        return """def getChildDriverName() {
+    deviceDriverName = getDeviceInfoByName('name')
+    if(deviceDriverName.toLowerCase().endsWith(' (parent)')) {
+        deviceDriverName = deviceDriverName.substring(0, deviceDriverName.length()-9)
+    }
+    childDriverName = "${deviceDriverName} (Child)"
+    logging("childDriverName = '$childDriverName'", 1)
+    return(childDriverName)
+}"""
+    else:
+        return """def getChildDriverName() {
+    childDriverName = '""" + childDriverName + """ (Child)'
+    logging("childDriverName = '$childDriverName'", 1)
+    return(childDriverName)
+}"""
 
 def getCalculateB0():
     return """def calculateB0(inputStr, repeats) {

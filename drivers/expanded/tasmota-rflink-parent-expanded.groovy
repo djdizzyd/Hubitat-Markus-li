@@ -16,10 +16,11 @@
 
 /* Default imports */
 import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
 
 
 metadata {
-	definition (name: "Tasmota - DO NOT USE RFLink (Parent)", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-rflink-parent-expanded.groovy") {
+	definition (name: "Tasmota - RFLink (Parent)", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-rflink-parent-expanded.groovy") {
         capability "Actuator"
 		capability "Switch"
 		capability "Sensor"
@@ -98,7 +99,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - DO NOT USE RFLink (Parent)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-rflink-parent-expanded.groovy']
+    deviceInfo = ['name': 'Tasmota - RFLink (Parent)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-rflink-parent-expanded.groovy']
     return(deviceInfo[infoName])
 }
 
@@ -161,12 +162,22 @@ def splitRFLinkData(rawRFLinkData) {
                 map
             }
             
-            d =['counter': c[0], 'type': c[1]]
+            d =['counter': c[0], 'etype': c[1]]
             d << r
             parsedData << d
         }
     }
     return parsedData
+}
+
+def makeRFLinkDataString(splitRFLinkData) {
+    childData = ''
+    splitRFLinkData.each { 
+        if(it.key != 'counter') {
+            childData = childData + "${it.key.toUpperCase()}=${it.value};"
+        }
+    }
+    return(childData)
 }
 
 def parse(description) {
@@ -273,10 +284,25 @@ def parse(description) {
             }
             // All commands received are separated by 20, then it's the counter (00 to FF, then it wraps around).
             // After that is the name of the encoding, after which key->data pairs come
+            
             if (result.containsKey("SerialReceived")) {
                 logging("SerialReceived: $result.SerialReceived", 100)
-                logging("Split RFLink Data: '${splitRFLinkData(result.SerialReceived)}'", 100)
-
+                splitRFLinkData = splitRFLinkData(result.SerialReceived)
+                logging("Split RFLink Data: '${splitRFLinkData}'", 100)
+                
+                splitRFLinkData.each {
+                    logging("it=${it}", 100)
+                    if(it.containsKey('counter')) {
+                        //if(it.containsKey('seen') && it['seen'] >= maxActionNumSeen) {
+                        //    maxActionNumSeen = it['seen']
+                        //    frequentData = it['data']
+                        //}
+                        it['Data'] = makeRFLinkDataString(it)
+                        it['type'] = 'rflink'
+                        logging("Split RFLink Data field: '${it['Data']}'", 100)
+                        events << sendParseEventToChildren(it)
+                    }
+                }
             }
             
             // Standard Wifi Data parsing
@@ -523,12 +549,18 @@ def update_needed_settings()
 private def getDriverVersion() {
     logging("getDriverVersion()", 50)
 	def cmds = []
-    comment = "UNTESTED driver - <a target=\"blakadder\" href=\"http://www.rflink.nl/blog2/wiring\">Device Model Info</a>"
+    comment = "Functional - Need feedback - <a target=\"blakadder\" href=\"http://www.rflink.nl/blog2/wiring\">Device Model Info</a>"
     if(comment != "") state.comment = comment
     sendEvent(name: "driverVersion", value: "v0.9.2 for Tasmota 7.x (Hubitat version)")
     return cmds
 }
 
+
+def getChildDriverName() {
+    childDriverName = 'Tasmota - RF/IR Switch/Toggle/Push (Child)'
+    logging("childDriverName = '$childDriverName'", 1)
+    return(childDriverName)
+}
 
 /* Logging function included in all drivers */
 private def logging(message, level) {
@@ -710,6 +742,19 @@ void logsOff(){
     }
 }
 
+private def getFilteredDeviceDriverName() {
+    deviceDriverName = getDeviceInfoByName('name')
+    if(deviceDriverName.toLowerCase().endsWith(' (parent)')) {
+        deviceDriverName = deviceDriverName.substring(0, deviceDriverName.length()-9)
+    }
+    return deviceDriverName
+}
+
+private def getFilteredDeviceDisplayName() {
+    device_display_name = device.displayName.replace(' (parent)', '').replace(' (Parent)', '')
+    return device_display_name
+}
+
 def configuration_model_debug()
 {
 '''
@@ -771,22 +816,12 @@ private areAllChildrenSwitchedOn(Integer skip = 0) {
     return status
 }
 
-private sendParserEventToChildren() {
+private sendParseEventToChildren(data) {
     def children = getChildDevices()
     children.each {child->
-        child.parseParentData('Parent Data')
+        child.parseParentData(data)
     }
     return status
-}
-
-def getChildDriverName() {
-    deviceDriverName = getDeviceInfoByName('name')
-    if(deviceDriverName.toLowerCase().endsWith(' (parent)')) {
-        deviceDriverName = deviceDriverName.substring(0, deviceDriverName.length()-9)
-    }
-    childDriverName = "${deviceDriverName} (Child)"
-    logging("childDriverName = '$childDriverName'", 1)
-    return(childDriverName)
 }
 
 private void createChildDevices() {
@@ -796,7 +831,7 @@ private void createChildDevices() {
     // If making changes here, don't forget that recreateDevices need to have the same settings set
     for (i in 1..numSwitchesI) {
         // https://community.hubitat.com/t/composite-devices-parent-child-devices/1925
-        addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getDeviceInfoByName("name")} #$i", label: "$device.displayName $i", isComponent: false])
+        addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getFilteredDeviceDriverName()} #$i", label: "${getFilteredDeviceDisplayName()} $i", isComponent: false])
     }
 }
 
@@ -817,7 +852,7 @@ def recreateChildDevices() {
             //.setLabel doesn't seem to work on child devices???
         } else {
             // No such device, we should create it
-            addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getDeviceInfoByName("name")} #$i", label: "$device.displayName $i", isComponent: false])
+            addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getFilteredDeviceDriverName()} #$i", label: "${getFilteredDeviceDisplayName()} $i", isComponent: false])
         }
     }
     if (numSwitchesI < 4) {
