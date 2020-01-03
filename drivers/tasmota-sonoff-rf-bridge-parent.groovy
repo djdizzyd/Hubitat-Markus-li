@@ -31,7 +31,7 @@ metadata {
         input(name: "rfRawMode", type: "bool", title: "<b>RF Raw Mode</b>", description: '<i>Set RF mode to RAW, only works with <a target="portisch" href="https://tasmota.github.io/docs/#/devices/Sonoff-RF-Bridge-433?id=rf-firmware">Portisch</a>. MAY be slower than Standard RF mode, but can handle more signals. Using the Portisch firmware is ALWAYS NOTICABLY faster than the original firmware, but RAW mode might be slower. With non-raw mode the risk is that you will miss events. DO NOT CHANGE THIS once you have paired child devices, they will stop working!</i>', displayDuringSetup: true, required: false)
 
         #!include:getDefaultMetadataPreferencesForParentDevicesWithUnlimitedChildren(numSwitches=1)
-        #!include:getDefaultMetadataPreferencesForTasmota(True) # False = No TelePeriod setting, True is default
+        #!include:getDefaultMetadataPreferencesForTasmota(False) # False = No TelePeriod setting, True is default
 	}
 }
 
@@ -169,7 +169,7 @@ def update_needed_settings()
     //cmds << getAction(getCommandString("LedPower", "1"))  // 1 = turn LED ON and set LedState 8
     //cmds << getAction(getCommandString("LedState", "8"))  // 8 = LED on when Wi-Fi and MQTT are connected.
     
-    #!include:getUpdateNeededSettingsTelePeriod()
+    #!include:getUpdateNeededSettingsTelePeriod(forcedTelePeriod=300)
 
     // Don't send these types of commands until AFTER setting the correct Module/Template
     cmds << updateRFMode()

@@ -677,7 +677,11 @@ private void createChildDevices() {
     // If making changes here, don't forget that recreateDevices need to have the same settings set
     for (i in 1..numSwitchesI) {
         // https://community.hubitat.com/t/composite-devices-parent-child-devices/1925
+        try {
         addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getFilteredDeviceDriverName()} #$i", label: "${getFilteredDeviceDisplayName()} $i", isComponent: true])
+                } catch (com.hubitat.app.exception.UnknownDeviceTypeException e) {
+                    log.error "'${getChildDriverName()}' driver can't be found! Did you forget to install the child driver?"
+                }
     }
 }
 
@@ -698,7 +702,11 @@ def recreateChildDevices() {
             //.setLabel doesn't seem to work on child devices???
         } else {
             // No such device, we should create it
+            try {
             addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getFilteredDeviceDriverName()} #$i", label: "${getFilteredDeviceDisplayName()} $i", isComponent: true])
+                    } catch (com.hubitat.app.exception.UnknownDeviceTypeException e) {
+                        log.error "'${getChildDriverName()}' driver can't be found! Did you forget to install the child driver?"
+                    }
         }
     }
     if (numSwitchesI < 4) {
@@ -729,6 +737,12 @@ def refresh() {
 	logging("refresh()", 10)
     def cmds = []
     cmds << getAction(getCommandString("Status", "0"))
+    try {
+        // In case we have some more to run specific to this driver
+        refreshAdditional()
+    } catch (MissingMethodException e) {
+        // ignore
+    }
     return cmds
 }
 

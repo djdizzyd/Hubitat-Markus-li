@@ -635,6 +635,12 @@ def refresh() {
 	logging("refresh()", 10)
     def cmds = []
     cmds << getAction(getCommandString("Status", "0"))
+    try {
+        // In case we have some more to run specific to this driver
+        refreshAdditional()
+    } catch (MissingMethodException e) {
+        // ignore
+    }
     return cmds
 }
 

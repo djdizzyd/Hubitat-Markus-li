@@ -24,7 +24,7 @@ metadata {
     preferences {
         #!include:getDefaultMetadataPreferences()
         #!include:getDefaultMetadataPreferencesForParentDevices()
-        #!include:getDefaultMetadataPreferencesForTasmota(True) # False = No TelePeriod setting
+        #!include:getDefaultMetadataPreferencesForTasmota(False) # False = No TelePeriod setting
 	}
 }
 

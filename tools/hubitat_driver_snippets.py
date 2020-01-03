@@ -307,11 +307,17 @@ if(disableModuleSelection == false && moduleNumberUsed != null && moduleNumberUs
 }
 """
 
-def getUpdateNeededSettingsTelePeriod():
-    return """
+def getUpdateNeededSettingsTelePeriod(forcedTelePeriod=None):
+    if (forcedTelePeriod==None):
+        return """
 // updateNeededSettings() TelePeriod setting
 cmds << getAction(getCommandString("TelePeriod", (telePeriod == '' || telePeriod == null ? "300" : telePeriod)))
 """
+    else:
+        return '''
+// updateNeededSettings() TelePeriod setting
+cmds << getAction(getCommandString("TelePeriod", "''' + str(forcedTelePeriod) + '''"))
+'''
 
 def getUpdateNeededSettingsTHMonitor():
     return """
@@ -468,13 +474,17 @@ def getSpecialDebugEntry(label=None):
 
 def getCreateChildDevicesCommand(childType='component'):
     #childType == 'not_component' should 
-    
+    start = "try {\n"
+    end = """
+        } catch (com.hubitat.app.exception.UnknownDeviceTypeException e) {
+            log.error "'${getChildDriverName()}' driver can't be found! Did you forget to install the child driver?"
+        }"""
     if(childType=='component'):
         #return('addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "$device.name #$i", label: "$device.displayName $i", isComponent: true])')
-
-        return('addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getFilteredDeviceDriverName()} #$i", label: "${getFilteredDeviceDisplayName()} $i", isComponent: true])')
+        
+        return(start + 'addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getFilteredDeviceDriverName()} #$i", label: "${getFilteredDeviceDisplayName()} $i", isComponent: true])' + end)
     elif(childType=='not_component'):
-        return('addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getFilteredDeviceDriverName()} #$i", label: "${getFilteredDeviceDisplayName()} $i", isComponent: false])')
+        return(start + 'addChildDevice("${getDeviceInfoByName("namespace")}", "${getChildDriverName()}", "$device.id-$i", [name: "${getFilteredDeviceDriverName()} #$i", label: "${getFilteredDeviceDisplayName()} $i", isComponent: false])' + end)
     else:
         raise HubitatCodeBuilderError('Unknown childType specified in getcreateChildDevicesCommand(childType={})'.format(str(childType)))
 
