@@ -64,7 +64,7 @@ metadata {
         generate_preferences(configuration_model_debug())
         
         // Default Preferences for Parent Devices
-        input(name: "numSwitches", type: "enum", title: "<b>Number of Relays</b>", description: "<i>Set the number of buttons/relays on the device (default 1)</i>", options: ["1", "2", "3", "4"], defaultValue: "1", displayDuringSetup: true, required: true)
+        input(name: "numSwitches", type: "enum", title: "<b>Number of Relays</b>", description: "<i>Set the number of buttons/relays on the device (default 1)</i>", options: ["1", "2", "3", "4", "5", "6"], defaultValue: "1", displayDuringSetup: true, required: true)
         
         // Default Preferences for Tasmota
         input(name: "ipAddress", type: "string", title: "<b>Device IP Address</b>", description: "<i>Set this as a default fallback for the auto-discovery feature.</i>", displayDuringSetup: true, required: false)
@@ -426,7 +426,7 @@ def update_needed_settings()
     }
     
     //logging("Cmds: " +cmds,1)
-    sendEvent(name:"needUpdate", value: isUpdateNeeded, displayed:false, isStateChange: true)
+    sendEvent(name:"needUpdate", value: isUpdateNeeded, displayed:false, isStateChange: false)
     return cmds
     // updateNeededSettings() Generic footer ENDS here
 }
@@ -457,7 +457,7 @@ private def logging(message, level) {
     if (logLevel != "0"){
         switch (logLevel) {
         case "-1": // Insanely verbose
-            if (level >= 0 && level < 99 || level == 100)
+            if (level >= 0 && level <= 100)
                 log.debug "$message"
         break
         case "1": // Very verbose
@@ -595,11 +595,11 @@ def update_current_properties(cmd)
     {
         if (state.settings."${cmd.name}".toString() == cmd.value)
         {
-            sendEvent(name:"needUpdate", value:"NO", displayed:false, isStateChange: true)
+            sendEvent(name:"needUpdate", value:"NO", displayed:false, isStateChange: false)
         }
         else
         {
-            sendEvent(name:"needUpdate", value:"YES", displayed:false, isStateChange: true)
+            sendEvent(name:"needUpdate", value:"YES", displayed:false, isStateChange: false)
         }
     }
     state.currentProperties = currentProperties
@@ -794,9 +794,9 @@ def updated()
     logging("updated()", 10)
     def cmds = [] 
     cmds = update_needed_settings()
-    sendEvent(name: "checkInterval", value: 2 * 15 * 60 + 2 * 60, displayed: false, data: [protocol: "lan", hubHardwareId: device.hub.hardwareID])
-    sendEvent(name:"needUpdate", value: device.currentValue("needUpdate"), displayed:false, isStateChange: true)
-    logging(cmds,0)
+    //sendEvent(name: "checkInterval", value: 2 * 15 * 60 + 2 * 60, displayed: false, data: [protocol: "lan", hubHardwareId: device.hub.hardwareID])
+    sendEvent(name:"needUpdate", value: device.currentValue("needUpdate"), displayed:false, isStateChange: false)
+    logging(cmds, 0)
     try {
         // Also run initialize(), if it exists...
         initialize()
@@ -855,11 +855,16 @@ private httpGetAction(uri){
   
   def headers = getHeader()
   //logging("Using httpGetAction for '${uri}'...", 0)
-  def hubAction = new hubitat.device.HubAction(
-    method: "GET",
-    path: uri,
-    headers: headers
-  )
+  def hubAction = null
+  try {
+    hubAction = new hubitat.device.HubAction(
+        method: "GET",
+        path: uri,
+        headers: headers
+    )
+  } catch (e) {
+    log.error "Error in httpGetAction(uri): $e ('$uri')"
+  }
   return hubAction    
 }
 
@@ -868,12 +873,17 @@ private postAction(uri, data){
 
   def headers = getHeader()
 
-  def hubAction = new hubitat.device.HubAction(
+  def hubAction = null
+  try {
+    hubAction = new hubitat.device.HubAction(
     method: "POST",
     path: uri,
     headers: headers,
     body: data
   )
+  } catch (e) {
+    log.error "Error in postAction(uri, data): $e ('$uri', '$data')"
+  }
   return hubAction    
 }
 

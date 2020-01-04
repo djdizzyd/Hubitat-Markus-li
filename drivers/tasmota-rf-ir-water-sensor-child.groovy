@@ -5,6 +5,7 @@
 metadata {
     definition (name: "Tasmota - RF/IR Water Sensor (Child)", namespace: "tasmota", author: "Markus Liljergren") {
         capability "WaterSensor"
+        capability "Sensor"
 
         #!include:getLearningModeAttributes()
         

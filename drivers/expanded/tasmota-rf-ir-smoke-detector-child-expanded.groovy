@@ -22,6 +22,7 @@ import groovy.json.JsonOutput
 metadata {
     definition (name: "Tasmota - RF/IR Smoke Detector (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-rf-ir-smoke-detector-child-expanded.groovy") {
         capability "SmokeDetector"
+        capability "Sensor"
 
         
         // Attributes used for Learning Mode
@@ -483,11 +484,11 @@ def update_current_properties(cmd)
     {
         if (state.settings."${cmd.name}".toString() == cmd.value)
         {
-            sendEvent(name:"needUpdate", value:"NO", displayed:false, isStateChange: true)
+            sendEvent(name:"needUpdate", value:"NO", displayed:false, isStateChange: false)
         }
         else
         {
-            sendEvent(name:"needUpdate", value:"YES", displayed:false, isStateChange: true)
+            sendEvent(name:"needUpdate", value:"YES", displayed:false, isStateChange: false)
         }
     }
     state.currentProperties = currentProperties
@@ -552,7 +553,7 @@ private def logging(message, level) {
     if (logLevel != "0"){
         switch (logLevel) {
         case "-1": // Insanely verbose
-            if (level >= 0 && level < 99 || level == 100)
+            if (level >= 0 && level <= 100)
                 log.debug "$message"
         break
         case "1": // Very verbose

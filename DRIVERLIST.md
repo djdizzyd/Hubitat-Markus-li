@@ -1,5 +1,5 @@
 # Driver List 
-These are the currently available drivers (updated: 2020-01-02):
+These are the currently available drivers (updated: 2020-01-04):
 
 **Tasmota - Generic Drivers**
 * [Generic Power Monitor Plug](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-generic-pm-plug-expanded.groovy)
@@ -30,6 +30,7 @@ These are the currently available drivers (updated: 2020-01-02):
 * [RFLink (Parent)](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-rflink-parent-expanded.groovy) (Functional - Need feedback) - [Device Model Info](http://www.rflink.nl/blog2/wiring)
 * [S120 Plug](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-s120-plug-expanded.groovy)
 * [SK03 Power Monitor Outdoor Plug](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-sk03-pm-outdoor-plug-expanded.groovy) - [Device Model Info](https://templates.blakadder.com/SK03_outdoor.html)
+* [Sensor (Distance)](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-sensor-distance-expanded.groovy) (UNTESTED driver) - [Device Model Info](https://github.com/arendst/Tasmota/wiki/HC-SR04)
 * [Sonoff 4CH (Child)](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-sonoff-4ch-child-expanded.groovy)
 * [Sonoff 4CH (Parent)](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-sonoff-4ch-parent-expanded.groovy) (UNTESTED driver) - [Device Model Info](https://templates.blakadder.com/sonoff_4CH.html)
 * [Sonoff 4CH Pro (Child)](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-sonoff-4ch-pro-child-expanded.groovy)

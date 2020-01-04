@@ -48,6 +48,7 @@ metadata {
         attribute   "voltageStr", "string"
         attribute   "powerStr", "string"
         attribute   "b0Code", "string"
+        attribute   "lastModeChange", "number"
         
         // Default Attributes
         attribute   "needUpdate", "string"
@@ -143,14 +144,30 @@ def off() {
 }
 
 def updateRFMode() {
+    return updateRFMode(false, false)
+}
+
+def updateRFMode(useCreateEvent, force) {
     def cmds = []
-    cmds << getAction(getCommandString("seriallog", "0"))
-    if(rfRawMode == true) {
-        logging("Switching to RAW RF mode...", 100)
-        cmds << getAction(getCommandString("rfraw", "177"))
-    } else {
-        logging("Switching to Standard RF mode...", 100)
-        cmds << getAction(getCommandString("rfraw", "0"))
+    now = Math.round(now() / 1000)
+    if(!force) pauseExecution(100)
+    last = device.latestValue("lastModeChange", true)
+    last = last ? last : 0
+    logging("lastModeChange: ${last} (forced: ${force}, enough time: ${now > last + 60})", 0)
+    if (force || now > last + 60) {
+        cmds << getAction(getCommandString("seriallog", "0"))
+        if(rfRawMode == true) {
+            logging("Switching to RAW RF mode...", 100)
+            cmds << getAction(getCommandString("rfraw", "177"))
+        } else {
+            logging("Switching to Standard RF mode...", 100)
+            cmds << getAction(getCommandString("rfraw", "0"))
+        }
+        if(useCreateEvent) {
+            cmds << createEvent(name: "lastModeChange", value: now )
+        } else {
+            cmds << sendEvent(name: "lastModeChange", value: now )
+        }
     }
     return cmds
 }
@@ -268,7 +285,7 @@ def parse(description) {
                 logging("RfReceived: $result.RfReceived", 100)
                 if(rfRawMode == true) {
                     logging("Switching to RAW RF mode...", 100)
-                    events << getAction(getCommandString("rfraw", "177"))
+                    events << updateRFMode()
                 } else {
                     result.RfReceived.type = 'parsed_portisch'
                     events << sendParseEventToChildren(result.RfReceived)
@@ -283,7 +300,7 @@ def parse(description) {
                     if(rawData.substring(3,5) != 'B1' && rawData != "AAA055") {
                         // We have RAW data and it is NOT B1 data, fix it:
                         logging("Incorrect RAW mode, fixing it now...", 100) 
-                        events << getAction(getCommandString("rfraw", "177"))
+                        events << updateRFMode()
                     } 
                     if(rawData.substring(3,5) == 'B1') {
                         childData['type'] = 'raw_portisch'
@@ -304,7 +321,7 @@ def parse(description) {
                 }
                 if(rfRawMode != true) {
                     logging("Switching to Standard RF mode...", 100)
-                    events << getAction(getCommandString("rfraw", "0"))
+                    events << updateRFMode()
                 }
             }
             
@@ -560,7 +577,7 @@ def update_needed_settings()
     cmds << getAction(getCommandString("TelePeriod", "300"))
 
     // Don't send these types of commands until AFTER setting the correct Module/Template
-    cmds << updateRFMode()
+    cmds << updateRFMode(false, true)  // false, true == Use SendEvent, FORCE the update
 
     
     // updateNeededSettings() Generic footer BEGINS here
@@ -577,7 +594,7 @@ def update_needed_settings()
     }
     
     //logging("Cmds: " +cmds,1)
-    sendEvent(name:"needUpdate", value: isUpdateNeeded, displayed:false, isStateChange: true)
+    sendEvent(name:"needUpdate", value: isUpdateNeeded, displayed:false, isStateChange: false)
     return cmds
     // updateNeededSettings() Generic footer ENDS here
 }
@@ -604,7 +621,7 @@ private def logging(message, level) {
     if (logLevel != "0"){
         switch (logLevel) {
         case "-1": // Insanely verbose
-            if (level >= 0 && level < 99 || level == 100)
+            if (level >= 0 && level <= 100)
                 log.debug "$message"
         break
         case "1": // Very verbose
@@ -747,11 +764,11 @@ def update_current_properties(cmd)
     {
         if (state.settings."${cmd.name}".toString() == cmd.value)
         {
-            sendEvent(name:"needUpdate", value:"NO", displayed:false, isStateChange: true)
+            sendEvent(name:"needUpdate", value:"NO", displayed:false, isStateChange: false)
         }
         else
         {
-            sendEvent(name:"needUpdate", value:"YES", displayed:false, isStateChange: true)
+            sendEvent(name:"needUpdate", value:"YES", displayed:false, isStateChange: false)
         }
     }
     state.currentProperties = currentProperties
@@ -947,9 +964,9 @@ def updated()
     logging("updated()", 10)
     def cmds = [] 
     cmds = update_needed_settings()
-    sendEvent(name: "checkInterval", value: 2 * 15 * 60 + 2 * 60, displayed: false, data: [protocol: "lan", hubHardwareId: device.hub.hardwareID])
-    sendEvent(name:"needUpdate", value: device.currentValue("needUpdate"), displayed:false, isStateChange: true)
-    logging(cmds,0)
+    //sendEvent(name: "checkInterval", value: 2 * 15 * 60 + 2 * 60, displayed: false, data: [protocol: "lan", hubHardwareId: device.hub.hardwareID])
+    sendEvent(name:"needUpdate", value: device.currentValue("needUpdate"), displayed:false, isStateChange: false)
+    logging(cmds, 0)
     try {
         // Also run initialize(), if it exists...
         initialize()
@@ -1008,11 +1025,16 @@ private httpGetAction(uri){
   
   def headers = getHeader()
   //logging("Using httpGetAction for '${uri}'...", 0)
-  def hubAction = new hubitat.device.HubAction(
-    method: "GET",
-    path: uri,
-    headers: headers
-  )
+  def hubAction = null
+  try {
+    hubAction = new hubitat.device.HubAction(
+        method: "GET",
+        path: uri,
+        headers: headers
+    )
+  } catch (e) {
+    log.error "Error in httpGetAction(uri): $e ('$uri')"
+  }
   return hubAction    
 }
 
@@ -1021,12 +1043,17 @@ private postAction(uri, data){
 
   def headers = getHeader()
 
-  def hubAction = new hubitat.device.HubAction(
+  def hubAction = null
+  try {
+    hubAction = new hubitat.device.HubAction(
     method: "POST",
     path: uri,
     headers: headers,
     body: data
   )
+  } catch (e) {
+    log.error "Error in postAction(uri, data): $e ('$uri', '$data')"
+  }
   return hubAction    
 }
 

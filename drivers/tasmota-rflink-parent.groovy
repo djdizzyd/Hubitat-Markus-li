@@ -69,6 +69,7 @@ def off() {
 }
 
 def updateRFMode() {
+    // If this is called from somewhere it could be repeatedly called, rate-limit this! See RF Bridge for an example
     def cmds = []
     logging("Initializing RFLink...", 100)
     cmds << getAction(getCommandString("Baudrate", "57600"))

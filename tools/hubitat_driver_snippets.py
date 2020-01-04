@@ -185,7 +185,7 @@ input(name: "tempRes", type: "enum", title: "<b>Temperature Resolution</b>", des
 def getDefaultMetadataPreferencesForParentDevices(numSwitches=1):
     return '''
 // Default Preferences for Parent Devices
-input(name: "numSwitches", type: "enum", title: "<b>Number of Relays</b>", description: "<i>Set the number of buttons/relays on the device (default ''' + str(numSwitches) + ''')</i>", options: ["1", "2", "3", "4"], defaultValue: "''' + str(numSwitches) + '''", displayDuringSetup: true, required: true)
+input(name: "numSwitches", type: "enum", title: "<b>Number of Relays</b>", description: "<i>Set the number of buttons/relays on the device (default ''' + str(numSwitches) + ''')</i>", options: ["1", "2", "3", "4", "5", "6"], defaultValue: "''' + str(numSwitches) + '''", displayDuringSetup: true, required: true)
 '''
 
 def getDefaultMetadataPreferencesForParentDevicesWithUnlimitedChildren(numSwitches=1):
@@ -341,7 +341,7 @@ if(override == true) {
 }
 
 //logging("Cmds: " +cmds,1)
-sendEvent(name:"needUpdate", value: isUpdateNeeded, displayed:false, isStateChange: true)
+sendEvent(name:"needUpdate", value: isUpdateNeeded, displayed:false, isStateChange: false)
 return cmds
 // updateNeededSettings() Generic footer ENDS here
 """
@@ -442,7 +442,7 @@ private def logging(message, level) {
     if (logLevel != "0"){
         switch (logLevel) {
         case "-1": // Insanely verbose
-            if (level >= 0 && level < 99 || level == 100)
+            if (level >= 0 && level <= 100)
                 log.debug "$message"
         break
         case "1": // Very verbose

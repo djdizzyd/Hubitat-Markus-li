@@ -62,7 +62,7 @@ private def logging(message, level) {
     if (logLevel != "0"){
         switch (logLevel) {
         case "-1": // Insanely verbose
-            if (level >= 0 && level < 99 || level == 100)
+            if (level >= 0 && level <= 100)
                 log.debug "$message"
         break
         case "1": // Very verbose

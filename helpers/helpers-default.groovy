@@ -112,11 +112,11 @@ def update_current_properties(cmd)
     {
         if (state.settings."${cmd.name}".toString() == cmd.value)
         {
-            sendEvent(name:"needUpdate", value:"NO", displayed:false, isStateChange: true)
+            sendEvent(name:"needUpdate", value:"NO", displayed:false, isStateChange: false)
         }
         else
         {
-            sendEvent(name:"needUpdate", value:"YES", displayed:false, isStateChange: true)
+            sendEvent(name:"needUpdate", value:"YES", displayed:false, isStateChange: false)
         }
     }
     state.currentProperties = currentProperties

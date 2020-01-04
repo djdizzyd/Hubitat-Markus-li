@@ -5,6 +5,7 @@
 metadata {
     definition (name: "Tasmota - RF/IR Smoke Detector (Child)", namespace: "tasmota", author: "Markus Liljergren") {
         capability "SmokeDetector"
+        capability "Sensor"
 
         #!include:getLearningModeAttributes()
         

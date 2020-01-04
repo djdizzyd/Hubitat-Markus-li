@@ -228,6 +228,11 @@ def main():
          'specialDebugLabel': 'Code Learning'},
         {'id': 676, 'file': 'tasmota-rf-ir-smoke-detector-child.groovy', 
          'specialDebugLabel': 'Code Learning'},
+
+        # Special sensor drivers:
+        {'id': 651, 'file': 'tasmota-sensor-distance.groovy' , 
+         'comment': 'UNTESTED driver',
+         'deviceLink': 'https://github.com/arendst/Tasmota/wiki/HC-SR04',},
         
         # Generic Tasmota Devices:
         {'id': 552, 'file': 'tasmota-generic-wifi-switch-plug.groovy' },
@@ -258,7 +263,7 @@ def main():
     # * Button (receive) - DONE
     # * RF Remote??? (receive) - DONE
     # * Door/Window Sensor (receive) - DONE
-    # * Smoke Alarm (receive)
+    # * Smoke Alarm (receive) - DONE
     # * Water Sensor (receive) - DONE
     # * On/Off signal transmitter (send)
     # * Custom Signal Transmitter??? (send)
@@ -270,8 +275,6 @@ def main():
     # * Send Custom IR command (implement as toggle/button?)
     # 
 
-
-    
     expected_num_drivers = len(driver_files)
     
     # Example driver: https://github.com/hubitat/HubitatPublic/blob/master/examples/drivers/GenericZigbeeRGBWBulb.groovy
@@ -280,7 +283,7 @@ def main():
     # As long as we have an id, we can just supply that here instead of the whole config...
     # 651 left over from RF Link Child
     driver_files_testing = [
-        
+    #    {'id':651},    # Sensor - Distance
     #    {'id':649}, {'id':673}, {'id':674}, {'id':675}, {'id':676}, # RF/IR Children
     #    {'id':588},
     #   {'id':650},{'id':651},  # RFLink
@@ -291,7 +294,7 @@ def main():
     #     'alternate_name': 'WRONG Tasmota - Sonoff TH', \
     #     'alternate_module': '4'},
     ]
-    
+    # 
     #expected_num_drivers = 1
 
     if(driver_files_testing != None and driver_files_testing != []):

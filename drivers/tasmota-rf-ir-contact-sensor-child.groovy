@@ -5,6 +5,7 @@
 metadata {
     definition (name: "Tasmota - RF/IR Contact Sensor (Child)", namespace: "tasmota", author: "Markus Liljergren") {
         capability "ContactSensor"
+        capability "Sensor"
 
         #!include:getLearningModeAttributes()
         

@@ -22,9 +22,9 @@ def updated()
     logging("updated()", 10)
     def cmds = [] 
     cmds = update_needed_settings()
-    sendEvent(name: "checkInterval", value: 2 * 15 * 60 + 2 * 60, displayed: false, data: [protocol: "lan", hubHardwareId: device.hub.hardwareID])
-    sendEvent(name:"needUpdate", value: device.currentValue("needUpdate"), displayed:false, isStateChange: true)
-    logging(cmds,0)
+    //sendEvent(name: "checkInterval", value: 2 * 15 * 60 + 2 * 60, displayed: false, data: [protocol: "lan", hubHardwareId: device.hub.hardwareID])
+    sendEvent(name:"needUpdate", value: device.currentValue("needUpdate"), displayed:false, isStateChange: false)
+    logging(cmds, 0)
     try {
         // Also run initialize(), if it exists...
         initialize()
@@ -83,11 +83,16 @@ private httpGetAction(uri){
   
   def headers = getHeader()
   //logging("Using httpGetAction for '${uri}'...", 0)
-  def hubAction = new hubitat.device.HubAction(
-    method: "GET",
-    path: uri,
-    headers: headers
-  )
+  def hubAction = null
+  try {
+    hubAction = new hubitat.device.HubAction(
+        method: "GET",
+        path: uri,
+        headers: headers
+    )
+  } catch (e) {
+    log.error "Error in httpGetAction(uri): $e ('$uri')"
+  }
   return hubAction    
 }
 
@@ -96,12 +101,17 @@ private postAction(uri, data){
 
   def headers = getHeader()
 
-  def hubAction = new hubitat.device.HubAction(
+  def hubAction = null
+  try {
+    hubAction = new hubitat.device.HubAction(
     method: "POST",
     path: uri,
     headers: headers,
     body: data
   )
+  } catch (e) {
+    log.error "Error in postAction(uri, data): $e ('$uri', '$data')"
+  }
   return hubAction    
 }
 

@@ -5,6 +5,7 @@
 metadata {
     definition (name: "Tasmota - RF/IR Motion Sensor (Child)", namespace: "tasmota", author: "Markus Liljergren") {
         capability "MotionSensor"
+        capability "Sensor"
 
         #!include:getLearningModeAttributes()
         

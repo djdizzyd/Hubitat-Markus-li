@@ -13,6 +13,7 @@ metadata {
         
         #!include:getDefaultMetadataAttributesForEnergyMonitor()
         attribute   "b0Code", "string"
+        attribute   "lastModeChange", "number"
         #!include:getDefaultMetadataAttributes()
         #!include:getMetadataCommandsForHandlingChildDevices()
         #!include:getDefaultMetadataCommands()
@@ -73,14 +74,30 @@ def off() {
 }
 
 def updateRFMode() {
+    return updateRFMode(false, false)
+}
+
+def updateRFMode(useCreateEvent, force) {
     def cmds = []
-    cmds << getAction(getCommandString("seriallog", "0"))
-    if(rfRawMode == true) {
-        logging("Switching to RAW RF mode...", 100)
-        cmds << getAction(getCommandString("rfraw", "177"))
-    } else {
-        logging("Switching to Standard RF mode...", 100)
-        cmds << getAction(getCommandString("rfraw", "0"))
+    now = Math.round(now() / 1000)
+    if(!force) pauseExecution(100)
+    last = device.latestValue("lastModeChange", true)
+    last = last ? last : 0
+    logging("lastModeChange: ${last} (forced: ${force}, enough time: ${now > last + 60})", 0)
+    if (force || now > last + 60) {
+        cmds << getAction(getCommandString("seriallog", "0"))
+        if(rfRawMode == true) {
+            logging("Switching to RAW RF mode...", 100)
+            cmds << getAction(getCommandString("rfraw", "177"))
+        } else {
+            logging("Switching to Standard RF mode...", 100)
+            cmds << getAction(getCommandString("rfraw", "0"))
+        }
+        if(useCreateEvent) {
+            cmds << createEvent(name: "lastModeChange", value: now )
+        } else {
+            cmds << sendEvent(name: "lastModeChange", value: now )
+        }
     }
     return cmds
 }
@@ -102,7 +119,7 @@ def parse(description) {
                 logging("RfReceived: $result.RfReceived", 100)
                 if(rfRawMode == true) {
                     logging("Switching to RAW RF mode...", 100)
-                    events << getAction(getCommandString("rfraw", "177"))
+                    events << updateRFMode()
                 } else {
                     result.RfReceived.type = 'parsed_portisch'
                     events << sendParseEventToChildren(result.RfReceived)
@@ -117,7 +134,7 @@ def parse(description) {
                     if(rawData.substring(3,5) != 'B1' && rawData != "AAA055") {
                         // We have RAW data and it is NOT B1 data, fix it:
                         logging("Incorrect RAW mode, fixing it now...", 100) 
-                        events << getAction(getCommandString("rfraw", "177"))
+                        events << updateRFMode()
                     } 
                     if(rawData.substring(3,5) == 'B1') {
                         childData['type'] = 'raw_portisch'
@@ -138,7 +155,7 @@ def parse(description) {
                 }
                 if(rfRawMode != true) {
                     logging("Switching to Standard RF mode...", 100)
-                    events << getAction(getCommandString("rfraw", "0"))
+                    events << updateRFMode()
                 }
             }
             #!include:getTasmotaParserForWifi()
@@ -172,7 +189,7 @@ def update_needed_settings()
     #!include:getUpdateNeededSettingsTelePeriod(forcedTelePeriod=300)
 
     // Don't send these types of commands until AFTER setting the correct Module/Template
-    cmds << updateRFMode()
+    cmds << updateRFMode(false, true)  // false, true == Use SendEvent, FORCE the update
 
     #!include:getUpdateNeededSettingsTasmotaFooter()
 }
