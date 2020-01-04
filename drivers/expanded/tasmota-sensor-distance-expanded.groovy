@@ -213,7 +213,7 @@ def parse(description) {
                     value = Math.round((value as Double) * decimalLimit) / decimalLimit
                     old_value = device.currentValue('distance') as Float
                     logging("Distance: $result.SR04.Distance (rounded: $value, old_value: $old_value)", 99)
-                    if(value > old_value + 0.5 || value < old_value -0.5 ) {
+                    if(value > old_value + 1 || value < old_value - 1 ) {
                         events << createEvent(name: "distance", value: "$value")  
                     }
                 }
