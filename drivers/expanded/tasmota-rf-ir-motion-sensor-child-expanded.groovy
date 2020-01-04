@@ -91,8 +91,9 @@ def getCurrentActionName() {
 /* These functions are unique to each driver */
 void active() {
     logging("active()", 1)
-    sendEvent(name: "motion", value: "active", isStateChange: true)
+    sendEvent(name: "motion", value: "active", isStateChange: false)
     logging("Recovery time: ${recoveryTime ?: 5}", 100)
+    unschedule(inactive)
     runIn(recoveryTime ?: 5, inactive)
 }
 

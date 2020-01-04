@@ -43,7 +43,8 @@ metadata {
         attribute   "driverVersion", "string"
         
         // Device Specific Attributes
-        attribute   "distance", "string"
+        attribute   "distance", "number"
+        attribute   "distanceMotion", "number"
 
         
         // Default Commands
@@ -58,8 +59,10 @@ metadata {
         // Default Preferences
         input(name: "runReset", description: "<i>For details and guidance, see the release thread in the <a href=\"https://community.hubitat.com/t/release-tasmota-7-x-firmware-with-hubitat-support/29368\"> Hubitat Forum</a>. For settings marked as ADVANCED, make sure you understand what they do before activating them. If settings are not reflected on the device, press the Configure button in this driver. Also make sure all settings really are saved and correct.<br/>Type RESET and then press 'Save Preferences' to DELETE all Preferences and return to DEFAULTS.</i>", title: "<b>Settings</b>", displayDuringSetup: false, type: "paragraph", element: "paragraph")
         generate_preferences(configuration_model_debug())
-        input(name: "recoveryTime", type: "number", title: "<b>Recovery Time</b>", description: "<i>Set the number of seconds before returning to Inactive (default: 5)</i>", defaultValue: "5", displayDuringSetup: true, required: true)
         input(name: "decimals", type: "number", title: "<b>Decimals</b>", description: "<i>Set the maximum number of decimals after the '.' (default: 3)</i>", defaultValue: "3", displayDuringSetup: false, required: false)
+        input(name: "changeDistance", type: "number", title: "<b>Distance Change</b>", description: "<i>The minimum (in cm) the distance has to change before updating Distance (default: 0.5)</i>", defaultValue: "0.5", displayDuringSetup: false, required: false)
+        input(name: "recoveryTime", type: "number", title: "<b>Recovery Time</b>", description: "<i>Set the number of seconds before returning to Inactive (default: 5)</i>", defaultValue: "5", displayDuringSetup: true, required: true)
+        input(name: "changeMotion", type: "number", title: "<b>Motion Change</b>", description: "<i>The minimum (in cm) the distance has to change before triggering Motion (default: 2)</i>", defaultValue: "2", displayDuringSetup: false, required: false)
         
         // Default Preferences for Tasmota
         input(name: "ipAddress", type: "string", title: "<b>Device IP Address</b>", description: "<i>Set this as a default fallback for the auto-discovery feature.</i>", displayDuringSetup: true, required: false)
@@ -99,6 +102,19 @@ def off() {
 
 
 /* These functions are unique to each driver */
+void active() {
+    logging("active()", 1)
+    sendEvent(name: "motion", value: "active", isStateChange: false)
+    logging("Recovery time: ${recoveryTime ?: 5}", 10)
+    unschedule(inactive)
+    runIn(recoveryTime ?: 5, inactive)
+}
+
+void inactive() {
+    logging("inactive()", 1)
+    sendEvent(name: "motion", value: "inactive", isStateChange: true)
+}
+
 def parse(description) {
     // parse() Generic Tasmota-device header BEGINS here
     //log.debug "Parsing: ${description}"
@@ -212,9 +228,25 @@ def parse(description) {
                     }
                     value = Math.round((value as Double) * decimalLimit) / decimalLimit
                     old_value = device.currentValue('distance') as Float
-                    logging("Distance: $result.SR04.Distance (rounded: $value, old_value: $old_value)", 99)
-                    if(value > old_value + 1 || value < old_value - 1 ) {
-                        events << createEvent(name: "distance", value: "$value")  
+                    if(!old_value) old_value = 0
+                    old_motion_value = device.currentValue('distanceMotion') as Float
+                    if(!old_motion_value) old_motion_value = 0
+                    logging("Distance: $result.SR04.Distance (rounded: $value, old_value: $old_value, old_motion_value: $old_motion_value)", 99)
+                    if(!changeDistance) changeDistance = 0.5
+                    if(changeDistance instanceof String) changeDistance = changeDistance as BigDecimal
+                    if(!changeMotion) changeMotion = 2
+                    if(changeMotion instanceof String) changeMotion = changeMotion as BigDecimal
+                    //logging("changeDistance: $changeDistance, changeMotion: $changeMotion", 99)
+                    if(value > old_value + changeDistance || value < old_value - changeDistance ) {
+                        logging("Setting Distance: $value", 99)
+                        events << createEvent(name: "distance", value: value)  
+                    }
+                    if(value > old_motion_value + changeMotion || value < old_motion_value - changeMotion ) {
+                        logging("Setting Motion to active: $value", 99)
+                        events << createEvent(name: "distanceMotion", value: value)
+                        events << createEvent(name: "motion", value: "active", isStateChange: false)
+                        unschedule(inactive)
+                        runIn(recoveryTime ?: 5, inactive)
                     }
                 }
             }
