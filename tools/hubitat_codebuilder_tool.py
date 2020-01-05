@@ -99,7 +99,7 @@ def main():
          'alternate_name': 'Tasmota - TuyaMCU CE Smart Home WF500D Dimmer (EXPERIMENTAL)', \
          'alternate_template': '{"NAME":"CE WF500D","GPIO":[255,255,255,255,255,255,0,0,255,108,255,107,255],"FLAG":0,"BASE":54}',
          'deviceLink': 'https://templates.blakadder.com/ce_smart_home-WF500D.html',
-         'comment': 'BROKEN, need feedback from users'},
+         'comment': 'WORKING, but need feedback from users'},
         {'id': 581, 'file': 'tasmota-generic-wifi-switch-plug.groovy' , \
          'alternate_output_filename': 'tasmota-ce-la-2-w3-wall-outlet', \
          'alternate_name': 'Tasmota - CE Smart Home LA-2-W3 Wall Outlet', \
@@ -196,7 +196,7 @@ def main():
         {'id': 557, 'file': 'tasmota-ykyc-001-pm-plug.groovy' },
         {'id': 559, 'file': 'tasmota-brilliant-bl20925-pm-plug.groovy', 'deviceLink': 'https://templates.blakadder.com/brilliant_BL20925.html'},
         {'id': 577, 'file': 'tasmota-prime-ccrcwfii113pk-plug.groovy', 'deviceLink': 'https://templates.blakadder.com/prime_CCRCWFII113PK.html'},
-        {'id': 590, 'file': 'tasmota-tuyamcu-wifi-dimmer.groovy', 'comment': 'BROKEN, need feedback from users'},
+        {'id': 590, 'file': 'tasmota-tuyamcu-wifi-dimmer.groovy', 'comment': 'WORKING, but need feedback from users'},
         {'id': 588, 'file': 'tasmota-unbranded-rgb-controller-with-ir.groovy' },
         {'id': 362, 'file': 'tasmota-sonoff-4ch-parent.groovy' , 
          'comment': 'UNTESTED driver',
@@ -283,6 +283,7 @@ def main():
     # As long as we have an id, we can just supply that here instead of the whole config...
     # 651 left over from RF Link Child
     driver_files_testing = [
+    #    {'id':590},
     #    {'id':651},    # Sensor - Distance
     #    {'id':649}, {'id':673}, {'id':674}, {'id':675}, {'id':676}, # RF/IR Children
     #    {'id':588},

@@ -107,7 +107,7 @@ def manuallyAdd(){
                 "Tasmota - YKYC-001 Power Monitor Plug",
                 "Tasmota - Brilliant BL20925 Power Monitor Plug",
                 "Tasmota - Prime CCRCWFII113PK Plug",
-                "Tasmota - TuyaMCU Wifi Dimmer (EXPERIMENTAL)",
+                "Tasmota - TuyaMCU Wifi Dimmer",
                 "Tasmota - Unbranded RGB Controller with IR",
                 "Tasmota - Sonoff 4CH (Parent)",
                 "Tasmota - Sonoff RF Bridge (Parent)",
@@ -444,8 +444,8 @@ def addDevices() {
                 deviceHandlerName = "Tasmota - Brilliant BL20925 Power Monitor Plug"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Prime CCRCWFII113PK Plug"))
                 deviceHandlerName = "Tasmota - Prime CCRCWFII113PK Plug"
-            if (selectedDevice?.value?.name?.startsWith("Tasmota - TuyaMCU Wifi Dimmer (EXPERIMENTAL)"))
-                deviceHandlerName = "Tasmota - TuyaMCU Wifi Dimmer (EXPERIMENTAL)"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - TuyaMCU Wifi Dimmer"))
+                deviceHandlerName = "Tasmota - TuyaMCU Wifi Dimmer"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Unbranded RGB Controller with IR"))
                 deviceHandlerName = "Tasmota - Unbranded RGB Controller with IR"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Sonoff 4CH (Parent)"))

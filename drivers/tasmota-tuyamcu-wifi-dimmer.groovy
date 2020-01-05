@@ -3,7 +3,7 @@
 #!include:getDefaultImports()
 
 metadata {
-	definition (name: "Tasmota - TuyaMCU Wifi Dimmer (EXPERIMENTAL)", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
+	definition (name: "Tasmota - TuyaMCU Wifi Dimmer", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
         capability "Switch"
 		capability "SwitchLevel"
         #!include:getDefaultMetadataCapabilities()
@@ -22,8 +22,8 @@ metadata {
     preferences {
         #!include:getDefaultMetadataPreferences()
         //input(name: "numSwitches", type: "enum", title: "<b>Number of Switches</b>", description: "<i>Set the number of buttons on the switch (default 1)</i>", options: ["1", "2", "3", "4"], defaultValue: "1", displayDuringSetup: true, required: true)
-        input(name: "lowLevel", type: "string", title: "<b>Dimming Range (low)</b>", description: '<i>Used to calibrate the MINIMUM dimming level, see <a href="https://github.com/arendst/Tasmota/wiki/TuyaMCU-Configurations#dimming-range">here</a> for details.</i>', displayDuringSetup: true, required: false)
-        input(name: "highLevel", type: "string", title: "<b>Dimming Range (high)</b>", description: '<i>Used to calibrate the MINIMUM dimming level, see <a href="https://github.com/arendst/Tasmota/wiki/TuyaMCU-Configurations#dimming-range">here</a> for details.</i>', displayDuringSetup: true, required: false)
+        //input(name: "lowLevel", type: "string", title: "<b>Dimming Range (low)</b>", description: '<i>Used to calibrate the MINIMUM dimming level, see <a href="https://tasmota.github.io/docs/#/TuyaMCU?id=dimmers">here</a> for details.</i>', displayDuringSetup: true, required: false)
+        //input(name: "highLevel", type: "string", title: "<b>Dimming Range (high)</b>", description: '<i>Used to calibrate the MINIMUM dimming level, see <a href="https://tasmota.github.io/docs/#/TuyaMCU?id=dimmers">here</a> for details.</i>', displayDuringSetup: true, required: false)
         #!include:getDefaultMetadataPreferencesForTasmota(False) # False = No TelePeriod setting
 	}
 }
@@ -41,36 +41,33 @@ def on() {
 	logging("on()",50)
     //logging("device.namespace: ${getDeviceInfoByName('namespace')}, device.driverName: ${getDeviceInfoByName('name')}", 50)
     def cmds = []
-    // Power0 doesn't work correctly for Tuya devices yet
-    //cmds << getAction(getCommandString("Power0", "1"))
-    Integer numSwitchesI = numSwitches.toInteger()
-    
-    for (i in 1..numSwitchesI) {
-        cmds << getAction(getCommandString("Power$i", "1"))
-    }
-    //return delayBetween(cmds, 500)
+    cmds << getAction(getCommandString("Power", "1"))
     return cmds
 }
 
 def off() {
     logging("off()",50)
     def cmds = []
-    // Power0 doesn't work correctly for Tuya devices yet
-    //cmds << getAction(getCommandString("Power0", "0"))
-    Integer numSwitchesI = numSwitches.toInteger()
-    
-    for (i in 1..numSwitchesI) {
-        cmds << getAction(getCommandString("Power$i", "0"))
-    }
-    //return delayBetween(cmds, 500)
+    cmds << getAction(getCommandString("Power", "0"))
     return cmds
+}
+
+def setLevel(l) {
+    return(setLevel(l, 0))
+}
+
+def setLevel(l, duration) {
+    logging("setLevel(l=$l, duration=$duration)",50)
+    return(getAction(getCommandString("Dimmer", "$l")))
 }
 
 def parse(description) {
     #!include:getGenericTasmotaParseHeader()
             #!include:getTasmotaParserForBasicData()
-            #!include:getTasmotaParserForParentSwitch()
             #!include:getTasmotaParserForWifi()
+            if (result.containsKey("Dimmer")) {
+                events << createEvent(name: "level", value: result.Dimmer)
+            }
         #!include:getGenericTasmotaParseFooter()
 }
 
@@ -80,34 +77,6 @@ def update_needed_settings()
 
     #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand(54)
 
-    // Update the TuyaMCU device with the correct number of switches
-    cmds << getAction(getCommandString("TuyaMCU", null))
-    if(device.currentValue('tuyaMCU') != null) {
-        tuyaMCU = device.currentValue('tuyaMCU')
-        logging("Got this tuyaMCU string ${tuyaMCU}",1)
-        Integer numSwitchesI = numSwitches.toInteger()
-    
-        for (i in 1..numSwitchesI) {
-            if(tuyaMCU.indexOf("1$i") == -1) {
-                // Only send commands for missing buttons
-                cmds << getAction(getCommandString("TuyaMCU", "1$i,$i"))
-            } else {
-                logging("Already have button $i",10)
-            }
-        }
-        //Remove buttons we don't have
-        if (numSwitchesI < 4) {
-            n = numSwitchesI + 1
-            for (i in n..4) {
-                if(tuyaMCU.indexOf("1$i") != -1) {
-                    // Only send commands for buttons we have
-                    cmds << getAction(getCommandString("TuyaMCU", "1$i,0"))
-                } else {
-                    logging("Button $i already doesn't exist, just as expected...",10)
-                }
-            }
-        }
-    }
     
     //
     // https://github.com/arendst/Tasmota/wiki/commands
@@ -115,13 +84,10 @@ def update_needed_settings()
     //Set publishing TuyaReceived to MQTT  »6.7.0
     //0 = disable publishing TuyaReceived over MQTT (default)
     //1 = enable publishing TuyaReceived over MQTT
-    //cmds << getAction(getCommandString("SetOption66", "1"))
+    cmds << getAction(getCommandString("SetOption66", "1"))
 
-    cmds << getAction(getCommandString("SetOption81", "0")) // Set PCF8574 component behavior for all ports as inverted (default=0)
-
-    // Make sure we have our child devices
-    recreateChildDevices()
-
+    //cmds << getAction(getCommandString("SetOption81", "0")) // Set PCF8574 component behavior for all ports as inverted (default=0)
+    
     #!include:getUpdateNeededSettingsTasmotaFooter()
 }
 
@@ -130,7 +96,5 @@ def update_needed_settings()
 #!include:getLoggingFunction()
 
 #!include:getHelperFunctions('default')
-
-#!include:getHelperFunctions('childDevices')
 
 #!include:getHelperFunctions('tasmota')

@@ -1,5 +1,5 @@
 # Driver List 
-These are the currently available drivers (updated: 2020-01-04):
+These are the currently available drivers (updated: 2020-01-05):
 
 **Tasmota - Generic Drivers**
 * [Generic Power Monitor Plug](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-generic-pm-plug-expanded.groovy)
@@ -45,8 +45,8 @@ These are the currently available drivers (updated: 2020-01-04):
 * [Sonoff S31](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-sonoff-s31-expanded.groovy) - [Device Model Info](https://templates.blakadder.com/sonoff_S31.html)
 * [Sonoff SV](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-sonoff-sv-expanded.groovy) - [Device Model Info](https://templates.blakadder.com/sonoff_SV.html)
 * [Sonoff TH](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-sonoff-th-expanded.groovy) - [Device Model Info](https://templates.blakadder.com/sonoff_TH.html)
-* [TuyaMCU CE Smart Home WF500D Dimmer (EXPERIMENTAL)](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-tuyamcu-ce-wf500d-dimmer-expanded.groovy) (BROKEN, need feedback from users) - [Device Model Info](https://templates.blakadder.com/ce_smart_home-WF500D.html)
-* [TuyaMCU Wifi Dimmer (EXPERIMENTAL)](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-tuyamcu-wifi-dimmer-expanded.groovy) (BROKEN, need feedback from users)
+* [TuyaMCU CE Smart Home WF500D Dimmer (EXPERIMENTAL)](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-tuyamcu-ce-wf500d-dimmer-expanded.groovy) (WORKING, but need feedback from users) - [Device Model Info](https://templates.blakadder.com/ce_smart_home-WF500D.html)
+* [TuyaMCU Wifi Dimmer](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-tuyamcu-wifi-dimmer-expanded.groovy) (WORKING, but need feedback from users)
 * [TuyaMCU Wifi Touch Switch](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-tuyamcu-wifi-touch-switch-expanded.groovy)
 * [TuyaMCU Wifi Touch Switch (Child)](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-tuyamcu-wifi-touch-switch-child-expanded.groovy)
 * [Unbranded RGB Controller with IR](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-unbranded-rgb-controller-with-ir-expanded.groovy)
