@@ -346,6 +346,8 @@ def main():
             else:
                 specific_drivers.append(newD.copy())
     
+
+  
     # Make Driver Lists if we have all files we expect...
     if(len(used_driver_list) >= expected_num_drivers):
         log.info('Making the driver list file...')
@@ -368,7 +370,32 @@ def main():
                  "* [%(name)s](%(base_url)s%(file)s) - Import URL: [RAW](%(base_raw_url)s%(file)s) - [Device Model Info](%(deviceLink)s)\n",
                  "* [%(name)s](%(base_url)s%(file)s) (%(comment)s) - Import URL: [RAW](%(base_raw_url)s%(file)s)\n",
                  "* [%(name)s](%(base_url)s%(file)s) - Import URL: [RAW](%(base_raw_url)s%(file)s)\n"]}]
-        cb.makeDriverListDoc(my_driver_list_1, filter_function=cb.makeDriverListFilter,
+        cb.makeDriverListDoc(my_driver_list_1, output_file='DRIVERLIST_OLD', filter_function=cb.makeDriverListFilter,
+            base_data={'base_url': base_repo_url, 'base_raw_url': base_raw_repo_url})
+        full_header = '<tr><td><b>Device</b></td><td><b>Comment</b></td><td><b>Import&nbsp;URL</b></td><td><b>Model&nbsp;Info</b></td></tr>'
+        my_driver_list_1b = [
+            {'name': '', 
+             'format': 'These are the currently available drivers (updated: %(asctime)s):\n\n'},
+            {'name': '<table>\n', 'format': '%(name)s'},
+            {'name': 'Generic&nbsp;Drivers',
+             'format': '<tr><th><b>%(name)s</b></th><th></th><th></th><th></th></tr>' + full_header + '\n',
+             'items': generic_drivers,
+             'items_format': [
+                 "<tr><td><a href=\"%(base_url)s%(file)s\">%(name)s</a></td><td>%(comment)s</td><td><a href=\"%(base_raw_url)s%(file)s\">RAW</a></td><td></td></tr>\n",
+                 "<tr><td><a href=\"%(base_url)s%(file)s\">%(name)s</td><td></td><td><a href=\"%(base_raw_url)s%(file)s\">RAW</a></td><td></td></tr>\n",]},
+            {'name': '\n', 'format': '%(name)s'},
+            {'name': '</table><table>\n', 'format': '%(name)s'},
+            {'name': 'Specific&nbsp;Drivers',
+             'format': '<tr><th><b>%(name)s</b></th><th></th><th></th><th></th></tr>' + full_header + '\n',
+             'items': specific_drivers,
+             # Make sure the format requesting the most amount of data is first in the list
+             'items_format': [
+                 "<tr><td><a href=\"%(base_url)s%(file)s\">%(name)s</td><td>%(comment)s</td><td><a href=\"%(base_raw_url)s%(file)s\">RAW</a></td><td><a href=\"%(deviceLink)s\">Link</a></td></tr>\n",
+                 "<tr><td><a href=\"%(base_url)s%(file)s\">%(name)s</td><td></td><td><a href=\"%(base_raw_url)s%(file)s\">RAW</a></td><td><a href=\"%(deviceLink)s\">Link</a></td></tr>\n",
+                 "<tr><td><a href=\"%(base_url)s%(file)s\">%(name)s</td><td>%(comment)s</td><td><a href=\"%(base_raw_url)s%(file)s\">RAW</a></td><td></td></tr>\n",
+                 "<tr><td><a href=\"%(base_url)s%(file)s\">%(name)s</td><td></td><td><a href=\"%(base_raw_url)s%(file)s\">RAW</a></td><td></td></tr>\n"]},
+            {'name': '</table>\n', 'format': '%(name)s'},]
+        cb.makeDriverListDoc(my_driver_list_1b, filter_function=cb.makeDriverListFilter,
             base_data={'base_url': base_repo_url, 'base_raw_url': base_raw_repo_url})
         my_driver_list_2 = [
             {'name': 'Driver List', 'format': '# %(name)s \n'},
@@ -427,6 +454,8 @@ def main():
     #print('Generic drivers: ' + str(generic_drivers))
     #print('Specific drivers: ' + str(specific_drivers))
     #pp.pprint(used_driver_list)
+    
+
     
     app_files = [
         {'id': 97, 'file': 'tasmota-connect.groovy' },

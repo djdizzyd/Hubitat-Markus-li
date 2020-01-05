@@ -83,7 +83,7 @@ def update_needed_settings()
     //Set publishing TuyaReceived to MQTT  »6.7.0
     //0 = disable publishing TuyaReceived over MQTT (default)
     //1 = enable publishing TuyaReceived over MQTT
-    cmds << getAction(getCommandString("SetOption66", "1"))
+    cmds << getAction(getCommandString("SetOption66", "0"))
 
     //cmds << getAction(getCommandString("SetOption81", "0")) // Set PCF8574 component behavior for all ports as inverted (default=0)
     
