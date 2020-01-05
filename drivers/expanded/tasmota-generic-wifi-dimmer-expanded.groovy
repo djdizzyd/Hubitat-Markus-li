@@ -20,7 +20,7 @@ import groovy.json.JsonOutput
 
 
 metadata {
-	definition (name: "Tasmota - TuyaMCU Wifi Dimmer", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-tuyamcu-wifi-dimmer-expanded.groovy") {
+	definition (name: "Tasmota - Generic Wifi Dimmer", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-generic-wifi-dimmer-expanded.groovy") {
         capability "Switch"
 		capability "SwitchLevel"
         
@@ -30,7 +30,6 @@ metadata {
         capability "HealthCheck"
         
         attribute   "dimState", "number"
-        attribute   "tuyaMCU", "string"
         
         // Default Attributes
         attribute   "needUpdate", "string"
@@ -80,7 +79,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - TuyaMCU Wifi Dimmer', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-tuyamcu-wifi-dimmer-expanded.groovy']
+    deviceInfo = ['name': 'Tasmota - Generic Wifi Dimmer', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-generic-wifi-dimmer-expanded.groovy']
     return(deviceInfo[infoName])
 }
 
@@ -92,7 +91,6 @@ def installedAdditional() {
 
 def on() {
 	logging("on()",50)
-    //logging("device.namespace: ${getDeviceInfoByName('namespace')}, device.driverName: ${getDeviceInfoByName('name')}", 50)
     def cmds = []
     cmds << getAction(getCommandString("Power", "1"))
     return cmds
@@ -283,7 +281,7 @@ def update_needed_settings()
     cmds << getAction(getCommandString("Template", null))
     if(disableModuleSelection == null) disableModuleSelection = false
     moduleNumberUsed = moduleNumber
-    if(moduleNumber == null || moduleNumber == -1) moduleNumberUsed = 54
+    if(moduleNumber == null || moduleNumber == -1) moduleNumberUsed = -1
     useDefaultTemplate = false
     defaultDeviceTemplate = ''
     if(deviceTemplateInput != null && deviceTemplateInput == "0") {
@@ -343,17 +341,6 @@ def update_needed_settings()
     }
 
     
-    //
-    // https://github.com/arendst/Tasmota/wiki/commands
-    //SetOption66
-    //Set publishing TuyaReceived to MQTT  »6.7.0
-    //0 = disable publishing TuyaReceived over MQTT (default)
-    //1 = enable publishing TuyaReceived over MQTT
-    cmds << getAction(getCommandString("SetOption66", "1"))
-
-    //cmds << getAction(getCommandString("SetOption81", "0")) // Set PCF8574 component behavior for all ports as inverted (default=0)
-    
-    
     // updateNeededSettings() Generic footer BEGINS here
     cmds << getAction(getCommandString("SetOption113", "1")) // Hubitat Enabled
     // Disabling Emulation so that we don't flood the logs with upnp traffic
@@ -377,7 +364,7 @@ def update_needed_settings()
 private def getDriverVersion() {
     logging("getDriverVersion()", 50)
 	def cmds = []
-    comment = "WORKING, but need feedback from users"
+    comment = ""
     if(comment != "") state.comment = comment
     sendEvent(name: "driverVersion", value: "v0.9.2 for Tasmota 7.x (Hubitat version)")
     return cmds

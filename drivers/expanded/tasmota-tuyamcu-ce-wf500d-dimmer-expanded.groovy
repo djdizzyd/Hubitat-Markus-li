@@ -88,7 +88,6 @@ def getDeviceInfoByName(infoName) {
 def installedAdditional() {
     // This runs from installed()
 	logging("installedAdditional()",50)
-    createChildDevices()
 }
 
 def on() {

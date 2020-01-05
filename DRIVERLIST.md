@@ -7,6 +7,7 @@ These are the currently available drivers (updated: 2020-01-05):
 * [Generic Power Monitor Plug (Parent)](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-generic-pm-plug-parent-expanded.groovy) (Multi-relay support)
 * [Generic RGB/RGBW Controller/Bulb/Dimmer](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-generic-rgb-rgbw-controller-bulb-dimmer-expanded.groovy) (RGBWW lights only PARTIALLY supported for now)
 * [Generic Temperature/Humidity/Pressure Device](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-generic-thp-device-expanded.groovy)
+* [Generic Wifi Dimmer](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-generic-wifi-dimmer-expanded.groovy)
 * [Generic Wifi Switch/Plug](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-generic-wifi-switch-plug-expanded.groovy)
 
 **Tasmota - Specific Device Drivers**

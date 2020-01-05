@@ -241,6 +241,7 @@ def main():
         {'id': 558, 'file': 'tasmota-generic-pm-plug.groovy'},
         {'id': 641, 'file': 'tasmota-generic-pm-plug-parent.groovy', 'comment': 'Multi-relay support'},
         {'id': 642, 'file': 'tasmota-generic-pm-plug-child.groovy' },
+        {'id': 737, 'file': 'tasmota-generic-wifi-dimmer.groovy' },
 
         # Zigbee
         {'id': 579, 'file': 'zigbee-generic-wifi-switch-plug.groovy' },
@@ -283,6 +284,7 @@ def main():
     # As long as we have an id, we can just supply that here instead of the whole config...
     # 651 left over from RF Link Child
     driver_files_testing = [
+        
     #    {'id':590},
     #    {'id':651},    # Sensor - Distance
     #    {'id':649}, {'id':673}, {'id':674}, {'id':675}, {'id':676}, # RF/IR Children

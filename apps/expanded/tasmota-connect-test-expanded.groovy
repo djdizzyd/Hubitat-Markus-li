@@ -117,6 +117,7 @@ def manuallyAdd(){
                 "Tasmota - Generic Temperature/Humidity/Pressure Device",
                 "Tasmota - Generic Power Monitor Plug",
                 "Tasmota - Generic Power Monitor Plug (Parent)",
+                "Tasmota - Generic Wifi Dimmer",
                 ]
             input "ipAddress", "text", title:"IP Address", description: "", required: false 
 		}
@@ -460,6 +461,8 @@ def addDevices() {
                 deviceHandlerName = "Tasmota - Generic Power Monitor Plug"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic Power Monitor Plug (Parent)"))
                 deviceHandlerName = "Tasmota - Generic Power Monitor Plug (Parent)"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic Wifi Dimmer"))
+                deviceHandlerName = "Tasmota - Generic Wifi Dimmer"
 			else if (selectedDevice?.value?.name?.startsWith("quired"))
                 deviceHandlerName = "Tasmota - Generic Wifi Switch/Plug"
             else if (selectedDevice?.value?.name?.startsWith("Aquired"))

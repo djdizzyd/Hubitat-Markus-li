@@ -3,13 +3,12 @@
 #!include:getDefaultImports()
 
 metadata {
-	definition (name: "Tasmota - TuyaMCU Wifi Dimmer", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
+	definition (name: "Tasmota - Generic Wifi Dimmer", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
         capability "Switch"
 		capability "SwitchLevel"
         #!include:getDefaultMetadataCapabilities()
         
         attribute   "dimState", "number"
-        attribute   "tuyaMCU", "string"
         #!include:getDefaultMetadataAttributes()
 
         //#!include:getMetadataCommandsForHandlingChildDevices()
@@ -38,7 +37,6 @@ def installedAdditional() {
 
 def on() {
 	logging("on()",50)
-    //logging("device.namespace: ${getDeviceInfoByName('namespace')}, device.driverName: ${getDeviceInfoByName('name')}", 50)
     def cmds = []
     cmds << getAction(getCommandString("Power", "1"))
     return cmds
@@ -74,19 +72,8 @@ def update_needed_settings()
 {
     #!include:getUpdateNeededSettingsTasmotaHeader()
 
-    #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand(54)
+    #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand()
 
-    
-    //
-    // https://github.com/arendst/Tasmota/wiki/commands
-    //SetOption66
-    //Set publishing TuyaReceived to MQTT  »6.7.0
-    //0 = disable publishing TuyaReceived over MQTT (default)
-    //1 = enable publishing TuyaReceived over MQTT
-    cmds << getAction(getCommandString("SetOption66", "1"))
-
-    //cmds << getAction(getCommandString("SetOption81", "0")) // Set PCF8574 component behavior for all ports as inverted (default=0)
-    
     #!include:getUpdateNeededSettingsTasmotaFooter()
 }
 
