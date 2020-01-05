@@ -12,7 +12,6 @@ metadata {
         attribute   "tuyaMCU", "string"
         #!include:getDefaultMetadataAttributes()
 
-        //#!include:getMetadataCommandsForHandlingChildDevices()
         #!include:getDefaultMetadataCommands()
 	}
 

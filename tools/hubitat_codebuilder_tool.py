@@ -205,6 +205,10 @@ def main():
         {'id': 645, 'file': 'tasmota-generic-pm-plug-child.groovy' , \
          'alternate_output_filename': 'tasmota-sonoff-4ch-child', \
          'alternate_name': 'Tasmota - Sonoff 4CH (Child)'},
+
+        {'id': 738, 'file': 'tasmota-znsn-tuyamcu-wifi-curtain-wall-panel.groovy',
+         'comment': 'NOT GENERIC - read the instructions', },
+        
         # https://tasmota.github.io/docs/#/devices/Sonoff-RF-Bridge-433pi 
         {'id': 648, 'file': 'tasmota-sonoff-rf-bridge-parent.groovy' , 
          'comment': 'Functional - Need feedback',
@@ -228,6 +232,8 @@ def main():
          'specialDebugLabel': 'Code Learning'},
         {'id': 676, 'file': 'tasmota-rf-ir-smoke-detector-child.groovy', 
          'specialDebugLabel': 'Code Learning'},
+
+
 
         # Special sensor drivers:
         {'id': 651, 'file': 'tasmota-sensor-distance.groovy' , 
@@ -284,7 +290,7 @@ def main():
     # As long as we have an id, we can just supply that here instead of the whole config...
     # 651 left over from RF Link Child
     driver_files_testing = [
-        
+    #     {'id':738},  # Wifi Curtain Wall Panel
     #    {'id':590},
     #    {'id':651},    # Sensor - Distance
     #    {'id':649}, {'id':673}, {'id':674}, {'id':675}, {'id':676}, # RF/IR Children

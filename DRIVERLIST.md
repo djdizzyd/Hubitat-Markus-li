@@ -52,3 +52,4 @@ These are the currently available drivers (updated: 2020-01-05):
 * [TuyaMCU Wifi Touch Switch (Child)](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-tuyamcu-wifi-touch-switch-child-expanded.groovy)
 * [Unbranded RGB Controller with IR](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-unbranded-rgb-controller-with-ir-expanded.groovy)
 * [YKYC-001 Power Monitor Plug](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-ykyc-001-pm-plug-expanded.groovy)
+* [ZNSN TuyaMCU Wifi Curtain Wall Panel](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-znsn-tuyamcu-wifi-curtain-wall-panel-expanded.groovy) (NOT GENERIC - read the instructions)

@@ -110,6 +110,7 @@ def manuallyAdd(){
                 "Tasmota - TuyaMCU Wifi Dimmer",
                 "Tasmota - Unbranded RGB Controller with IR",
                 "Tasmota - Sonoff 4CH (Parent)",
+                "Tasmota - ZNSN TuyaMCU Wifi Curtain Wall Panel",
                 "Tasmota - Sonoff RF Bridge (Parent)",
                 "Tasmota - RFLink (Parent)",
                 "Tasmota - Sensor (Distance)",
@@ -451,6 +452,8 @@ def addDevices() {
                 deviceHandlerName = "Tasmota - Unbranded RGB Controller with IR"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Sonoff 4CH (Parent)"))
                 deviceHandlerName = "Tasmota - Sonoff 4CH (Parent)"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - ZNSN TuyaMCU Wifi Curtain Wall Panel"))
+                deviceHandlerName = "Tasmota - ZNSN TuyaMCU Wifi Curtain Wall Panel"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Sonoff RF Bridge (Parent)"))
                 deviceHandlerName = "Tasmota - Sonoff RF Bridge (Parent)"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - RFLink (Parent)"))

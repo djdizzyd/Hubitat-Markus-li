@@ -41,12 +41,6 @@ metadata {
         attribute   "templateData", "string"
         attribute   "driverVersion", "string"
 
-        //
-          // Commands for handling Child Devices
-          command "childOn"
-          command "childOff"
-          command "recreateChildDevices"
-          command "deleteChildren"
         
         // Default Commands
         command "reboot"
