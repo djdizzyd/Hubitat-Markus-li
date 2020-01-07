@@ -365,11 +365,6 @@ private def getDriverVersion() {
 
 
 /* Helper functions included in all drivers */
-def ping() {
-    logging("ping()", 50)
-    refresh()
-}
-
 def installed() {
 	logging("installed()", 50)
 	configure()

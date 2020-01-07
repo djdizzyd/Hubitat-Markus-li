@@ -28,7 +28,6 @@ metadata {
         // Default Capabilities
         capability "Refresh"
         capability "Configuration"
-        capability "HealthCheck"
         
         attribute   "dimState", "number"
         attribute   "tuyaMCU", "string"
@@ -495,11 +494,6 @@ private def logging(message, level) {
 
 
 /* Helper functions included in all drivers */
-def ping() {
-    logging("ping()", 50)
-    refresh()
-}
-
 def installed() {
 	logging("installed()", 50)
 	configure()

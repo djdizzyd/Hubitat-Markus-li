@@ -47,7 +47,6 @@ def getDefaultMetadataCapabilities():
 // Default Capabilities
 capability "Refresh"
 capability "Configuration"
-capability "HealthCheck"
 """
 
 def getDefaultMetadataCapabilitiesForEnergyMonitor():
