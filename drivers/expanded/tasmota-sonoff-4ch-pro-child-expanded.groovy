@@ -21,6 +21,7 @@ import groovy.json.JsonOutput
 
 metadata {
     definition (name: "Tasmota - Sonoff 4CH Pro (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-sonoff-4ch-pro-child-expanded.groovy") {
+        capability "Light"
         capability "Switch"
         capability "Actuator"
     }

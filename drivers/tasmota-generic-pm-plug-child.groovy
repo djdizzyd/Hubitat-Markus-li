@@ -4,6 +4,7 @@
 
 metadata {
     definition (name: "Tasmota - Generic Power Monitor Plug (Child)", namespace: "tasmota", author: "Markus Liljergren") {
+        capability "Light"
         capability "Switch"
         capability "Actuator"
     }

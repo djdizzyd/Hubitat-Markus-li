@@ -5,6 +5,7 @@
 metadata {
 	definition (name: "Tasmota - Generic Temperature/Humidity/Pressure Device", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
         capability "Actuator"
+        capability "Light"
 		capability "Switch"
 		capability "Sensor"
 

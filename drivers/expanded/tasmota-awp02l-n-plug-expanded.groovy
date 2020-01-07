@@ -22,6 +22,7 @@ import groovy.json.JsonOutput
 metadata {
 	definition (name: "Tasmota - AWP02L-N Plug", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-awp02l-n-plug-expanded.groovy") {
         capability "Actuator"
+        capability "Light"
 		capability "Switch"
 		capability "Sensor"
 

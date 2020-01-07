@@ -5,6 +5,7 @@
 metadata {
 	definition (name: "Tasmota - YKYC-001 Power Monitor Plug", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
         capability "Actuator"
+        capability "Light"
 		capability "Switch"
 		capability "Sensor"
 

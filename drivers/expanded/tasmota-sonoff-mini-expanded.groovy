@@ -22,6 +22,7 @@ import groovy.json.JsonOutput
 metadata {
 	definition (name: "Tasmota - Sonoff Mini", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-sonoff-mini-expanded.groovy") {
         capability "Actuator"
+        capability "Light"
 		capability "Switch"
 		capability "Sensor"
 

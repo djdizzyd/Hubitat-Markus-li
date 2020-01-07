@@ -27,7 +27,7 @@ import groovy.json.JsonOutput
 metadata {
 	definition (name: "Tasmota - Unbranded RGB Controller with IR", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-unbranded-rgb-controller-with-ir-expanded.groovy") {
         capability "Actuator"
-		capability "Switch"
+		capability "Light"
 		capability "ColorControl"
         capability "ColorTemperature"
         capability "SwitchLevel"
@@ -396,7 +396,7 @@ def update_needed_settings() {
     } else {
         logging("Setting the Module has been disabled!", 10)
     }
-    
+
     // Disabling these here, but leaving them if anyone needs them
     // If another driver has set SetOption81 to 1, the below might be needed, or you can use:
     // http://<device IP>/cm?user=admin&password=<your password>&cmnd=SetOption81%200

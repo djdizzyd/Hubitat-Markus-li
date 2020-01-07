@@ -22,6 +22,7 @@ import groovy.json.JsonOutput
 metadata {
 	definition (name: "Tasmota - CYYLTF BIFANS J23 Plug", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-cyyltf-bifans-j23-plug-expanded.groovy") {
         capability "Actuator"
+        capability "Light"
 		capability "Switch"
 		capability "Sensor"
 

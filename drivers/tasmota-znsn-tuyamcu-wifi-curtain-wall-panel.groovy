@@ -4,6 +4,7 @@
 
 metadata {
 	definition (name: "Tasmota - ZNSN TuyaMCU Wifi Curtain Wall Panel", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
+        capability "Light"
         capability "Switch"
         capability "WindowShade"
         #!include:getDefaultMetadataCapabilities()

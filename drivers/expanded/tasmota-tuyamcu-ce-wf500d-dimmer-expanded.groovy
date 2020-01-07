@@ -21,6 +21,7 @@ import groovy.json.JsonOutput
 
 metadata {
 	definition (name: "Tasmota - TuyaMCU CE Smart Home WF500D Dimmer (EXPERIMENTAL)", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-tuyamcu-ce-wf500d-dimmer-expanded.groovy") {
+        capability "Light"
         capability "Switch"
 		capability "SwitchLevel"
         

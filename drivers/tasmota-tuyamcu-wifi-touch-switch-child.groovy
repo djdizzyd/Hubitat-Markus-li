@@ -4,7 +4,7 @@
 
 metadata {
     definition (name: "Tasmota - TuyaMCU Wifi Touch Switch (Child)", namespace: "tasmota", author: "Markus Liljergren") {
-        capability "Switch"
+        capability "Light"
         capability "Actuator"
     }
 }

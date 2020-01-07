@@ -5,6 +5,7 @@
 metadata {
 	definition (name: "Tasmota - Sonoff POW R2", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
         capability "Actuator"
+        capability "Light"
 		capability "Switch"
 		capability "Sensor"
 

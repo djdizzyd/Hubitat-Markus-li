@@ -5,6 +5,7 @@
 metadata {
 	definition (name: "Tasmota - Sonoff Mini", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
         capability "Actuator"
+        capability "Light"
 		capability "Switch"
 		capability "Sensor"
 

@@ -4,6 +4,7 @@
 
 metadata {
 	definition (name: "Tasmota - TuyaMCU Wifi Dimmer", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
+        capability "Light"
         capability "Switch"
 		capability "SwitchLevel"
         #!include:getDefaultMetadataCapabilities()

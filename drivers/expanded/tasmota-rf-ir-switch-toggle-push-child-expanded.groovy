@@ -21,6 +21,7 @@ import groovy.json.JsonOutput
 
 metadata {
     definition (name: "Tasmota - RF/IR Switch/Toggle/Push (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-rf-ir-switch-toggle-push-child-expanded.groovy") {
+        capability "Light"
         capability "Switch"
         capability "Actuator"
         capability "Momentary"

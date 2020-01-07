@@ -21,7 +21,7 @@ import groovy.json.JsonOutput
 
 metadata {
     definition (name: "Tasmota - TuyaMCU Wifi Touch Switch (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-tuyamcu-wifi-touch-switch-child-expanded.groovy") {
-        capability "Switch"
+        capability "Light"
         capability "Actuator"
     }
 }

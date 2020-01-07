@@ -21,6 +21,7 @@ import groovy.json.JsonOutput
 
 metadata {
     definition (name: "Tasmota - KMC 4 Power Monitor Plug (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-kmc-4-pm-plug-child-expanded.groovy") {
+        capability "Light"
         capability "Switch"
         capability "Actuator"
     }

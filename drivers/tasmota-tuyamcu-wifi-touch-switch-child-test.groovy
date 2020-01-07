@@ -6,6 +6,7 @@
 
 metadata {
     definition (name: "Tasmota - DO NOT USE Tuya Wifi Touch Switch TEST (Child)", namespace: "tasmota", author: "Markus Liljergren") {
+        capability "Light"
         capability "Switch"
         capability "Actuator"
     }

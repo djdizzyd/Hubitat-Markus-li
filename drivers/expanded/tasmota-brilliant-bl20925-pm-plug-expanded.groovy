@@ -22,7 +22,8 @@ import groovy.json.JsonOutput
 metadata {
 	definition (name: "Tasmota - Brilliant BL20925 Power Monitor Plug", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-brilliant-bl20925-pm-plug-expanded.groovy") {
         capability "Actuator"
-		capability "Switch"
+		capability "Light"
+        capability "Switch"
 		capability "Sensor"
 
         

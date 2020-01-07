@@ -21,6 +21,7 @@ import groovy.json.JsonOutput
 
 metadata {
 	definition (name: "Tasmota - ZNSN TuyaMCU Wifi Curtain Wall Panel", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-znsn-tuyamcu-wifi-curtain-wall-panel-expanded.groovy") {
+        capability "Light"
         capability "Switch"
         capability "WindowShade"
         

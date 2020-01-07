@@ -4,6 +4,7 @@
 
 metadata {
     definition (name: "Tasmota - RF/IR Switch/Toggle/Push (Child)", namespace: "tasmota", author: "Markus Liljergren") {
+        capability "Light"
         capability "Switch"
         capability "Actuator"
         capability "Momentary"

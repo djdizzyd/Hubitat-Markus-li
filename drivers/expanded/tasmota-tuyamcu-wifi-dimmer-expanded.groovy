@@ -21,6 +21,7 @@ import groovy.json.JsonOutput
 
 metadata {
 	definition (name: "Tasmota - TuyaMCU Wifi Dimmer", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-tuyamcu-wifi-dimmer-expanded.groovy") {
+        capability "Light"
         capability "Switch"
 		capability "SwitchLevel"
         

@@ -5,7 +5,8 @@
 metadata {
 	definition (name: "Tasmota - Brilliant BL20925 Power Monitor Plug", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
         capability "Actuator"
-		capability "Switch"
+		capability "Light"
+        capability "Switch"
 		capability "Sensor"
 
         #!include:getDefaultMetadataCapabilitiesForEnergyMonitor()
