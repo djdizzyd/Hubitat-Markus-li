@@ -11,6 +11,7 @@ metadata {
 	definition (name: "Tasmota - Generic RGB/RGBW Controller/Bulb/Dimmer", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
         capability "Actuator"
         capability "Light"
+        capability "Switch"
 		capability "ColorControl"
         capability "ColorTemperature"
         capability "SwitchLevel"

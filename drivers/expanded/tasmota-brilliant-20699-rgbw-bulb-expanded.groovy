@@ -28,6 +28,7 @@ metadata {
 	definition (name: "Tasmota - Brilliant 20699 800lm RGBW Bulb", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-brilliant-20699-rgbw-bulb-expanded.groovy") {
         capability "Actuator"
         capability "Light"
+        capability "Switch"
 		capability "ColorControl"
         capability "ColorTemperature"
         capability "SwitchLevel"
