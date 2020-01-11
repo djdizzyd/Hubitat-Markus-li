@@ -11,7 +11,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-driverVersion = "v0.9.2 for Tasmota 7.x (Hubitat version)"
+driverVersion = "v0.9.3 for Tasmota 7.x/8.x (Hubitat version)"
 
 from hubitat_codebuilder import HubitatCodeBuilderError
 
@@ -21,7 +21,7 @@ from hubitat_codebuilder import HubitatCodeBuilderError
 
 def getHeaderLicense():
     return """ /**
- *  Copyright 2019 Markus Liljergren
+ *  Copyright 2020 Markus Liljergren
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.

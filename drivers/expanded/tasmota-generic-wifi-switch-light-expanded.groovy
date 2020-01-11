@@ -20,33 +20,18 @@ import groovy.json.JsonOutput
 
 
 metadata {
-	definition (name: "Tasmota - SK03 Power Monitor Outdoor Plug", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-sk03-pm-outdoor-plug-expanded.groovy") {
+	definition (name: "Tasmota - Generic Wifi Switch/Light", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-generic-wifi-switch-light-expanded.groovy") {
         capability "Actuator"
         capability "Light"
 		capability "Switch"
+        capability "PushableButton"
 		capability "Sensor"
 
-        
-        // Default Capabilities for Energy Monitor
-        capability "Voltage Measurement"
-        capability "Power Meter"
-        capability "Energy Meter"
         
         // Default Capabilities
         capability "Refresh"
         capability "Configuration"
         
-        
-        // Default Attributes for Energy Monitor
-        attribute   "current", "string"
-        attribute   "apparentPower", "string"
-        attribute   "reactivePower", "string"
-        attribute   "powerFactor", "string"
-        attribute   "energyToday", "string"
-        attribute   "energyYesterday", "string"
-        attribute   "energyTotal", "string"
-        attribute   "voltageStr", "string"
-        attribute   "powerStr", "string"
         
         // Default Attributes
         attribute   "needUpdate", "string"
@@ -74,7 +59,7 @@ metadata {
         input(name: "ipAddress", type: "string", title: "<b>Device IP Address</b>", description: "<i>Set this as a default fallback for the auto-discovery feature.</i>", displayDuringSetup: true, required: false)
         input(name: "port", type: "number", title: "<b>Device Port</b>", description: "<i>The http Port of the Device (default: 80)</i>", displayDuringSetup: true, required: false, defaultValue: 80)
         input(name: "override", type: "bool", title: "<b>Override IP</b>", description: "<i>Override the automatically discovered IP address and disable auto-discovery.</i>", displayDuringSetup: true, required: false)
-        input(name: "telePeriod", type: "string", title: "<b>Update Frequency</b>", description: "<i>Tasmota sensor value update interval, set this to any value between 10 and 3600 seconds. See the Tasmota docs concerning telePeriod for details. This is NOT a poll frequency. Button/switch changes are immediate and are NOT affected by this. This ONLY affects SENSORS and reporting of data such as UPTIME. (default = 300)</i>", displayDuringSetup: true, required: false)
+        
         generate_preferences(configuration_model_tasmota())
         input(name: "disableModuleSelection", type: "bool", title: "<b>Disable Automatically Setting Module and Template</b>", description: "ADVANCED: <i>Disable automatically setting the Module Type and Template in Tasmota. Enable for using custom Module or Template settings directly on the device. With this disabled, you need to set these settings manually on the device.</i>", displayDuringSetup: true, required: false)
         input(name: "moduleNumber", type: "number", title: "<b>Module Number</b>", description: "ADVANCED: <i>Module Number used in Tasmota. If Device Template is set, this value is IGNORED. (default: -1 (use the default for the driver))</i>", displayDuringSetup: true, required: false, defaultValue: -1)
@@ -86,7 +71,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - SK03 Power Monitor Outdoor Plug', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-sk03-pm-outdoor-plug-expanded.groovy']
+    deviceInfo = ['name': 'Tasmota - Generic Wifi Switch/Light', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-generic-wifi-switch-light-expanded.groovy']
     return(deviceInfo[infoName])
 }
 
@@ -207,6 +192,13 @@ def parse(description) {
                 //events << createEvent(name: 'uptime', value: result.Uptime, displayed: false, archivable: false)
                 state.uptime = result.Uptime
             }
+            if (result.containsKey("Var1")) {
+                theButton = result.Var1
+                logging("Button: $result.Var1",99)
+                try {
+                    events << createEvent(name: "pushed", value: Integer.parseInt(theButton), isStateChange: true )
+                } catch (e) { }
+            }
             
             // Standard Wifi Data parsing
             if (result.containsKey("Wifi")) {
@@ -226,58 +218,6 @@ def parse(description) {
                     logging("SSId: $result.Wifi.SSId",99)
                 }
             }
-            
-            // Standard Energy Monitor Data parsing
-            if (result.containsKey("StatusSNS")) {
-                result << result.StatusSNS
-            }
-            if (result.containsKey("ENERGY")) {
-                //logging("Has ENERGY...", 1)
-                //if (!state.containsKey('energy')) state.energy = {}
-                if (result.ENERGY.containsKey("Total")) {
-                    logging("Total: $result.ENERGY.Total kWh",99)
-                    events << createEvent(name: "energyTotal", value: "$result.ENERGY.Total kWh")  
-                }
-                if (result.ENERGY.containsKey("Today")) {
-                    logging("Today: $result.ENERGY.Today kWh",99)
-                    events << createEvent(name: "energyToday", value: "$result.ENERGY.Today kWh")
-                }
-                if (result.ENERGY.containsKey("Yesterday")) {
-                    logging("Yesterday: $result.ENERGY.Yesterday kWh",99)
-                    events << createEvent(name: "energyYesterday", value: "$result.ENERGY.Yesterday kWh")
-                }
-                if (result.ENERGY.containsKey("Current")) {
-                    logging("Current: $result.ENERGY.Current A",99)
-                    r = (result.ENERGY.Current == null) ? 0 : result.ENERGY.Current
-                    events << createEvent(name: "current", value: "$r A")
-                }
-                if (result.ENERGY.containsKey("ApparentPower")) {
-                    logging("apparentPower: $result.ENERGY.ApparentPower VA",99)
-                    events << createEvent(name: "apparentPower", value: "$result.ENERGY.ApparentPower VA")
-                }
-                if (result.ENERGY.containsKey("ReactivePower")) {
-                    logging("reactivePower: $result.ENERGY.ReactivePower VAr",99)
-                    events << createEvent(name: "reactivePower", value: "$result.ENERGY.ReactivePower VAr")
-                }
-                if (result.ENERGY.containsKey("Factor")) {
-                    logging("powerFactor: $result.ENERGY.Factor",99)
-                    events << createEvent(name: "powerFactor", value: "$result.ENERGY.Factor")
-                }
-                if (result.ENERGY.containsKey("Voltage")) {
-                    logging("Voltage: $result.ENERGY.Voltage V",99)
-                    r = (result.ENERGY.Voltage == null) ? 0 : result.ENERGY.Voltage
-                    events << createEvent(name: "voltageWithUnit", value: "$r V")
-                    events << createEvent(name: "voltage", value: r, unit: "V")
-                }
-                if (result.ENERGY.containsKey("Power")) {
-                    logging("Power: $result.ENERGY.Power W",99)
-                    r = (result.ENERGY.Power == null) ? 0 : result.ENERGY.Power
-                    events << createEvent(name: "powerWithUnit", value: "$r W")
-                    events << createEvent(name: "power", value: r, unit: "W")
-                    //state.energy.power = r
-                }
-            }
-            // StatusPTH:[PowerDelta:0, PowerLow:0, PowerHigh:0, VoltageLow:0, VoltageHigh:0, CurrentLow:0, CurrentHigh:0]
         // parse() Generic Tasmota-device footer BEGINS here
         } else {
                 //log.debug "Response is not JSON: $body"
@@ -326,7 +266,7 @@ def update_needed_settings()
     cmds << getAction(getCommandString("Template", null))
     if(disableModuleSelection == null) disableModuleSelection = false
     moduleNumberUsed = moduleNumber
-    if(moduleNumber == null || moduleNumber == -1) moduleNumberUsed = 0
+    if(moduleNumber == null || moduleNumber == -1) moduleNumberUsed = 1
     useDefaultTemplate = false
     defaultDeviceTemplate = ''
     if(deviceTemplateInput != null && deviceTemplateInput == "0") {
@@ -336,7 +276,7 @@ def update_needed_settings()
     if(deviceTemplateInput == null || deviceTemplateInput == "") {
         // We should use the default of the driver
         useDefaultTemplate = true
-        defaultDeviceTemplate = '{"NAME":"SK03 Outdoor","GPIO":[17,0,0,0,133,132,0,0,131,57,56,21,0],"FLAG":0,"BASE":57}'
+        defaultDeviceTemplate = ''
     }
     if(deviceTemplateInput != null) deviceTemplateInput = deviceTemplateInput.replaceAll(' ','')
     if(disableModuleSelection == false && ((deviceTemplateInput != null && deviceTemplateInput != "") || 
@@ -385,9 +325,14 @@ def update_needed_settings()
         logging("Setting the Module has been disabled!", 10)
     }
 
-    //cmds << getAction(getCommandString("SetOption81", "1")) // Set PCF8574 component behavior for all ports as inverted (default=0)
+    // Disabling these here, but leaving them if anyone needs them
+    // If another driver has set SetOption81 to 1, the below might be needed, or you can use:
+    // http://<device IP>/cm?user=admin&password=<your password>&cmnd=SetOption81%200
+    // or without username and password:
+    // http://<device IP>/cm?cmnd=SetOption81%200
+    //cmds << getAction(getCommandString("SetOption81", "0")) // Set PCF8574 component behavior for all ports as inverted (default=0)
     //cmds << getAction(getCommandString("LedPower", "1"))  // 1 = turn LED ON and set LedState 8
-    //cmds << getAction(getCommandString("LedState", "8"))  // 8 = LED on when Wi-Fi and MQTT are connected.
+    //mds << getAction(getCommandString("LedState", "8"))  // 8 = LED on when Wi-Fi and MQTT are connected.
     
     
     // updateNeededSettings() TelePeriod setting
@@ -417,7 +362,7 @@ def update_needed_settings()
 private def getDriverVersion() {
     logging("getDriverVersion()", 50)
 	def cmds = []
-    comment = "<a target=\"blakadder\" href=\"https://templates.blakadder.com/SK03_outdoor.html\">Device Model Info</a>"
+    comment = "Works as Light with Alexa"
     if(comment != "") state.comment = comment
     sendEvent(name: "driverVersion", value: "v0.9.3 for Tasmota 7.x/8.x (Hubitat version)")
     return cmds

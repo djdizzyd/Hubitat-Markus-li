@@ -1,5 +1,5 @@
  /**
- *  Copyright 2019 Markus Liljergren
+ *  Copyright 2020 Markus Liljergren
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -115,6 +115,7 @@ def manuallyAdd(){
                 "Tasmota - RFLink (Parent)",
                 "Tasmota - Sensor (Distance)",
                 "Tasmota - Generic Wifi Switch/Plug",
+                "Tasmota - Generic Wifi Switch/Light",
                 "Tasmota - Generic RGB/RGBW Controller/Bulb/Dimmer",
                 "Tasmota - Generic Temperature/Humidity/Pressure Device",
                 "Tasmota - Generic Power Monitor Plug",
@@ -462,6 +463,8 @@ def addDevices() {
                 deviceHandlerName = "Tasmota - Sensor (Distance)"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic Wifi Switch/Plug"))
                 deviceHandlerName = "Tasmota - Generic Wifi Switch/Plug"
+            if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic Wifi Switch/Light"))
+                deviceHandlerName = "Tasmota - Generic Wifi Switch/Light"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic RGB/RGBW Controller/Bulb/Dimmer"))
                 deviceHandlerName = "Tasmota - Generic RGB/RGBW Controller/Bulb/Dimmer"
             if (selectedDevice?.value?.name?.startsWith("Tasmota - Generic Temperature/Humidity/Pressure Device"))

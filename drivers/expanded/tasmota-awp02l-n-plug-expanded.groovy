@@ -1,5 +1,5 @@
  /**
- *  Copyright 2019 Markus Liljergren
+ *  Copyright 2020 Markus Liljergren
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -22,8 +22,9 @@ import groovy.json.JsonOutput
 metadata {
 	definition (name: "Tasmota - AWP02L-N Plug", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-awp02l-n-plug-expanded.groovy") {
         capability "Actuator"
-        capability "Light"
+        capability "Outlet"
 		capability "Switch"
+        capability "PushableButton"
 		capability "Sensor"
 
         
@@ -191,6 +192,13 @@ def parse(description) {
                 //events << createEvent(name: 'uptime', value: result.Uptime, displayed: false, archivable: false)
                 state.uptime = result.Uptime
             }
+            if (result.containsKey("Var1")) {
+                theButton = result.Var1
+                logging("Button: $result.Var1",99)
+                try {
+                    events << createEvent(name: "pushed", value: Integer.parseInt(theButton), isStateChange: true )
+                } catch (e) { }
+            }
             
             // Standard Wifi Data parsing
             if (result.containsKey("Wifi")) {
@@ -356,7 +364,7 @@ private def getDriverVersion() {
 	def cmds = []
     comment = "<a target=\"blakadder\" href=\"https://templates.blakadder.com/hugoai_awp02l-n.html\">Device Model Info</a>"
     if(comment != "") state.comment = comment
-    sendEvent(name: "driverVersion", value: "v0.9.2 for Tasmota 7.x (Hubitat version)")
+    sendEvent(name: "driverVersion", value: "v0.9.3 for Tasmota 7.x/8.x (Hubitat version)")
     return cmds
 }
 

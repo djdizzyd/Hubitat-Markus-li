@@ -1,5 +1,5 @@
 # Driver List 
-These are the currently available drivers (updated: 2020-01-05):
+These are the currently available drivers (updated: 2020-01-11):
 
 **Tasmota - Generic Drivers**
 * [Generic Power Monitor Plug](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-generic-pm-plug-expanded.groovy)
@@ -8,7 +8,8 @@ These are the currently available drivers (updated: 2020-01-05):
 * [Generic RGB/RGBW Controller/Bulb/Dimmer](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-generic-rgb-rgbw-controller-bulb-dimmer-expanded.groovy) (RGBWW lights only PARTIALLY supported for now)
 * [Generic Temperature/Humidity/Pressure Device](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-generic-thp-device-expanded.groovy)
 * [Generic Wifi Dimmer](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-generic-wifi-dimmer-expanded.groovy)
-* [Generic Wifi Switch/Plug](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-generic-wifi-switch-plug-expanded.groovy)
+* [Generic Wifi Switch/Light](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-generic-wifi-switch-light-expanded.groovy) (Works as Light with Alexa)
+* [Generic Wifi Switch/Plug](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-generic-wifi-switch-plug-expanded.groovy) (Works as Plug/Outlet with Alexa)
 
 **Tasmota - Specific Device Drivers**
 * [AWP02L-N Plug](https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/tasmota-awp02l-n-plug-expanded.groovy) - [Device Model Info](https://templates.blakadder.com/hugoai_awp02l-n.html)

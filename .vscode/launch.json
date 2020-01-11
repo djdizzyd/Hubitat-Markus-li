@@ -12,6 +12,13 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "Python: test_light_speed.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/tools/test_light_speed.py",
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Python: BitBucketConverterMinimal.py",
             "type": "python",
             "request": "launch",

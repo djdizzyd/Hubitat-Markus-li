@@ -241,7 +241,10 @@ def main():
          'deviceLink': 'https://github.com/arendst/Tasmota/wiki/HC-SR04',},
         
         # Generic Tasmota Devices:
-        {'id': 552, 'file': 'tasmota-generic-wifi-switch-plug.groovy' },
+        {'id': 552, 'file': 'tasmota-generic-wifi-switch-plug.groovy',
+         'comment': 'Works as Plug/Outlet with Alexa' },
+        {'id': 769, 'file': 'tasmota-generic-wifi-switch-light.groovy',
+         'comment': 'Works as Light with Alexa' },
         {'id': 591, 'file': 'tasmota-generic-rgb-rgbw-controller-bulb-dimmer.groovy', 'comment': 'RGBWW lights only PARTIALLY supported for now' },
         {'id': 578, 'file': 'tasmota-generic-thp-device.groovy' },
         {'id': 558, 'file': 'tasmota-generic-pm-plug.groovy'},

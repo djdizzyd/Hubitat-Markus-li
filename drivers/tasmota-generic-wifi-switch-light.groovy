@@ -3,9 +3,9 @@
 #!include:getDefaultImports()
 
 metadata {
-	definition (name: "Tasmota - Generic Wifi Switch/Plug", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
+	definition (name: "Tasmota - Generic Wifi Switch/Light", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
         capability "Actuator"
-        capability "Outlet"
+        capability "Light"
 		capability "Switch"
         capability "PushableButton"
 		capability "Sensor"

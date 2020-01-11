@@ -1,5 +1,5 @@
  /**
- *  Copyright 2019 Markus Liljergren
+ *  Copyright 2020 Markus Liljergren
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -351,7 +351,7 @@ private def getDriverVersion() {
 	def cmds = []
     comment = "<a target=\"blakadder\" href=\"https://templates.blakadder.com/sonoff_basic.html\">Device Model Info</a>"
     if(comment != "") state.comment = comment
-    sendEvent(name: "driverVersion", value: "v0.9.2 for Tasmota 7.x (Hubitat version)")
+    sendEvent(name: "driverVersion", value: "v0.9.3 for Tasmota 7.x/8.x (Hubitat version)")
     return cmds
 }
 
