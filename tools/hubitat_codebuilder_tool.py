@@ -258,15 +258,11 @@ def main():
         # The following can be overwritten: 
     ]
     # Future devices to implement support for:
-    # https://templates.blakadder.com/sonoff_RF_bridge.html
     # https://templates.blakadder.com/maxcio_400ml_diffuser.html
     # https://templates.blakadder.com/ytf_ir_bridge.html
 
     # Future devices to MAYBE implement support for, if someone asks... :
     # https://templates.blakadder.com/sonoff_SC.html
-
-    # Still not fully functional (or BROKEN):
-    # https://templates.blakadder.com/ce_smart_home-WF500D.html
 
     # RF Bridge functions to implement:
     # * Motion Sensor (receive) - DONE
@@ -293,6 +289,7 @@ def main():
     # As long as we have an id, we can just supply that here instead of the whole config...
     # 651 left over from RF Link Child
     driver_files_testing = [
+        {'id': 801, 'file': 'zigbee-xiaomi-curtain.groovy' },
     #     {'id':738},  # Wifi Curtain Wall Panel
     #    {'id':590},
     #    {'id':651},    # Sensor - Distance
