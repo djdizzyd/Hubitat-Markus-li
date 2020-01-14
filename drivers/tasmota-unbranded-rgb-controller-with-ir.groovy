@@ -13,7 +13,6 @@ metadata {
 		capability "Light"
         capability "Switch"
 		capability "ColorControl"
-        capability "ColorTemperature"
         capability "SwitchLevel"
         #!include:getDefaultMetadataCapabilities()
         

@@ -245,7 +245,7 @@ def main():
          'comment': 'Works as Plug/Outlet with Alexa' },
         {'id': 769, 'file': 'tasmota-generic-wifi-switch-light.groovy',
          'comment': 'Works as Light with Alexa' },
-        {'id': 591, 'file': 'tasmota-generic-rgb-rgbw-controller-bulb-dimmer.groovy', 'comment': 'RGBWW lights only PARTIALLY supported for now' },
+        {'id': 591, 'file': 'tasmota-generic-rgb-rgbw-controller-bulb-dimmer.groovy', 'comment': 'RGB+WW+CW should all work properly, please report progress' },
         {'id': 578, 'file': 'tasmota-generic-thp-device.groovy' },
         {'id': 558, 'file': 'tasmota-generic-pm-plug.groovy'},
         {'id': 641, 'file': 'tasmota-generic-pm-plug-parent.groovy', 'comment': 'Multi-relay support'},
@@ -297,7 +297,7 @@ def main():
     #    {'id':590},
     #    {'id':651},    # Sensor - Distance
     #    {'id':649}, {'id':673}, {'id':674}, {'id':675}, {'id':676}, # RF/IR Children
-    #    {'id':588},
+    #    {'id':591},
     #   {'id':650},{'id':651},  # RFLink
     #    {'id':648},  # Sonoff RF Bridgle
     #     {'id':551},{'id':578}, {'id':362}, {'id':645}, {'id':590}, {'id':588}, 

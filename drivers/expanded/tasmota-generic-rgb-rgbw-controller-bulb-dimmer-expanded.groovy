@@ -252,11 +252,16 @@ def parse(description) {
                 logging("hsbColor: ${hsbColor}", 1)
                 if(hue != hsbColor[0] ) events << createEvent(name: "hue", value: hsbColor[0])
                 if(saturation != hsbColor[1] ) events << createEvent(name: "saturation", value: hsbColor[1])
-                if(level != hsbColor[2] ) events << createEvent(name: "level", value: hsbColor[2])
             }
             if (result.containsKey("Color")) {
                 color = result.Color
                 logging("Color: ${color.tokenize(",")}", 1)
+            }
+            if (result.containsKey("Dimmer")) {
+                dimmer = result.Dimmer
+                logging("Dimmer: ${dimmer}", 1)
+                state.level = dimmer
+                if(level != dimmer ) events << createEvent(name: "level", value: dimmer)
             }
             if (result.containsKey("CT")) {
                 t = Math.round(1000000/result.CT)
@@ -408,7 +413,7 @@ def update_needed_settings() {
 private def getDriverVersion() {
     logging("getDriverVersion()", 50)
 	def cmds = []
-    comment = "RGBWW lights only PARTIALLY supported for now"
+    comment = "RGB+WW+CW should all work properly, please report progress"
     if(comment != "") state.comment = comment
     sendEvent(name: "driverVersion", value: "v0.9.3 for Tasmota 7.x/8.x (Hubitat version)")
     return cmds
@@ -969,9 +974,11 @@ def setColorTemperature(value) {
     if(t < 153) t = 153
     if(t > 500) t = 500
     state.mired = t
+    state.hue = 0
+    state.saturation = 0
+    state.colorMode = "CT"
     logging("setColorTemperature('${t}') ADJUSTED to Mired", 10)
     getAction(getCommandString("CT", "${t}"))
-    white()
 }
 
 def setHSB(h, s, b) {
@@ -991,7 +998,7 @@ def setHSB(h, s, b, callWhite) {
         adjusted = True
     }
     if(b == null || b == 'NaN') {
-        b = state != null && state.containsKey("level") ? state.saturation : 0
+        b = state != null && state.containsKey("level") ? state.level : 0
         adjusted = True
     }
     if(adjusted) {
@@ -1045,7 +1052,7 @@ def setRGB(r,g,b) {
     hsbColor = rgbToHSB(r, g, b)
     logging("hsbColor from RGB: ${hsbColor}", 1)
     state.colorMode = "RGB"
-    if (hsbcmd == "${hsbColor[0]},${hsbColor[1]},${hsbColor[2]}") state.colorMode = "white"
+    //if (hsbcmd == "${hsbColor[0]},${hsbColor[1]},${hsbColor[2]}") state.colorMode = "white"
     state.hue = hsbColor['hue']
     state.saturation = hsbColor['saturation']
     state.level = hsbColor['level']
@@ -1078,12 +1085,12 @@ def setLevel(l, duration) {
 def whiteForPlatform() {
     logging("whiteForPlatform()", 10)
     l = state.level
-    state.colorMode = "white"
-    if (l < 0) l = 0
+    //state.colorMode = "white"
+    if (l < 10) l = 10
     l = Math.round(l * 2.55).toInteger()
     if (l > 255) l = 255
     lHex = l.toHexString(l)
-    hexCmd = "#${lHex}${lHex}${lHex}${lHex}"
+    hexCmd = "#${lHex}${lHex}${lHex}${lHex}${lHex}"
     logging("hexCmd='${hexCmd}'", 1)
     state.hue = 0
     state.saturation = 0

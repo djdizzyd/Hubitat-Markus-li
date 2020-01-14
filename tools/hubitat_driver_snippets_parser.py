@@ -295,11 +295,16 @@ if (result.containsKey("HSBColor")) {
     logging("hsbColor: ${hsbColor}", 1)
     if(hue != hsbColor[0] ) events << createEvent(name: "hue", value: hsbColor[0])
     if(saturation != hsbColor[1] ) events << createEvent(name: "saturation", value: hsbColor[1])
-    if(level != hsbColor[2] ) events << createEvent(name: "level", value: hsbColor[2])
 }
 if (result.containsKey("Color")) {
     color = result.Color
     logging("Color: ${color.tokenize(",")}", 1)
+}
+if (result.containsKey("Dimmer")) {
+    dimmer = result.Dimmer
+    logging("Dimmer: ${dimmer}", 1)
+    state.level = dimmer
+    if(level != dimmer ) events << createEvent(name: "level", value: dimmer)
 }
 if (result.containsKey("CT")) {
     t = Math.round(1000000/result.CT)
