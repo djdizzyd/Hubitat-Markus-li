@@ -45,8 +45,8 @@ metadata {
         attribute   "energyToday", "string"
         attribute   "energyYesterday", "string"
         attribute   "energyTotal", "string"
-        attribute   "voltageStr", "string"
-        attribute   "powerStr", "string"
+        attribute   "voltageWithUnit", "string"
+        attribute   "powerWithUnit", "string"
         
         // Default Attributes
         attribute   "needUpdate", "string"
