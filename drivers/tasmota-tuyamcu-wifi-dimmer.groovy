@@ -12,8 +12,10 @@ metadata {
         attribute   "dimState", "number"
         attribute   "tuyaMCU", "string"
         #!include:getDefaultMetadataAttributes()
+        #!include:getDefaultMetadataAttributesForDimmableLights()
 
         #!include:getDefaultMetadataCommands()
+        #!include:getMetadataCommandsForHandlingTasmotaDimmerDevices()
 	}
 
 	simulator {
@@ -64,9 +66,7 @@ def parse(description) {
     #!include:getGenericTasmotaParseHeader()
             #!include:getTasmotaParserForBasicData()
             #!include:getTasmotaParserForWifi()
-            if (result.containsKey("Dimmer")) {
-                events << createEvent(name: "level", value: result.Dimmer)
-            }
+            #!include:getTasmotaParserForDimmableDevice()
         #!include:getGenericTasmotaParseFooter()
 }
 

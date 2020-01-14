@@ -293,23 +293,33 @@ if (result.containsKey("HSBColor")) {
     hsbColor[1] = hsbColor[1] as Integer
     hsbColor[2] = hsbColor[2] as Integer
     logging("hsbColor: ${hsbColor}", 1)
-    if(hue != hsbColor[0] ) events << createEvent(name: "hue", value: hsbColor[0])
-    if(saturation != hsbColor[1] ) events << createEvent(name: "saturation", value: hsbColor[1])
+    if(device.currentValue('hue') != hsbColor[0] ) events << createEvent(name: "hue", value: hsbColor[0])
+    if(device.currentValue('saturation') != hsbColor[1] ) events << createEvent(name: "saturation", value: hsbColor[1])
 }
 if (result.containsKey("Color")) {
     color = result.Color
     logging("Color: ${color.tokenize(",")}", 1)
 }
+if (result.containsKey("CT")) {
+    t = Math.round(1000000/result.CT)
+    if(colorTemperature != t ) events << createEvent(name: "colorTemperature", value: t)
+    logging("CT: $result.CT ($t)",99)
+}
+"""
+
+def getTasmotaParserForDimmableDevice():
+    return """
+// Standard Dimmable Device Data parsing
 if (result.containsKey("Dimmer")) {
     dimmer = result.Dimmer
     logging("Dimmer: ${dimmer}", 1)
     state.level = dimmer
-    if(level != dimmer ) events << createEvent(name: "level", value: dimmer)
+    if(device.currentValue('level') != dimmer ) events << createEvent(name: "level", value: dimmer)
 }
-if (result.containsKey("CT")) {
-    t = Math.round(1000000/result.CT)
-    if(colorTemperature != t ) events << createEvent(name: "colorTemperature", value: t)
-    logging("CT: $result.CT",99)
+if (result.containsKey("Wakeup")) {
+    wakeup = result.Wakeup
+    logging("Wakeup: ${wakeup}", 1)
+    events << createEvent(name: "wakeup", value: wakeup)
 }
 """
 

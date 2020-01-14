@@ -45,6 +45,9 @@ metadata {
         attribute   "module", "string"
         attribute   "templateData", "string"
         attribute   "driverVersion", "string"
+        
+        // Default Attributes for Dimmable Lights
+        attribute   "wakeup", "string"
 
         
         // Default Commands
@@ -60,10 +63,13 @@ metadata {
         command "modeNext"
         command "modePrevious"
         command "modeSingleColor"
-        command "modeWakeUp"
         command "modeCycleUpColors"
         command "modeCycleDownColors"
         command "modeRandomColors"
+        
+        // Commands for handling Tasmota Dimmer Devices
+        command "modeWakeUp", [[name:"Wake Up Duration*", type: "NUMBER", description: "1..3000 = set wake up duration in seconds"],
+                               [name:"Level", type: "NUMBER", description: "1..100 = target dimming level"] ]
 	}
 
 	simulator {
@@ -283,23 +289,30 @@ def parse(description) {
                 hsbColor[1] = hsbColor[1] as Integer
                 hsbColor[2] = hsbColor[2] as Integer
                 logging("hsbColor: ${hsbColor}", 1)
-                if(hue != hsbColor[0] ) events << createEvent(name: "hue", value: hsbColor[0])
-                if(saturation != hsbColor[1] ) events << createEvent(name: "saturation", value: hsbColor[1])
+                if(device.currentValue('hue') != hsbColor[0] ) events << createEvent(name: "hue", value: hsbColor[0])
+                if(device.currentValue('saturation') != hsbColor[1] ) events << createEvent(name: "saturation", value: hsbColor[1])
             }
             if (result.containsKey("Color")) {
                 color = result.Color
                 logging("Color: ${color.tokenize(",")}", 1)
             }
+            if (result.containsKey("CT")) {
+                t = Math.round(1000000/result.CT)
+                if(colorTemperature != t ) events << createEvent(name: "colorTemperature", value: t)
+                logging("CT: $result.CT ($t)",99)
+            }
+            
+            // Standard Dimmable Device Data parsing
             if (result.containsKey("Dimmer")) {
                 dimmer = result.Dimmer
                 logging("Dimmer: ${dimmer}", 1)
                 state.level = dimmer
-                if(level != dimmer ) events << createEvent(name: "level", value: dimmer)
+                if(device.currentValue('level') != dimmer ) events << createEvent(name: "level", value: dimmer)
             }
-            if (result.containsKey("CT")) {
-                t = Math.round(1000000/result.CT)
-                if(colorTemperature != t ) events << createEvent(name: "colorTemperature", value: t)
-                logging("CT: $result.CT",99)
+            if (result.containsKey("Wakeup")) {
+                wakeup = result.Wakeup
+                logging("Wakeup: ${wakeup}", 1)
+                events << createEvent(name: "wakeup", value: wakeup)
             }
         // parse() Generic Tasmota-device footer BEGINS here
         } else {
@@ -720,6 +733,22 @@ def getCommandString(command, value) {
     return uri
 }
 
+def getMultiCommandString(commands) {
+    def uri = "/cm?"
+    if (password) {
+        uri += "user=admin&password=${password}&"
+    }
+    uri += "cmnd=backlog%20"
+    commands.each {cmd->
+        if(cmd.containsKey("value")) {
+          uri += "${cmd['command']}%20${cmd['value']}%3B%20"
+        } else {
+          uri += "${cmd['command']}%3B%20"
+        }
+    }
+    return uri
+}
+
 def parseDescriptionAsMap(description) {
 	description.split(",").inject([:]) { map, param ->
 		def nameAndValue = param.split(":")
@@ -994,7 +1023,7 @@ def pink() {
 /* Helper functions included in all Tasmota drivers using RGB, RGBW or Dimmers */
 def setColorTemperature(value) {
     logging("setColorTemperature('${value}')", 10)
-    if(colorTemperature != value ) sendEvent(name: "colorTemperature", value: value)
+    if(device.currentValue('colorTemperature') != value ) sendEvent(name: "colorTemperature", value: value)
     // 153..500 = set color temperature from 153 (cold) to 500 (warm) for CT lights
     // Tasmota use mired to measure color temperature
     t = value != null ?  (value as Integer) : 0
@@ -1164,8 +1193,26 @@ def modeSingleColor() {
 }
 
 def modeWakeUp() {
+    logging("modeWakeUp()", 1)
     state.mode = 1
     modeSet(state.mode)
+}
+
+def modeWakeUp(wakeUpDuration) {
+    level = device.currentValue('level')
+    nlevel = level > 10 ? level : 10
+    logging("modeWakeUp(wakeUpDuration ${wakeUpDuration}, current level: ${nlevel})", 1)
+    modeWakeUp(wakeUpDuration, nlevel)
+}
+
+def modeWakeUp(wakeUpDuration, level) {
+    logging("modeWakeUp(wakeUpDuration ${wakeUpDuration}, level: ${level})", 1)
+    state.mode = 1
+    wakeUpDuration = wakeUpDuration < 1 ? 1 : wakeUpDuration > 3000 ? 3000 : wakeUpDuration
+    level = level < 1 ? 1 : level > 100 ? 100 : level
+    state.level = level
+    getAction(getMultiCommandString([[command: "WakeupDuration", value: "${wakeUpDuration}"],
+                                    [command: "Wakeup", value: "${level}"]]))
 }
 
 def modeCycleUpColors() {

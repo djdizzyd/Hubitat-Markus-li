@@ -793,6 +793,22 @@ def getCommandString(command, value) {
     return uri
 }
 
+def getMultiCommandString(commands) {
+    def uri = "/cm?"
+    if (password) {
+        uri += "user=admin&password=${password}&"
+    }
+    uri += "cmnd=backlog%20"
+    commands.each {cmd->
+        if(cmd.containsKey("value")) {
+          uri += "${cmd['command']}%20${cmd['value']}%3B%20"
+        } else {
+          uri += "${cmd['command']}%3B%20"
+        }
+    }
+    return uri
+}
+
 def parseDescriptionAsMap(description) {
 	description.split(",").inject([:]) { map, param ->
 		def nameAndValue = param.split(":")

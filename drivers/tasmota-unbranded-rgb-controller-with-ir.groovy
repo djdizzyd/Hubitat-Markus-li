@@ -17,10 +17,12 @@ metadata {
         #!include:getDefaultMetadataCapabilities()
         
         #!include:getDefaultMetadataAttributes()
+        #!include:getDefaultMetadataAttributesForDimmableLights()
 
         #!include:getDefaultMetadataCommands()
         #!include:getMetadataCommandsForHandlingRGBWDevices()
         #!include:getMetadataCommandsForHandlingTasmotaRGBWDevices()
+        #!include:getMetadataCommandsForHandlingTasmotaDimmerDevices()
 	}
 
 	simulator {
@@ -43,6 +45,7 @@ def parse(description) {
             #!include:getTasmotaParserForWifi()
             #!include:getTasmotaParserForRGBWIRRemote()
             #!include:getTasmotaParserForRGBWDevice()
+            #!include:getTasmotaParserForDimmableDevice()
         #!include:getGenericTasmotaParseFooter()
 }
 

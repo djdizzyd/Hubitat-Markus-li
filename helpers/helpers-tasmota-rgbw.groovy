@@ -1,7 +1,7 @@
 /* Helper functions included in all Tasmota drivers using RGB, RGBW or Dimmers */
 def setColorTemperature(value) {
     logging("setColorTemperature('${value}')", 10)
-    if(colorTemperature != value ) sendEvent(name: "colorTemperature", value: value)
+    if(device.currentValue('colorTemperature') != value ) sendEvent(name: "colorTemperature", value: value)
     // 153..500 = set color temperature from 153 (cold) to 500 (warm) for CT lights
     // Tasmota use mired to measure color temperature
     t = value != null ?  (value as Integer) : 0
@@ -171,8 +171,26 @@ def modeSingleColor() {
 }
 
 def modeWakeUp() {
+    logging("modeWakeUp()", 1)
     state.mode = 1
     modeSet(state.mode)
+}
+
+def modeWakeUp(wakeUpDuration) {
+    level = device.currentValue('level')
+    nlevel = level > 10 ? level : 10
+    logging("modeWakeUp(wakeUpDuration ${wakeUpDuration}, current level: ${nlevel})", 1)
+    modeWakeUp(wakeUpDuration, nlevel)
+}
+
+def modeWakeUp(wakeUpDuration, level) {
+    logging("modeWakeUp(wakeUpDuration ${wakeUpDuration}, level: ${level})", 1)
+    state.mode = 1
+    wakeUpDuration = wakeUpDuration < 1 ? 1 : wakeUpDuration > 3000 ? 3000 : wakeUpDuration
+    level = level < 1 ? 1 : level > 100 ? 100 : level
+    state.level = level
+    getAction(getMultiCommandString([[command: "WakeupDuration", value: "${wakeUpDuration}"],
+                                    [command: "Wakeup", value: "${level}"]]))
 }
 
 def modeCycleUpColors() {

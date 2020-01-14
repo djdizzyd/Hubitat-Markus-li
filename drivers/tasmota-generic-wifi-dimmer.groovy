@@ -11,9 +11,11 @@ metadata {
         
         attribute   "dimState", "number"
         #!include:getDefaultMetadataAttributes()
+        #!include:getDefaultMetadataAttributesForDimmableLights()
 
         //#!include:getMetadataCommandsForHandlingChildDevices()
         #!include:getDefaultMetadataCommands()
+        #!include:getMetadataCommandsForHandlingTasmotaDimmerDevices()
 	}
 
 	simulator {
@@ -63,9 +65,7 @@ def parse(description) {
     #!include:getGenericTasmotaParseHeader()
             #!include:getTasmotaParserForBasicData()
             #!include:getTasmotaParserForWifi()
-            if (result.containsKey("Dimmer")) {
-                events << createEvent(name: "level", value: result.Dimmer)
-            }
+            #!include:getTasmotaParserForDimmableDevice()
         #!include:getGenericTasmotaParseFooter()
 }
 

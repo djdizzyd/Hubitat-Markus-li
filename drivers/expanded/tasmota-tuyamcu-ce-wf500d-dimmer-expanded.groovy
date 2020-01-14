@@ -40,10 +40,17 @@ metadata {
         attribute   "module", "string"
         attribute   "templateData", "string"
         attribute   "driverVersion", "string"
+        
+        // Default Attributes for Dimmable Lights
+        attribute   "wakeup", "string"
 
         
         // Default Commands
         command "reboot"
+        
+        // Commands for handling Tasmota Dimmer Devices
+        command "modeWakeUp", [[name:"Wake Up Duration*", type: "NUMBER", description: "1..3000 = set wake up duration in seconds"],
+                               [name:"Level", type: "NUMBER", description: "1..100 = target dimming level"] ]
 	}
 
 	simulator {
@@ -226,8 +233,18 @@ def parse(description) {
                     logging("SSId: $result.Wifi.SSId",99)
                 }
             }
+            
+            // Standard Dimmable Device Data parsing
             if (result.containsKey("Dimmer")) {
-                events << createEvent(name: "level", value: result.Dimmer)
+                dimmer = result.Dimmer
+                logging("Dimmer: ${dimmer}", 1)
+                state.level = dimmer
+                if(device.currentValue('level') != dimmer ) events << createEvent(name: "level", value: dimmer)
+            }
+            if (result.containsKey("Wakeup")) {
+                wakeup = result.Wakeup
+                logging("Wakeup: ${wakeup}", 1)
+                events << createEvent(name: "wakeup", value: wakeup)
             }
         // parse() Generic Tasmota-device footer BEGINS here
         } else {
@@ -642,6 +659,22 @@ def getCommandString(command, value) {
 	else {
 		uri += "cmnd=${command}"
 	}
+    return uri
+}
+
+def getMultiCommandString(commands) {
+    def uri = "/cm?"
+    if (password) {
+        uri += "user=admin&password=${password}&"
+    }
+    uri += "cmnd=backlog%20"
+    commands.each {cmd->
+        if(cmd.containsKey("value")) {
+          uri += "${cmd['command']}%20${cmd['value']}%3B%20"
+        } else {
+          uri += "${cmd['command']}%3B%20"
+        }
+    }
     return uri
 }
 

@@ -92,6 +92,12 @@ attribute   "voltageWithUnit", "string"
 attribute   "powerWithUnit", "string"
 """
 
+def getDefaultMetadataAttributesForDimmableLights():
+    return """
+// Default Attributes for Dimmable Lights
+attribute   "wakeup", "string"
+"""
+
 def getDefaultMetadataAttributesForTHMonitor():
     return """
 // Default Attributes for Temperature Humidity Monitor
@@ -136,10 +142,16 @@ def getMetadataCommandsForHandlingTasmotaRGBWDevices():
 command "modeNext"
 command "modePrevious"
 command "modeSingleColor"
-command "modeWakeUp"
 command "modeCycleUpColors"
 command "modeCycleDownColors"
 command "modeRandomColors"
+"""
+
+def getMetadataCommandsForHandlingTasmotaDimmerDevices():
+    return """
+// Commands for handling Tasmota Dimmer Devices
+command "modeWakeUp", [[name:"Wake Up Duration*", type: "NUMBER", description: "1..3000 = set wake up duration in seconds"],
+                       [name:"Level", type: "NUMBER", description: "1..100 = target dimming level"] ]
 """
 
 def getLearningModeCommands():
