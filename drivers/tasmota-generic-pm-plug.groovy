@@ -43,7 +43,7 @@ def update_needed_settings()
 {
     #!include:getUpdateNeededSettingsTasmotaHeader()
 
-    #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand(43)
+    #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand()
 
     //cmds << getAction(getCommandString("SetOption81", "1")) // Set PCF8574 component behavior for all ports as inverted (default=0)
     //cmds << getAction(getCommandString("LedPower", "1"))  // 1 = turn LED ON and set LedState 8

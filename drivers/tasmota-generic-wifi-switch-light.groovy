@@ -48,7 +48,7 @@ def update_needed_settings()
 {
     #!include:getUpdateNeededSettingsTasmotaHeader()
 
-    #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand(1)
+    #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand()
 
     // Disabling these here, but leaving them if anyone needs them
     // If another driver has set SetOption81 to 1, the below might be needed, or you can use:
