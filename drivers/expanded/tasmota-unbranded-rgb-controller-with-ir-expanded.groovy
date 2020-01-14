@@ -109,7 +109,13 @@ def on() {
         b = state.containsKey("level") ? state.level : 100
     }
     if(b < 20) b = 20
-    cmds << setHSB(h, s, b)
+    if(state.colorMode == "CT") {
+        state.level = b
+        cmds << setColorTemperature(colorTemperature ? colorTemperature : 3000)
+        cmds << setLevel(state.level, 0)
+    } else {
+        cmds << setHSB(h, s, b)
+    }
     cmds << getAction(getCommandString("Power", "On"))
     return cmds
 }
