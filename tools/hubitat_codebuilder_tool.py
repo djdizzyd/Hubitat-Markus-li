@@ -289,12 +289,13 @@ def main():
     # As long as we have an id, we can just supply that here instead of the whole config...
     # 651 left over from RF Link Child
     driver_files_testing = [
-        {'id': 801, 'file': 'zigbee-xiaomi-curtain.groovy' },
+    #    {'id': 801, 'file': 'zigbee-xiaomi-curtain.groovy' },
     #     {'id':738},  # Wifi Curtain Wall Panel
     #    {'id':590},
     #    {'id':651},    # Sensor - Distance
     #    {'id':649}, {'id':673}, {'id':674}, {'id':675}, {'id':676}, # RF/IR Children
     #    {'id':591},
+    #   {'id':641},{'id':642},
     #   {'id':650},{'id':651},  # RFLink
     #    {'id':648},  # Sonoff RF Bridgle
     #     {'id':551},{'id':578}, {'id':362}, {'id':645}, {'id':590}, {'id':588}, 

@@ -238,25 +238,40 @@ def parse(description) {
             }
             
             // Standard TuyaSwitch Data parsing
+            Integer numSwitchesI = numSwitches.toInteger()
+            if (numSwitchesI == 1 && result.containsKey("POWER")) {
+                logging("POWER (child): $result.POWER",1)
+                events << childSendState("1", result.POWER.toLowerCase())
+            }
             if (result.containsKey("POWER1")) {
                 logging("POWER1: $result.POWER1",1)
-                childSendState("1", result.POWER1.toLowerCase())
+                events << childSendState("1", result.POWER1.toLowerCase())
                 events << createEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER1.toLowerCase() == "on"?1:0) && result.POWER1.toLowerCase() == "on"? "on" : "off"))
             }
             if (result.containsKey("POWER2")) {
                 logging("POWER2: $result.POWER2",1)
-                childSendState("2", result.POWER2.toLowerCase())
+                events << childSendState("2", result.POWER2.toLowerCase())
                 events << createEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER2.toLowerCase() == "on"?2:0) && result.POWER2.toLowerCase() == "on"? "on" : "off"))
             }
             if (result.containsKey("POWER3")) {
                 logging("POWER3: $result.POWER3",1)
-                childSendState("3", result.POWER3.toLowerCase())
+                events << childSendState("3", result.POWER3.toLowerCase())
                 events << createEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER3.toLowerCase() == "on"?3:0) && result.POWER3.toLowerCase() == "on"? "on" : "off"))
             }
             if (result.containsKey("POWER4")) {
                 logging("POWER4: $result.POWER4",1)
-                childSendState("4", result.POWER4.toLowerCase())
+                events << childSendState("4", result.POWER4.toLowerCase())
                 events << createEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER4.toLowerCase() == "on"?4:0) && result.POWER4.toLowerCase() == "on" ? "on" : "off"))
+            }
+            if (result.containsKey("POWER5")) {
+                logging("POWER5: $result.POWER5",1)
+                events << childSendState("5", result.POWER5.toLowerCase())
+                events << createEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER5.toLowerCase() == "on"?5:0) && result.POWER5.toLowerCase() == "on" ? "on" : "off"))
+            }
+            if (result.containsKey("POWER6")) {
+                logging("POWER6: $result.POWER6",1)
+                events << childSendState("6", result.POWER6.toLowerCase())
+                events << createEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER6.toLowerCase() == "on"?6:0) && result.POWER6.toLowerCase() == "on" ? "on" : "off"))
             }
         // parse() Generic Tasmota-device footer BEGINS here
         } else {
