@@ -1,13 +1,13 @@
 # Hubitat Apps and Drivers
-A collection of various Hubitat Apps and Drivers
+Apps and Drivers I've created for Hubitat Elevation
 
 # Drivers
-The drivers to be used are under 'drivers/expanded', the drivers directly in 'drivers' can't be used on Hubitat. They contain code generation blocks executed by the Python scripts to create the final drivers residing in 'expanded'.
+The drivers to be used are under 'drivers/expanded', the drivers directly in 'drivers' can't be used on HE. They contain code generation blocks executed by the Python scripts to create the final drivers residing in 'expanded'.
 
 NOTE: 'tasmota-tuya-wifi-touch-switch-child-test' is NOT a real driver, do NOT use it.
 
 # Apps
-The drivers to be used are under 'apps/expanded', the apps directly in 'apps' can't be used on Hubitat. They contain code generation blocks executed by the Python scripts to create the final apps residing in 'expanded'.
+The apps to be used are under 'apps/expanded', the apps directly in 'apps' can't be used on HE. They contain code generation blocks executed by the Python scripts to create the final apps residing in 'expanded'.
 
 "Tasmota Connect" is used to install these drivers on HE.
 
