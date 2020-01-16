@@ -20,7 +20,7 @@ import groovy.json.JsonOutput
 
 
 metadata {
-    definition (name: "Tasmota - TuyaMCU Wifi Touch Switch Legacy (Child)", namespace: "tasmota-legacy", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-tuyamcu-wifi-touch-switch-legacy-child-expanded.groovy") {
+    definition (name: "Tasmota - TuyaMCU Wifi Touch Switch Legacy (Child)", namespace: "tasmota-legacy", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-tuyamcu-wifi-touch-switch-legacy-child-expanded.groovy") {
         capability "Light"
         capability "Switch"
         capability "Actuator"
@@ -30,7 +30,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - TuyaMCU Wifi Touch Switch Legacy (Child)', 'namespace': 'tasmota-legacy', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-tuyamcu-wifi-touch-switch-legacy-child-expanded.groovy']
+    deviceInfo = ['name': 'Tasmota - TuyaMCU Wifi Touch Switch Legacy (Child)', 'namespace': 'tasmota-legacy', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-tuyamcu-wifi-touch-switch-legacy-child-expanded.groovy']
     return(deviceInfo[infoName])
 }
 

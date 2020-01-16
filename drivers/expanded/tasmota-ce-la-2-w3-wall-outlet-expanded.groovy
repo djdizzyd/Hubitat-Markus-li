@@ -20,7 +20,7 @@ import groovy.json.JsonOutput
 
 
 metadata {
-	definition (name: "Tasmota - CE Smart Home LA-2-W3 Wall Outlet", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-ce-la-2-w3-wall-outlet-expanded.groovy") {
+	definition (name: "Tasmota - CE Smart Home LA-2-W3 Wall Outlet", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-ce-la-2-w3-wall-outlet-expanded.groovy") {
         capability "Actuator"
         capability "Outlet"
 		capability "Switch"
@@ -71,7 +71,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - CE Smart Home LA-2-W3 Wall Outlet', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-ce-la-2-w3-wall-outlet-expanded.groovy']
+    deviceInfo = ['name': 'Tasmota - CE Smart Home LA-2-W3 Wall Outlet', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-ce-la-2-w3-wall-outlet-expanded.groovy']
     return(deviceInfo[infoName])
 }
 

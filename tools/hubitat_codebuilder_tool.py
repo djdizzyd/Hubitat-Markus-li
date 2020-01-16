@@ -68,8 +68,8 @@ except SyntaxError as e:
 # NOTE: All function names use mixedCaps since this is used with Groovy and it makes
 #       it less confusing not changing style all the time. 
 def main():
-    base_repo_url = 'https://github.com/markus-li/Hubitat/blob/master/drivers/expanded/'
-    base_raw_repo_url = 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/'
+    base_repo_url = 'https://github.com/markus-li/Hubitat/blob/release/drivers/expanded/'
+    base_raw_repo_url = 'https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/'
 
     # Get us a Code Builder...
     
@@ -298,6 +298,7 @@ def main():
     #   {'id':641},{'id':642},
     #   {'id':650},{'id':651},  # RFLink
     #    {'id':648},  # Sonoff RF Bridgle
+    #    {'id':557},  # YKYC
     #     {'id':551},{'id':578}, {'id':362}, {'id':645}, {'id':590}, {'id':588}, 
     #    {'id': 0, 'file': 'tasmota-generic-thp-device.groovy' , \
     #     'alternate_output_filename': 'tasmota-sonoff-th', \

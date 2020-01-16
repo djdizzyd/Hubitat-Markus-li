@@ -20,7 +20,7 @@ import groovy.json.JsonOutput
 
 
 metadata {
-	definition (name: "Tasmota - Generic Wifi Dimmer", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-generic-wifi-dimmer-expanded.groovy") {
+	definition (name: "Tasmota - Generic Wifi Dimmer", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-generic-wifi-dimmer-expanded.groovy") {
         capability "Light"
         capability "Switch"
 		capability "SwitchLevel"
@@ -86,7 +86,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - Generic Wifi Dimmer', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-generic-wifi-dimmer-expanded.groovy']
+    deviceInfo = ['name': 'Tasmota - Generic Wifi Dimmer', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-generic-wifi-dimmer-expanded.groovy']
     return(deviceInfo[infoName])
 }
 

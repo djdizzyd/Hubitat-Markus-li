@@ -20,7 +20,7 @@ import groovy.json.JsonOutput
 
 
 metadata {
-	definition (name: "Tasmota - Sonoff SV", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-sonoff-sv-expanded.groovy") {
+	definition (name: "Tasmota - Sonoff SV", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-sonoff-sv-expanded.groovy") {
         capability "Actuator"
         capability "Outlet"
 		capability "Switch"
@@ -71,7 +71,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - Sonoff SV', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-sonoff-sv-expanded.groovy']
+    deviceInfo = ['name': 'Tasmota - Sonoff SV', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-sonoff-sv-expanded.groovy']
     return(deviceInfo[infoName])
 }
 

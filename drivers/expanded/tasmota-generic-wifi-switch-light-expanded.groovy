@@ -20,7 +20,7 @@ import groovy.json.JsonOutput
 
 
 metadata {
-	definition (name: "Tasmota - Generic Wifi Switch/Light", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-generic-wifi-switch-light-expanded.groovy") {
+	definition (name: "Tasmota - Generic Wifi Switch/Light", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-generic-wifi-switch-light-expanded.groovy") {
         capability "Actuator"
         capability "Light"
 		capability "Switch"
@@ -71,7 +71,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - Generic Wifi Switch/Light', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-generic-wifi-switch-light-expanded.groovy']
+    deviceInfo = ['name': 'Tasmota - Generic Wifi Switch/Light', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-generic-wifi-switch-light-expanded.groovy']
     return(deviceInfo[infoName])
 }
 

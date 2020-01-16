@@ -20,7 +20,7 @@ import groovy.json.JsonOutput
 
 
 metadata {
-    definition (name: "Tasmota - RF/IR Smoke Detector (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-rf-ir-smoke-detector-child-expanded.groovy") {
+    definition (name: "Tasmota - RF/IR Smoke Detector (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-rf-ir-smoke-detector-child-expanded.groovy") {
         capability "SmokeDetector"
         capability "Sensor"
 
@@ -51,7 +51,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - RF/IR Smoke Detector (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-rf-ir-smoke-detector-child-expanded.groovy']
+    deviceInfo = ['name': 'Tasmota - RF/IR Smoke Detector (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-rf-ir-smoke-detector-child-expanded.groovy']
     return(deviceInfo[infoName])
 }
 

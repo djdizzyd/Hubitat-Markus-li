@@ -20,7 +20,7 @@ import groovy.json.JsonOutput
 
 
 metadata {
-	definition (name: "Tasmota - Aoycocr X10S Power Monitor Plug", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-aoycocr-x10s-pm-plug-expanded.groovy") {
+	definition (name: "Tasmota - Aoycocr X10S Power Monitor Plug", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-aoycocr-x10s-pm-plug-expanded.groovy") {
         capability "Actuator"
         capability "Light"
 		capability "Switch"
@@ -86,7 +86,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - Aoycocr X10S Power Monitor Plug', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-aoycocr-x10s-pm-plug-expanded.groovy']
+    deviceInfo = ['name': 'Tasmota - Aoycocr X10S Power Monitor Plug', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-aoycocr-x10s-pm-plug-expanded.groovy']
     return(deviceInfo[infoName])
 }
 

@@ -20,7 +20,7 @@ import groovy.json.JsonOutput
 
 
 metadata {
-	definition (name: "Tasmota - ZNSN TuyaMCU Wifi Curtain Wall Panel", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-znsn-tuyamcu-wifi-curtain-wall-panel-expanded.groovy") {
+	definition (name: "Tasmota - ZNSN TuyaMCU Wifi Curtain Wall Panel", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-znsn-tuyamcu-wifi-curtain-wall-panel-expanded.groovy") {
         capability "Light"
         capability "Switch"
         capability "WindowShade"
@@ -77,7 +77,7 @@ metadata {
 def getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - ZNSN TuyaMCU Wifi Curtain Wall Panel', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/master/drivers/expanded/tasmota-znsn-tuyamcu-wifi-curtain-wall-panel-expanded.groovy']
+    deviceInfo = ['name': 'Tasmota - ZNSN TuyaMCU Wifi Curtain Wall Panel', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-znsn-tuyamcu-wifi-curtain-wall-panel-expanded.groovy']
     return(deviceInfo[infoName])
 }
 
