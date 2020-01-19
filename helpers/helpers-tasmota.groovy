@@ -21,13 +21,16 @@ def updated()
 {
     logging("updated()", 10)
     def cmds = [] 
-    cmds = update_needed_settings()
-    //sendEvent(name: "checkInterval", value: 2 * 15 * 60 + 2 * 60, displayed: false, data: [protocol: "lan", hubHardwareId: device.hub.hardwareID])
-    sendEvent(name:"needUpdate", value: device.currentValue("needUpdate"), displayed:false, isStateChange: false)
+    if(isDriver()) {
+        cmds = update_needed_settings()
+        //sendEvent(name: "checkInterval", value: 2 * 15 * 60 + 2 * 60, displayed: false, data: [protocol: "lan", hubHardwareId: device.hub.hardwareID])
+        sendEvent(name:"needUpdate", value: device.currentValue("needUpdate"), displayed:false, isStateChange: false)
+    }
     logging(cmds, 0)
     try {
         // Also run initialize(), if it exists...
         initialize()
+        updatedAdditional()
     } catch (MissingMethodException e) {
         // ignore
     }

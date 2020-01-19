@@ -432,14 +432,18 @@ def off() {
 }
 """
 
-def getDefaultFunctions(comment=""):
+def getDefaultFunctions(comment="", driverVersionSpecial=None):
+    if(driverVersionSpecial != None):
+        driverVersionActual = driverVersionSpecial
+    else:
+        driverVersionActual = driverVersion
     return '''/* Default functions go here */
 private def getDriverVersion() {
     logging("getDriverVersion()", 50)
 	def cmds = []
     comment = "''' + comment + '''"
     if(comment != "") state.comment = comment
-    sendEvent(name: "driverVersion", value: "''' + driverVersion + '''")
+    sendEvent(name: "driverVersion", value: "''' + driverVersionActual + '''")
     return cmds
 }
 '''

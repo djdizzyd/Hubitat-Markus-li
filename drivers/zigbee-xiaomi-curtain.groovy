@@ -4,22 +4,29 @@
    https://github.com/shin4299/XiaomiSJ/blob/master/devicetypes/shinjjang/xiaomi-curtain-b1.src/xiaomi-curtain-b1.groovy
 */
 
+#!include:getDefaultImports()
+
 metadata {
-	definition (name: "Zigbee - DO NOT USE Xiaomi Curtain", namespace: "markusl", author: "Markus Liljergren", vid: "generic-shade") {
+	definition (name: "Zigbee - Xiaomi Curtain", namespace: "markusl", author: "Markus Liljergren", vid: "generic-shade") {
         capability "Actuator"
         capability "Light"
 		capability "Switch"
 		capability "Sensor"
         capability "WindowShade"
+        capability "Battery"
 
         #!include:getDefaultMetadataCapabilities()
         
         #!include:getDefaultMetadataAttributes()
+        attribute "lastCheckin", "String"
+        attribute "batteryLastReplaced", "String"
         #!include:getDefaultMetadataCommands()
         command "stop"
 
         // Fingerprint for Aqara Smart Curtain Motor (ZNCLDJ11LM)
-		fingerprint profileId: "0104", inClusters: "0000,0004,0003,0005,000A,0102,000D,0013,0006,0001,0406", outClusters: "0019,000A,000D,0102,0013,0006,0001,0406", manufacturer: "LUMI", model: "lumi.curtain"
+		fingerprint endpointId: "01", profileId: "0104", deviceId: "0202", inClusters: "0000, 0003, 0102, 000D, 0013, 0001", outClusters: "0003, 000A", manufacturer: "LUMI", model: "lumi.curtain.hagl04", deviceJoinName: "Xiaomi Curtain B1"
+        fingerprint profileId: "0104", inClusters: "0000,0004,0003,0005,000A,0102,000D,0013,0006,0001,0406", outClusters: "0019,000A,000D,0102,0013,0006,0001,0406", manufacturer: "LUMI", model: "lumi.curtain"
+        
 	}
 
 	simulator {
@@ -28,6 +35,9 @@ metadata {
     preferences {
         #!include:getDefaultMetadataPreferences()
         input name: "mode", type: "bool", title: "Curtain Direction", description: "Reverse Mode ON", required: true, displayDuringSetup: true
+        //Battery Voltage Range
+		input name: "voltsmin", type: "decimal", title: "Min Volts (0% battery = ___ volts). Default = 2.8 Volts", description: ""
+		input name: "voltsmax", type: "decimal", title: "Max Volts (100% battery = ___ volts). Default = 3.05 Volts", description: ""
 	}
 }
 
@@ -38,6 +48,7 @@ private getCLUSTER_BASIC() { 0x0000 }
 private getCLUSTER_POWER() { 0x0001 }
 private getCLUSTER_WINDOW_COVERING() { 0x0102 }
 private getCLUSTER_WINDOW_POSITION() { 0x000d }
+private getCLUSTER_ON_OFF() { 0x0006 }
 private getBASIC_ATTR_POWER_SOURCE() { 0x0007 }
 private getPOWER_ATTR_BATTERY_PERCENTAGE_REMAINING() { 0x0021 }
 private getPOSITION_ATTR_VALUE() { 0x0055 }
@@ -51,37 +62,7 @@ def refresh() {
     // http://ftp1.digi.com/support/images/APP_NOTE_XBee_ZigBee_Device_Profile.pdf
     // https://docs.hubitat.com/index.php?title=Zigbee_Object
     // https://docs.smartthings.com/en/latest/ref-docs/zigbee-ref.html
-    //zigbee.clusterLookup(0x0001)
-    /*msgMap = [profileId:0, clusterId:"0x0001", sourceEndpoint:0, 
-              destinationEndpoint:0, options:0, messageType:0, dni:"${device.endpointId}", 
-              isClusterSpecific:false, isManufacturerSpecific:false, manufacturerId:0, 
-              command:0, direction:0]
-    
-    logging("${device.deviceNetworkId}", 10)
-    logging(zigbee.swapOctets("${device.deviceNetworkId}"), 10)
-    zigbee.command(0x0001, 0, "${device.deviceNetworkId}")
-    zigbee.command(0x0001, 0, zigbee.swapOctets("${device.deviceNetworkId}"))
-    zigbee.command(0x0001, 0, msgMap)
-    zigbee.command(0x0001, 0, '')
-    zigbee.enrollResponse()*/
-    /*return [
-            "he 0x0001 0x${device.endpointId} 0x00 {}","delay 200",  //light state
-            "he rattr 0x${device.deviceNetworkId} 0x${device.endpointId} 0x0004 0 {}","delay 200",  //light state
-            "he rattr 0x${device.deviceNetworkId} 0x${device.endpointId} 0x0000 0 {}","delay 200",  //light state
-            "he rattr 0x${device.deviceNetworkId} 0x${device.endpointId} 0x0086 0 {}","delay 200",  //light state
-            "he rattr 0x${device.deviceNetworkId} 0x${device.endpointId} 0x0085 0 {}","delay 200",  //light state
-            "he rattr 0x${device.deviceNetworkId} 0x${device.endpointId} 0x8600 0 {}","delay 200",  //light state
-            "he rattr 0x${device.deviceNetworkId} 0x${device.endpointId} 0x8500 0 {}","delay 200",  //light state
-            "he rattr 0x${device.deviceNetworkId} 0x${device.endpointId} 0x0006 0 {}","delay 200",  //light state
-            "he rattr 0x${device.deviceNetworkId} 0x${device.endpointId} 0x0008 0 {}","delay 200",  //light level
-            "he rattr 0x${device.deviceNetworkId} 0x${device.endpointId} 0x0300 0x0000 {}","delay 200", //hue
-            "he rattr 0x${device.deviceNetworkId} 0x${device.endpointId} 0x0300 0x0001 {}","delay 200", //sat
-            "he rattr 0x${device.deviceNetworkId} 0x${device.endpointId} 0x0300 0x0007 {}","delay 200",	//color temp
-            "he rattr 0x${device.deviceNetworkId} 0x${device.endpointId} 0x0300 0x0008 {}"  		//color mode
-    ]*/
-    /*return [
-        "he cmd 0x${device.deviceNetworkId} 0x${device.endpointId} 0x0006 0 {}"
-    ]*/
+    // https://www.nxp.com/docs/en/user-guide/JN-UG-3115.pdf
     def cmds = []
     cmds += zigbee.readAttribute(CLUSTER_BASIC, BASIC_ATTR_POWER_SOURCE)
     cmds += zigbee.readAttribute(CLUSTER_POWER, POWER_ATTR_BATTERY_PERCENTAGE_REMAINING)
@@ -93,30 +74,58 @@ def reboot() {
     logging('reboot() is NOT implemented for this device', 1)
     // Ignore
 }
-
+// description:read attr - raw: 05470100000A07003001, dni: 0547, endpoint: 01, cluster: 0000, size: 0A, attrId: 0007, encoding: 30, command: 01, value: 01, parseMap:[raw:05470100000A07003001, dni:0547, endpoint:01, cluster:0000, size:0A, attrId:0007, encoding:30, command:01, value:01, clusterInt:0, attrInt:7]
+// Closed curtain: read attr - raw: 054701000D1055003900000000, dni: 0547, endpoint: 01, cluster: 000D, size: 10, attrId: 0055, encoding: 39, command: 01, value: 00000000
+// PArtially open: msgMap: [raw:054701000D1C5500390000C84200F02300000000, dni:0547, endpoint:01, cluster:000D, size:1C, attrId:0055, encoding:39, command:0A, value:42C80000, clusterInt:13, attrInt:85, additionalAttrs:[[value:00000000, encoding:23, attrId:F000, consumedBytes:7, attrInt:61440]]]
+// 0104 000A 01 01 0040 00 0547 00 00 0000 00 00 0000, profileId:0104, clusterId:000A, clusterInt:10, sourceEndpoint:01, destinationEndpoint:01, options:0040, messageType:00, dni:0547, isClusterSpecific:false, isManufacturerSpecific:false, manufacturerId:0000, command:00, direction:00, data:[00, 00]]
+// Fully open: 
 def parse(description) {
     #!include:getGenericZigbeeParseHeader()
-    if (msgMap["cluster"] == "000D" && msgMap["attrId"] == "0055") {
-		if (msgMap["size"] == "16") {
+    
+    if (msgMap["profileId"] == "0104") {
+        logging("Unhandled KNOWN event - description:${description}, parseMap:${msgMap}", 1)
+        logging("RAW: ${msgMap["attrId"]}", 1)
+        // catchall: 0104 000A 01 01 0040 00 63A1 00 00 0000 00 00 0000, parseMap:[raw:catchall: 0104 000A 01 01 0040 00 63A1 00 00 0000 00 00 0000, profileId:0104, clusterId:000A, clusterInt:10, sourceEndpoint:01, destinationEndpoint:01, options:0040, messageType:00, dni:63A1, isClusterSpecific:false, isManufacturerSpecific:false, manufacturerId:0000, command:00, direction:00, data:[00, 00]]
+    } else if (msgMap["cluster"] == "0000" && msgMap["attrId"] == "0404") {
+        logging("Unhandled KNOWN event - description:${description}, parseMap:${msgMap}", 1)
+        //read attr - raw: 63A10100000804042000, dni: 63A1, endpoint: 01, cluster: 0000, size: 08, attrId: 0404, encoding: 20, command: 0A, value: 00, parseMap:[raw:63A10100000804042000, dni:63A1, endpoint:01, cluster:0000, size:08, attrId:0404, encoding:20, command:0A, value:00, clusterInt:0, attrInt:1028]
+    } else if (msgMap["cluster"] == "0000" && msgMap["attrId"] == "0005") {
+        logging("Unhandled KNOWN event (pressed button) - description:${description}, parseMap:${msgMap}", 1)
+        // read attr - raw: 63A1010000200500420C6C756D692E6375727461696E, dni: 63A1, endpoint: 01, cluster: 0000, size: 20, attrId: 0005, encoding: 42, command: 0A, value: 0C6C756D692E6375727461696E, parseMap:[raw:63A1010000200500420C6C756D692E6375727461696E, dni:63A1, endpoint:01, cluster:0000, size:20, attrId:0005, encoding:42, command:0A, value:lumi.curtain, clusterInt:0, attrInt:5]
+    } else if (msgMap["cluster"] == "0000" && msgMap["attrId"] == "0007") {
+        logging("Unhandled KNOWN event (BASIC_ATTR_POWER_SOURCE) - description:${description}, parseMap:${msgMap}", 1)
+        // Answer to zigbee.readAttribute(CLUSTER_BASIC, BASIC_ATTR_POWER_SOURCE)
+        //read attr - raw: 63A10100000A07003001, dni: 63A1, endpoint: 01, cluster: 0000, size: 0A, attrId: 0007, encoding: 30, command: 01, value: 01, parseMap:[raw:63A10100000A07003001, dni:63A1, endpoint:01, cluster:0000, size:0A, attrId:0007, encoding:30, command:01, value:01, clusterInt:0, attrInt:7]
+    } else if (msgMap["cluster"] == "0000" && (msgMap["attrId"] == "FF01" || msgMap["attrId"] == "FF02")) {
+        // This is probably the battery event, like in other Xiaomi devices... it can also be FF02
+        logging("KNOWN event (probably battery, not parsed) - description:${description}, parseMap:${msgMap}", 1)
+        // TODO: Parse this
+        //events << createEvent(parseBattery(msgMap["value"].toString()))
+        //read attr - raw: 63A10100004001FF421C03281E05210F00642000082120110727000000000000000009210002, dni: 63A1, endpoint: 01, cluster: 0000, size: 40, attrId: FF01, encoding: 42, command: 0A, value: 1C03281E05210F00642000082120110727000000000000000009210002, parseMap:[raw:63A10100004001FF421C03281E05210F00642000082120110727000000000000000009210002, dni:63A1, endpoint:01, cluster:0000, size:40, attrId:FF01, encoding:42, command:0A, value:(!d ! '	!, clusterInt:0, attrInt:65281]
+    } else if (msgMap["cluster"] == "000D" && msgMap["attrId"] == "0055") {
+        logging("cluster 000D", 1)
+		if (msgMap["size"] == "16" || msgMap["size"] == "1C" || msgMap["size"] == "10") {
 			long theValue = Long.parseLong(msgMap["value"], 16)
 			float floatValue = Float.intBitsToFloat(theValue.intValue());
-			logging("long => ${theValue}, float => ${floatValue}", 1)
+			logging("GETTING POSITION: long => ${theValue}, float => ${floatValue}", 1)
 			curtainPosition = floatValue.intValue()
 			events << positionEvent(curtainPosition)
 		} else if (msgMap["size"] == "28" && msgMap["value"] == "00000000") {
 			logging("done…", 1)
 			sendHubCommand(zigbee.readAttribute(CLUSTER_WINDOW_POSITION, POSITION_ATTR_VALUE))                
 		}
-	} else if (msgMap["cluster"] == "0001" && msgMap["attrId"] == "0021") {
+	} else if (msgMap["clusterId"] == "0001" && msgMap["attrId"] == "0021") {
 		def bat = msgMap["value"]
 		long value = Long.parseLong(bat, 16)/2
 		logging("Battery: ${value}%, ${bat}", 1)
 		events << createEvent(name:"battery", value: value)
+
 	} else if (msgMap["clusterId"] == "000A") {
 		logging("Xiaomi Curtain Present Event", 1)
 	} else {
 		log.warn "Unhandled Event - description:${description}, parseMap:${msgMap}"
 	}
+    logging("-----------------------", 1)
     #!include:getGenericZigbeeParseFooter()
 }
 
@@ -136,13 +145,33 @@ def positionEvent(curtainPosition) {
         windowShadeStatus = "closed"
     }
 	def events = []
-	eventStack << createEvent(name:"windowShade", value: windowShadeStatus as String)
-	eventStack << createEvent(name:"position", value: curtainPosition)
-	eventStack << createEvent(name:"switch", value: (windowShadeStatus == "closed" ? "off" : "on"))
+	events << createEvent(name:"windowShade", value: windowShadeStatus)
+	events << createEvent(name:"position", value: curtainPosition)
+	events << createEvent(name:"switch", value: (windowShadeStatus == "closed" ? "off" : "on"))
 	return events
 }
 
-
+// Convert raw 4 digit integer voltage value into percentage based on minVolts/maxVolts range
+private parseBattery(hexString) {
+    // All credits go to veeceeoh for this battery parsing method!
+    logging("Battery full string = ${hexString}", 1)
+	def hexBattery = (hexString[8..9] + hexString[6..7])
+    logging("Battery parsed string = ${hexBattery}", 1)
+	def rawValue = Integer.parseInt(hexBattery,16)
+	def rawVolts = rawValue / 1000
+	def minVolts = voltsmin ? voltsmin : 2.8
+	def maxVolts = voltsmax ? voltsmax : 3.05
+	def pct = (rawVolts - minVolts) / (maxVolts - minVolts)
+	def roundedPct = Math.min(100, Math.round(pct * 100))
+	displayDebugLog("Battery report: $rawVolts Volts, calculating level based on min/max range of $minVolts to $maxVolts")
+	def descText = "Battery level is $roundedPct% ($rawVolts Volts)"
+	return [
+		name: 'battery',
+		value: roundedPct,
+		unit: "%",
+		descriptionText: descText
+	]
+}
 
 def updated()
 {
@@ -186,7 +215,10 @@ def off() {
 
 def stop() {
     logging("stop()", 1)
-	zigbee.command(CLUSTER_WINDOW_COVERING, COMMAND_PAUSE)
+    def cmd = []
+	cmd += zigbee.command(CLUSTER_WINDOW_COVERING, COMMAND_PAUSE)
+    cmd += zigbee.readAttribute(CLUSTER_WINDOW_POSITION, POSITION_ATTR_VALUE)
+    return cmd
 }
 
 def setPosition(position) {
@@ -196,18 +228,36 @@ def setPosition(position) {
     Integer  currentPosition = device.currentValue("position")
     if (position > currentPosition) {
         sendEvent(name: "windowShade", value: "opening")
-    } else if (level < currentLevel) {
+    } else if (position < currentLevel) {
         sendEvent(name: "windowShade", value: "closing")
     }
-	if(mode == true){
-		position = (100 - position) as int
+    if(position == 100) {
+        if(mode == true){
+            logging("Command: Close", 1)
+        } else {
+            logging("Command: Open", 1)
+        }
+        logging("cluster: ${CLUSTER_ON_OFF}, command: ${COMMAND_OPEN}", 1)
+        return zigbee.command(CLUSTER_ON_OFF, COMMAND_CLOSE)
+    } else if (position < 1) {
+        if(mode == true){
+            logging("Command: Open", 1)
+        } else {
+            logging("Command: Close", 1)
+        }
+        logging("cluster: ${CLUSTER_ON_OFF}, command: ${COMMAND_CLOSE}", 1)
+        return zigbee.command(CLUSTER_ON_OFF, COMMAND_OPEN)
+    } else {
+        if(mode == true){
+            position = (100 - position) as int
+        }
+        logging("Set Position: ${position}%", 1)
+        //logging("zigbee.writeAttribute(getCLUSTER_WINDOW_POSITION()=${CLUSTER_WINDOW_POSITION}, getPOSITION_ATTR_VALUE()=${POSITION_ATTR_VALUE}, getENCODING_SIZE()=${ENCODING_SIZE}, position=${Float.floatToIntBits(position)})", 1)
+        return zigbee.writeAttribute(CLUSTER_WINDOW_POSITION, POSITION_ATTR_VALUE, ENCODING_SIZE, Float.floatToIntBits(position))
     }
-	log.info "Set Position: ${position}%"
-	//String hex = Integer.toHexString(Float.floatToIntBits(level)).toUpperCase()
-	zigbee.writeAttribute(CLUSTER_WINDOW_POSITION, POSITION_ATTR_VALUE, ENCODING_SIZE, position)
 }
 
-#!include:getDefaultFunctions()
+#!include:getDefaultFunctions(driverVersionSpecial="v0.9.0")
 
 #!include:getLoggingFunction()
 

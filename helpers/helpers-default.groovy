@@ -1,7 +1,36 @@
-/* Helper functions included in all drivers */
+/* Helper functions included in all drivers/apps */
+def isDriver() {
+    try {
+        // If this fails, this is not a driver...
+        getDeviceDataByName('_unimportant')
+        logging("This IS a driver!", 1)
+        return true
+    } catch (MissingMethodException e) {
+        logging("This is NOT a driver!", 1)
+        return false
+    }
+}
+
+def deviceCommand(cmd) {
+    def jsonSlurper = new JsonSlurper()
+    cmd = jsonSlurper.parseText(cmd)
+    logging("deviceCommand: ${cmd}", 0)
+    r = this."${cmd['cmd']}"(*cmd['args'])
+    logging("deviceCommand return: ${r}", 0)
+    updateDataValue('appReturn', JsonOutput.toJson(r))
+}
+
+// Since refresh, with any number of arguments, is accepted as we always have it declared anyway, 
+// we use it as a wrapper
+// All our "normal" refresh functions take 0 arguments, we can declare one with 1 here...
+def refresh(cmd) {
+    deviceCommand(cmd)
+}
+
 def installed() {
 	logging("installed()", 50)
-	configure()
+    
+	if(isDriver()) configure()
     try {
         // In case we have some more to run specific to this driver
         installedAdditional()
@@ -13,8 +42,8 @@ def installed() {
 /*
 	initialize
 
-	Purpose: initialize the driver
-	Note: also called from updated() in most drivers
+	Purpose: initialize the driver/app
+	Note: also called from updated() in most drivers/apps
 */
 void initialize()
 {
@@ -29,18 +58,26 @@ void initialize()
         }
         runIn(1800, logsOff)
     }
+    try {
+        // In case we have some more to run specific to this driver/app
+        initializeAdditional()
+    } catch (MissingMethodException e) {
+        // ignore
+    }
 }
 
 def configure() {
     logging("configure()", 50)
     def cmds = []
-    cmds = update_needed_settings()
-    try {
-        // Run the getDriverVersion() command
-        newCmds = getDriverVersion()
-        if (newCmds != null && newCmds != []) cmds = cmds + newCmds
-    } catch (MissingMethodException e) {
-        // ignore
+    if(isDriver()) {
+        cmds = update_needed_settings()
+        try {
+            // Run the getDriverVersion() command
+            newCmds = getDriverVersion()
+            if (newCmds != null && newCmds != []) cmds = cmds + newCmds
+        } catch (MissingMethodException e) {
+            // ignore
+        }
     }
     if (cmds != []) cmds
 }
@@ -130,9 +167,17 @@ void logsOff(){
         //device.updateSetting("logLevel",[value:"0",type:"string"])
         //app.updateSetting("logLevel",[value:"0",type:"list"])
         // Not sure which ones are needed, so doing all... This works!
-        device.clearSetting("logLevel")
-        device.removeSetting("logLevel")
-        state.settings.remove("logLevel")
+        if(isDriver()) {
+            device.clearSetting("logLevel")
+            device.removeSetting("logLevel")
+            device.updateSetting("logLevel", "0")
+            state.settings.remove("logLevel")
+        } else {
+            //app.clearSetting("logLevel")
+            // To be able to update the setting, it has to be removed first, clear does NOT work, at least for Apps
+            app.removeSetting("logLevel")
+            app.updateSetting("logLevel", "0")
+        }
     } else {
         log.warn "OVERRIDE: Disabling Debug logging will not execute with 'DEBUG' set..."
         if (logLevel != "0") runIn(1800, logsOff)
@@ -156,7 +201,7 @@ def configuration_model_debug()
 {
 '''
 <configuration>
-<Value type="list" index="logLevel" label="Debug Log Level" description="Under normal operations, set this to None. Only needed for debugging. Auto-disabled after 30 minutes." value="0" setting_type="preference" fw="">
+<Value type="list" index="logLevel" label="Debug Log Level" description="Under normal operations, set this to None. Only needed for debugging. Auto-disabled after 30 minutes." value="-1" setting_type="preference" fw="">
 <Help>
 </Help>
     <Item label="None" value="0" />

@@ -371,10 +371,10 @@ if (result.containsKey("IrReceived")) {
 
 def getGenericZigbeeParseHeader():
     return """// parse() Generic Zigbee-device header BEGINS here
-logging("Parsing: ${description}", 10)
+logging("Parsing: ${description}", 0)
 def events = []
 def msgMap = zigbee.parseDescriptionAsMap(description)
-logging("msgMap: ${msgMap}", 10)
+logging("msgMap: ${msgMap}", 0)
 // parse() Generic header ENDS here"""
 
 def getGenericZigbeeParseFooter():
