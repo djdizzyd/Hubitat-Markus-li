@@ -31,6 +31,7 @@ metadata {
         capability "Switch"
 		capability "ColorControl"
         capability "ColorTemperature"
+        capability "ColorMode"
         capability "SwitchLevel"
         
         // Default Capabilities
@@ -95,10 +96,11 @@ metadata {
 	}
 }
 
-def getDeviceInfoByName(infoName) { 
+public getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
     deviceInfo = ['name': 'Tasmota - Brilliant 20699 800lm RGBW Bulb', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-brilliant-20699-rgbw-bulb-expanded.groovy']
+    //logging("deviceInfo[${infoName}] = ${deviceInfo[infoName]}", 1)
     return(deviceInfo[infoName])
 }
 
@@ -134,6 +136,10 @@ def off() {
     return cmds
 }
 
+
+def installedAdditional() {
+    sendEvent(name: "colorMode", value: "RGB")
+}
 
 /* These functions are unique to each driver */
 def parse(description) {
@@ -468,10 +474,39 @@ private def logging(message, level) {
 }
 
 
-/* Helper functions included in all drivers */
+/* Helper functions included in all drivers/apps */
+def isDriver() {
+    try {
+        // If this fails, this is not a driver...
+        getDeviceDataByName('_unimportant')
+        logging("This IS a driver!", 1)
+        return true
+    } catch (MissingMethodException e) {
+        logging("This is NOT a driver!", 1)
+        return false
+    }
+}
+
+def deviceCommand(cmd) {
+    def jsonSlurper = new JsonSlurper()
+    cmd = jsonSlurper.parseText(cmd)
+    logging("deviceCommand: ${cmd}", 0)
+    r = this."${cmd['cmd']}"(*cmd['args'])
+    logging("deviceCommand return: ${r}", 0)
+    updateDataValue('appReturn', JsonOutput.toJson(r))
+}
+
+// Since refresh, with any number of arguments, is accepted as we always have it declared anyway, 
+// we use it as a wrapper
+// All our "normal" refresh functions take 0 arguments, we can declare one with 1 here...
+def refresh(cmd) {
+    deviceCommand(cmd)
+}
+
 def installed() {
 	logging("installed()", 50)
-	configure()
+    
+	if(isDriver()) configure()
     try {
         // In case we have some more to run specific to this driver
         installedAdditional()
@@ -483,8 +518,8 @@ def installed() {
 /*
 	initialize
 
-	Purpose: initialize the driver
-	Note: also called from updated() in most drivers
+	Purpose: initialize the driver/app
+	Note: also called from updated() in most drivers/apps
 */
 void initialize()
 {
@@ -499,18 +534,26 @@ void initialize()
         }
         runIn(1800, logsOff)
     }
+    try {
+        // In case we have some more to run specific to this driver/app
+        initializeAdditional()
+    } catch (MissingMethodException e) {
+        // ignore
+    }
 }
 
 def configure() {
     logging("configure()", 50)
     def cmds = []
-    cmds = update_needed_settings()
-    try {
-        // Run the getDriverVersion() command
-        newCmds = getDriverVersion()
-        if (newCmds != null && newCmds != []) cmds = cmds + newCmds
-    } catch (MissingMethodException e) {
-        // ignore
+    if(isDriver()) {
+        cmds = update_needed_settings()
+        try {
+            // Run the getDriverVersion() command
+            newCmds = getDriverVersion()
+            if (newCmds != null && newCmds != []) cmds = cmds + newCmds
+        } catch (MissingMethodException e) {
+            // ignore
+        }
     }
     if (cmds != []) cmds
 }
@@ -600,9 +643,17 @@ void logsOff(){
         //device.updateSetting("logLevel",[value:"0",type:"string"])
         //app.updateSetting("logLevel",[value:"0",type:"list"])
         // Not sure which ones are needed, so doing all... This works!
-        device.clearSetting("logLevel")
-        device.removeSetting("logLevel")
-        state.settings.remove("logLevel")
+        if(isDriver()) {
+            device.clearSetting("logLevel")
+            device.removeSetting("logLevel")
+            device.updateSetting("logLevel", "0")
+            state.settings.remove("logLevel")
+        } else {
+            //app.clearSetting("logLevel")
+            // To be able to update the setting, it has to be removed first, clear does NOT work, at least for Apps
+            app.removeSetting("logLevel")
+            app.updateSetting("logLevel", "0")
+        }
     } else {
         log.warn "OVERRIDE: Disabling Debug logging will not execute with 'DEBUG' set..."
         if (logLevel != "0") runIn(1800, logsOff)
@@ -626,7 +677,7 @@ def configuration_model_debug()
 {
 '''
 <configuration>
-<Value type="list" index="logLevel" label="Debug Log Level" description="Under normal operations, set this to None. Only needed for debugging. Auto-disabled after 30 minutes." value="0" setting_type="preference" fw="">
+<Value type="list" index="logLevel" label="Debug Log Level" description="Under normal operations, set this to None. Only needed for debugging. Auto-disabled after 30 minutes." value="-1" setting_type="preference" fw="">
 <Help>
 </Help>
     <Item label="None" value="0" />
@@ -663,13 +714,16 @@ def updated()
 {
     logging("updated()", 10)
     def cmds = [] 
-    cmds = update_needed_settings()
-    //sendEvent(name: "checkInterval", value: 2 * 15 * 60 + 2 * 60, displayed: false, data: [protocol: "lan", hubHardwareId: device.hub.hardwareID])
-    sendEvent(name:"needUpdate", value: device.currentValue("needUpdate"), displayed:false, isStateChange: false)
+    if(isDriver()) {
+        cmds = update_needed_settings()
+        //sendEvent(name: "checkInterval", value: 2 * 15 * 60 + 2 * 60, displayed: false, data: [protocol: "lan", hubHardwareId: device.hub.hardwareID])
+        sendEvent(name:"needUpdate", value: device.currentValue("needUpdate"), displayed:false, isStateChange: false)
+    }
     logging(cmds, 0)
     try {
         // Also run initialize(), if it exists...
         initialize()
+        updatedAdditional()
     } catch (MissingMethodException e) {
         // ignore
     }
@@ -1012,6 +1066,7 @@ def setColorTemperature(value) {
     state.hue = 0
     state.saturation = 0
     state.colorMode = "CT"
+    if(device.currentValue("colorMode") != "CT" ) sendEvent(name: "colorMode", value: "CT")
     logging("setColorTemperature('${t}') ADJUSTED to Mired", 10)
     getAction(getCommandString("CT", "${t}"))
 }
@@ -1051,11 +1106,11 @@ def setHSB(h, s, b, callWhite) {
     state.colorMode = "RGB"
     if (hsbcmd.startsWith("0,0,")) {
         //state.colorMode = "white"
-        //sendEvent(name: "colorMode", value: "CT")
+        //if(device.currentValue("colorMode") != "CT" ) sendEvent(name: "colorMode", value: "CT")
         return(white())
         //return(getAction(getCommandString("hsbcolor", hsbcmd)))
     } else {
-        if(colorMode != "RGB" ) sendEvent(name: "colorMode", value: "RGB")
+        if(device.currentValue("colorMode") != "RGB" ) sendEvent(name: "colorMode", value: "RGB")
         return(getAction(getCommandString("HsbColor", hsbcmd)))
     }
 }
@@ -1087,6 +1142,7 @@ def setRGB(r,g,b) {
     hsbColor = rgbToHSB(r, g, b)
     logging("hsbColor from RGB: ${hsbColor}", 1)
     state.colorMode = "RGB"
+    if(device.currentValue("colorMode") != "RGB" ) sendEvent(name: "colorMode", value: "RGB")
     //if (hsbcmd == "${hsbColor[0]},${hsbColor[1]},${hsbColor[2]}") state.colorMode = "white"
     state.hue = hsbColor['hue']
     state.saturation = hsbColor['saturation']
@@ -1132,6 +1188,7 @@ def whiteForPlatform() {
     state.red = l
     state.green = l
     state.blue = l
+    if(device.currentValue("colorMode") != "CT" ) sendEvent(name: "colorMode", value: "CT")
     return(getAction(getCommandString("Color1", hexCmd)))
 }
 

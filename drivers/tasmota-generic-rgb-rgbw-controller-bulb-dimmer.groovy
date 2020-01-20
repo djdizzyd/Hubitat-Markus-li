@@ -14,6 +14,7 @@ metadata {
         capability "Switch"
 		capability "ColorControl"
         capability "ColorTemperature"
+        capability "ColorMode"
         capability "SwitchLevel"
         #!include:getDefaultMetadataCapabilities()
         
@@ -38,6 +39,10 @@ metadata {
 #!include:getDeviceInfoFunction()
 
 #!include:getRGBWOnOffFunctions()
+
+def installedAdditional() {
+    sendEvent(name: "colorMode", value: "RGB")
+}
 
 /* These functions are unique to each driver */
 def parse(description) {
