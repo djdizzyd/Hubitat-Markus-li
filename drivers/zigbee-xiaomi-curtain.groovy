@@ -19,6 +19,7 @@ metadata {
         
         #!include:getDefaultMetadataAttributes()
         attribute "lastCheckin", "String"
+        attribute "battery2", "Number"
         attribute "batteryLastReplaced", "String"
         #!include:getDefaultMetadataCommands()
         command "stop"
@@ -83,24 +84,25 @@ def parse(description) {
     #!include:getGenericZigbeeParseHeader()
     
     if (msgMap["profileId"] == "0104") {
-        logging("Unhandled KNOWN event - description:${description}, parseMap:${msgMap}", 1)
+        logging("Unhandled KNOWN event - description:${description} | parseMap:${msgMap}", 1)
         logging("RAW: ${msgMap["attrId"]}", 1)
         // catchall: 0104 000A 01 01 0040 00 63A1 00 00 0000 00 00 0000, parseMap:[raw:catchall: 0104 000A 01 01 0040 00 63A1 00 00 0000 00 00 0000, profileId:0104, clusterId:000A, clusterInt:10, sourceEndpoint:01, destinationEndpoint:01, options:0040, messageType:00, dni:63A1, isClusterSpecific:false, isManufacturerSpecific:false, manufacturerId:0000, command:00, direction:00, data:[00, 00]]
     } else if (msgMap["cluster"] == "0000" && msgMap["attrId"] == "0404") {
-        logging("Unhandled KNOWN event - description:${description}, parseMap:${msgMap}", 1)
+        logging("Unhandled KNOWN event - description:${description} | parseMap:${msgMap}", 1)
         //read attr - raw: 63A10100000804042000, dni: 63A1, endpoint: 01, cluster: 0000, size: 08, attrId: 0404, encoding: 20, command: 0A, value: 00, parseMap:[raw:63A10100000804042000, dni:63A1, endpoint:01, cluster:0000, size:08, attrId:0404, encoding:20, command:0A, value:00, clusterInt:0, attrInt:1028]
     } else if (msgMap["cluster"] == "0000" && msgMap["attrId"] == "0005") {
-        logging("Unhandled KNOWN event (pressed button) - description:${description}, parseMap:${msgMap}", 1)
+        logging("Unhandled KNOWN event (pressed button) - description:${description} | parseMap:${msgMap}", 1)
         // read attr - raw: 63A1010000200500420C6C756D692E6375727461696E, dni: 63A1, endpoint: 01, cluster: 0000, size: 20, attrId: 0005, encoding: 42, command: 0A, value: 0C6C756D692E6375727461696E, parseMap:[raw:63A1010000200500420C6C756D692E6375727461696E, dni:63A1, endpoint:01, cluster:0000, size:20, attrId:0005, encoding:42, command:0A, value:lumi.curtain, clusterInt:0, attrInt:5]
     } else if (msgMap["cluster"] == "0000" && msgMap["attrId"] == "0007") {
-        logging("Unhandled KNOWN event (BASIC_ATTR_POWER_SOURCE) - description:${description}, parseMap:${msgMap}", 1)
+        logging("Unhandled KNOWN event (BASIC_ATTR_POWER_SOURCE) - description:${description} | parseMap:${msgMap}", 1)
         // Answer to zigbee.readAttribute(CLUSTER_BASIC, BASIC_ATTR_POWER_SOURCE)
         //read attr - raw: 63A10100000A07003001, dni: 63A1, endpoint: 01, cluster: 0000, size: 0A, attrId: 0007, encoding: 30, command: 01, value: 01, parseMap:[raw:63A10100000A07003001, dni:63A1, endpoint:01, cluster:0000, size:0A, attrId:0007, encoding:30, command:01, value:01, clusterInt:0, attrInt:7]
     } else if (msgMap["cluster"] == "0000" && (msgMap["attrId"] == "FF01" || msgMap["attrId"] == "FF02")) {
         // This is probably the battery event, like in other Xiaomi devices... it can also be FF02
-        logging("KNOWN event (probably battery, not parsed) - description:${description}, parseMap:${msgMap}", 1)
-        // TODO: Parse this
-        //events << createEvent(parseBattery(msgMap["value"].toString()))
+        logging("KNOWN event (probably battery) - description:${description} | parseMap:${msgMap}", 1)
+        // TODO: Test this, I don't have the battery version...
+        // 1C (file separator??) is missing in the beginning of the value after doing this encoding...
+        events << createEvent(parseBattery(msgMap["value"].getBytes().encodeHex().toString().toUpperCase()))
         //read attr - raw: 63A10100004001FF421C03281E05210F00642000082120110727000000000000000009210002, dni: 63A1, endpoint: 01, cluster: 0000, size: 40, attrId: FF01, encoding: 42, command: 0A, value: 1C03281E05210F00642000082120110727000000000000000009210002, parseMap:[raw:63A10100004001FF421C03281E05210F00642000082120110727000000000000000009210002, dni:63A1, endpoint:01, cluster:0000, size:40, attrId:FF01, encoding:42, command:0A, value:(!d ! '	!, clusterInt:0, attrInt:65281]
     } else if (msgMap["cluster"] == "000D" && msgMap["attrId"] == "0055") {
         logging("cluster 000D", 1)
@@ -123,7 +125,7 @@ def parse(description) {
 	} else if (msgMap["clusterId"] == "000A") {
 		logging("Xiaomi Curtain Present Event", 1)
 	} else {
-		log.warn "Unhandled Event - description:${description}, parseMap:${msgMap}"
+		log.warn "Unhandled Event - description:${description} | parseMap:${msgMap}"
 	}
     logging("-----------------------", 1)
     #!include:getGenericZigbeeParseFooter()
@@ -155,7 +157,9 @@ def positionEvent(curtainPosition) {
 private parseBattery(hexString) {
     // All credits go to veeceeoh for this battery parsing method!
     logging("Battery full string = ${hexString}", 1)
-	def hexBattery = (hexString[8..9] + hexString[6..7])
+    // Moved this one byte to the left due to how the built-in parser work, needs testing!
+	//def hexBattery = (hexString[8..9] + hexString[6..7])
+    def hexBattery = (hexString[6..7] + hexString[4..5])
     logging("Battery parsed string = ${hexBattery}", 1)
 	def rawValue = Integer.parseInt(hexBattery,16)
 	def rawVolts = rawValue / 1000
@@ -163,10 +167,10 @@ private parseBattery(hexString) {
 	def maxVolts = voltsmax ? voltsmax : 3.05
 	def pct = (rawVolts - minVolts) / (maxVolts - minVolts)
 	def roundedPct = Math.min(100, Math.round(pct * 100))
-	displayDebugLog("Battery report: $rawVolts Volts, calculating level based on min/max range of $minVolts to $maxVolts")
+	logging("Battery report: $rawVolts Volts ($roundedPct%), calculating level based on min/max range of $minVolts to $maxVolts", 1)
 	def descText = "Battery level is $roundedPct% ($rawVolts Volts)"
 	return [
-		name: 'battery',
+		name: 'battery2',
 		value: roundedPct,
 		unit: "%",
 		descriptionText: descText
