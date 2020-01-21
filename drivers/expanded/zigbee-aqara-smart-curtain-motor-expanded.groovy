@@ -53,6 +53,9 @@ metadata {
         // Default Commands
         command "reboot"
         command "stop"
+        command "altStop"
+        command "altClose"
+        command "altOpen"
         command "clearPosition"
 
         // Fingerprint for Aqara Smart Curtain Motor (ZNCLDJ11LM)
@@ -270,6 +273,20 @@ def open() {
 	setPosition(100)    
 }
 
+def altOpen() {
+    logging("altOpen()", 1)
+	def cmd = []
+	cmd += zigbee.command(CLUSTER_WINDOW_COVERING, COMMAND_OPEN)
+    return cmd  
+}
+
+def altClose() {
+    logging("altClose()", 1)
+	def cmd = []
+	cmd += zigbee.command(CLUSTER_WINDOW_COVERING, COMMAND_CLOSE)
+    return cmd  
+}
+
 def on() {
     logging("on()", 1)
 	open()
@@ -290,10 +307,18 @@ def stop() {
     return cmd
 }
 
+def altStop() {
+    logging("altStop()", 1)
+    def cmd = []
+	cmd += zigbee.command(CLUSTER_ON_OFF, COMMAND_PAUSE)
+    return cmd
+}
+
 def clearPosition() {
     logging("clearPosition()", 1)
     def cmd = []
 	cmd += zigbee.writeAttribute(CLUSTER_BASIC, 0xFF27, 0x10, 0x00)
+    logging("cmd=${cmd}", 1)
     return cmd
 }
 
@@ -314,7 +339,9 @@ def setPosition(position) {
             logging("Command: Open", 1)
         }
         logging("cluster: ${CLUSTER_ON_OFF}, command: ${COMMAND_OPEN}", 1)
-        return zigbee.command(CLUSTER_ON_OFF, COMMAND_CLOSE)
+        cmd = zigbee.command(CLUSTER_ON_OFF, COMMAND_CLOSE)
+        logging("cmd=${cmd}", 1)
+        return cmd
     } else if (onlySetPosition == false && position < 1) {
         if(mode == true){
             logging("Command: Open", 1)
@@ -322,7 +349,10 @@ def setPosition(position) {
             logging("Command: Close", 1)
         }
         logging("cluster: ${CLUSTER_ON_OFF}, command: ${COMMAND_CLOSE}", 1)
-        return zigbee.command(CLUSTER_ON_OFF, COMMAND_OPEN)
+
+        cmd = zigbee.command(CLUSTER_ON_OFF, COMMAND_OPEN)
+        logging("cmd=${cmd}", 1)
+        return cmd
     } else {
         if(mode == true){
             position = (100 - position) as int
