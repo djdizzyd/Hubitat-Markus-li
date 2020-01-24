@@ -17,6 +17,7 @@ def setColorTemperature(value) {
     state.hue = 0
     state.saturation = 0
     state.colorMode = "CT"
+    if(device.currentValue("colorMode") != "CT" ) sendEvent(name: "colorMode", value: "CT")
     logging("setColorTemperature('${t}') ADJUSTED to Mired", 10)
     getAction(getCommandString("CT", "${t}"))
 }
@@ -56,11 +57,11 @@ def setHSB(h, s, b, callWhite) {
     state.colorMode = "RGB"
     if (hsbcmd.startsWith("0,0,")) {
         //state.colorMode = "white"
-        //sendEvent(name: "colorMode", value: "CT")
+        //if(device.currentValue("colorMode") != "CT" ) sendEvent(name: "colorMode", value: "CT")
         return(white())
         //return(getAction(getCommandString("hsbcolor", hsbcmd)))
     } else {
-        if(colorMode != "RGB" ) sendEvent(name: "colorMode", value: "RGB")
+        if(device.currentValue("colorMode") != "RGB" ) sendEvent(name: "colorMode", value: "RGB")
         return(getAction(getCommandString("HsbColor", hsbcmd)))
     }
 }
@@ -92,6 +93,7 @@ def setRGB(r,g,b) {
     hsbColor = rgbToHSB(r, g, b)
     logging("hsbColor from RGB: ${hsbColor}", 1)
     state.colorMode = "RGB"
+    if(device.currentValue("colorMode") != "RGB" ) sendEvent(name: "colorMode", value: "RGB")
     //if (hsbcmd == "${hsbColor[0]},${hsbColor[1]},${hsbColor[2]}") state.colorMode = "white"
     state.hue = hsbColor['hue']
     state.saturation = hsbColor['saturation']
@@ -137,6 +139,7 @@ def whiteForPlatform() {
     state.red = l
     state.green = l
     state.blue = l
+    if(device.currentValue("colorMode") != "CT" ) sendEvent(name: "colorMode", value: "CT")
     return(getAction(getCommandString("Color1", hexCmd)))
 }
 

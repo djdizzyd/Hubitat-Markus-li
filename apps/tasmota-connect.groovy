@@ -381,9 +381,9 @@ def addDevices() {
 
 def uninstalled() {
     unsubscribe()
-    getChildDevices().each {
-        deleteChildDevice(it.deviceNetworkId)
-    }
+    //getChildDevices().each {
+    //    deleteChildDevice(it.deviceNetworkId)
+    //}
 }
 
 

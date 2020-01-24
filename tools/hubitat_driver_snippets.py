@@ -11,7 +11,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-driverVersion = "v0.9.3 for Tasmota 7.x/8.x (Hubitat version)"
+driverVersion = "v0.9.5T"
 
 from hubitat_codebuilder import HubitatCodeBuilderError
 
@@ -40,6 +40,7 @@ def getDefaultImports():
     return """/* Default imports */
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
+import java.security.MessageDigest
 """
 
 def getDefaultMetadataCapabilities():
@@ -75,7 +76,8 @@ attribute   "ip", "string"
 attribute   "ipLink", "string"
 attribute   "module", "string"
 attribute   "templateData", "string"
-attribute   "driverVersion", "string"
+attribute   "driver", "string"
+attribute   "wifiSignal", "string"
 """
 
 def getDefaultMetadataAttributesForEnergyMonitor():
@@ -439,12 +441,13 @@ def getDefaultFunctions(comment="", driverVersionSpecial=None):
         driverVersionActual = driverVersion
     return '''/* Default functions go here */
 private def getDriverVersion() {
-    logging("getDriverVersion()", 50)
-	def cmds = []
     comment = "''' + comment + '''"
     if(comment != "") state.comment = comment
-    sendEvent(name: "driverVersion", value: "''' + driverVersionActual + '''")
-    return cmds
+    version = "''' + driverVersionActual + '''"
+    logging("getDriverVersion() = ${version}", 50)
+    sendEvent(name: "driver", value: version)
+    updateDataValue('driver', version)
+    return version
 }
 '''
 
@@ -454,12 +457,18 @@ def getLoggingFunction(specialDebugLevel=False):
         extraDebug = """
         case "100": // Only special debug messages, eg IR and RF codes
             if (level == 100 )
-                log.debug "$message"
+                log.info "$message"
         break
         """
 
     return """/* Logging function included in all drivers */
 private def logging(message, level) {
+    if (infoLogging == true) {
+        logLevel = 100
+    }
+    if (debugLogging == true) {
+        logLevel = 1
+    }
     if (logLevel != "0"){
         switch (logLevel) {
         case "-1": // Insanely verbose

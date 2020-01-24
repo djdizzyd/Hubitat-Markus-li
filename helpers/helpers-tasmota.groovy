@@ -3,6 +3,8 @@ def refresh() {
 	logging("refresh()", 10)
     def cmds = []
     cmds << getAction(getCommandString("Status", "0"))
+    getDriverVersion()
+    updateDataValue('namespace', getDeviceInfoByName('namespace'))
     try {
         // In case we have some more to run specific to this driver
         refreshAdditional()
@@ -97,17 +99,39 @@ private getAction(uri){
     return httpGetAction(uri)
 }
 
+def parse(asyncResponse, data) {
+    // This method could be removed, but is nice for debugging...
+    if(asyncResponse != null) {
+        try{
+            logging("parse(asyncResponse.getJson() = \"${asyncResponse.getJson()}\", data = \"${data}\")", 1)
+        } catch(e1) {
+            try{
+                logging("parse(asyncResponse.data = \"${asyncResponse.data}\", data = \"${data}\")", 1)
+            } catch(e2) {
+                logging("parse(asyncResponse.data = null, data = \"${data}\")", 1)
+            }
+        }
+    } else {
+        logging("parse(asyncResponse.data = null, data = \"${data}\")", 1)
+    }
+}
+
 private httpGetAction(uri){ 
   updateDNI()
   
   def headers = getHeader()
-  //logging("Using httpGetAction for '${uri}'...", 0)
+  logging("Using httpGetAction for 'http://${getHostAddress()}$uri'...", 0)
   def hubAction = null
   try {
-    hubAction = new hubitat.device.HubAction(
+    /*hubAction = new hubitat.device.HubAction(
         method: "GET",
         path: uri,
         headers: headers
+    )*/
+    hubAction = asynchttpGet(
+        "parse",
+        [uri: "http://${getHostAddress()}$uri",
+        headers: headers]
     )
   } catch (e) {
     log.error "Error in httpGetAction(uri): $e ('$uri')"

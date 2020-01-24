@@ -233,8 +233,6 @@ def main():
         {'id': 676, 'file': 'tasmota-rf-ir-smoke-detector-child.groovy', 
          'specialDebugLabel': 'Code Learning'},
 
-
-
         # Special sensor drivers:
         {'id': 651, 'file': 'tasmota-sensor-distance.groovy' , 
          'comment': 'UNTESTED driver',
@@ -289,22 +287,29 @@ def main():
     # As long as we have an id, we can just supply that here instead of the whole config...
     # 651 left over from RF Link Child
     driver_files_testing = [
-    #    {'id': 801, 'file': 'zigbee-xiaomi-curtain.groovy' },
+    #    {'id': 801, 'file': 'zigbee-aqara-smart-curtain-motor.groovy' },
     #     {'id':738},  # Wifi Curtain Wall Panel
     #    {'id':590},
     #    {'id':651},    # Sensor - Distance
     #    {'id':649}, {'id':673}, {'id':674}, {'id':675}, {'id':676}, # RF/IR Children
     #    {'id':591},
+        {'id':548},  # TuyaMCU Touch Switches
+        # These three following rows represent most of the drivers personally used by markus-li
+    #    {'id':548},{'id':549},{'id':513},{'id':592},{'id':418},{'id':554},{'id':590},{'id':557},
+    #    {'id':649},{'id':673},{'id':674},{'id':675},{'id':676},{'id':641},{'id':642},{'id':591},
+    #    {'id':578},{'id':738},{'id':553},{'id':648},{'id':650},{'id':651},{'id':551},{'id':588},
     #   {'id':641},{'id':642},
     #   {'id':650},{'id':651},  # RFLink
-    #    {'id':648},  # Sonoff RF Bridgle
+    #    {'id':648},  # Sonoff RF Bridge
     #    {'id':557},  # YKYC
+    #    {'id':589}, {'id':591},
     #     {'id':551},{'id':578}, {'id':362}, {'id':645}, {'id':590}, {'id':588}, 
     #    {'id': 0, 'file': 'tasmota-generic-thp-device.groovy' , \
     #     'alternate_output_filename': 'tasmota-sonoff-th', \
     #     'alternate_name': 'WRONG Tasmota - Sonoff TH', \
     #     'alternate_module': '4'},
     ]
+    
     # 
     #expected_num_drivers = 1
 
@@ -468,6 +473,7 @@ def main():
     app_files = [
         {'id': 97, 'file': 'tasmota-connect.groovy' },
         {'id': 163, 'file': 'tasmota-connect-test.groovy' },
+        {'id': 289, 'file': 'tasmota-device-handler.groovy' },
     ]
 
     cb.setUsedDriverList(used_driver_list)

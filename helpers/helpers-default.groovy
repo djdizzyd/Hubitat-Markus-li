@@ -3,10 +3,10 @@ def isDriver() {
     try {
         // If this fails, this is not a driver...
         getDeviceDataByName('_unimportant')
-        logging("This IS a driver!", 1)
+        logging("This IS a driver!", 0)
         return true
     } catch (MissingMethodException e) {
-        logging("This is NOT a driver!", 1)
+        logging("This is NOT a driver!", 0)
         return false
     }
 }
@@ -82,6 +82,22 @@ def configure() {
     if (cmds != []) cmds
 }
 
+def makeTextBold(s) {
+    if(isDriver()) {
+        return "<b>$s</b>"
+    } else {
+        return "$s"
+    }
+}
+
+def makeTextItalic(s) {
+    if(isDriver()) {
+        return "<i>$s</i>"
+    } else {
+        return "$s"
+    }
+}
+
 def generate_preferences(configuration_model)
 {
     def configuration = new XmlSlurper().parseText(configuration_model)
@@ -91,44 +107,49 @@ def generate_preferences(configuration_model)
         if(it.@hidden != "true" && it.@disabled != "true"){
         switch(it.@type)
         {   
-            case ["number"]:
-                input "${it.@index}", "number",
-                    title:"<b>${it.@label}</b>\n" + "${it.Help}",
-                    description: "<i>${it.@description}</i>",
+            case "number":
+                input("${it.@index}", "number",
+                    title:"${makeTextBold(it.@label)}\n" + "${it.Help}",
+                    description: makeTextItalic(it.@description),
                     range: "${it.@min}..${it.@max}",
                     defaultValue: "${it.@value}",
-                    displayDuringSetup: "${it.@displayDuringSetup}"
+                    submitOnChange: it.@submitOnChange == "true",
+                    displayDuringSetup: "${it.@displayDuringSetup}")
             break
             case "list":
                 def items = []
                 it.Item.each { items << ["${it.@value}":"${it.@label}"] }
-                input "${it.@index}", "enum",
-                    title:"<b>${it.@label}</b>\n" + "${it.Help}",
-                    description: "<i>${it.@description}</i>",
+                input("${it.@index}", "enum",
+                    title:"${makeTextBold(it.@label)}\n" + "${it.Help}",
+                    description: makeTextItalic(it.@description),
                     defaultValue: "${it.@value}",
+                    submitOnChange: it.@submitOnChange == "true",
                     displayDuringSetup: "${it.@displayDuringSetup}",
-                    options: items
+                    options: items)
             break
-            case ["password"]:
-                input "${it.@index}", "password",
-                    title:"<b>${it.@label}</b>\n" + "${it.Help}",
-                    description: "<i>${it.@description}</i>",
-                    displayDuringSetup: "${it.@displayDuringSetup}"
+            case "password":
+                input("${it.@index}", "password",
+                    title:"${makeTextBold(it.@label)}\n" + "${it.Help}",
+                    description: makeTextItalic(it.@description),
+                    submitOnChange: it.@submitOnChange == "true",
+                    displayDuringSetup: "${it.@displayDuringSetup}")
             break
             case "decimal":
-               input "${it.@index}", "decimal",
-                    title:"<b>${it.@label}</b>\n" + "${it.Help}",
-                    description: "<i>${it.@description}</i>",
+               input("${it.@index}", "decimal",
+                    title:"${makeTextBold(it.@label)}\n" + "${it.Help}",
+                    description: makeTextItalic(it.@description),
                     range: "${it.@min}..${it.@max}",
                     defaultValue: "${it.@value}",
-                    displayDuringSetup: "${it.@displayDuringSetup}"
+                    submitOnChange: it.@submitOnChange == "true",
+                    displayDuringSetup: "${it.@displayDuringSetup}")
             break
-            case "boolean":
-               input "${it.@index}", "boolean",
-                    title:"<b>${it.@label}</b>\n" + "${it.Help}",
-                    description: "<i>${it.@description}</i>",
+            case "bool":
+               input("${it.@index}", "bool",
+                    title:"${makeTextBold(it.@label)}\n" + "${it.Help}",
+                    description: makeTextItalic(it.@description),
                     defaultValue: "${it.@value}",
-                    displayDuringSetup: "${it.@displayDuringSetup}"
+                    submitOnChange: it.@submitOnChange == "true",
+                    displayDuringSetup: "${it.@displayDuringSetup}")
             break
         }
         }
@@ -154,6 +175,24 @@ def update_current_properties(cmd)
     state.currentProperties = currentProperties
 }
 
+def dBmToQuality(dBm) {
+    def quality = 0
+    if(dBm > 0) dBm = dBm * -1
+    if(dBm <= -100) {
+        quality = 0
+    } else if(dBm >= -50) {
+        quality = 100
+    } else {
+        quality = 2 * (dBm + 100)
+    }
+    logging("DBM: $dBm (${quality}%)", 0)
+    return quality
+}
+
+def extractInt( String input ) {
+  return input.replaceAll("[^0-9]", "").toInteger()
+}
+
 /*
 	logsOff
 
@@ -172,11 +211,18 @@ void logsOff(){
             device.removeSetting("logLevel")
             device.updateSetting("logLevel", "0")
             state.settings.remove("logLevel")
+            device.clearSetting("debugLogging")
+            device.removeSetting("debugLogging")
+            device.updateSetting("debugLogging", "false")
+            state.settings.remove("debugLogging")
+            
         } else {
             //app.clearSetting("logLevel")
             // To be able to update the setting, it has to be removed first, clear does NOT work, at least for Apps
             app.removeSetting("logLevel")
             app.updateSetting("logLevel", "0")
+            app.removeSetting("debugLogging")
+            app.updateSetting("debugLogging", "false")
         }
     } else {
         log.warn "OVERRIDE: Disabling Debug logging will not execute with 'DEBUG' set..."
@@ -197,11 +243,50 @@ private def getFilteredDeviceDisplayName() {
     return device_display_name
 }
 
+def generateMD5(String s){
+    MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
+}
+
+def isDeveloperHub() {
+    return generateMD5(location.hub.zigbeeId) == "125fceabd0413141e34bb859cd15e067"
+    //return false
+}
+
+def getEnvironmentObject() {
+    if(isDriver()) {
+        return device
+    } else {
+        return app
+    }
+}
+
 def configuration_model_debug()
 {
-'''
+    if(!isDeveloperHub()) {
+        if(!isDriver()) {
+            app.removeSetting("logLevel")
+            app.updateSetting("logLevel", "0")
+        }
+        return '''
 <configuration>
-<Value type="list" index="logLevel" label="Debug Log Level" description="Under normal operations, set this to None. Only needed for debugging. Auto-disabled after 30 minutes." value="-1" setting_type="preference" fw="">
+<Value type="bool" index="debugLogging" label="Enable debug logging" description="" value="true" submitOnChange="true" setting_type="preference" fw="">
+<Help></Help>
+</Value>
+<Value type="bool" index="infoLogging" label="Enable descriptionText logging" description="" value="true" submitOnChange="true" setting_type="preference" fw="">
+<Help></Help>
+</Value>
+</configuration>
+'''
+    } else {
+        if(!isDriver()) {
+            app.removeSetting("debugLogging")
+            app.updateSetting("debugLogging", "false")
+            app.removeSetting("infoLogging")
+            app.updateSetting("infoLogging", "false")
+        }
+        return '''
+<configuration>
+<Value type="list" index="logLevel" label="Debug Log Level" description="Under normal operations, set this to None. Only needed for debugging. Auto-disabled after 30 minutes." value="-1" submitOnChange="true" setting_type="preference" fw="">
 <Help>
 </Help>
     <Item label="None" value="0" />
@@ -214,4 +299,5 @@ def configuration_model_debug()
 </Value>
 </configuration>
 '''
+    }
 }

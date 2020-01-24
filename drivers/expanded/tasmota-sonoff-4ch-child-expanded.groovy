@@ -17,6 +17,7 @@
 /* Default imports */
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
+import java.security.MessageDigest
 
 
 metadata {
@@ -27,10 +28,11 @@ metadata {
     }
 }
 
-def getDeviceInfoByName(infoName) { 
+public getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
     deviceInfo = ['name': 'Tasmota - Sonoff 4CH (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-sonoff-4ch-child-expanded.groovy']
+    //logging("deviceInfo[${infoName}] = ${deviceInfo[infoName]}", 1)
     return(deviceInfo[infoName])
 }
 
@@ -47,17 +49,24 @@ void off() {
 
 /* Default functions go here */
 private def getDriverVersion() {
-    logging("getDriverVersion()", 50)
-	def cmds = []
     comment = ""
     if(comment != "") state.comment = comment
-    sendEvent(name: "driverVersion", value: "v0.9.3 for Tasmota 7.x/8.x (Hubitat version)")
-    return cmds
+    version = "v0.9.5T"
+    logging("getDriverVersion() = ${version}", 50)
+    sendEvent(name: "driver", value: version)
+    updateDataValue('driver', version)
+    return version
 }
 
 
 /* Logging function included in all drivers */
 private def logging(message, level) {
+    if (infoLogging == true) {
+        logLevel = 100
+    }
+    if (debugLogging == true) {
+        logLevel = 1
+    }
     if (logLevel != "0"){
         switch (logLevel) {
         case "-1": // Insanely verbose

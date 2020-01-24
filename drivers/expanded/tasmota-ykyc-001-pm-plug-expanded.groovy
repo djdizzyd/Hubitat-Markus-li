@@ -17,6 +17,7 @@
 /* Default imports */
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
+import java.security.MessageDigest
 
 
 metadata {
@@ -55,7 +56,8 @@ metadata {
         attribute   "ipLink", "string"
         attribute   "module", "string"
         attribute   "templateData", "string"
-        attribute   "driverVersion", "string"
+        attribute   "driver", "string"
+        attribute   "wifiSignal", "string"
         
         // Default Commands
         command "reboot"
@@ -83,10 +85,11 @@ metadata {
 	}
 }
 
-def getDeviceInfoByName(infoName) { 
+public getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
     deviceInfo = ['name': 'Tasmota - YKYC-001 Power Monitor Plug', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-ykyc-001-pm-plug-expanded.groovy']
+    //logging("deviceInfo[${infoName}] = ${deviceInfo[infoName]}", 1)
     return(deviceInfo[infoName])
 }
 
@@ -136,14 +139,30 @@ def parse(description) {
             
             
             // Standard Basic Data parsing
-            if (result.containsKey("POWER")) {
-                logging("POWER: $result.POWER",99)
-                events << createEvent(name: "switch", value: result.POWER.toLowerCase())
-            }
+            
             if (result.containsKey("StatusNET")) {
                 logging("StatusNET: $result.StatusNET",99)
                 result << result.StatusNET
-                //logging("result: ${result}",0)
+            }
+            if (result.containsKey("StatusFWR")) {
+                logging("StatusFWR: $result.StatusFWR",99)
+                result << result.StatusFWR
+            }
+            if (result.containsKey("StatusPRM")) {
+                logging("StatusPRM: $result.StatusPRM",99)
+                result << result.StatusPRM
+            }
+            if (result.containsKey("Status")) {
+                logging("Status: $result.Status",99)
+                result << result.Status
+            }
+            if (result.containsKey("StatusSTS")) {
+                logging("StatusSTS: $result.StatusSTS",99)
+                result << result.StatusSTS
+            }
+            if (result.containsKey("POWER")) {
+                logging("POWER: $result.POWER",99)
+                events << createEvent(name: "switch", value: result.POWER.toLowerCase())
             }
             if (result.containsKey("LoadAvg")) {
                 logging("LoadAvg: $result.LoadAvg",99)
@@ -171,6 +190,7 @@ def parse(description) {
             }
             if (result.containsKey("Version")) {
                 logging("Version: $result.Version",99)
+                updateDataValue("firmware", result.Version)
             }
             if (result.containsKey("Module") && !result.containsKey("Version")) {
                 // The check for Version is here to avoid using the wrong message
@@ -205,7 +225,9 @@ def parse(description) {
                 logging("Uptime: $result.Uptime",99)
                 // Even with "displayed: false, archivable: false" these events still show up under events... There is no way of NOT having it that way...
                 //events << createEvent(name: 'uptime', value: result.Uptime, displayed: false, archivable: false)
+            
                 state.uptime = result.Uptime
+                updateDataValue('uptime', result.Uptime)
             }
             
             // Standard Wifi Data parsing
@@ -221,6 +243,8 @@ def parse(description) {
                 }
                 if (result.Wifi.containsKey("RSSI")) {
                     logging("RSSI: $result.Wifi.RSSI",99)
+                    quality = "${dBmToQuality(result.Wifi.RSSI)}%"
+                    if(device.currentValue('wifiSignal') != quality) events << createEvent(name: "wifiSignal", value: quality)
                 }
                 if (result.Wifi.containsKey("SSId")) {
                     logging("SSId: $result.Wifi.SSId",99)
@@ -236,7 +260,7 @@ def parse(description) {
                 //if (!state.containsKey('energy')) state.energy = {}
                 if (result.ENERGY.containsKey("Total")) {
                     logging("Total: $result.ENERGY.Total kWh",99)
-                    events << createEvent(name: "energyTotal", value: "$result.ENERGY.Total kWh")  
+                    events << createEvent(name: "energyTotal", value: "$result.ENERGY.Total kWh")
                 }
                 if (result.ENERGY.containsKey("Today")) {
                     logging("Today: $result.ENERGY.Today kWh",99)
@@ -415,17 +439,24 @@ def update_needed_settings()
 
 /* Default functions go here */
 private def getDriverVersion() {
-    logging("getDriverVersion()", 50)
-	def cmds = []
     comment = ""
     if(comment != "") state.comment = comment
-    sendEvent(name: "driverVersion", value: "v0.9.3 for Tasmota 7.x/8.x (Hubitat version)")
-    return cmds
+    version = "v0.9.5T"
+    logging("getDriverVersion() = ${version}", 50)
+    sendEvent(name: "driver", value: version)
+    updateDataValue('driver', version)
+    return version
 }
 
 
 /* Logging function included in all drivers */
 private def logging(message, level) {
+    if (infoLogging == true) {
+        logLevel = 100
+    }
+    if (debugLogging == true) {
+        logLevel = 1
+    }
     if (logLevel != "0"){
         switch (logLevel) {
         case "-1": // Insanely verbose
@@ -453,10 +484,39 @@ private def logging(message, level) {
 }
 
 
-/* Helper functions included in all drivers */
+/* Helper functions included in all drivers/apps */
+def isDriver() {
+    try {
+        // If this fails, this is not a driver...
+        getDeviceDataByName('_unimportant')
+        logging("This IS a driver!", 0)
+        return true
+    } catch (MissingMethodException e) {
+        logging("This is NOT a driver!", 0)
+        return false
+    }
+}
+
+def deviceCommand(cmd) {
+    def jsonSlurper = new JsonSlurper()
+    cmd = jsonSlurper.parseText(cmd)
+    logging("deviceCommand: ${cmd}", 0)
+    r = this."${cmd['cmd']}"(*cmd['args'])
+    logging("deviceCommand return: ${r}", 0)
+    updateDataValue('appReturn', JsonOutput.toJson(r))
+}
+
+// Since refresh, with any number of arguments, is accepted as we always have it declared anyway, 
+// we use it as a wrapper
+// All our "normal" refresh functions take 0 arguments, we can declare one with 1 here...
+def refresh(cmd) {
+    deviceCommand(cmd)
+}
+
 def installed() {
 	logging("installed()", 50)
-	configure()
+    
+	if(isDriver()) configure()
     try {
         // In case we have some more to run specific to this driver
         installedAdditional()
@@ -468,8 +528,8 @@ def installed() {
 /*
 	initialize
 
-	Purpose: initialize the driver
-	Note: also called from updated() in most drivers
+	Purpose: initialize the driver/app
+	Note: also called from updated() in most drivers/apps
 */
 void initialize()
 {
@@ -484,20 +544,44 @@ void initialize()
         }
         runIn(1800, logsOff)
     }
+    try {
+        // In case we have some more to run specific to this driver/app
+        initializeAdditional()
+    } catch (MissingMethodException e) {
+        // ignore
+    }
 }
 
 def configure() {
     logging("configure()", 50)
     def cmds = []
-    cmds = update_needed_settings()
-    try {
-        // Run the getDriverVersion() command
-        newCmds = getDriverVersion()
-        if (newCmds != null && newCmds != []) cmds = cmds + newCmds
-    } catch (MissingMethodException e) {
-        // ignore
+    if(isDriver()) {
+        cmds = update_needed_settings()
+        try {
+            // Run the getDriverVersion() command
+            newCmds = getDriverVersion()
+            if (newCmds != null && newCmds != []) cmds = cmds + newCmds
+        } catch (MissingMethodException e) {
+            // ignore
+        }
     }
     if (cmds != []) cmds
+}
+
+def makeTextBold(s) {
+    if(isDriver()) {
+        return "<b>$s</b>"
+    } else {
+        return "$s"
+    }
+}
+
+def makeTextItalic(s) {
+    if(isDriver()) {
+        return "<i>$s</i>"
+    } else {
+        return "$s"
+    }
 }
 
 def generate_preferences(configuration_model)
@@ -509,44 +593,49 @@ def generate_preferences(configuration_model)
         if(it.@hidden != "true" && it.@disabled != "true"){
         switch(it.@type)
         {   
-            case ["number"]:
-                input "${it.@index}", "number",
-                    title:"<b>${it.@label}</b>\n" + "${it.Help}",
-                    description: "<i>${it.@description}</i>",
+            case "number":
+                input("${it.@index}", "number",
+                    title:"${makeTextBold(it.@label)}\n" + "${it.Help}",
+                    description: makeTextItalic(it.@description),
                     range: "${it.@min}..${it.@max}",
                     defaultValue: "${it.@value}",
-                    displayDuringSetup: "${it.@displayDuringSetup}"
+                    submitOnChange: it.@submitOnChange == "true",
+                    displayDuringSetup: "${it.@displayDuringSetup}")
             break
             case "list":
                 def items = []
                 it.Item.each { items << ["${it.@value}":"${it.@label}"] }
-                input "${it.@index}", "enum",
-                    title:"<b>${it.@label}</b>\n" + "${it.Help}",
-                    description: "<i>${it.@description}</i>",
+                input("${it.@index}", "enum",
+                    title:"${makeTextBold(it.@label)}\n" + "${it.Help}",
+                    description: makeTextItalic(it.@description),
                     defaultValue: "${it.@value}",
+                    submitOnChange: it.@submitOnChange == "true",
                     displayDuringSetup: "${it.@displayDuringSetup}",
-                    options: items
+                    options: items)
             break
-            case ["password"]:
-                input "${it.@index}", "password",
-                    title:"<b>${it.@label}</b>\n" + "${it.Help}",
-                    description: "<i>${it.@description}</i>",
-                    displayDuringSetup: "${it.@displayDuringSetup}"
+            case "password":
+                input("${it.@index}", "password",
+                    title:"${makeTextBold(it.@label)}\n" + "${it.Help}",
+                    description: makeTextItalic(it.@description),
+                    submitOnChange: it.@submitOnChange == "true",
+                    displayDuringSetup: "${it.@displayDuringSetup}")
             break
             case "decimal":
-               input "${it.@index}", "decimal",
-                    title:"<b>${it.@label}</b>\n" + "${it.Help}",
-                    description: "<i>${it.@description}</i>",
+               input("${it.@index}", "decimal",
+                    title:"${makeTextBold(it.@label)}\n" + "${it.Help}",
+                    description: makeTextItalic(it.@description),
                     range: "${it.@min}..${it.@max}",
                     defaultValue: "${it.@value}",
-                    displayDuringSetup: "${it.@displayDuringSetup}"
+                    submitOnChange: it.@submitOnChange == "true",
+                    displayDuringSetup: "${it.@displayDuringSetup}")
             break
-            case "boolean":
-               input "${it.@index}", "boolean",
-                    title:"<b>${it.@label}</b>\n" + "${it.Help}",
-                    description: "<i>${it.@description}</i>",
+            case "bool":
+               input("${it.@index}", "bool",
+                    title:"${makeTextBold(it.@label)}\n" + "${it.Help}",
+                    description: makeTextItalic(it.@description),
                     defaultValue: "${it.@value}",
-                    displayDuringSetup: "${it.@displayDuringSetup}"
+                    submitOnChange: it.@submitOnChange == "true",
+                    displayDuringSetup: "${it.@displayDuringSetup}")
             break
         }
         }
@@ -572,6 +661,24 @@ def update_current_properties(cmd)
     state.currentProperties = currentProperties
 }
 
+def dBmToQuality(dBm) {
+    def quality = 0
+    if(dBm > 0) dBm = dBm * -1
+    if(dBm <= -100) {
+        quality = 0
+    } else if(dBm >= -50) {
+        quality = 100
+    } else {
+        quality = 2 * (dBm + 100)
+    }
+    logging("DBM: $dBm (${quality}%)", 0)
+    return quality
+}
+
+def extractInt( String input ) {
+  return input.replaceAll("[^0-9]", "").toInteger()
+}
+
 /*
 	logsOff
 
@@ -585,9 +692,24 @@ void logsOff(){
         //device.updateSetting("logLevel",[value:"0",type:"string"])
         //app.updateSetting("logLevel",[value:"0",type:"list"])
         // Not sure which ones are needed, so doing all... This works!
-        device.clearSetting("logLevel")
-        device.removeSetting("logLevel")
-        state.settings.remove("logLevel")
+        if(isDriver()) {
+            device.clearSetting("logLevel")
+            device.removeSetting("logLevel")
+            device.updateSetting("logLevel", "0")
+            state.settings.remove("logLevel")
+            device.clearSetting("debugLogging")
+            device.removeSetting("debugLogging")
+            device.updateSetting("debugLogging", "false")
+            state.settings.remove("debugLogging")
+            
+        } else {
+            //app.clearSetting("logLevel")
+            // To be able to update the setting, it has to be removed first, clear does NOT work, at least for Apps
+            app.removeSetting("logLevel")
+            app.updateSetting("logLevel", "0")
+            app.removeSetting("debugLogging")
+            app.updateSetting("debugLogging", "false")
+        }
     } else {
         log.warn "OVERRIDE: Disabling Debug logging will not execute with 'DEBUG' set..."
         if (logLevel != "0") runIn(1800, logsOff)
@@ -607,11 +729,50 @@ private def getFilteredDeviceDisplayName() {
     return device_display_name
 }
 
+def generateMD5(String s){
+    MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
+}
+
+def isDeveloperHub() {
+    return generateMD5(location.hub.zigbeeId) == "125fceabd0413141e34bb859cd15e067"
+    //return false
+}
+
+def getEnvironmentObject() {
+    if(isDriver()) {
+        return device
+    } else {
+        return app
+    }
+}
+
 def configuration_model_debug()
 {
-'''
+    if(!isDeveloperHub()) {
+        if(!isDriver()) {
+            app.removeSetting("logLevel")
+            app.updateSetting("logLevel", "0")
+        }
+        return '''
 <configuration>
-<Value type="list" index="logLevel" label="Debug Log Level" description="Under normal operations, set this to None. Only needed for debugging. Auto-disabled after 30 minutes." value="0" setting_type="preference" fw="">
+<Value type="bool" index="debugLogging" label="Enable debug logging" description="" value="true" submitOnChange="true" setting_type="preference" fw="">
+<Help></Help>
+</Value>
+<Value type="bool" index="infoLogging" label="Enable descriptionText logging" description="" value="true" submitOnChange="true" setting_type="preference" fw="">
+<Help></Help>
+</Value>
+</configuration>
+'''
+    } else {
+        if(!isDriver()) {
+            app.removeSetting("debugLogging")
+            app.updateSetting("debugLogging", "false")
+            app.removeSetting("infoLogging")
+            app.updateSetting("infoLogging", "false")
+        }
+        return '''
+<configuration>
+<Value type="list" index="logLevel" label="Debug Log Level" description="Under normal operations, set this to None. Only needed for debugging. Auto-disabled after 30 minutes." value="-1" submitOnChange="true" setting_type="preference" fw="">
 <Help>
 </Help>
     <Item label="None" value="0" />
@@ -623,6 +784,7 @@ def configuration_model_debug()
     </Value>
 </configuration>
 '''
+    }
 }
 
 /* Helper functions included in all Tasmota drivers */
@@ -630,6 +792,8 @@ def refresh() {
 	logging("refresh()", 10)
     def cmds = []
     cmds << getAction(getCommandString("Status", "0"))
+    getDriverVersion()
+    updateDataValue('namespace', getDeviceInfoByName('namespace'))
     try {
         // In case we have some more to run specific to this driver
         refreshAdditional()
@@ -648,13 +812,16 @@ def updated()
 {
     logging("updated()", 10)
     def cmds = [] 
-    cmds = update_needed_settings()
-    //sendEvent(name: "checkInterval", value: 2 * 15 * 60 + 2 * 60, displayed: false, data: [protocol: "lan", hubHardwareId: device.hub.hardwareID])
-    sendEvent(name:"needUpdate", value: device.currentValue("needUpdate"), displayed:false, isStateChange: false)
+    if(isDriver()) {
+        cmds = update_needed_settings()
+        //sendEvent(name: "checkInterval", value: 2 * 15 * 60 + 2 * 60, displayed: false, data: [protocol: "lan", hubHardwareId: device.hub.hardwareID])
+        sendEvent(name:"needUpdate", value: device.currentValue("needUpdate"), displayed:false, isStateChange: false)
+    }
     logging(cmds, 0)
     try {
         // Also run initialize(), if it exists...
         initialize()
+        updatedAdditional()
     } catch (MissingMethodException e) {
         // ignore
     }
@@ -721,17 +888,39 @@ private getAction(uri){
     return httpGetAction(uri)
 }
 
+def parse(asyncResponse, data) {
+    // This method could be removed, but is nice for debugging...
+    if(asyncResponse != null) {
+        try{
+            logging("parse(asyncResponse.getJson() = \"${asyncResponse.getJson()}\", data = \"${data}\")", 1)
+        } catch(e1) {
+            try{
+                logging("parse(asyncResponse.data = \"${asyncResponse.data}\", data = \"${data}\")", 1)
+            } catch(e2) {
+                logging("parse(asyncResponse.data = null, data = \"${data}\")", 1)
+            }
+        }
+    } else {
+        logging("parse(asyncResponse.data = null, data = \"${data}\")", 1)
+    }
+}
+
 private httpGetAction(uri){ 
   updateDNI()
   
   def headers = getHeader()
-  //logging("Using httpGetAction for '${uri}'...", 0)
+  logging("Using httpGetAction for 'http://${getHostAddress()}$uri'...", 0)
   def hubAction = null
   try {
-    hubAction = new hubitat.device.HubAction(
+    /*hubAction = new hubitat.device.HubAction(
         method: "GET",
         path: uri,
         headers: headers
+    )*/
+    hubAction = asynchttpGet(
+        "parse",
+        [uri: "http://${getHostAddress()}$uri",
+        headers: headers]
     )
   } catch (e) {
     log.error "Error in httpGetAction(uri): $e ('$uri')"

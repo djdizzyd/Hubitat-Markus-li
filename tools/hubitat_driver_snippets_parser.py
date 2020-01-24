@@ -62,14 +62,30 @@ return events
 def getTasmotaParserForBasicData():
     return """
 // Standard Basic Data parsing
-if (result.containsKey("POWER")) {
-    logging("POWER: $result.POWER",99)
-    events << createEvent(name: "switch", value: result.POWER.toLowerCase())
-}
+
 if (result.containsKey("StatusNET")) {
     logging("StatusNET: $result.StatusNET",99)
     result << result.StatusNET
-    //logging("result: ${result}",0)
+}
+if (result.containsKey("StatusFWR")) {
+    logging("StatusFWR: $result.StatusFWR",99)
+    result << result.StatusFWR
+}
+if (result.containsKey("StatusPRM")) {
+    logging("StatusPRM: $result.StatusPRM",99)
+    result << result.StatusPRM
+}
+if (result.containsKey("Status")) {
+    logging("Status: $result.Status",99)
+    result << result.Status
+}
+if (result.containsKey("StatusSTS")) {
+    logging("StatusSTS: $result.StatusSTS",99)
+    result << result.StatusSTS
+}
+if (result.containsKey("POWER")) {
+    logging("POWER: $result.POWER",99)
+    events << createEvent(name: "switch", value: result.POWER.toLowerCase())
 }
 if (result.containsKey("LoadAvg")) {
     logging("LoadAvg: $result.LoadAvg",99)
@@ -97,6 +113,7 @@ if (result.containsKey("WebServerMode")) {
 }
 if (result.containsKey("Version")) {
     logging("Version: $result.Version",99)
+    updateDataValue("firmware", result.Version)
 }
 if (result.containsKey("Module") && !result.containsKey("Version")) {
     // The check for Version is here to avoid using the wrong message
@@ -131,7 +148,9 @@ if (result.containsKey("Uptime")) {
     logging("Uptime: $result.Uptime",99)
     // Even with "displayed: false, archivable: false" these events still show up under events... There is no way of NOT having it that way...
     //events << createEvent(name: 'uptime', value: result.Uptime, displayed: false, archivable: false)
+
     state.uptime = result.Uptime
+    updateDataValue('uptime', result.Uptime)
 }
 """
 
@@ -150,6 +169,8 @@ if (result.containsKey("Wifi")) {
     }
     if (result.Wifi.containsKey("RSSI")) {
         logging("RSSI: $result.Wifi.RSSI",99)
+        quality = "${dBmToQuality(result.Wifi.RSSI)}%"
+        if(device.currentValue('wifiSignal') != quality) events << createEvent(name: "wifiSignal", value: quality)
     }
     if (result.Wifi.containsKey("SSId")) {
         logging("SSId: $result.Wifi.SSId",99)
@@ -208,7 +229,7 @@ if (result.containsKey("ENERGY")) {
     //if (!state.containsKey('energy')) state.energy = {}
     if (result.ENERGY.containsKey("Total")) {
         logging("Total: $result.ENERGY.Total kWh",99)
-        events << createEvent(name: "energyTotal", value: "$result.ENERGY.Total kWh")  
+        events << createEvent(name: "energyTotal", value: "$result.ENERGY.Total kWh")
     }
     if (result.ENERGY.containsKey("Today")) {
         logging("Today: $result.ENERGY.Today kWh",99)

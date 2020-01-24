@@ -27,6 +27,7 @@ metadata {
         command "altClose"
         command "altOpen"
         command "clearPosition"
+        command "reverseCurtain"
 
         // Fingerprint for Aqara Smart Curtain Motor (ZNCLDJ11LM)
 		fingerprint endpointId: "01", profileId: "0104", deviceId: "0202", inClusters: "0000, 0003, 0102, 000D, 0013, 0001", outClusters: "0003, 000A", manufacturer: "LUMI", model: "lumi.curtain.hagl04", deviceJoinName: "Xiaomi Curtain B1"
@@ -93,7 +94,7 @@ def parse(description) {
     #!include:getGenericZigbeeParseHeader()
     
     if (msgMap["profileId"] == "0104") {
-        logging("Unhandled KNOWN event - description:${description} | parseMap:${msgMap}", 1)
+        logging("Unhandled KNOWN 0104 event - description:${description} | parseMap:${msgMap}", 1)
         logging("RAW: ${msgMap["attrId"]}", 1)
         // catchall: 0104 000A 01 01 0040 00 63A1 00 00 0000 00 00 0000, parseMap:[raw:catchall: 0104 000A 01 01 0040 00 63A1 00 00 0000 00 00 0000, profileId:0104, clusterId:000A, clusterInt:10, sourceEndpoint:01, destinationEndpoint:01, options:0040, messageType:00, dni:63A1, isClusterSpecific:false, isManufacturerSpecific:false, manufacturerId:0000, command:00, direction:00, data:[00, 00]]
     } else if (msgMap["cluster"] == "0000" && msgMap["attrId"] == "0404") {
@@ -233,10 +234,21 @@ def altOpen() {
     return cmd  
 }
 
+//reverseCurtain
+
+def reverseCurtain() {
+    logging("reverseCurtain()", 1)
+	def cmd = []
+	cmd += zigbee.writeAttribute(CLUSTER_BASIC, 0xFF28, 0x10, 0x01)
+    logging("cmd=${cmd}", 1)
+    return cmd
+}
+
 def altClose() {
     logging("altClose()", 1)
 	def cmd = []
 	cmd += zigbee.command(CLUSTER_WINDOW_COVERING, COMMAND_CLOSE)
+    logging("cmd=${cmd}", 1)
     return cmd  
 }
 
