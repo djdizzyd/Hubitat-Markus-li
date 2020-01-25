@@ -744,6 +744,6 @@ def initializeAdditional() {
 
 #!include:getLoggingFunction()
 
-#!include:getHelperFunctions('default')
+#!include:getHelperFunctions('app-default')
 
 #!include:getHelperFunctions('tasmota')

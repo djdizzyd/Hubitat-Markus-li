@@ -476,14 +476,15 @@ def main():
     
     app_files = [
         {'id': 97, 'file': 'tasmota-connect.groovy' },
-        {'id': 163, 'file': 'tasmota-connect-test.groovy' },
+        # 163 is available for re-use
+        #{'id': 163, 'file': 'tasmota-connect-test.groovy' },
         {'id': 289, 'file': 'tasmota-device-handler.groovy' },
     ]
 
     cb.setUsedDriverList(used_driver_list)
     filtered_app_files = []
     for a in app_files:
-        if(a['id'] != 97 and a['id'] != 163):
+        if(a['id'] != 97):
             filtered_app_files.append(a)
         if(a['id'] != 0 and len(used_driver_list) >= expected_num_drivers):
             filtered_app_files.append(a)

@@ -39,6 +39,8 @@ def installedAdditional() {
 }
 
 def updatedAdditional() {
+    logging("updatedAdditional()", 1)
+    //Runs when saving settings
     setDisableCSS(disableCSS)
 }
 
@@ -60,16 +62,13 @@ def getDriverCSS() {
     //r += getCSSForPreferenceHiding('<none>', overrideIndex=getPreferenceIndex('<none>', returnMax=true) + 1)
     //r += getCSSForHidingLastPreference()
     r += '''
-    form[action*="preference"]::before {
+    /*form[action*="preference"]::before {
         color: green;
         content: "Hi, this is my content"
     }
     form[action*="preference"] div[for^=preferences] {
         color: blue;
-    }
-    h3, h4, .property-label {
-        font-weight: bold;
-    }
+    }*/
     '''
     return r
 }
@@ -138,35 +137,6 @@ def update_needed_settings()
 
     #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand()
 
-    // Update the TuyaMCU device with the correct number of switches
-    cmds << getAction(getCommandString("TuyaMCU", null))
-    if(device.currentValue('tuyaMCU') != null) {
-        tuyaMCU = device.currentValue('tuyaMCU')
-        logging("Got this tuyaMCU string ${tuyaMCU}",1)
-        Integer numSwitchesI = numSwitches.toInteger()
-    
-        for (i in 1..numSwitchesI) {
-            if(tuyaMCU.indexOf("1$i") == -1) {
-                // Only send commands for missing buttons
-                cmds << getAction(getCommandString("TuyaMCU", "1$i,$i"))
-            } else {
-                logging("Already have button $i",10)
-            }
-        }
-        //Remove buttons we don't have
-        if (numSwitchesI < 4) {
-            n = numSwitchesI + 1
-            for (i in n..4) {
-                if(tuyaMCU.indexOf("1$i") != -1) {
-                    // Only send commands for buttons we have
-                    cmds << getAction(getCommandString("TuyaMCU", "1$i,0"))
-                } else {
-                    logging("Button $i already doesn't exist, just as expected...",10)
-                }
-            }
-        }
-    }
-    
     //
     // https://github.com/arendst/Tasmota/wiki/commands
     //SetOption66
@@ -189,7 +159,7 @@ def update_needed_settings()
 
 #!include:getLoggingFunction()
 
-#!include:getHelperFunctions('default')
+#!include:getHelperFunctions('driver-default')
 
 #!include:getHelperFunctions('childDevices')
 

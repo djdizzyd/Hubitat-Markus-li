@@ -147,13 +147,14 @@ def getDriverCSSWrapper() {
         margin-top: 0px;
     }
     /* This is general CSS Styling for the Driver page */
+    h3, h4, .property-label {
+        font-weight: bold;
+    }
     .preference-title {
         font-weight: bold;
-        color: red;
     }
     .preference-description {
         font-style: italic;
-        color: red;
     }
     '''
     r = "<style>"
