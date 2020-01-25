@@ -164,47 +164,60 @@ command("actionSave")
 command("actionPauseUnpauseLearning")
 """
 
+def getMetadataCustomizationMethods():
+    #input(description: "Once you change values on this page, the corner of the 'configuration' icon will change to orange until all configuration parameters are updated.", title: "Settings", displayDuringSetup: false, type: "paragraph", element: "paragraph")
+    return """
+// Here getPreferences() can be used to get the above preferences
+metaDataExporter()
+if(isCSSDisabled() == false) {
+    preferences {
+        input(name: "hiddenSetting", description: "" + getDriverCSSWrapper(), title: "None", displayDuringSetup: false, type: "paragraph", element: "paragraph")
+    }
+}
+"""
+
 def getDefaultMetadataPreferences():
     #input(description: "Once you change values on this page, the corner of the 'configuration' icon will change to orange until all configuration parameters are updated.", title: "Settings", displayDuringSetup: false, type: "paragraph", element: "paragraph")
     return """
 // Default Preferences
-input(name: "runReset", description: "<i>For details and guidance, see the release thread in the <a href=\\\"https://community.hubitat.com/t/release-tasmota-7-x-firmware-with-hubitat-support/29368\\\"> Hubitat Forum</a>. For settings marked as ADVANCED, make sure you understand what they do before activating them. If settings are not reflected on the device, press the Configure button in this driver. Also make sure all settings really are saved and correct.<br/>Type RESET and then press 'Save Preferences' to DELETE all Preferences and return to DEFAULTS.</i>", title: "<b>Settings</b>", displayDuringSetup: false, type: "paragraph", element: "paragraph")
+input(name: "runReset", description: addDescriptionDiv("For details and guidance, see the release thread in the <a href=\\\"https://community.hubitat.com/t/release-tasmota-7-x-firmware-with-hubitat-support/29368\\\"> Hubitat Forum</a>. For settings marked as ADVANCED, make sure you understand what they do before activating them. If settings are not reflected on the device, press the Configure button in this driver. Also make sure all settings really are saved and correct.<br/>Type RESET and then press 'Save Preferences' to DELETE all Preferences and return to DEFAULTS."), title: addTitleDiv("Settings"), displayDuringSetup: false, type: "paragraph", element: "paragraph")
 generate_preferences(configuration_model_debug())
+input(name: "disableCSS", type: "bool", title: addTitleDiv("Disable CSS"), description: addDescriptionDiv("CSS makes the driver more user friendly. Disable the use of CSS in the driver by enabling this. Does NOT affect HE resource usage."), defaultValue: false, displayDuringSetup: false, required: false)
 """
 
 def getDefaultMetadataPreferencesForTasmota(includeTelePeriod=True):
     return """
 // Default Preferences for Tasmota
-input(name: "ipAddress", type: "string", title: "<b>Device IP Address</b>", description: "<i>Set this as a default fallback for the auto-discovery feature.</i>", displayDuringSetup: true, required: false)
-input(name: "port", type: "number", title: "<b>Device Port</b>", description: "<i>The http Port of the Device (default: 80)</i>", displayDuringSetup: true, required: false, defaultValue: 80)
-input(name: "override", type: "bool", title: "<b>Override IP</b>", description: "<i>Override the automatically discovered IP address and disable auto-discovery.</i>", displayDuringSetup: true, required: false)
-""" + ("""input(name: "telePeriod", type: "string", title: "<b>Update Frequency</b>", description: "<i>Tasmota sensor value update interval, set this to any value between 10 and 3600 seconds. See the Tasmota docs concerning telePeriod for details. This is NOT a poll frequency. Button/switch changes are immediate and are NOT affected by this. This ONLY affects SENSORS and reporting of data such as UPTIME. (default = 300)</i>", displayDuringSetup: true, required: false)""" if includeTelePeriod else "") + """
+input(name: "ipAddress", type: "string", title: addTitleDiv("Device IP Address"), description: addDescriptionDiv("Set this as a default fallback for the auto-discovery feature."), displayDuringSetup: true, required: false)
+input(name: "port", type: "number", title: addTitleDiv("Device Port"), description: addDescriptionDiv("The http Port of the Device (default: 80)"), displayDuringSetup: true, required: false, defaultValue: 80)
+input(name: "override", type: "bool", title: addTitleDiv("Override IP"), description: addDescriptionDiv("Override the automatically discovered IP address and disable auto-discovery."), displayDuringSetup: true, required: false)
+""" + ("""input(name: "telePeriod", type: "string", title: addTitleDiv("Update Frequency"), description: addDescriptionDiv("Tasmota sensor value update interval, set this to any value between 10 and 3600 seconds. See the Tasmota docs concerning telePeriod for details. This is NOT a poll frequency. Button/switch changes are immediate and are NOT affected by this. This ONLY affects SENSORS and reporting of data such as UPTIME. (default = 300)"), displayDuringSetup: true, required: false)""" if includeTelePeriod else "") + """
 generate_preferences(configuration_model_tasmota())
-input(name: "disableModuleSelection", type: "bool", title: "<b>Disable Automatically Setting Module and Template</b>", description: "ADVANCED: <i>Disable automatically setting the Module Type and Template in Tasmota. Enable for using custom Module or Template settings directly on the device. With this disabled, you need to set these settings manually on the device.</i>", displayDuringSetup: true, required: false)
-input(name: "moduleNumber", type: "number", title: "<b>Module Number</b>", description: "ADVANCED: <i>Module Number used in Tasmota. If Device Template is set, this value is IGNORED. (default: -1 (use the default for the driver))</i>", displayDuringSetup: true, required: false, defaultValue: -1)
-input(name: "deviceTemplateInput", type: "string", title: "<b>Device Template</b>", description: "ADVANCED: <i>Set this to a Device Template for Tasmota, leave it EMPTY to use the driver default. Set it to 0 to NOT use a Template. NAME can be maximum 14 characters! (Example: {\\\"NAME\\\":\\\"S120\\\",\\\"GPIO\\\":[0,0,0,0,0,21,0,0,0,52,90,0,0],\\\"FLAG\\\":0,\\\"BASE\\\":18})</i>", displayDuringSetup: true, required: false)
-input(name: "useIPAsID", type: "bool", title: "<b>IP as Network ID</b>", description: "ADVANCED: <i>Not needed under normal circumstances. Setting this when not needed can break updates. This requires the IP to be static or set to not change in your DHCP server. It will force the use of IP as network ID. When in use, set Override IP to true and input the correct Device IP Address. See the release thread in the Hubitat forum for details and guidance.</i>", displayDuringSetup: true, required: false)
+input(name: "disableModuleSelection", type: "bool", title: addTitleDiv("Disable Automatically Setting Module and Template"), description: "ADVANCED: " + addDescriptionDiv("Disable automatically setting the Module Type and Template in Tasmota. Enable for using custom Module or Template settings directly on the device. With this disabled, you need to set these settings manually on the device."), displayDuringSetup: true, required: false)
+input(name: "moduleNumber", type: "number", title: addTitleDiv("Module Number"), description: "ADVANCED: " + addDescriptionDiv("Module Number used in Tasmota. If Device Template is set, this value is IGNORED. (default: -1 (use the default for the driver))"), displayDuringSetup: true, required: false, defaultValue: -1)
+input(name: "deviceTemplateInput", type: "string", title: addTitleDiv("Device Template"), description: "ADVANCED: " + addDescriptionDiv("Set this to a Device Template for Tasmota, leave it EMPTY to use the driver default. Set it to 0 to NOT use a Template. NAME can be maximum 14 characters! (Example: {\\\"NAME\\\":\\\"S120\\\",\\\"GPIO\\\":[0,0,0,0,0,21,0,0,0,52,90,0,0],\\\"FLAG\\\":0,\\\"BASE\\\":18})"), displayDuringSetup: true, required: false)
+input(name: "useIPAsID", type: "bool", title: addTitleDiv("IP as Network ID"), description: "ADVANCED: " + addDescriptionDiv("Not needed under normal circumstances. Setting this when not needed can break updates. This requires the IP to be static or set to not change in your DHCP server. It will force the use of IP as network ID. When in use, set Override IP to true and input the correct Device IP Address. See the release thread in the Hubitat forum for details and guidance."), displayDuringSetup: true, required: false)
 """
 
 def getDefaultMetadataPreferencesForTHMonitor():
     return """
 // Default Preferences for Temperature Humidity Monitor
-input(name: "tempOffset", type: "decimal", title: "<b>Temperature Offset</b>", description: "<i>Adjust the temperature by this many degrees (in Celcius).</i>", displayDuringSetup: true, required: false, range: "*..*")
-input(name: "humidityOffset", type: "decimal", title: "<b>Humidity Offset</b>", description: "<i>Adjust the humidity by this many percent.</i>", displayDuringSetup: true, required: false, range: "*..*")
-input(name: "pressureOffset", type: "decimal", title: "<b>Pressure Offset</b>", description: "<i>Adjust the pressure value by this much.</i>", displayDuringSetup: true, required: false, range: "*..*")
-input(name: "tempRes", type: "enum", title: "<b>Temperature Resolution</b>", description: "<i>Temperature sensor resolution (0..3 = maximum number of decimal places, default: 1)<br/>NOTE: If the 3rd decimal is a 0 (eg. 24.720) it will show without the last decimal (eg. 24.72).</i>", options: ["0", "1", "2", "3"], defaultValue: "1", displayDuringSetup: true, required: false)
+input(name: "tempOffset", type: "decimal", title: addTitleDiv("Temperature Offset"), description: addDescriptionDiv("Adjust the temperature by this many degrees (in Celcius)."), displayDuringSetup: true, required: false, range: "*..*")
+input(name: "humidityOffset", type: "decimal", title: addTitleDiv("Humidity Offset"), description: addDescriptionDiv("Adjust the humidity by this many percent."), displayDuringSetup: true, required: false, range: "*..*")
+input(name: "pressureOffset", type: "decimal", title: addTitleDiv("Pressure Offset"), description: addDescriptionDiv("Adjust the pressure value by this much."), displayDuringSetup: true, required: false, range: "*..*")
+input(name: "tempRes", type: "enum", title: addTitleDiv("Temperature Resolution"), description: addDescriptionDiv("Temperature sensor resolution (0..3 = maximum number of decimal places, default: 1)<br/>NOTE: If the 3rd decimal is a 0 (eg. 24.720) it will show without the last decimal (eg. 24.72)."), options: ["0", "1", "2", "3"], defaultValue: "1", displayDuringSetup: true, required: false)
 """
 
 def getDefaultMetadataPreferencesForParentDevices(numSwitches=1):
     return '''
 // Default Preferences for Parent Devices
-input(name: "numSwitches", type: "enum", title: "<b>Number of Relays</b>", description: "<i>Set the number of buttons/relays on the device (default ''' + str(numSwitches) + ''')</i>", options: ["1", "2", "3", "4", "5", "6"], defaultValue: "''' + str(numSwitches) + '''", displayDuringSetup: true, required: true)
+input(name: "numSwitches", type: "enum", title: addTitleDiv("Number of Relays"), description: addDescriptionDiv("Set the number of buttons/relays on the device (default ''' + str(numSwitches) + ''')"), options: ["1", "2", "3", "4", "5", "6"], defaultValue: "''' + str(numSwitches) + '''", displayDuringSetup: true, required: true)
 '''
 
 def getDefaultMetadataPreferencesForParentDevicesWithUnlimitedChildren(numSwitches=1):
     return '''
 // Default Preferences for Parent Devices
-input(name: "numSwitches", type: "number", title: "<b>Number of Children</b>", description: "<i>Set the number of children (default ''' + str(numSwitches) + ''')</i>", defaultValue: "''' + str(numSwitches) + '''", displayDuringSetup: true, required: true)
+input(name: "numSwitches", type: "number", title: addTitleDiv("Number of Children"), description: addDescriptionDiv("Set the number of children (default ''' + str(numSwitches) + ''')"), defaultValue: "''' + str(numSwitches) + '''", displayDuringSetup: true, required: true)
 '''
 
 def getUpdateNeededSettingsTasmotaHeader():
@@ -575,20 +588,20 @@ def getGenerateLearningPreferences(types='["Default", "Toggle", "Push", "On", "O
     return '''// Methods for displaying the correct Learning Preferences and returning the 
 // current Action Name
 def generateLearningPreferences() {
-    input(name: "learningMode", type: "bool", title: "<b>Learning Mode</b>", description: '<i>Activate this to enter Learning Mode. DO NOT ACTIVATE THIS once you have learned the codes of a device, they will have to be re-learned!</i>', displayDuringSetup: false, required: false)
+    input(name: "learningMode", type: "bool", title: addTitleDiv("Learning Mode"), description: '<i>Activate this to enter Learning Mode. DO NOT ACTIVATE THIS once you have learned the codes of a device, they will have to be re-learned!</i>', displayDuringSetup: false, required: false)
     if(learningMode) {
-        input(name: "actionCurrentName", type: "enum", title: "<b>Action To Learn</b>", 
-              description: "<i>Select which Action to save to in Learn Mode.</i>", 
+        input(name: "actionCurrentName", type: "enum", title: addTitleDiv("Action To Learn"), 
+              description: addDescriptionDiv("Select which Action to save to in Learn Mode."), 
               options: ''' + types + ''', defaultValue: "''' + default_type + '''", 
               displayDuringSetup: false, required: false)
-        input(name: "learningModeAdvanced", type: "bool", title: "<b>Advanced Learning Mode</b>", 
+        input(name: "learningModeAdvanced", type: "bool", title: addTitleDiv("Advanced Learning Mode"), 
               description: '<i>Activate this to enable setting Advanced settings. Normally this is NOT needed, be careful!</i>', 
               defaultValue: false, displayDuringSetup: false, required: false)
         if(learningModeAdvanced) {
-            input(name: "actionCodeSetManual", type: "string", title: "<b>Set Action Code Manually</b>", 
+            input(name: "actionCodeSetManual", type: "string", title: addTitleDiv("Set Action Code Manually"), 
               description: '<i>WARNING! For ADVANCED users only!</i>', 
               displayDuringSetup: false, required: false)
-            input(name: "actionResetAll", type: "bool", title: "<b>RESET all Saved Actions</b>", 
+            input(name: "actionResetAll", type: "bool", title: addTitleDiv("RESET all Saved Actions"), 
               description: '<i>WARNING! This will DELETE all saved/learned Actions!</i>', 
               defaultValue: false, displayDuringSetup: false, required: false)
         }

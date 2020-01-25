@@ -3,7 +3,7 @@
 #!include:getDefaultImports()
 
 metadata {
-	definition (name: "Tasmota - TuyaMCU Wifi Touch Switch", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
+	definition (name: "Tasmota - Universal Parent", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
         capability "Actuator"
         capability "Light"
         capability "Switch"
@@ -12,7 +12,7 @@ metadata {
         #!include:getDefaultMetadataCapabilities()
         
         //attribute   "checkInterval", "number"
-        attribute   "tuyaMCU", "string"
+        //attribute   "tuyaMCU", "string"
         #!include:getDefaultMetadataAttributes()
 
         #!include:getMetadataCommandsForHandlingChildDevices()
@@ -136,7 +136,7 @@ def update_needed_settings()
 {
     #!include:getUpdateNeededSettingsTasmotaHeader()
 
-    #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand(54)
+    #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand()
 
     // Update the TuyaMCU device with the correct number of switches
     cmds << getAction(getCommandString("TuyaMCU", null))
@@ -175,7 +175,7 @@ def update_needed_settings()
     //1 = enable publishing TuyaReceived over MQTT
     //cmds << getAction(getCommandString("SetOption66", "1"))
 
-    cmds << getAction(getCommandString("SetOption81", "0")) // Set PCF8574 component behavior for all ports as inverted (default=0)
+    //cmds << getAction(getCommandString("SetOption81", "0")) // Set PCF8574 component behavior for all ports as inverted (default=0)
 
     // Make sure we have our child devices
     recreateChildDevices()

@@ -20,6 +20,8 @@ def deviceCommand(cmd) {
     updateDataValue('appReturn', JsonOutput.toJson(r))
 }
 
+#!include:getHelperFunctions('driver-metadata')
+
 // Since refresh, with any number of arguments, is accepted as we always have it declared anyway, 
 // we use it as a wrapper
 // All our "normal" refresh functions take 0 arguments, we can declare one with 1 here...

@@ -193,7 +193,6 @@ def main():
         {'id': 554, 'file': 'tasmota-sonoff-mini.groovy', 'deviceLink': 'https://templates.blakadder.com/sonoff_mini.html'},
         {'id': 560, 'file': 'tasmota-sonoff-basic.groovy', 'deviceLink': 'https://templates.blakadder.com/sonoff_basic.html'},
         {'id': 553, 'file': 'tasmota-s120-plug.groovy' },
-        {'id': 557, 'file': 'tasmota-ykyc-001-pm-plug.groovy' },
         {'id': 559, 'file': 'tasmota-brilliant-bl20925-pm-plug.groovy', 'deviceLink': 'https://templates.blakadder.com/brilliant_BL20925.html'},
         {'id': 577, 'file': 'tasmota-prime-ccrcwfii113pk-plug.groovy', 'deviceLink': 'https://templates.blakadder.com/prime_CCRCWFII113PK.html'},
         {'id': 590, 'file': 'tasmota-tuyamcu-wifi-dimmer.groovy', 'comment': 'WORKING, but need feedback from users'},
@@ -250,6 +249,11 @@ def main():
         {'id': 642, 'file': 'tasmota-generic-pm-plug-child.groovy' },
         {'id': 737, 'file': 'tasmota-generic-wifi-dimmer.groovy' },
 
+        # Universal drivers
+        # Replacing 557 with the new Universal driver
+        #{'id': 557, 'file': 'tasmota-ykyc-001-pm-plug.groovy' },
+        {'id': 557, 'file': 'tasmota-universal-parent.groovy' },
+
         # Zigbee
         {'id': 579, 'file': 'zigbee-generic-wifi-switch-plug.groovy' },
 
@@ -293,7 +297,7 @@ def main():
     #    {'id':651},    # Sensor - Distance
     #    {'id':649}, {'id':673}, {'id':674}, {'id':675}, {'id':676}, # RF/IR Children
     #    {'id':591},
-        {'id':548},  # TuyaMCU Touch Switches
+    #    {'id':548},  # TuyaMCU Touch Switches
         # These three following rows represent most of the drivers personally used by markus-li
     #    {'id':548},{'id':549},{'id':513},{'id':592},{'id':418},{'id':554},{'id':590},{'id':557},
     #    {'id':649},{'id':673},{'id':674},{'id':675},{'id':676},{'id':641},{'id':642},{'id':591},
@@ -301,7 +305,7 @@ def main():
     #   {'id':641},{'id':642},
     #   {'id':650},{'id':651},  # RFLink
     #    {'id':648},  # Sonoff RF Bridge
-    #    {'id':557},  # YKYC
+        {'id':557},  # Universal Parent
     #    {'id':589}, {'id':591},
     #     {'id':551},{'id':578}, {'id':362}, {'id':645}, {'id':590}, {'id':588}, 
     #    {'id': 0, 'file': 'tasmota-generic-thp-device.groovy' , \

@@ -56,29 +56,37 @@ metadata {
         command "reboot"
 	}
 
-	simulator {
-	}
-    
-    preferences {
+	preferences {
         
         // Default Preferences
-        input(name: "runReset", description: "<i>For details and guidance, see the release thread in the <a href=\"https://community.hubitat.com/t/release-tasmota-7-x-firmware-with-hubitat-support/29368\"> Hubitat Forum</a>. For settings marked as ADVANCED, make sure you understand what they do before activating them. If settings are not reflected on the device, press the Configure button in this driver. Also make sure all settings really are saved and correct.<br/>Type RESET and then press 'Save Preferences' to DELETE all Preferences and return to DEFAULTS.</i>", title: "<b>Settings</b>", displayDuringSetup: false, type: "paragraph", element: "paragraph")
+        input(name: "runReset", description: addDescriptionDiv("For details and guidance, see the release thread in the <a href=\"https://community.hubitat.com/t/release-tasmota-7-x-firmware-with-hubitat-support/29368\"> Hubitat Forum</a>. For settings marked as ADVANCED, make sure you understand what they do before activating them. If settings are not reflected on the device, press the Configure button in this driver. Also make sure all settings really are saved and correct.<br/>Type RESET and then press 'Save Preferences' to DELETE all Preferences and return to DEFAULTS."), title: addTitleDiv("Settings"), displayDuringSetup: false, type: "paragraph", element: "paragraph")
         generate_preferences(configuration_model_debug())
+        input(name: "disableCSS", type: "bool", title: addTitleDiv("Disable CSS"), description: addDescriptionDiv("CSS makes the driver more user friendly. Disable the use of CSS in the driver by enabling this. Does NOT affect HE resource usage."), defaultValue: false, displayDuringSetup: false, required: false)
         
         // Default Preferences for Parent Devices
-        input(name: "numSwitches", type: "enum", title: "<b>Number of Relays</b>", description: "<i>Set the number of buttons/relays on the device (default 1)</i>", options: ["1", "2", "3", "4", "5", "6"], defaultValue: "1", displayDuringSetup: true, required: true)
+        input(name: "numSwitches", type: "enum", title: addTitleDiv("Number of Relays"), description: addDescriptionDiv("Set the number of buttons/relays on the device (default 1)"), options: ["1", "2", "3", "4", "5", "6"], defaultValue: "1", displayDuringSetup: true, required: true)
         
         // Default Preferences for Tasmota
-        input(name: "ipAddress", type: "string", title: "<b>Device IP Address</b>", description: "<i>Set this as a default fallback for the auto-discovery feature.</i>", displayDuringSetup: true, required: false)
-        input(name: "port", type: "number", title: "<b>Device Port</b>", description: "<i>The http Port of the Device (default: 80)</i>", displayDuringSetup: true, required: false, defaultValue: 80)
-        input(name: "override", type: "bool", title: "<b>Override IP</b>", description: "<i>Override the automatically discovered IP address and disable auto-discovery.</i>", displayDuringSetup: true, required: false)
+        input(name: "ipAddress", type: "string", title: addTitleDiv("Device IP Address"), description: addDescriptionDiv("Set this as a default fallback for the auto-discovery feature."), displayDuringSetup: true, required: false)
+        input(name: "port", type: "number", title: addTitleDiv("Device Port"), description: addDescriptionDiv("The http Port of the Device (default: 80)"), displayDuringSetup: true, required: false, defaultValue: 80)
+        input(name: "override", type: "bool", title: addTitleDiv("Override IP"), description: addDescriptionDiv("Override the automatically discovered IP address and disable auto-discovery."), displayDuringSetup: true, required: false)
         
         generate_preferences(configuration_model_tasmota())
-        input(name: "disableModuleSelection", type: "bool", title: "<b>Disable Automatically Setting Module and Template</b>", description: "ADVANCED: <i>Disable automatically setting the Module Type and Template in Tasmota. Enable for using custom Module or Template settings directly on the device. With this disabled, you need to set these settings manually on the device.</i>", displayDuringSetup: true, required: false)
-        input(name: "moduleNumber", type: "number", title: "<b>Module Number</b>", description: "ADVANCED: <i>Module Number used in Tasmota. If Device Template is set, this value is IGNORED. (default: -1 (use the default for the driver))</i>", displayDuringSetup: true, required: false, defaultValue: -1)
-        input(name: "deviceTemplateInput", type: "string", title: "<b>Device Template</b>", description: "ADVANCED: <i>Set this to a Device Template for Tasmota, leave it EMPTY to use the driver default. Set it to 0 to NOT use a Template. NAME can be maximum 14 characters! (Example: {\"NAME\":\"S120\",\"GPIO\":[0,0,0,0,0,21,0,0,0,52,90,0,0],\"FLAG\":0,\"BASE\":18})</i>", displayDuringSetup: true, required: false)
-        input(name: "useIPAsID", type: "bool", title: "<b>IP as Network ID</b>", description: "ADVANCED: <i>Not needed under normal circumstances. Setting this when not needed can break updates. This requires the IP to be static or set to not change in your DHCP server. It will force the use of IP as network ID. When in use, set Override IP to true and input the correct Device IP Address. See the release thread in the Hubitat forum for details and guidance.</i>", displayDuringSetup: true, required: false)
+        input(name: "disableModuleSelection", type: "bool", title: addTitleDiv("Disable Automatically Setting Module and Template"), description: "ADVANCED: " + addDescriptionDiv("Disable automatically setting the Module Type and Template in Tasmota. Enable for using custom Module or Template settings directly on the device. With this disabled, you need to set these settings manually on the device."), displayDuringSetup: true, required: false)
+        input(name: "moduleNumber", type: "number", title: addTitleDiv("Module Number"), description: "ADVANCED: " + addDescriptionDiv("Module Number used in Tasmota. If Device Template is set, this value is IGNORED. (default: -1 (use the default for the driver))"), displayDuringSetup: true, required: false, defaultValue: -1)
+        input(name: "deviceTemplateInput", type: "string", title: addTitleDiv("Device Template"), description: "ADVANCED: " + addDescriptionDiv("Set this to a Device Template for Tasmota, leave it EMPTY to use the driver default. Set it to 0 to NOT use a Template. NAME can be maximum 14 characters! (Example: {\"NAME\":\"S120\",\"GPIO\":[0,0,0,0,0,21,0,0,0,52,90,0,0],\"FLAG\":0,\"BASE\":18})"), displayDuringSetup: true, required: false)
+        input(name: "useIPAsID", type: "bool", title: addTitleDiv("IP as Network ID"), description: "ADVANCED: " + addDescriptionDiv("Not needed under normal circumstances. Setting this when not needed can break updates. This requires the IP to be static or set to not change in your DHCP server. It will force the use of IP as network ID. When in use, set Override IP to true and input the correct Device IP Address. See the release thread in the Hubitat forum for details and guidance."), displayDuringSetup: true, required: false)
 	}
+
+    // The below line needs to exist in ALL drivers for custom CSS to work!
+    
+    // Here getPreferences() can be used to get the above preferences
+    metaDataExporter()
+    if(isCSSDisabled() == false) {
+        preferences {
+            input(name: "hiddenSetting", description: "" + getDriverCSSWrapper(), title: "None", displayDuringSetup: false, type: "paragraph", element: "paragraph")
+        }
+    }
 }
 
 public getDeviceInfoByName(infoName) { 
@@ -94,6 +102,63 @@ def installedAdditional() {
     // This runs from installed()
 	logging("installedAdditional()",50)
     createChildDevices()
+}
+
+def updatedAdditional() {
+    setDisableCSS(disableCSS)
+}
+
+def getDriverCSS() {
+    // Executed on page load, put CSS used by the driver here.
+    
+    // This does NOT execute in the NORMAL scope of the driver!
+
+    r = ""
+    // "Data" is available when this runs
+    
+    //r += getCSSForCommandsToHide(["deleteChildren"])
+    //r += getCSSForCommandsToHide(["overSanta", "on", "off"])
+    //r += getCSSForStateVariablesToHide(["alertMessage", "mac", "dni", "oldLabel"])
+    //r += getCSSForCurrentStatesToHide(["templateData", "tuyaMCU", "needUpdate"])
+    //r += getCSSForDatasToHide(["metaConfig2", "preferences", "appReturn", "namespace"])
+    //r += getCSSToChangeCommandTitle("configure", "Run Configure3")
+    //r += getCSSForPreferencesToHide(["numSwitches", "deviceTemplateInput"])
+    //r += getCSSForPreferenceHiding('<none>', overrideIndex=getPreferenceIndex('<none>', returnMax=true) + 1)
+    //r += getCSSForHidingLastPreference()
+    r += '''
+    form[action*="preference"]::before {
+        color: green;
+        content: "Hi, this is my content"
+    }
+    form[action*="preference"] div[for^=preferences] {
+        color: blue;
+    }
+    h3, h4, .property-label {
+        font-weight: bold;
+    }
+    '''
+    return r
+}
+
+def refreshAdditional() {
+    //logging("this.binding.variables = ${this.binding.variables}", 1)
+    //logging("settings = ${settings}", 1)
+    //logging("getDefinitionData() = ${getDefinitionData()}", 1)
+    //logging("getPreferences() = ${getPreferences()}", 1)
+    //logging("getSupportedCommands() = ${device.getSupportedCommands()}", 1)
+    //logging("Seeing these commands: ${device.getSupportedCommands()}", 1)
+    /*metaConfig = setCommandsToHide(["on", "hiAgain2", "on"])
+    metaConfig = setStateVariablesToHide(["uptime"], metaConfig=metaConfig)
+    metaConfig = setCurrentStatesToHide(["needUpdate"], metaConfig=metaConfig)
+    metaConfig = setDatasToHide(["namespace"], metaConfig=metaConfig)
+    metaConfig = setPreferencesToHide(["port"], metaConfig=metaConfig)*/
+    //metaConfig = clearThingsToHide()
+    //setDisableCSS(false, metaConfig=metaConfig)
+    /*metaConfig = setCommandsToHide([])
+    metaConfig = setStateVariablesToHide([], metaConfig=metaConfig)
+    metaConfig = setCurrentStatesToHide([], metaConfig=metaConfig)
+    metaConfig = setDatasToHide([], metaConfig=metaConfig)
+    metaConfig = setPreferencesToHide([], metaConfig=metaConfig)*/
 }
 
 def on() {
@@ -549,6 +614,348 @@ def deviceCommand(cmd) {
     updateDataValue('appReturn', JsonOutput.toJson(r))
 }
 
+// These methods can be executed in both the NORMAL driver scope as well
+// as the Metadata scope.
+private getMetaConfig() {
+    // This method can ALSO be executed in the Metadata Scope
+    metaConfig = getDataValue('metaConfig')
+    if(metaConfig == null) {
+        metaConfig = [:]
+    } else {
+        metaConfig = parseJson(metaConfig)
+    }
+    return metaConfig
+}
+
+def isCSSDisabled(metaConfig=null) {
+    if(metaConfig==null) metaConfig = getMetaConfig()
+    disableCSS = false
+    if(metaConfig.containsKey("disableCSS")) disableCSS = metaConfig["disableCSS"]
+    return disableCSS
+}
+
+// These methods are used to set which elements to hide. 
+// They have to be executed in the NORMAL driver scope.
+
+
+private saveMetaConfig(metaConfig) {
+    updateDataValue('metaConfig', JsonOutput.toJson(metaConfig))
+}
+
+private setSomethingToHide(type, something, metaConfig=null) {
+    if(metaConfig==null) metaConfig = getMetaConfig()
+    something = something.unique()
+    if(!metaConfig.containsKey("hide")) {
+        metaConfig["hide"] = ["$type":something]
+    } else {
+        metaConfig["hide"]["$type"] = something
+    }
+    saveMetaConfig(metaConfig)
+    logging("setSomethingToHide() = ${metaConfig}", 1)
+    return metaConfig
+}
+
+def clearThingsToHide(metaConfig=null) {
+    metaConfig = setSomethingToHide("other", [], metaConfig=metaConfig)
+    metaConfig["hide"] = [:]
+    saveMetaConfig(metaConfig)
+    logging("clearThingsToHide() = ${metaConfig}", 1)
+    return metaConfig
+}
+
+def setDisableCSS(valueBool, metaConfig=null) {
+    if(metaConfig==null) metaConfig = getMetaConfig()
+    metaConfig["disableCSS"] = valueBool
+    saveMetaConfig(metaConfig)
+    logging("setDisableCSS(valueBool = $valueBool) = ${metaConfig}", 1)
+    return metaConfig
+}
+
+def setCommandsToHide(commands, metaConfig=null) {
+    metaConfig = setSomethingToHide("command", commands, metaConfig=metaConfig)
+    logging("setCommandsToHide(${commands})", 1)
+    return metaConfig
+}
+
+def setStateVariablesToHide(stateVariables, metaConfig=null) {
+    metaConfig = setSomethingToHide("stateVariable", stateVariables, metaConfig=metaConfig)
+    logging("setStateVariablesToHide(${stateVariables})", 1)
+    return metaConfig
+}
+
+def setCurrentStatesToHide(currentStates, metaConfig=null) {
+    metaConfig = setSomethingToHide("currentState", currentStates, metaConfig=metaConfig)
+    logging("setCurrentStatesToHide(${currentStates})", 1)
+    return metaConfig
+}
+
+def setDatasToHide(datas, metaConfig=null) {
+    metaConfig = setSomethingToHide("data", datas, metaConfig=metaConfig)
+    logging("setDatasToHide(${datas})", 1)
+    return metaConfig
+}
+
+def setPreferencesToHide(preferences, metaConfig=null) {
+    metaConfig = setSomethingToHide("preference", preferences, metaConfig=metaConfig)
+    logging("setPreferencesToHide(${preferences})", 1)
+    return metaConfig
+}
+
+// These methods are for executing inside the metadata section of a driver.
+def metaDataExporter() {
+    log.debug "getEXECUTOR_TYPE = ${getEXECUTOR_TYPE()}"
+    filteredPrefs = getPreferences()['sections']['input'].name[0]
+    //log.debug "filteredPrefs = ${filteredPrefs}"
+    if(filteredPrefs != []) updateDataValue('preferences', "${filteredPrefs}".replaceAll("\\s",""))
+}
+
+// These methods are used to add CSS to the driver page
+// This can be used for, among other things, to hide Commands
+// They HAVE to be run in getDriverCSS() or getDriverCSSWrapper()!
+
+/* Example usage:
+r += getCSSForCommandsToHide(["off", "refresh"])
+r += getCSSForStateVariablesToHide(["alertMessage", "mac", "dni", "oldLabel"])
+r += getCSSForCurrentStatesToHide(["templateData", "tuyaMCU", "needUpdate"])
+r += getCSSForDatasToHide(["preferences", "appReturn"])
+r += getCSSToChangeCommandTitle("configure", "Run Configure2")
+r += getCSSForPreferencesToHide(["numSwitches", "deviceTemplateInput"])
+r += getCSSForPreferenceHiding('<none>', overrideIndex=getPreferenceIndex('<none>', returnMax=true) + 1)
+r += getCSSForHidingLastPreference()
+r += '''
+form[action*="preference"]::before {
+    color: green;
+    content: "Hi, this is my content"
+}
+form[action*="preference"] div.mdl-grid div.mdl-cell:nth-of-type(2) {
+    color: green;
+}
+form[action*="preference"] div[for^=preferences] {
+    color: blue;
+}
+h3, h4, .property-label {
+    font-weight: bold;
+}
+'''
+*/
+
+def addTitleDiv(title) {
+    return '<div class="preference-title">' + title + '</div>'
+}
+
+def addDescriptionDiv(description) {
+    return '<div class="preference-description">' + description + '</div>'
+}
+
+def getDriverCSSWrapper() {
+    metaConfig = getMetaConfig()
+    disableCSS = isCSSDisabled(metaConfig=metaConfig)
+    defaultCSS = '''
+    /* This is part of the CSS for replacing a Command Title */
+    div.mdl-card__title div.mdl-grid div.mdl-grid .mdl-cell p::after {
+        visibility: visible;
+        position: absolute;
+        left: 50%;
+        transform: translate(-50%, 0%);
+        width: calc(100% - 20px);
+        padding-left: 5px;
+        padding-right: 5px;
+        margin-top: 0px;
+    }
+    /* This is general CSS Styling for the Driver page */
+    .preference-title {
+        font-weight: bold;
+        color: red;
+    }
+    .preference-description {
+        font-style: italic;
+        color: red;
+    }
+    '''
+    r = "<style>"
+    
+    if(disableCSS == false) {
+        r += "$defaultCSS "
+        try{
+            // We always need to hide this element when we use CSS
+            r += " ${getCSSForHidingLastPreference()} "
+            
+            if(disableCSS == false) {
+                if(metaConfig.containsKey("hide")) {
+                    if(metaConfig["hide"].containsKey("command")) {
+                        r += getCSSForCommandsToHide(metaConfig["hide"]["command"])
+                    }
+                    if(metaConfig["hide"].containsKey("stateVariable")) {
+                        r += getCSSForStateVariablesToHide(metaConfig["hide"]["stateVariable"])
+                    }
+                    if(metaConfig["hide"].containsKey("currentState")) {
+                        r += getCSSForCurrentStatesToHide(metaConfig["hide"]["currentState"])
+                    }
+                    if(metaConfig["hide"].containsKey("data")) {
+                        r += getCSSForDatasToHide(metaConfig["hide"]["data"])
+                    }
+                    if(metaConfig["hide"].containsKey("preference")) {
+                        r += getCSSForPreferencesToHide(metaConfig["hide"]["preference"])
+                    }
+                }
+                r += " ${getDriverCSS()} "
+            }
+        }catch(MissingMethodException e) {
+            if(!e.toString().contains("getDriverCSS()")) {
+                log.warn "getDriverCSS() Error: $e"
+            }
+        } catch(e) {
+            log.warn "getDriverCSS() Error: $e"
+        }
+    }
+    r += " </style>"
+    return r
+}
+
+def getCommandIndex(cmd) {
+    commands = device.getSupportedCommands().unique()
+    i = commands.findIndexOf{ "$it" == cmd}+1
+    //log.debug "getCommandIndex: Seeing these commands: '${commands}', index=$i}"
+    return i
+}
+
+def getCSSForCommandHiding(cmdToHide) {
+    i = getCommandIndex(cmdToHide)
+    r = ""
+    if(i > 0) {
+        r = "div.mdl-card__title div.mdl-grid div.mdl-grid .mdl-cell:nth-of-type($i){display: none;}"
+    }
+    return r
+}
+
+def getCSSForCommandsToHide(commands) {
+    r = ""
+    commands.each {
+        r += getCSSForCommandHiding(it)
+    }
+    return r
+}
+
+def getCSSToChangeCommandTitle(cmd, newTitle) {
+    i = getCommandIndex(cmd)
+    r = ""
+    if(i > 0) {
+        r += "div.mdl-card__title div.mdl-grid div.mdl-grid .mdl-cell:nth-of-type($i) p {visibility: hidden;}"
+        r += "div.mdl-card__title div.mdl-grid div.mdl-grid .mdl-cell:nth-of-type($i) p::after {content: '$newTitle';}"
+    }
+    return r
+}
+
+def getStateVariableIndex(stateVariable) {
+    stateVariables = state.keySet()
+    i = stateVariables.findIndexOf{ "$it" == stateVariable}+1
+    //log.debug "getStateVariableIndex: Seeing these State Variables: '${stateVariables}', index=$i}"
+    return i
+}
+
+def getCSSForStateVariableHiding(stateVariableToHide) {
+    i = getStateVariableIndex(stateVariableToHide)
+    r = ""
+    if(i > 0) {
+        r = "ul#statev li.property-value:nth-of-type($i){display: none;}"
+    }
+    return r
+}
+
+def getCSSForStateVariablesToHide(stateVariables) {
+    r = ""
+    stateVariables.each {
+        r += getCSSForStateVariableHiding(it)
+    }
+    return r
+}
+
+def getCSSForCurrentStatesToHide(currentStates) {
+    r = ""
+    currentStates.each {
+        r += "ul#cstate li#cstate-$it {display: none;}"
+    }
+    return r
+}
+
+def getDataIndex(data) {
+    datas = device.getData().keySet()
+    i = datas.findIndexOf{ "$it" == data}+1
+    //log.debug "getDataIndex: Seeing these Data Keys: '${datas}', index=$i}"
+    return i
+}
+
+def getCSSForDataHiding(dataToHide) {
+    i = getDataIndex(dataToHide)
+    r = ""
+    if(i > 0) {
+        r = "table.property-list tr li.property-value:nth-of-type($i) {display: none;}"
+    }
+    return r
+}
+
+def getCSSForDatasToHide(datas) {
+    r = ""
+    datas.each {
+        r += getCSSForDataHiding(it)
+    }
+    return r
+}
+
+def getPreferenceIndex(preference, returnMax=false) {
+    filteredPrefs = getPreferences()['sections']['input'].name[0]
+    //log.debug "getPreferenceIndex: Seeing these Preferences first: '${filteredPrefs}'"
+    if(filteredPrefs == [] || filteredPrefs == null) {
+        d = getDataValue('preferences')
+        //log.debug "getPreferenceIndex: getDataValue('preferences'): '${d}'"
+        if(d != null && d.length() > 2) {
+            try{
+                filteredPrefs = d[1..d.length()-2].tokenize(',')
+            } catch(e) {
+                // Do nothing
+            }
+        }
+        
+
+    }
+    i = 0
+    if(returnMax == true) {
+        i = filteredPrefs.size()
+    } else {
+        i = filteredPrefs.findIndexOf{ "$it" == preference}+1
+    }
+    //log.debug "getPreferenceIndex: Seeing these Preferences: '${filteredPrefs}', index=$i"
+    return i
+}
+
+def getCSSForPreferenceHiding(preferenceToHide, overrideIndex=0) {
+    i = 0
+    if(overrideIndex == 0) {
+        i = getPreferenceIndex(preferenceToHide)
+    } else {
+        i = overrideIndex
+    }
+    r = ""
+    if(i > 0) {
+        r = "form[action*=\"preference\"] div.mdl-grid div.mdl-cell:nth-of-type($i) {display: none;} "
+    }else if(i == -1) {
+        r = "form[action*=\"preference\"] div.mdl-grid div.mdl-cell:nth-last-child(2) {display: none;} "
+    }
+    return r
+}
+
+def getCSSForPreferencesToHide(preferences) {
+    r = ""
+    preferences.each {
+        r += getCSSForPreferenceHiding(it)
+    }
+    return r
+}
+def getCSSForHidingLastPreference() {
+    return getCSSForPreferenceHiding(null, overrideIndex=-1)
+}
+
+
 // Since refresh, with any number of arguments, is accepted as we always have it declared anyway, 
 // we use it as a wrapper
 // All our "normal" refresh functions take 0 arguments, we can declare one with 1 here...
@@ -948,7 +1355,23 @@ def refresh() {
     def cmds = []
     cmds << getAction(getCommandString("Status", "0"))
     getDriverVersion()
+    //logging("this.binding.variables = ${this.binding.variables}", 1)
+    //logging("settings = ${settings}", 1)
+    //logging("getDefinitionData() = ${getDefinitionData()}", 1)
+    //logging("getPreferences() = ${getPreferences()}", 1)
+    //logging("getSupportedCommands() = ${device.getSupportedCommands()}", 1)
+    //logging("Seeing these commands: ${device.getSupportedCommands()}", 1)
     updateDataValue('namespace', getDeviceInfoByName('namespace'))
+    /*metaConfig = setCommandsToHide(["on", "hiAgain2", "on"])
+    metaConfig = setStateVariablesToHide(["uptime"], metaConfig=metaConfig)
+    metaConfig = setCurrentStatesToHide(["needUpdate"], metaConfig=metaConfig)
+    metaConfig = setDatasToHide(["namespace"], metaConfig=metaConfig)
+    metaConfig = setPreferencesToHide(["port"], metaConfig=metaConfig)*/
+    metaConfig = setCommandsToHide([])
+    metaConfig = setStateVariablesToHide([], metaConfig=metaConfig)
+    metaConfig = setCurrentStatesToHide([], metaConfig=metaConfig)
+    metaConfig = setDatasToHide([], metaConfig=metaConfig)
+    metaConfig = setPreferencesToHide([], metaConfig=metaConfig)
     try {
         // In case we have some more to run specific to this driver
         refreshAdditional()

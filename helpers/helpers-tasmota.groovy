@@ -4,7 +4,23 @@ def refresh() {
     def cmds = []
     cmds << getAction(getCommandString("Status", "0"))
     getDriverVersion()
+    //logging("this.binding.variables = ${this.binding.variables}", 1)
+    //logging("settings = ${settings}", 1)
+    //logging("getDefinitionData() = ${getDefinitionData()}", 1)
+    //logging("getPreferences() = ${getPreferences()}", 1)
+    //logging("getSupportedCommands() = ${device.getSupportedCommands()}", 1)
+    //logging("Seeing these commands: ${device.getSupportedCommands()}", 1)
     updateDataValue('namespace', getDeviceInfoByName('namespace'))
+    /*metaConfig = setCommandsToHide(["on", "hiAgain2", "on"])
+    metaConfig = setStateVariablesToHide(["uptime"], metaConfig=metaConfig)
+    metaConfig = setCurrentStatesToHide(["needUpdate"], metaConfig=metaConfig)
+    metaConfig = setDatasToHide(["namespace"], metaConfig=metaConfig)
+    metaConfig = setPreferencesToHide(["port"], metaConfig=metaConfig)*/
+    metaConfig = setCommandsToHide([])
+    metaConfig = setStateVariablesToHide([], metaConfig=metaConfig)
+    metaConfig = setCurrentStatesToHide([], metaConfig=metaConfig)
+    metaConfig = setDatasToHide([], metaConfig=metaConfig)
+    metaConfig = setPreferencesToHide([], metaConfig=metaConfig)
     try {
         // In case we have some more to run specific to this driver
         refreshAdditional()

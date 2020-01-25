@@ -94,40 +94,42 @@ def mainPage() {
                 state.devices.each { rawDev ->
                     cDev = getTasmotaDevice(rawDev.deviceNetworkId)
                     //getLastActivity()
-                    href("configureTasmotaDevice", title:"${getMaterialIcon('', 'he-bulb_1 icon-small')} $cDev.label", description:"", params: [did: cDev.deviceNetworkId])
-                    
-                    lastActivity = getTimeStringSinceDateWithMaximum(cDev.getLastActivity(), 2*60*60*1000)
-                    
-                    wifiSignalQuality = cDev.currentState('wifiSignal')
-                    wifiSignalQualityRed = true
-                    if(wifiSignalQuality != null) {
-                        wifiSignalQuality = wifiSignalQuality.value
-                        quality = extractInt(wifiSignalQuality)
-                        wifiSignalQualityRed = quality < 50
+                    if(cDev != null) {
+                        href("configureTasmotaDevice", title:"${getMaterialIcon('', 'he-bulb_1 icon-small')} $cDev.label", description:"", params: [did: cDev.deviceNetworkId])
+                        
+                        lastActivity = getTimeStringSinceDateWithMaximum(cDev.getLastActivity(), 2*60*60*1000)
+                        
+                        wifiSignalQuality = cDev.currentState('wifiSignal')
+                        wifiSignalQualityRed = true
+                        if(wifiSignalQuality != null) {
+                            wifiSignalQuality = wifiSignalQuality.value
+                            quality = extractInt(wifiSignalQuality)
+                            wifiSignalQualityRed = quality < 50
+                        }
+                        uptime = "${cDev.getDeviceDataByName('uptime')}"
+                        firmware = "${cDev.getDeviceDataByName('firmware')}"
+                        driverVersion = "${cDev.getDeviceDataByName('driver')}"
+                        driverName = "${getDeviceDriverName(cDev)}"
+                        getDeviceTable([[href:getDeviceConfigLink(cDev.id)],
+                                        [data:rawDev['data']['ip']],
+                                        //[data:runDeviceCommand(getTasmotaDevice(cDev.deviceNetworkId), 'getDeviceDataByName', ['uptime'])],])
+                                        [data:uptime, red:uptime == "null"],
+                                        [data:lastActivity['time'], red:lastActivity['red']],
+                                        [data:"${wifiSignalQuality}", red:wifiSignalQualityRed],
+                                        [data:firmware, red:firmware == "null"],
+                                        [data:driverVersion, red:driverVersion == "null"],
+                                        [data:driverName, red:driverName == "null"],])
+                                // it.label
+                            //btnParagraph([[href:getDeviceConfigLink(cDev.id), target:"_blank", title:"Config"],
+                            //            [href:getDeviceTasmotaConfigLink(cDev['data']['ip']), target:"_blank", title:'Tasmota&nbsp;Web&nbsp;Config (' + cDev['data']['ip'] + ')']],
+                            //)
+                                //paragraph('<table style="border-spacing: 10px 0px"><tr><td class="btn btn-default btn-lg hrefElem mdl-button--raised mdl-shadow--2dp"><a style="color: #000;" href="' + "${getDeviceConfigLink(it.id)}" + '" target="deviceConfig">Config</a></td>' + 
+                                        //' | <a href="' + "${getDeviceLogLink(it.id)}" + '" target="deviceConfig">Log</a>' +
+                                //        '<td class="btn btn-default btn-lg hrefElem mdl-button--raised mdl-shadow--2dp"><a style="color: #000;" href="' + "${getDeviceTasmotaConfigLink(it['data']['ip'])}" + '" target="deviceWebConfig">Tasmota&nbsp;Web&nbsp;Config (' + it['data']['ip'] + ')</a></td></tr></table>' )
+                        
+                        //%7B%22did%22%3A%225002915AFD0A%22%7D
+                        //%7B%22did%22%3A%222CF43222E6AD%22%7D
                     }
-                    uptime = "${cDev.getDeviceDataByName('uptime')}"
-                    firmware = "${cDev.getDeviceDataByName('firmware')}"
-                    driverVersion = "${cDev.getDeviceDataByName('driver')}"
-                    driverName = "${getDeviceDriverName(cDev)}"
-                    getDeviceTable([[href:getDeviceConfigLink(cDev.id)],
-                                    [data:rawDev['data']['ip']],
-                                    //[data:runDeviceCommand(getTasmotaDevice(cDev.deviceNetworkId), 'getDeviceDataByName', ['uptime'])],])
-                                    [data:uptime, red:uptime == "null"],
-                                    [data:lastActivity['time'], red:lastActivity['red']],
-                                    [data:"${wifiSignalQuality}", red:wifiSignalQualityRed],
-                                    [data:firmware, red:firmware == "null"],
-                                    [data:driverVersion, red:driverVersion == "null"],
-                                    [data:driverName, red:driverName == "null"],])
-                            // it.label
-                        //btnParagraph([[href:getDeviceConfigLink(cDev.id), target:"_blank", title:"Config"],
-                        //            [href:getDeviceTasmotaConfigLink(cDev['data']['ip']), target:"_blank", title:'Tasmota&nbsp;Web&nbsp;Config (' + cDev['data']['ip'] + ')']],
-                        //)
-                            //paragraph('<table style="border-spacing: 10px 0px"><tr><td class="btn btn-default btn-lg hrefElem mdl-button--raised mdl-shadow--2dp"><a style="color: #000;" href="' + "${getDeviceConfigLink(it.id)}" + '" target="deviceConfig">Config</a></td>' + 
-                                    //' | <a href="' + "${getDeviceLogLink(it.id)}" + '" target="deviceConfig">Log</a>' +
-                            //        '<td class="btn btn-default btn-lg hrefElem mdl-button--raised mdl-shadow--2dp"><a style="color: #000;" href="' + "${getDeviceTasmotaConfigLink(it['data']['ip'])}" + '" target="deviceWebConfig">Tasmota&nbsp;Web&nbsp;Config (' + it['data']['ip'] + ')</a></td></tr></table>' )
-                    
-                    //%7B%22did%22%3A%225002915AFD0A%22%7D
-                    //%7B%22did%22%3A%222CF43222E6AD%22%7D
 
                 }
                 it = test
