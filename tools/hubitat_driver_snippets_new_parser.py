@@ -15,13 +15,15 @@
   Snippets used by hubitat-driver-helper-tool
 """
 
-def getGenericTasmotaParseHeader():
+def getGenericTasmotaNewParseHeader():
     return """// parse() Generic Tasmota-device header BEGINS here
-//log.debug "Parsing: ${description}"
+//logging("Parsing: ${description}", 0)
 def events = []
 def descMap = parseDescriptionAsMap(description)
 def body
-//log.debug "descMap: ${descMap}"
+//logging("descMap: ${descMap}", 0)
+
+missingChild = false
 
 if (!state.mac || state.mac != descMap["mac"]) {
     logging("Mac address of device found ${descMap["mac"]}",1)
@@ -42,13 +44,17 @@ if (body && body != "") {
         // parse() Generic header ENDS here
         """
 
-def getGenericTasmotaParseFooter():
+def getGenericTasmotaNewParseFooter():
     return """// parse() Generic Tasmota-device footer BEGINS here
-    } else {
+} else {
         //log.debug "Response is not JSON: $body"
     }
 }
 
+if(missingChild == true) {
+    log.warn "DISABLED: Missing a child device, refreshing..."
+    refresh()
+}
 if (!device.currentValue("ip") || (device.currentValue("ip") != getDataValue("ip"))) {
     curIP = getDataValue("ip")
     logging("Setting IP: $curIP", 1)
@@ -59,7 +65,7 @@ if (!device.currentValue("ip") || (device.currentValue("ip") != getDataValue("ip
 return events
 // parse() Generic footer ENDS here"""
 
-def getTasmotaParserForBasicData():
+def getTasmotaNewParserForBasicData():
     return """
 // Standard Basic Data parsing
 
@@ -77,20 +83,11 @@ if (result.containsKey("StatusPRM")) {
 }
 if (result.containsKey("Status")) {
     logging("Status: $result.Status",99)
-    if (result.Status.containsKey("Module")) {
-        // The check for Version is here to avoid using the wrong message
-        logging("Module: $result.Status.Module",50)
-        events << createEvent(name: "module", value: "$result.Status.Module")
-    }
     result << result.Status
 }
 if (result.containsKey("StatusSTS")) {
     logging("StatusSTS: $result.StatusSTS",99)
     result << result.StatusSTS
-}
-if (result.containsKey("POWER")) {
-    logging("POWER: $result.POWER",99)
-    events << createEvent(name: "switch", value: result.POWER.toLowerCase())
 }
 if (result.containsKey("LoadAvg")) {
     logging("LoadAvg: $result.LoadAvg",99)
@@ -120,7 +117,12 @@ if (result.containsKey("Version")) {
     logging("Version: $result.Version",99)
     updateDataValue("firmware", result.Version)
 }
-// When it is a Template, it looks a bit different
+if (result.containsKey("Module") && !result.containsKey("Version")) {
+    // The check for Version is here to avoid using the wrong message
+    logging("Module: $result.Module",50)
+    events << createEvent(name: "module", value: "$result.Module")
+}
+// When it is a Template, it looks a bit different and is NOT valid JSON...
 if (result.containsKey("NAME") && result.containsKey("GPIO") && result.containsKey("FLAG") && result.containsKey("BASE")) {  
     n = result.toMapString()
     n = n.replaceAll(', ',',')
@@ -154,7 +156,7 @@ if (result.containsKey("Uptime")) {
 }
 """
 
-def getTasmotaParserForWifi():
+def getTasmotaNewParserForWifi():
     return """
 // Standard Wifi Data parsing
 if (result.containsKey("Wifi")) {
@@ -178,47 +180,27 @@ if (result.containsKey("Wifi")) {
 }
 """
 
-def getTasmotaParserForParentSwitch():
+def getTasmotaNewParserForParentSwitch():
     return """
-// Standard TuyaSwitch Data parsing
+// Standard Switch Data parsing
 Integer numSwitchesI = numSwitches.toInteger()
-if (numSwitchesI == 1 && result.containsKey("POWER")) {
-    logging("POWER (child): $result.POWER",1)
-    events << childSendState("1", result.POWER.toLowerCase())
+if (result.containsKey("POWER") && result.containsKey("POWER1") == false) {
+    logging("parser: POWER (child): $result.POWER",1)
+    //events << childSendState("1", result.POWER.toLowerCase())
+    missingChild = callChildParseByTypeId("POWER1", [[name:"switch", value: result.POWER.toLowerCase()]], missingChild)
 }
-if (result.containsKey("POWER1")) {
-    logging("POWER1: $result.POWER1",1)
-    events << childSendState("1", result.POWER1.toLowerCase())
-    events << createEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER1.toLowerCase() == "on"?1:0) && result.POWER1.toLowerCase() == "on"? "on" : "off"))
-}
-if (result.containsKey("POWER2")) {
-    logging("POWER2: $result.POWER2",1)
-    events << childSendState("2", result.POWER2.toLowerCase())
-    events << createEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER2.toLowerCase() == "on"?2:0) && result.POWER2.toLowerCase() == "on"? "on" : "off"))
-}
-if (result.containsKey("POWER3")) {
-    logging("POWER3: $result.POWER3",1)
-    events << childSendState("3", result.POWER3.toLowerCase())
-    events << createEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER3.toLowerCase() == "on"?3:0) && result.POWER3.toLowerCase() == "on"? "on" : "off"))
-}
-if (result.containsKey("POWER4")) {
-    logging("POWER4: $result.POWER4",1)
-    events << childSendState("4", result.POWER4.toLowerCase())
-    events << createEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER4.toLowerCase() == "on"?4:0) && result.POWER4.toLowerCase() == "on" ? "on" : "off"))
-}
-if (result.containsKey("POWER5")) {
-    logging("POWER5: $result.POWER5",1)
-    events << childSendState("5", result.POWER5.toLowerCase())
-    events << createEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER5.toLowerCase() == "on"?5:0) && result.POWER5.toLowerCase() == "on" ? "on" : "off"))
-}
-if (result.containsKey("POWER6")) {
-    logging("POWER6: $result.POWER6",1)
-    events << childSendState("6", result.POWER6.toLowerCase())
-    events << createEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER6.toLowerCase() == "on"?6:0) && result.POWER6.toLowerCase() == "on" ? "on" : "off"))
+(1..16).each {i->
+    //logging("POWER$i:${result."POWER$i"} '$result' containsKey:${result.containsKey("POWER$i")}", 1)
+    if(result."POWER$i" != null) {
+        logging("parser: POWER$i: ${result."POWER$i"}",1)
+        missingChild = callChildParseByTypeId("POWER$i", [[name:"switch", value: result."POWER$i".toLowerCase()]], missingChild)
+        //events << childSendState("1", result.POWER1.toLowerCase())
+        //events << createEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER1.toLowerCase() == "on"?1:0) && result.POWER1.toLowerCase() == "on"? "on" : "off"))
+    }
 }
 """
 
-def getTasmotaParserForEnergyMonitor():
+def getTasmotaNewParserForEnergyMonitor():
     return """
 // Standard Energy Monitor Data parsing
 if (result.containsKey("StatusSNS")) {
@@ -229,137 +211,163 @@ if (result.containsKey("ENERGY")) {
     //if (!state.containsKey('energy')) state.energy = {}
     if (result.ENERGY.containsKey("Total")) {
         logging("Total: $result.ENERGY.Total kWh",99)
-        events << createEvent(name: "energyTotal", value: "$result.ENERGY.Total kWh")
+        //events << createEvent(name: "energyTotal", value: "$result.ENERGY.Total kWh")
+        missingChild = callChildParseByTypeId("POWER1", [[name:"energyTotal", value:"$result.ENERGY.Total kWh"]], missingChild)
     }
     if (result.ENERGY.containsKey("Today")) {
         logging("Today: $result.ENERGY.Today kWh",99)
-        events << createEvent(name: "energyToday", value: "$result.ENERGY.Today kWh")
+        //events << createEvent(name: "energyToday", value: "$result.ENERGY.Today kWh")
+        missingChild = callChildParseByTypeId("POWER1", [[name:"energyToday", value:"$result.ENERGY.Today kWh"]], missingChild)
     }
     if (result.ENERGY.containsKey("Yesterday")) {
         logging("Yesterday: $result.ENERGY.Yesterday kWh",99)
-        events << createEvent(name: "energyYesterday", value: "$result.ENERGY.Yesterday kWh")
+        //events << createEvent(name: "energyYesterday", value: "$result.ENERGY.Yesterday kWh")
+        missingChild = callChildParseByTypeId("POWER1", [[name:"energyYesterday", value:"$result.ENERGY.Yesterday kWh"]], missingChild)
     }
     if (result.ENERGY.containsKey("Current")) {
         logging("Current: $result.ENERGY.Current A",99)
         r = (result.ENERGY.Current == null) ? 0 : result.ENERGY.Current
-        events << createEvent(name: "current", value: "$r A")
+        //events << createEvent(name: "current", value: "$r A")
+        missingChild = callChildParseByTypeId("POWER1", [[name:"current", value:"$r A"]], missingChild)
     }
     if (result.ENERGY.containsKey("ApparentPower")) {
         logging("apparentPower: $result.ENERGY.ApparentPower VA",99)
-        events << createEvent(name: "apparentPower", value: "$result.ENERGY.ApparentPower VA")
+        //events << createEvent(name: "apparentPower", value: "$result.ENERGY.ApparentPower VA")
+        missingChild = callChildParseByTypeId("POWER1", [[name:"apparentPower", value:"$result.ENERGY.ApparentPower VA"]], missingChild)
     }
     if (result.ENERGY.containsKey("ReactivePower")) {
         logging("reactivePower: $result.ENERGY.ReactivePower VAr",99)
-        events << createEvent(name: "reactivePower", value: "$result.ENERGY.ReactivePower VAr")
+        //events << createEvent(name: "reactivePower", value: "$result.ENERGY.ReactivePower VAr")
+        missingChild = callChildParseByTypeId("POWER1", [[name:"reactivePower", value:"$result.ENERGY.reactivePower VAr"]], missingChild)
     }
     if (result.ENERGY.containsKey("Factor")) {
         logging("powerFactor: $result.ENERGY.Factor",99)
-        events << createEvent(name: "powerFactor", value: "$result.ENERGY.Factor")
+        //events << createEvent(name: "powerFactor", value: "$result.ENERGY.Factor")
+        missingChild = callChildParseByTypeId("POWER1", [[name:"powerFactor", value:"$result.ENERGY.Factor"]], missingChild)
     }
     if (result.ENERGY.containsKey("Voltage")) {
         logging("Voltage: $result.ENERGY.Voltage V",99)
         r = (result.ENERGY.Voltage == null) ? 0 : result.ENERGY.Voltage
-        events << createEvent(name: "voltageWithUnit", value: "$r V")
-        events << createEvent(name: "voltage", value: r, unit: "V")
+        //events << createEvent(name: "voltageWithUnit", value: "$r V")
+        //events << createEvent(name: "voltage", value: r, unit: "V")
+        missingChild = callChildParseByTypeId("POWER1", [[name:"voltageWithUnit", value:"$r V"]], missingChild)
+        missingChild = callChildParseByTypeId("POWER1", [[name:"voltage", value: r, unit: "V"]], missingChild)
     }
     if (result.ENERGY.containsKey("Power")) {
         logging("Power: $result.ENERGY.Power W",99)
         r = (result.ENERGY.Power == null) ? 0 : result.ENERGY.Power
-        events << createEvent(name: "powerWithUnit", value: "$r W")
-        events << createEvent(name: "power", value: r, unit: "W")
+        //events << createEvent(name: "powerWithUnit", value: "$r W")
+        //events << createEvent(name: "power", value: r, unit: "W")
+        missingChild = callChildParseByTypeId("POWER1", [[name:"powerWithUnit", value:"$r W"]], missingChild)
+        missingChild = callChildParseByTypeId("POWER1", [[name:"power", value: r, unit: "W"]], missingChild)
         //state.energy.power = r
     }
 }
 // StatusPTH:[PowerDelta:0, PowerLow:0, PowerHigh:0, VoltageLow:0, VoltageHigh:0, CurrentLow:0, CurrentHigh:0]
 """
 
-def getTasmotaParserForTHMonitor():
+def getTasmotaNewParserForSensors():
     return """
-// Standard Energy Monitor Data parsing
-resultTH = null
+// Standard Sensor Data parsing
 // AM2301
 // BME280
 // BMP280
 //logging("result instanceof Map: ${result instanceof Map}", 1)
 for ( r in result ) {
     //logging("${r.key} instanceof Map: ${r.value instanceof Map}", 1)
-    if(r.value instanceof Map && (r.value.containsKey("Humidity") || r.value.containsKey("Temperature") || r.value.containsKey("Pressure"))) {
-        resultTH = r.value
-        logging("Found resultTH in ${r.key}", 1)
-    }
     if((r.key == 'StatusSNS' || r.key == 'SENSOR') && r.value instanceof Map) {
-        for ( rs in r ) {
-            if(rs.value instanceof Map && (rs.value.containsKey("Humidity") || rs.value.containsKey("Temperature") || rs.value.containsKey("Pressure"))) {
-                resultTH = rs.value
-                logging("Found resultTH in StatusSNS.${r.key}", 1)
-            }
-        }
+        result << r
     }
 }
-if(resultTH != null) {
-    if (resultTH.containsKey("Humidity")) {
-        logging("Humidity: RH $resultTH.Humidity %", 99)
-        state.realHumidity = Math.round((resultTH.Humidity as Double) * 100) / 100
-        events << createEvent(name: "humidity", value: "${getAdjustedHumidity(state.realHumidity)}", unit: "%")
-    }
-    if (resultTH.containsKey("Temperature")) {
-        //Probably need this line below
-        //state.realTemperature = convertTemperatureIfNeeded(resultTH.Temperature.toFloat(), result.TempUnit, 1)
-        state.realTemperature = resultTH.Temperature.toFloat()
-        logging("Temperature: ${getAdjustedTemp(state.realTemperature? state.realTemperature:0)}", 99)
-        events << createEvent(name: "temperature", value: "${getAdjustedTemp(state.realTemperature)}", unit: "${location.temperatureScale}")
-    }
-    if (resultTH.containsKey("Pressure")) {
-        logging("Pressure: $resultTH.Pressure $result.PressureUnit", 99)
-        state.realPressure = Math.round((resultTH.Pressure as Double) * 100) / 100
-        adjustedPressure = getAdjustedPressure(state.realPressure)
-        events << createEvent(name: "pressure", value: "${adjustedPressure}", unit: "${result.PressureUnit}")
-        // Since there is no Pressure tile yet, we need an attribute with the unit...
-        events << createEvent(name: "pressureWithUnit", value: "${adjustedPressure} ${result.PressureUnit}")
+for ( r in result ) {
+    if(r.value instanceof Map && (r.value.containsKey("Humidity") || 
+        r.value.containsKey("Temperature") || r.value.containsKey("Pressure") ||
+        r.value.containsKey("Distance"))) {
+        if (r.value.containsKey("Humidity")) {
+            logging("Humidity: RH $r.value.Humidity%", 99)
+            realHumidity = Math.round((r.value.Humidity as Double) * 100) / 100
+            //events << createEvent(name: "humidity", value: "${getAdjustedHumidity(realHumidity)}", unit: "%")
+            missingChild = callChildParseByTypeId(r.key, [[name: "humidity", value: String.format("%.2f", getAdjustedHumidity(realHumidity)), unit: "%"]], missingChild)
+        }
+        if (r.value.containsKey("Temperature")) {
+            //Probably need this line below
+            //state.realTemperature = convertTemperatureIfNeeded(r.value.Temperature.toFloat(), result.TempUnit, 1)
+            realTemperature = r.value.Temperature.toFloat()
+            logging("Temperature: ${getAdjustedTemp(realTemperature? realTemperature:0)}", 99)
+            //events << createEvent(name: "temperature", value: "${getAdjustedTemp(realTemperature)}", unit: "&deg;${location.temperatureScale}")
+            c = String.valueOf((char)(Integer.parseInt("00B0", 16)));
+            missingChild = callChildParseByTypeId(r.key, [[name: "temperature", value: String.format("%.2f", getAdjustedTemp(realTemperature)), unit: "$c${location.temperatureScale}"]], missingChild)
+        }
+        if (r.value.containsKey("Pressure")) {
+            logging("Pressure: $r.value.Pressure", 99)
+            pressureUnit = "kPa"
+            realPressure = Math.round((r.value.Pressure as Double) * 100) / 100
+            adjustedPressure = getAdjustedPressure(realPressure)
+            //events << createEvent(name: "pressure", value: "${adjustedPressure}", unit: "${pressureUnit}")
+            missingChild = callChildParseByTypeId(r.key, [[name: "pressure", value: String.format("%.2f", adjustedPressure), unit: pressureUnit]], missingChild)
+            // Since there is no Pressure tile yet, we need an attribute with the unit...
+            //events << createEvent(name: "pressureWithUnit", value: "${adjustedPressure} ${pressureUnit}")
+            missingChild = callChildParseByTypeId(r.key, [[name: "pressureWithUnit", value: String.format("%.2f $pressureUnit", adjustedPressure)]], missingChild)
+        }
+        if (r.value.containsKey("Distance")) {
+            logging("Distance: $r.value.Distance cm", 99)
+            realDistance = Math.round((r.value.Distance as Double) * 100) / 100
+            //events << createEvent(name: "distance", value: "${realDistance}", unit: "cm")
+            missingChild = callChildParseByTypeId(r.key, [[name: "distance", value: String.format("%.2f cm", realDistance), unit: "cm"]], missingChild)
+        }
+        // TODO: Add Distance!
     }
 }
 """
 
-def getTasmotaParserForRGBWDevice():
+def getTasmotaNewParserForRGBWDevice():
     return """
 // Standard RGBW Device Data parsing
+childDevice = getChildDeviceByActionType("POWER1")
 if (result.containsKey("HSBColor")) {
     hsbColor = result.HSBColor.tokenize(",")
     hsbColor[0] = Math.round((hsbColor[0] as Integer) / 3.6)
     hsbColor[1] = hsbColor[1] as Integer
     hsbColor[2] = hsbColor[2] as Integer
     logging("hsbColor: ${hsbColor}", 1)
-    if(device.currentValue('hue') != hsbColor[0] ) events << createEvent(name: "hue", value: hsbColor[0])
-    if(device.currentValue('saturation') != hsbColor[1] ) events << createEvent(name: "saturation", value: hsbColor[1])
+    if(childDevice.currentValue('hue') != hsbColor[0] ) missingChild = callChildParseByTypeId("POWER1", [[name: "hue", value: hsbColor[0]]], missingChild)
+    if(childDevice.currentValue('saturation') != hsbColor[1] ) missingChild = callChildParseByTypeId("POWER1", [[name: "saturation", value: hsbColor[1]]], missingChild)
 }
 if (result.containsKey("Color")) {
     color = result.Color
-    logging("Color: ${color.tokenize(",")}", 1)
+    logging("Color: ${color}", 1)
+    mode = "RGB"
+    if(color.length() > 6 && color.startsWith("000000")) {
+        mode = "CT"
+    }
+    state.colorMode = mode
+    if(childDevice.currentValue('colorMode') != mode ) missingChild = callChildParseByTypeId("POWER1", [[name: "colorMode", value: mode]], missingChild)
 }
 if (result.containsKey("CT")) {
     t = Math.round(1000000/result.CT)
-    if(colorTemperature != t ) events << createEvent(name: "colorTemperature", value: t)
+    if(childDevice.currentValue('colorTemperature') != t ) missingChild = callChildParseByTypeId("POWER1", [[name: "colorTemperature", value: t]], missingChild)
     logging("CT: $result.CT ($t)",99)
 }
 """
 
-def getTasmotaParserForDimmableDevice():
+def getTasmotaNewParserForDimmableDevice():
     return """
 // Standard Dimmable Device Data parsing
+childDevice = getChildDeviceByActionType("POWER1")
 if (result.containsKey("Dimmer")) {
     dimmer = result.Dimmer
     logging("Dimmer: ${dimmer}", 1)
     state.level = dimmer
-    if(device.currentValue('level') != dimmer ) events << createEvent(name: "level", value: dimmer)
+    if(childDevice.currentValue('level') != dimmer ) missingChild = callChildParseByTypeId("POWER1", [[name: "level", value: dimmer]], missingChild)
 }
 if (result.containsKey("Wakeup")) {
     wakeup = result.Wakeup
     logging("Wakeup: ${wakeup}", 1)
-    events << createEvent(name: "wakeup", value: wakeup)
+    //events << createEvent(name: "wakeup", value: wakeup)
 }
 """
 
-def getTasmotaParserForRGBWIRRemote():
+def getTasmotaNewParserForRGBWIRRemote():
     return """
 // Standard RGBW IR Remote Data parsing
 if (result.containsKey("IrReceived")) {
@@ -389,3 +397,17 @@ if (result.containsKey("IrReceived")) {
     
 }
 """
+
+def getGenericZigbeeParseHeader():
+    return """// parse() Generic Zigbee-device header BEGINS here
+logging("Parsing: ${description}", 0)
+def events = []
+def msgMap = zigbee.parseDescriptionAsMap(description)
+logging("msgMap: ${msgMap}", 0)
+// parse() Generic header ENDS here"""
+
+def getGenericZigbeeParseFooter():
+    return """// parse() Generic Zigbee-device footer BEGINS here
+
+return events
+// parse() Generic footer ENDS here"""

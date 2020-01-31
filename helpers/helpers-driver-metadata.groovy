@@ -26,16 +26,39 @@ private saveMetaConfig(metaConfig) {
     updateDataValue('metaConfig', JsonOutput.toJson(metaConfig))
 }
 
-private setSomethingToHide(type, something, metaConfig=null) {
+private setSomethingToHide(String type, something, metaConfig=null) {
     if(metaConfig==null) metaConfig = getMetaConfig()
+    def oldData = []
     something = something.unique()
     if(!metaConfig.containsKey("hide")) {
-        metaConfig["hide"] = ["$type":something]
+        metaConfig["hide"] = [type:something]
     } else {
-        metaConfig["hide"]["$type"] = something
+        //logging("setSomethingToHide 1 else: something: '$something', type:'$type' (${metaConfig["hide"]}) containsKey:${metaConfig["hide"].containsKey(type)}", 1)
+        if(metaConfig["hide"].containsKey(type)) {
+            //logging("setSomethingToHide 1 hasKey else: something: '$something', type:'$type' (${metaConfig["hide"]}) containsKey:${metaConfig["hide"].containsKey(type)}", 1)
+            metaConfig["hide"][type].addAll(something)
+        } else {
+            //logging("setSomethingToHide 1 noKey else: something: '$something', type:'$type' (${metaConfig["hide"]}) containsKey:${metaConfig["hide"].containsKey(type)}", 1)
+            metaConfig["hide"][type] = something
+        }
+        //metaConfig["hide"]["$type"] = oldData
+        //logging("setSomethingToHide 2 else: something: '$something', type:'$type' (${metaConfig["hide"]}) containsKey:${metaConfig["hide"].containsKey(type)}", 1)
     }
     saveMetaConfig(metaConfig)
     logging("setSomethingToHide() = ${metaConfig}", 1)
+    return metaConfig
+}
+
+private clearTypeToHide(type, metaConfig=null) {
+    if(metaConfig==null) metaConfig = getMetaConfig()
+    something = something.unique()
+    if(!metaConfig.containsKey("hide")) {
+        metaConfig["hide"] = ["$type":[]]
+    } else {
+        metaConfig["hide"]["$type"] = []
+    }
+    saveMetaConfig(metaConfig)
+    logging("clearTypeToHide() = ${metaConfig}", 1)
     return metaConfig
 }
 
@@ -55,9 +78,23 @@ def setDisableCSS(valueBool, metaConfig=null) {
     return metaConfig
 }
 
+def setStateCommentInCSS(stateComment, metaConfig=null) {
+    if(metaConfig==null) metaConfig = getMetaConfig()
+    metaConfig["stateComment"] = stateComment
+    saveMetaConfig(metaConfig)
+    logging("setStateCommentInCSS(stateComment = $stateComment) = ${metaConfig}", 1)
+    return metaConfig
+}
+
 def setCommandsToHide(commands, metaConfig=null) {
     metaConfig = setSomethingToHide("command", commands, metaConfig=metaConfig)
     logging("setCommandsToHide(${commands})", 1)
+    return metaConfig
+}
+
+def clearCommandsToHide(metaConfig=null) {
+    metaConfig = clearTypeToHide("command", metaConfig=metaConfig)
+    logging("clearCommandsToHide(metaConfig=${metaConfig})", 1)
     return metaConfig
 }
 
@@ -67,9 +104,21 @@ def setStateVariablesToHide(stateVariables, metaConfig=null) {
     return metaConfig
 }
 
+def clearStateVariablesToHide(metaConfig=null) {
+    metaConfig = clearTypeToHide("stateVariable", metaConfig=metaConfig)
+    logging("clearStateVariablesToHide(metaConfig=${metaConfig})", 1)
+    return metaConfig
+}
+
 def setCurrentStatesToHide(currentStates, metaConfig=null) {
     metaConfig = setSomethingToHide("currentState", currentStates, metaConfig=metaConfig)
     logging("setCurrentStatesToHide(${currentStates})", 1)
+    return metaConfig
+}
+
+def clearCurrentStatesToHide(metaConfig=null) {
+    metaConfig = clearTypeToHide("currentState", metaConfig=metaConfig)
+    logging("clearCurrentStatesToHide(metaConfig=${metaConfig})", 1)
     return metaConfig
 }
 
@@ -79,15 +128,27 @@ def setDatasToHide(datas, metaConfig=null) {
     return metaConfig
 }
 
+def clearDatasToHide(metaConfig=null) {
+    metaConfig = clearTypeToHide("data", metaConfig=metaConfig)
+    logging("clearDatasToHide(metaConfig=${metaConfig})", 1)
+    return metaConfig
+}
+
 def setPreferencesToHide(preferences, metaConfig=null) {
     metaConfig = setSomethingToHide("preference", preferences, metaConfig=metaConfig)
     logging("setPreferencesToHide(${preferences})", 1)
     return metaConfig
 }
 
+def clearPreferencesToHide(metaConfig=null) {
+    metaConfig = clearTypeToHide("preference", metaConfig=metaConfig)
+    logging("clearPreferencesToHide(metaConfig=${metaConfig})", 1)
+    return metaConfig
+}
+
 // These methods are for executing inside the metadata section of a driver.
 def metaDataExporter() {
-    log.debug "getEXECUTOR_TYPE = ${getEXECUTOR_TYPE()}"
+    //log.debug "getEXECUTOR_TYPE = ${getEXECUTOR_TYPE()}"
     filteredPrefs = getPreferences()['sections']['input'].name[0]
     //log.debug "filteredPrefs = ${filteredPrefs}"
     if(filteredPrefs != []) updateDataValue('preferences', "${filteredPrefs}".replaceAll("\\s",""))
@@ -182,6 +243,9 @@ def getDriverCSSWrapper() {
                     if(metaConfig["hide"].containsKey("preference")) {
                         r += getCSSForPreferencesToHide(metaConfig["hide"]["preference"])
                     }
+                }
+                if(metaConfig.containsKey("stateComment")) {
+                    r += "div#stateComment:after { content: \"${metaConfig["stateComment"]}\" }"
                 }
                 r += " ${getDriverCSS()} "
             }

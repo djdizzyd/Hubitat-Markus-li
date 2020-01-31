@@ -94,7 +94,7 @@ def recreateChildDevices() {
 }
 
 def deleteChildren() {
-	logging("deleteChildren",1)
+	logging("deleteChildren()", 100)
 	def children = getChildDevices()
     
     children.each {child->

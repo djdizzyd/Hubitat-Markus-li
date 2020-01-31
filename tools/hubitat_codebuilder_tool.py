@@ -38,6 +38,9 @@ from hubitat_codebuilder_tasmota import HubitatCodeBuilderTasmota
 # Internal functions
 from hubitat_driver_snippets import *
 from hubitat_driver_snippets_parser import *
+from hubitat_driver_snippets_new_parser import *
+from hubitat_driver_snippets_zigbee_parser import *
+from hubitat_driver_snippets_metadata import *
 
 # Setup the logger
 log = logging.getLogger(__name__)
@@ -186,7 +189,7 @@ def main():
         # Tasmota Drivers WITH their own base-file
         {'id': 548, 'file': 'tasmota-tuyamcu-wifi-touch-switch.groovy' },
         {'id': 549, 'file': 'tasmota-tuyamcu-wifi-touch-switch-child.groovy' },
-        {'id': 550, 'file': 'tasmota-tuyamcu-wifi-touch-switch-child-test.groovy' },
+        #{'id': 550, 'file': 'tasmota-tuyamcu-wifi-touch-switch-child-test.groovy' },
         {'id': 513, 'file': 'tasmota-sonoff-powr2.groovy', 'deviceLink': 'https://templates.blakadder.com/sonoff_Pow_R2.html'},
         {'id': 551, 'file': 'tasmota-sonoff-s2x.groovy', 'comment': 'Works with both Sonoff S20 and S26.',
         'deviceLink': 'https://templates.blakadder.com/sonoff_S20.html'},
@@ -252,7 +255,8 @@ def main():
         # Universal drivers
         # Replacing 557 with the new Universal driver
         #{'id': 557, 'file': 'tasmota-ykyc-001-pm-plug.groovy' },
-        {'id': 557, 'file': 'tasmota-universal-parent.groovy' },
+        {'id': 557, 'file': 'tasmota-universal-parent.groovy', 'specialDebugLabel': 'descriptionText' },
+        {'id': 550, 'file': 'tasmota-universal-multisensor-child.groovy', 'specialDebugLabel': 'descriptionText' },
 
         # Zigbee
         {'id': 579, 'file': 'zigbee-generic-wifi-switch-plug.groovy' },
@@ -305,7 +309,7 @@ def main():
     #   {'id':641},{'id':642},
     #   {'id':650},{'id':651},  # RFLink
     #    {'id':648},  # Sonoff RF Bridge
-        {'id':557},  # Universal Parent
+        {'id':557}, {'id':550}, # Universal Parent + Universal Children
     #    {'id':589}, {'id':591},
     #     {'id':551},{'id':578}, {'id':362}, {'id':645}, {'id':590}, {'id':588}, 
     #    {'id': 0, 'file': 'tasmota-generic-thp-device.groovy' , \

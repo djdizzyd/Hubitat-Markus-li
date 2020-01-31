@@ -17,7 +17,7 @@ def setColorTemperature(value) {
     state.hue = 0
     state.saturation = 0
     state.colorMode = "CT"
-    if(device.currentValue("colorMode") != "CT" ) sendEvent(name: "colorMode", value: "CT")
+    //if(device.currentValue("colorMode") != "CT" ) sendEvent(name: "colorMode", value: "CT")
     logging("setColorTemperature('${t}') ADJUSTED to Mired", 10)
     getAction(getCommandString("CT", "${t}"))
 }
@@ -61,7 +61,7 @@ def setHSB(h, s, b, callWhite) {
         return(white())
         //return(getAction(getCommandString("hsbcolor", hsbcmd)))
     } else {
-        if(device.currentValue("colorMode") != "RGB" ) sendEvent(name: "colorMode", value: "RGB")
+        //if(device.currentValue("colorMode") != "RGB" ) sendEvent(name: "colorMode", value: "RGB")
         return(getAction(getCommandString("HsbColor", hsbcmd)))
     }
 }
@@ -93,13 +93,21 @@ def setRGB(r,g,b) {
     hsbColor = rgbToHSB(r, g, b)
     logging("hsbColor from RGB: ${hsbColor}", 1)
     state.colorMode = "RGB"
-    if(device.currentValue("colorMode") != "RGB" ) sendEvent(name: "colorMode", value: "RGB")
+    //if(device.currentValue("colorMode") != "RGB" ) sendEvent(name: "colorMode", value: "RGB")
     //if (hsbcmd == "${hsbColor[0]},${hsbColor[1]},${hsbColor[2]}") state.colorMode = "white"
     state.hue = hsbColor['hue']
     state.saturation = hsbColor['saturation']
     state.level = hsbColor['level']
     
     return(getAction(getCommandString("Color1", rgbcmd)))
+}
+
+float round2(float number, int scale) {
+    int pow = 10;
+    for (int i = 1; i < scale; i++)
+        pow *= 10;
+    float tmp = number * pow;
+    return ( (float) ( (int) ((tmp - (int) tmp) >= 0.5f ? tmp + 1 : tmp) ) ) / pow;
 }
 
 def setLevel(l, duration) {
@@ -115,13 +123,80 @@ def setLevel(l, duration) {
         if (state.colorMode == "RGB") {
             return(setHSB(null, null, l))
         } else {
-            if (duration > 10) {duration = 10}
-            delay = duration * 10
-            fadeCommand = "Fade 1;Speed ${duration};Dimmer ${l};Delay ${delay};Fade 0"
-            logging("fadeCommand: '" + fadeCommand + "'", 1)
-            return(getAction(getCommandString("Backlog", urlEscape(fadeCommand))))
+            if (duration > 5400) {
+                log.warn "Maximum supported dimming duration is 5400 seconds due to current implementation method used."
+                duration = 5400 // Maximum duration is 1.5 hours
+            } 
+            cLevel = state.level
+            
+            levelDistance = l - cLevel
+            direction = 1
+            if(levelDistance < 0) {
+                direction = -1
+                levelDistance = levelDistance * -1
+            }
+            steps = 13
+            increment = Math.round(((levelDistance as Float)  / steps) as Float)
+            if(increment <= 1 && levelDistance < steps) {
+                steps = levelDistance
+            }
+            // Each Backlog command has 200ms delay, deduct that delay and add 1 second extra
+            duration = ((duration as Float) - (2 * steps * 0.2) + 1) as Float
+            stepTime = round2((duration / steps) as Float, 1)
+            stepTimeTasmota = Math.round((stepTime as Float) * 10)
+            lastStepTime = round2((stepTime + (duration - (stepTime * steps)) as Float), 1)
+            lastStepTimeTasmota = Math.round((lastStepTime as Float) * 10)
+            fadeCommands = []
+            cmdLevel = cLevel
+            fadeCommands.add([command: "Fade", value: "1"])
+            fadeCommands.add([command: "Speed", value: "20"])
+            if(steps > 0) {
+                (1..steps).each{
+                    cmdLevel += (increment * direction)
+                    if(direction == 1 && (cmdLevel > l || it == steps)) cmdLevel = l
+                    if(direction == -1 && (cmdLevel < l || it == steps)) cmdLevel = l
+                    if(it != steps) {
+                        fadeCommands.add([command: "Delay", value: "$stepTimeTasmota"])
+                    } else {
+                        fadeCommands.add([command: "Delay", value: "$lastStepTimeTasmota"])
+                    }
+                    fadeCommands.add([command: "Dimmer", value: "$cmdLevel"])
+                }
+            } else {
+                fadeCommands.add([command: "Dimmer", value: "$l"])
+            }
+            fadeCommands.add([command: "Fade", value: "0"])
+            cmdData = [cLevel:cLevel, levelDistance:levelDistance, direction:direction, steps:steps, increment:increment, stepTime:stepTime, lastStepTime:lastStepTime]
+            //fadeCommands = "Fade 1;Speed ${speed};Dimmer ${l};Delay ${duration};Fade 0"
+            logging("fadeCommands: '" + fadeCommands + "', cmdData=$cmdData", 1)
+            return(getAction(getMultiCommandString(fadeCommands)))
         }
    }
+}
+
+def stopLevelChange() {
+    // Since sending a backlog command without arguments will cancel any current level change we have, 
+    // then that is what we do...
+    cmds = []
+    cmds << getAction(getMultiCommandString([[command: "Fade", value: "0"]]))
+    cmds << getAction(getCommandString("Backlog", null))
+    return cmds
+}
+
+def startLevelChange(String direction) {
+    cLevel = state.level
+    delay = 30
+    if(direction == "up") {
+        if(cLevel != null) {
+            delay = Math.round(((delay / 100) * (100-cLevel)) as Float)
+        }
+        setLevel(100, delay)
+    } else {
+        if(cLevel != null) {
+            delay = Math.round(((delay / 100) * (cLevel)) as Float)
+        }
+        setLevel(0, delay)
+    }
 }
 
 def whiteForPlatform() {
@@ -139,7 +214,8 @@ def whiteForPlatform() {
     state.red = l
     state.green = l
     state.blue = l
-    if(device.currentValue("colorMode") != "CT" ) sendEvent(name: "colorMode", value: "CT")
+    state.colorMode = "CT"
+    //if(device.currentValue("colorMode") != "CT" ) sendEvent(name: "colorMode", value: "CT")
     return(getAction(getCommandString("Color1", hexCmd)))
 }
 

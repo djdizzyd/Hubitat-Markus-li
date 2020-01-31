@@ -1,6 +1,6 @@
 #!include:getHeaderLicense()
 
-#!include:getDefaultImports()
+#!include:getDefaultParentImports()
 
 definition(
     name: "Tasmota Device Handler",
@@ -170,6 +170,7 @@ def refreshDevices(){
     } else {
         result = "PARTIAL FAILURE: $numDevicesSuccess of $numDevices Device(s) have been refreshed! (${numDevices - numDevicesSuccess} failed!)"
     }
+    updatedAdditional()
     resultPage("refreshDevices", "Devices Refreshed", result)
 }
 
