@@ -20,7 +20,7 @@ import groovy.json.JsonOutput
 
 
 metadata {
-	definition (name: "Tasmota - (TEST) ZNSN TuyaMCU Wifi Curtain Wall Panel", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-znsn-tuyamcu-wifi-curtain-wall-panel-expanded.groovy") {
+	definition (name: "Tasmota - ZNSN TuyaMCU Wifi Curtain Wall Panel", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-znsn-tuyamcu-wifi-curtain-wall-panel-expanded.groovy") {
         capability "Light"
         capability "Switch"
         capability "WindowShade"
@@ -1257,7 +1257,12 @@ def update_current_properties(cmd)
 def refresh() {
 	logging("refresh()", 100)
     def cmds = []
+    // Clear all old state variables
+    state.clear()
+
+    // Retrieve full status from Tasmota
     cmds << getAction(getCommandString("Status", "0"), callback="parseConfigureChildDevices")
+    
     getDriverVersion()
     //logging("this.binding.variables = ${this.binding.variables}", 1)
     //logging("settings = ${settings}", 1)
@@ -1275,7 +1280,9 @@ def refresh() {
     // This should be the first place we access metaConfig here, so clear and reset...
     metaConfig = clearThingsToHide()
     metaConfig = setCommandsToHide([], metaConfig=metaConfig)
-    metaConfig = setStateVariablesToHide(['settings', 'colorMode', 'red', 'green', 'blue', 'mired', 'level', 'saturation', 'mode', 'hue'], metaConfig=metaConfig)
+    metaConfig = setStateVariablesToHide(['settings', 'colorMode', 'red', 'green', 'blue', 
+        'mired', 'level', 'saturation', 'mode', 'hue'], metaConfig=metaConfig)
+    
     metaConfig = setCurrentStatesToHide(['needUpdate'], metaConfig=metaConfig)
     //metaConfig = setDatasToHide(['preferences', 'namespace', 'appReturn', 'metaConfig'], metaConfig=metaConfig)
     metaConfig = setDatasToHide(['namespace', 'appReturn'], metaConfig=metaConfig)
