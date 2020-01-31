@@ -14,14 +14,13 @@
  *  limitations under the License.
  */
 
-/* Default imports */
+/* Default Imports */
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
-import java.security.MessageDigest
 
 
 metadata {
-	definition (name: "Tasmota - ZNSN TuyaMCU Wifi Curtain Wall Panel", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-znsn-tuyamcu-wifi-curtain-wall-panel-expanded.groovy") {
+	definition (name: "Tasmota - (TEST) ZNSN TuyaMCU Wifi Curtain Wall Panel", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-znsn-tuyamcu-wifi-curtain-wall-panel-expanded.groovy") {
         capability "Light"
         capability "Switch"
         capability "WindowShade"
@@ -36,14 +35,7 @@ metadata {
         attribute   "target", "number"
         
         // Default Attributes
-        attribute   "needUpdate", "string"
-        //attribute   "uptime", "string"  // This floods the event log!
-        attribute   "ip", "string"
-        attribute   "ipLink", "string"
-        attribute   "module", "string"
-        attribute   "templateData", "string"
-        attribute   "driver", "string"
-        attribute   "wifiSignal", "string"
+        
 
         
         // Default Commands
@@ -57,22 +49,21 @@ metadata {
     preferences {
         
         // Default Preferences
-        input(name: "runReset", description: "<i>For details and guidance, see the release thread in the <a href=\"https://community.hubitat.com/t/release-tasmota-7-x-firmware-with-hubitat-support/29368\"> Hubitat Forum</a>. For settings marked as ADVANCED, make sure you understand what they do before activating them. If settings are not reflected on the device, press the Configure button in this driver. Also make sure all settings really are saved and correct.<br/>Type RESET and then press 'Save Preferences' to DELETE all Preferences and return to DEFAULTS.</i>", title: "<b>Settings</b>", displayDuringSetup: false, type: "paragraph", element: "paragraph")
-        generate_preferences(configuration_model_debug())
+        
         //input(name: "numSwitches", type: "enum", title: "<b>Number of Switches</b>", description: "<i>Set the number of buttons on the switch (default 1)</i>", options: ["1", "2", "3", "4"], defaultValue: "1", displayDuringSetup: true, required: true)
         //input(name: "lowLevel", type: "string", title: "<b>Dimming Range (low)</b>", description: '<i>Used to calibrate the MINIMUM dimming level, see <a href="https://tasmota.github.io/docs/#/TuyaMCU?id=dimmers">here</a> for details.</i>', displayDuringSetup: true, required: false)
         //input(name: "highLevel", type: "string", title: "<b>Dimming Range (high)</b>", description: '<i>Used to calibrate the MINIMUM dimming level, see <a href="https://tasmota.github.io/docs/#/TuyaMCU?id=dimmers">here</a> for details.</i>', displayDuringSetup: true, required: false)
         
         // Default Preferences for Tasmota
-        input(name: "ipAddress", type: "string", title: "<b>Device IP Address</b>", description: "<i>Set this as a default fallback for the auto-discovery feature.</i>", displayDuringSetup: true, required: false)
-        input(name: "port", type: "number", title: "<b>Device Port</b>", description: "<i>The http Port of the Device (default: 80)</i>", displayDuringSetup: true, required: false, defaultValue: 80)
-        input(name: "override", type: "bool", title: "<b>Override IP</b>", description: "<i>Override the automatically discovered IP address and disable auto-discovery.</i>", displayDuringSetup: true, required: false)
-        
         generate_preferences(configuration_model_tasmota())
-        input(name: "disableModuleSelection", type: "bool", title: "<b>Disable Automatically Setting Module and Template</b>", description: "ADVANCED: <i>Disable automatically setting the Module Type and Template in Tasmota. Enable for using custom Module or Template settings directly on the device. With this disabled, you need to set these settings manually on the device.</i>", displayDuringSetup: true, required: false)
-        input(name: "moduleNumber", type: "number", title: "<b>Module Number</b>", description: "ADVANCED: <i>Module Number used in Tasmota. If Device Template is set, this value is IGNORED. (default: -1 (use the default for the driver))</i>", displayDuringSetup: true, required: false, defaultValue: -1)
-        input(name: "deviceTemplateInput", type: "string", title: "<b>Device Template</b>", description: "ADVANCED: <i>Set this to a Device Template for Tasmota, leave it EMPTY to use the driver default. Set it to 0 to NOT use a Template. NAME can be maximum 14 characters! (Example: {\"NAME\":\"S120\",\"GPIO\":[0,0,0,0,0,21,0,0,0,52,90,0,0],\"FLAG\":0,\"BASE\":18})</i>", displayDuringSetup: true, required: false)
-        input(name: "useIPAsID", type: "bool", title: "<b>IP as Network ID</b>", description: "ADVANCED: <i>Not needed under normal circumstances. Setting this when not needed can break updates. This requires the IP to be static or set to not change in your DHCP server. It will force the use of IP as network ID. When in use, set Override IP to true and input the correct Device IP Address. See the release thread in the Hubitat forum for details and guidance.</i>", displayDuringSetup: true, required: false)
+        input(name: "ipAddress", type: "string", title: addTitleDiv("Device IP Address"), description: addDescriptionDiv("Set this as a default fallback for the auto-discovery feature."), displayDuringSetup: true, required: false)
+        input(name: "port", type: "number", title: addTitleDiv("Device Port"), description: addDescriptionDiv("The http Port of the Device (default: 80)"), displayDuringSetup: true, required: false, defaultValue: 80)
+        input(name: "override", type: "bool", title: addTitleDiv("Override IP"), description: addDescriptionDiv("Override the automatically discovered IP address and disable auto-discovery."), displayDuringSetup: true, required: false)
+        
+        input(name: "disableModuleSelection", type: "bool", title: addTitleDiv("Disable Automatically Setting Module and Template"), description: "ADVANCED: " + addDescriptionDiv("Disable automatically setting the Module Type and Template in Tasmota. Enable for using custom Module or Template settings directly on the device. With this disabled, you need to set these settings manually on the device."), displayDuringSetup: true, required: false)
+        input(name: "moduleNumber", type: "number", title: addTitleDiv("Module Number"), description: "ADVANCED: " + addDescriptionDiv("Module Number used in Tasmota. If Device Template is set, this value is IGNORED. (default: -1 (use the default for the driver))"), displayDuringSetup: true, required: false, defaultValue: -1)
+        input(name: "deviceTemplateInput", type: "string", title: addTitleDiv("Device Template"), description: "ADVANCED: " + addDescriptionDiv("Set this to a Device Template for Tasmota, leave it EMPTY to use the driver default. Set it to 0 to NOT use a Template. NAME can be maximum 14 characters! (Example: {\"NAME\":\"S120\",\"GPIO\":[0,0,0,0,0,21,0,0,0,52,90,0,0],\"FLAG\":0,\"BASE\":18})"), displayDuringSetup: true, required: false)
+        input(name: "useIPAsID", type: "bool", title: addTitleDiv("IP as Network ID"), description: "ADVANCED: " + addDescriptionDiv("Not needed under normal circumstances. Setting this when not needed can break updates. This requires the IP to be static or set to not change in your DHCP server. It will force the use of IP as network ID. When in use, set Override IP to true and input the correct Device IP Address. See the release thread in the Hubitat forum for details and guidance."), displayDuringSetup: true, required: false)
 	}
 }
 
@@ -166,6 +157,11 @@ def parse(description) {
             }
             if (result.containsKey("Status")) {
                 logging("Status: $result.Status",99)
+                if (result.Status.containsKey("Module")) {
+                    // The check for Version is here to avoid using the wrong message
+                    logging("Module: $result.Status.Module",50)
+                    events << createEvent(name: "module", value: "$result.Status.Module")
+                }
                 result << result.Status
             }
             if (result.containsKey("StatusSTS")) {
@@ -203,11 +199,6 @@ def parse(description) {
             if (result.containsKey("Version")) {
                 logging("Version: $result.Version",99)
                 updateDataValue("firmware", result.Version)
-            }
-            if (result.containsKey("Module") && !result.containsKey("Version")) {
-                // The check for Version is here to avoid using the wrong message
-                logging("Module: $result.Module",50)
-                events << createEvent(name: "module", value: "$result.Module")
             }
             // When it is a Template, it looks a bit different
             if (result.containsKey("NAME") && result.containsKey("GPIO") && result.containsKey("FLAG") && result.containsKey("BASE")) {  
@@ -307,7 +298,7 @@ def parse(description) {
                 }
             }
         // parse() Generic Tasmota-device footer BEGINS here
-        } else {
+            } else {
                 //log.debug "Response is not JSON: $body"
             }
         }
@@ -429,7 +420,7 @@ def update_needed_settings()
     if(disableModuleSelection == false && moduleNumberUsed != null && moduleNumberUsed >= 0) {
         logging("Setting the Module soon...", 10)
         logging("device.currentValue('module'): '${device.currentValue('module')}'", 10)
-        if(moduleNumberUsed != null && device.currentValue('module') != null && !device.currentValue('module').startsWith("[${moduleNumberUsed}:")) {
+        if(moduleNumberUsed != null && device.currentValue('module') != null && !(device.currentValue('module').startsWith("[${moduleNumberUsed}:") || device.currentValue('module') == '0')) {
             logging("This DOESN'T start with [${moduleNumberUsed} ${device.currentValue('module')}",10)
             cmds << getAction(getCommandString("Module", "${moduleNumberUsed}"))
         } else if (moduleNumberUsed != null && device.currentValue('module') != null){
@@ -479,8 +470,8 @@ def update_needed_settings()
 
 /* Default functions go here */
 private def getDriverVersion() {
-    comment = "NOT GENERIC - read the instructions"
-    if(comment != "") state.comment = comment
+    //comment = "NOT GENERIC - read the instructions"
+    //if(comment != "") state.comment = comment
     version = "v0.9.5T"
     logging("getDriverVersion() = ${version}", 50)
     sendEvent(name: "driver", value: version)
@@ -500,16 +491,22 @@ private def logging(message, level) {
     if (logLevel != "0"){
         switch (logLevel) {
         case "-1": // Insanely verbose
-            if (level >= 0 && level <= 100)
+            if (level >= 0 && level < 100)
                 log.debug "$message"
+            else if (level == 100)
+                log.info "$message"
         break
         case "1": // Very verbose
-            if (level >= 1 && level < 99 || level == 100)
+            if (level >= 1 && level < 99)
                 log.debug "$message"
+            else if (level == 100)
+                log.info "$message"
         break
         case "10": // A little less
-            if (level >= 10 && level < 99 || level == 100)
+            if (level >= 10 && level < 99)
                 log.debug "$message"
+            else if (level == 100)
+                log.info "$message"
         break
         case "50": // Rather chatty
             if (level >= 50 )
@@ -525,266 +522,7 @@ private def logging(message, level) {
 
 
 /* Helper functions included in all drivers/apps */
-def isDriver() {
-    try {
-        // If this fails, this is not a driver...
-        getDeviceDataByName('_unimportant')
-        logging("This IS a driver!", 0)
-        return true
-    } catch (MissingMethodException e) {
-        logging("This is NOT a driver!", 0)
-        return false
-    }
-}
-
-def deviceCommand(cmd) {
-    def jsonSlurper = new JsonSlurper()
-    cmd = jsonSlurper.parseText(cmd)
-    logging("deviceCommand: ${cmd}", 0)
-    r = this."${cmd['cmd']}"(*cmd['args'])
-    logging("deviceCommand return: ${r}", 0)
-    updateDataValue('appReturn', JsonOutput.toJson(r))
-}
-
-// Since refresh, with any number of arguments, is accepted as we always have it declared anyway, 
-// we use it as a wrapper
-// All our "normal" refresh functions take 0 arguments, we can declare one with 1 here...
-def refresh(cmd) {
-    deviceCommand(cmd)
-}
-
-def installed() {
-	logging("installed()", 50)
-    
-	if(isDriver()) configure()
-    try {
-        // In case we have some more to run specific to this driver
-        installedAdditional()
-    } catch (MissingMethodException e) {
-        // ignore
-    }
-}
-
-/*
-	initialize
-
-	Purpose: initialize the driver/app
-	Note: also called from updated() in most drivers/apps
-*/
-void initialize()
-{
-    logging("initialize()", 50)
-	unschedule()
-    // disable debug logs after 30 min, unless override is in place
-	if (logLevel != "0") {
-        if(runReset != "DEBUG") {
-            log.warn "Debug logging will be disabled in 30 minutes..."
-        } else {
-            log.warn "Debug logging will NOT BE AUTOMATICALLY DISABLED!"
-        }
-        runIn(1800, logsOff)
-    }
-    try {
-        // In case we have some more to run specific to this driver/app
-        initializeAdditional()
-    } catch (MissingMethodException e) {
-        // ignore
-    }
-}
-
-def configure() {
-    logging("configure()", 50)
-    def cmds = []
-    if(isDriver()) {
-        cmds = update_needed_settings()
-        try {
-            // Run the getDriverVersion() command
-            newCmds = getDriverVersion()
-            if (newCmds != null && newCmds != []) cmds = cmds + newCmds
-        } catch (MissingMethodException e) {
-            // ignore
-        }
-    }
-    if (cmds != []) cmds
-}
-
-def makeTextBold(s) {
-    if(isDriver()) {
-        return "<b>$s</b>"
-    } else {
-        return "$s"
-    }
-}
-
-def makeTextItalic(s) {
-    if(isDriver()) {
-        return "<i>$s</i>"
-    } else {
-        return "$s"
-    }
-}
-
-def generate_preferences(configuration_model)
-{
-    def configuration = new XmlSlurper().parseText(configuration_model)
-   
-    configuration.Value.each
-    {
-        if(it.@hidden != "true" && it.@disabled != "true"){
-        switch(it.@type)
-        {   
-            case "number":
-                input("${it.@index}", "number",
-                    title:"${makeTextBold(it.@label)}\n" + "${it.Help}",
-                    description: makeTextItalic(it.@description),
-                    range: "${it.@min}..${it.@max}",
-                    defaultValue: "${it.@value}",
-                    submitOnChange: it.@submitOnChange == "true",
-                    displayDuringSetup: "${it.@displayDuringSetup}")
-            break
-            case "list":
-                def items = []
-                it.Item.each { items << ["${it.@value}":"${it.@label}"] }
-                input("${it.@index}", "enum",
-                    title:"${makeTextBold(it.@label)}\n" + "${it.Help}",
-                    description: makeTextItalic(it.@description),
-                    defaultValue: "${it.@value}",
-                    submitOnChange: it.@submitOnChange == "true",
-                    displayDuringSetup: "${it.@displayDuringSetup}",
-                    options: items)
-            break
-            case "password":
-                input("${it.@index}", "password",
-                    title:"${makeTextBold(it.@label)}\n" + "${it.Help}",
-                    description: makeTextItalic(it.@description),
-                    submitOnChange: it.@submitOnChange == "true",
-                    displayDuringSetup: "${it.@displayDuringSetup}")
-            break
-            case "decimal":
-               input("${it.@index}", "decimal",
-                    title:"${makeTextBold(it.@label)}\n" + "${it.Help}",
-                    description: makeTextItalic(it.@description),
-                    range: "${it.@min}..${it.@max}",
-                    defaultValue: "${it.@value}",
-                    submitOnChange: it.@submitOnChange == "true",
-                    displayDuringSetup: "${it.@displayDuringSetup}")
-            break
-            case "bool":
-               input("${it.@index}", "bool",
-                    title:"${makeTextBold(it.@label)}\n" + "${it.Help}",
-                    description: makeTextItalic(it.@description),
-                    defaultValue: "${it.@value}",
-                    submitOnChange: it.@submitOnChange == "true",
-                    displayDuringSetup: "${it.@displayDuringSetup}")
-            break
-        }
-        }
-    }
-}
-
-def update_current_properties(cmd)
-{
-    def currentProperties = state.currentProperties ?: [:]
-    currentProperties."${cmd.name}" = cmd.value
-
-    if (state.settings?."${cmd.name}" != null)
-    {
-        if (state.settings."${cmd.name}".toString() == cmd.value)
-        {
-            sendEvent(name:"needUpdate", value:"NO", displayed:false, isStateChange: false)
-        }
-        else
-        {
-            sendEvent(name:"needUpdate", value:"YES", displayed:false, isStateChange: false)
-        }
-    }
-    state.currentProperties = currentProperties
-}
-
-def dBmToQuality(dBm) {
-    def quality = 0
-    if(dBm > 0) dBm = dBm * -1
-    if(dBm <= -100) {
-        quality = 0
-    } else if(dBm >= -50) {
-        quality = 100
-    } else {
-        quality = 2 * (dBm + 100)
-    }
-    logging("DBM: $dBm (${quality}%)", 0)
-    return quality
-}
-
-def extractInt( String input ) {
-  return input.replaceAll("[^0-9]", "").toInteger()
-}
-
-/*
-	logsOff
-
-	Purpose: automatically disable debug logging after 30 mins.
-	Note: scheduled in Initialize()
-*/
-void logsOff(){
-    if(runReset != "DEBUG") {
-        log.warn "Debug logging disabled..."
-        // Setting logLevel to "0" doesn't seem to work, it disables logs, but does not update the UI...
-        //device.updateSetting("logLevel",[value:"0",type:"string"])
-        //app.updateSetting("logLevel",[value:"0",type:"list"])
-        // Not sure which ones are needed, so doing all... This works!
-        if(isDriver()) {
-            device.clearSetting("logLevel")
-            device.removeSetting("logLevel")
-            device.updateSetting("logLevel", "0")
-            state.settings.remove("logLevel")
-            device.clearSetting("debugLogging")
-            device.removeSetting("debugLogging")
-            device.updateSetting("debugLogging", "false")
-            state.settings.remove("debugLogging")
-            
-        } else {
-            //app.clearSetting("logLevel")
-            // To be able to update the setting, it has to be removed first, clear does NOT work, at least for Apps
-            app.removeSetting("logLevel")
-            app.updateSetting("logLevel", "0")
-            app.removeSetting("debugLogging")
-            app.updateSetting("debugLogging", "false")
-        }
-    } else {
-        log.warn "OVERRIDE: Disabling Debug logging will not execute with 'DEBUG' set..."
-        if (logLevel != "0") runIn(1800, logsOff)
-    }
-}
-
-private def getFilteredDeviceDriverName() {
-    deviceDriverName = getDeviceInfoByName('name')
-    if(deviceDriverName.toLowerCase().endsWith(' (parent)')) {
-        deviceDriverName = deviceDriverName.substring(0, deviceDriverName.length()-9)
-    }
-    return deviceDriverName
-}
-
-private def getFilteredDeviceDisplayName() {
-    device_display_name = device.displayName.replace(' (parent)', '').replace(' (Parent)', '')
-    return device_display_name
-}
-
-def generateMD5(String s){
-    MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
-}
-
-def isDeveloperHub() {
-    return generateMD5(location.hub.zigbeeId) == "125fceabd0413141e34bb859cd15e067"
-    //return false
-}
-
-def getEnvironmentObject() {
-    if(isDriver()) {
-        return device
-    } else {
-        return app
-    }
-}
+/* Helper Debug functions included in all drivers/apps */
 
 def configuration_model_debug()
 {
@@ -827,18 +565,732 @@ def configuration_model_debug()
     }
 }
 
-/* Helper functions included in all Tasmota drivers */
-def refresh() {
-	logging("refresh()", 10)
-    def cmds = []
-    cmds << getAction(getCommandString("Status", "0"))
-    getDriverVersion()
-    updateDataValue('namespace', getDeviceInfoByName('namespace'))
+def isDriver() {
     try {
-        // In case we have some more to run specific to this driver
-        refreshAdditional()
+        // If this fails, this is not a driver...
+        getDeviceDataByName('_unimportant')
+        logging("This IS a driver!", 0)
+        return true
+    } catch (MissingMethodException e) {
+        logging("This is NOT a driver!", 0)
+        return false
+    }
+}
+
+def deviceCommand(cmd) {
+    def jsonSlurper = new JsonSlurper()
+    cmd = jsonSlurper.parseText(cmd)
+    logging("deviceCommand: ${cmd}", 0)
+    r = this."${cmd['cmd']}"(*cmd['args'])
+    logging("deviceCommand return: ${r}", 0)
+    updateDataValue('appReturn', JsonOutput.toJson(r))
+}
+
+/*
+	initialize
+
+	Purpose: initialize the driver/app
+	Note: also called from updated()
+*/
+// Call order: installed() -> configure() -> updated() -> initialize()
+void initialize()
+{
+    logging("initialize()", 100)
+	unschedule()
+    // disable debug logs after 30 min, unless override is in place
+	if (logLevel != "0" && logLevel != "100") {
+        if(runReset != "DEBUG") {
+            log.warn "Debug logging will be disabled in 30 minutes..."
+        } else {
+            log.warn "Debug logging will NOT BE AUTOMATICALLY DISABLED!"
+        }
+        runIn(1800, logsOff)
+    }
+    if(isDriver()) {
+        if(!isDeveloperHub()) {
+            device.removeSetting("logLevel")
+            device.updateSetting("logLevel", "0")
+        } else {
+            device.removeSetting("debugLogging")
+            device.updateSetting("debugLogging", "false")
+            device.removeSetting("infoLogging")
+            device.updateSetting("infoLogging", "false")
+        }
+    }
+    try {
+        // In case we have some more to run specific to this driver/app
+        initializeAdditional()
     } catch (MissingMethodException e) {
         // ignore
+    }
+    refresh()
+}
+
+/*
+	logsOff
+
+	Purpose: automatically disable debug logging after 30 mins.
+	Note: scheduled in Initialize()
+*/
+void logsOff(){
+    if(runReset != "DEBUG") {
+        log.warn "Debug logging disabled..."
+        // Setting logLevel to "0" doesn't seem to work, it disables logs, but does not update the UI...
+        //device.updateSetting("logLevel",[value:"0",type:"string"])
+        //app.updateSetting("logLevel",[value:"0",type:"list"])
+        // Not sure which ones are needed, so doing all... This works!
+        if(isDriver()) {
+            device.clearSetting("logLevel")
+            device.removeSetting("logLevel")
+            device.updateSetting("logLevel", "0")
+            state.settings.remove("logLevel")
+            device.clearSetting("debugLogging")
+            device.removeSetting("debugLogging")
+            device.updateSetting("debugLogging", "false")
+            state.settings.remove("debugLogging")
+            
+        } else {
+            //app.clearSetting("logLevel")
+            // To be able to update the setting, it has to be removed first, clear does NOT work, at least for Apps
+            app.removeSetting("logLevel")
+            app.updateSetting("logLevel", "0")
+            app.removeSetting("debugLogging")
+            app.updateSetting("debugLogging", "false")
+        }
+    } else {
+        log.warn "OVERRIDE: Disabling Debug logging will not execute with 'DEBUG' set..."
+        if (logLevel != "0" && logLevel != "100") runIn(1800, logsOff)
+    }
+}
+
+def generateMD5(String s){
+    MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
+}
+
+def isDeveloperHub() {
+    return generateMD5(location.hub.zigbeeId) == "125fceabd0413141e34bb859cd15e067"
+    //return false
+}
+
+def getEnvironmentObject() {
+    if(isDriver()) {
+        return device
+    } else {
+        return app
+    }
+}
+
+def dBmToQuality(dBm) {
+    def quality = 0
+    if(dBm > 0) dBm = dBm * -1
+    if(dBm <= -100) {
+        quality = 0
+    } else if(dBm >= -50) {
+        quality = 100
+    } else {
+        quality = 2 * (dBm + 100)
+    }
+    logging("DBM: $dBm (${quality}%)", 0)
+    return quality
+}
+
+def extractInt( String input ) {
+  return input.replaceAll("[^0-9]", "").toInteger()
+}
+
+private def getFilteredDeviceDriverName() {
+    deviceDriverName = getDeviceInfoByName('name')
+    if(deviceDriverName.toLowerCase().endsWith(' (parent)')) {
+        deviceDriverName = deviceDriverName.substring(0, deviceDriverName.length()-9)
+    }
+    return deviceDriverName
+}
+
+private def getFilteredDeviceDisplayName() {
+    device_display_name = device.displayName.replace(' (parent)', '').replace(' (Parent)', '')
+    return device_display_name
+}
+
+def makeTextBold(s) {
+    if(isDriver()) {
+        return "<b>$s</b>"
+    } else {
+        return "$s"
+    }
+}
+
+def makeTextItalic(s) {
+    if(isDriver()) {
+        return "<i>$s</i>"
+    } else {
+        return "$s"
+    }
+}
+
+def generate_preferences(configuration_model)
+{
+    def configuration = new XmlSlurper().parseText(configuration_model)
+   
+    configuration.Value.each
+    {
+        if(it.@hidden != "true" && it.@disabled != "true"){
+        switch(it.@type)
+        {   
+            case "number":
+                input("${it.@index}", "number",
+                    title:"${addTitleDiv(it.@label)}" + "${it.Help}",
+                    description: makeTextItalic(it.@description),
+                    range: "${it.@min}..${it.@max}",
+                    defaultValue: "${it.@value}",
+                    submitOnChange: it.@submitOnChange == "true",
+                    displayDuringSetup: "${it.@displayDuringSetup}")
+            break
+            case "list":
+                def items = []
+                it.Item.each { items << ["${it.@value}":"${it.@label}"] }
+                input("${it.@index}", "enum",
+                    title:"${addTitleDiv(it.@label)}" + "${it.Help}",
+                    description: makeTextItalic(it.@description),
+                    defaultValue: "${it.@value}",
+                    submitOnChange: it.@submitOnChange == "true",
+                    displayDuringSetup: "${it.@displayDuringSetup}",
+                    options: items)
+            break
+            case "password":
+                input("${it.@index}", "password",
+                    title:"${addTitleDiv(it.@label)}" + "${it.Help}",
+                    description: makeTextItalic(it.@description),
+                    submitOnChange: it.@submitOnChange == "true",
+                    displayDuringSetup: "${it.@displayDuringSetup}")
+            break
+            case "decimal":
+               input("${it.@index}", "decimal",
+                    title:"${addTitleDiv(it.@label)}" + "${it.Help}",
+                    description: makeTextItalic(it.@description),
+                    range: "${it.@min}..${it.@max}",
+                    defaultValue: "${it.@value}",
+                    submitOnChange: it.@submitOnChange == "true",
+                    displayDuringSetup: "${it.@displayDuringSetup}")
+            break
+            case "bool":
+               input("${it.@index}", "bool",
+                    title:"${addTitleDiv(it.@label)}" + "${it.Help}",
+                    description: makeTextItalic(it.@description),
+                    defaultValue: "${it.@value}",
+                    submitOnChange: it.@submitOnChange == "true",
+                    displayDuringSetup: "${it.@displayDuringSetup}")
+            break
+        }
+        }
+    }
+}
+
+// These methods can be executed in both the NORMAL driver scope as well
+// as the Metadata scope.
+private getMetaConfig() {
+    // This method can ALSO be executed in the Metadata Scope
+    metaConfig = getDataValue('metaConfig')
+    if(metaConfig == null) {
+        metaConfig = [:]
+    } else {
+        metaConfig = parseJson(metaConfig)
+    }
+    return metaConfig
+}
+
+def isCSSDisabled(metaConfig=null) {
+    if(metaConfig==null) metaConfig = getMetaConfig()
+    disableCSS = false
+    if(metaConfig.containsKey("disableCSS")) disableCSS = metaConfig["disableCSS"]
+    return disableCSS
+}
+
+// These methods are used to set which elements to hide. 
+// They have to be executed in the NORMAL driver scope.
+
+
+private saveMetaConfig(metaConfig) {
+    updateDataValue('metaConfig', JsonOutput.toJson(metaConfig))
+}
+
+private setSomethingToHide(String type, something, metaConfig=null) {
+    if(metaConfig==null) metaConfig = getMetaConfig()
+    def oldData = []
+    something = something.unique()
+    if(!metaConfig.containsKey("hide")) {
+        metaConfig["hide"] = [type:something]
+    } else {
+        //logging("setSomethingToHide 1 else: something: '$something', type:'$type' (${metaConfig["hide"]}) containsKey:${metaConfig["hide"].containsKey(type)}", 1)
+        if(metaConfig["hide"].containsKey(type)) {
+            //logging("setSomethingToHide 1 hasKey else: something: '$something', type:'$type' (${metaConfig["hide"]}) containsKey:${metaConfig["hide"].containsKey(type)}", 1)
+            metaConfig["hide"][type].addAll(something)
+        } else {
+            //logging("setSomethingToHide 1 noKey else: something: '$something', type:'$type' (${metaConfig["hide"]}) containsKey:${metaConfig["hide"].containsKey(type)}", 1)
+            metaConfig["hide"][type] = something
+        }
+        //metaConfig["hide"]["$type"] = oldData
+        //logging("setSomethingToHide 2 else: something: '$something', type:'$type' (${metaConfig["hide"]}) containsKey:${metaConfig["hide"].containsKey(type)}", 1)
+    }
+    saveMetaConfig(metaConfig)
+    logging("setSomethingToHide() = ${metaConfig}", 1)
+    return metaConfig
+}
+
+private clearTypeToHide(type, metaConfig=null) {
+    if(metaConfig==null) metaConfig = getMetaConfig()
+    something = something.unique()
+    if(!metaConfig.containsKey("hide")) {
+        metaConfig["hide"] = ["$type":[]]
+    } else {
+        metaConfig["hide"]["$type"] = []
+    }
+    saveMetaConfig(metaConfig)
+    logging("clearTypeToHide() = ${metaConfig}", 1)
+    return metaConfig
+}
+
+def clearThingsToHide(metaConfig=null) {
+    metaConfig = setSomethingToHide("other", [], metaConfig=metaConfig)
+    metaConfig["hide"] = [:]
+    saveMetaConfig(metaConfig)
+    logging("clearThingsToHide() = ${metaConfig}", 1)
+    return metaConfig
+}
+
+def setDisableCSS(valueBool, metaConfig=null) {
+    if(metaConfig==null) metaConfig = getMetaConfig()
+    metaConfig["disableCSS"] = valueBool
+    saveMetaConfig(metaConfig)
+    logging("setDisableCSS(valueBool = $valueBool) = ${metaConfig}", 1)
+    return metaConfig
+}
+
+def setStateCommentInCSS(stateComment, metaConfig=null) {
+    if(metaConfig==null) metaConfig = getMetaConfig()
+    metaConfig["stateComment"] = stateComment
+    saveMetaConfig(metaConfig)
+    logging("setStateCommentInCSS(stateComment = $stateComment) = ${metaConfig}", 1)
+    return metaConfig
+}
+
+def setCommandsToHide(commands, metaConfig=null) {
+    metaConfig = setSomethingToHide("command", commands, metaConfig=metaConfig)
+    logging("setCommandsToHide(${commands})", 1)
+    return metaConfig
+}
+
+def clearCommandsToHide(metaConfig=null) {
+    metaConfig = clearTypeToHide("command", metaConfig=metaConfig)
+    logging("clearCommandsToHide(metaConfig=${metaConfig})", 1)
+    return metaConfig
+}
+
+def setStateVariablesToHide(stateVariables, metaConfig=null) {
+    metaConfig = setSomethingToHide("stateVariable", stateVariables, metaConfig=metaConfig)
+    logging("setStateVariablesToHide(${stateVariables})", 1)
+    return metaConfig
+}
+
+def clearStateVariablesToHide(metaConfig=null) {
+    metaConfig = clearTypeToHide("stateVariable", metaConfig=metaConfig)
+    logging("clearStateVariablesToHide(metaConfig=${metaConfig})", 1)
+    return metaConfig
+}
+
+def setCurrentStatesToHide(currentStates, metaConfig=null) {
+    metaConfig = setSomethingToHide("currentState", currentStates, metaConfig=metaConfig)
+    logging("setCurrentStatesToHide(${currentStates})", 1)
+    return metaConfig
+}
+
+def clearCurrentStatesToHide(metaConfig=null) {
+    metaConfig = clearTypeToHide("currentState", metaConfig=metaConfig)
+    logging("clearCurrentStatesToHide(metaConfig=${metaConfig})", 1)
+    return metaConfig
+}
+
+def setDatasToHide(datas, metaConfig=null) {
+    metaConfig = setSomethingToHide("data", datas, metaConfig=metaConfig)
+    logging("setDatasToHide(${datas})", 1)
+    return metaConfig
+}
+
+def clearDatasToHide(metaConfig=null) {
+    metaConfig = clearTypeToHide("data", metaConfig=metaConfig)
+    logging("clearDatasToHide(metaConfig=${metaConfig})", 1)
+    return metaConfig
+}
+
+def setPreferencesToHide(preferences, metaConfig=null) {
+    metaConfig = setSomethingToHide("preference", preferences, metaConfig=metaConfig)
+    logging("setPreferencesToHide(${preferences})", 1)
+    return metaConfig
+}
+
+def clearPreferencesToHide(metaConfig=null) {
+    metaConfig = clearTypeToHide("preference", metaConfig=metaConfig)
+    logging("clearPreferencesToHide(metaConfig=${metaConfig})", 1)
+    return metaConfig
+}
+
+// These methods are for executing inside the metadata section of a driver.
+def metaDataExporter() {
+    //log.debug "getEXECUTOR_TYPE = ${getEXECUTOR_TYPE()}"
+    filteredPrefs = getPreferences()['sections']['input'].name[0]
+    //log.debug "filteredPrefs = ${filteredPrefs}"
+    if(filteredPrefs != []) updateDataValue('preferences', "${filteredPrefs}".replaceAll("\\s",""))
+}
+
+// These methods are used to add CSS to the driver page
+// This can be used for, among other things, to hide Commands
+// They HAVE to be run in getDriverCSS() or getDriverCSSWrapper()!
+
+/* Example usage:
+r += getCSSForCommandsToHide(["off", "refresh"])
+r += getCSSForStateVariablesToHide(["alertMessage", "mac", "dni", "oldLabel"])
+r += getCSSForCurrentStatesToHide(["templateData", "tuyaMCU", "needUpdate"])
+r += getCSSForDatasToHide(["preferences", "appReturn"])
+r += getCSSToChangeCommandTitle("configure", "Run Configure2")
+r += getCSSForPreferencesToHide(["numSwitches", "deviceTemplateInput"])
+r += getCSSForPreferenceHiding('<none>', overrideIndex=getPreferenceIndex('<none>', returnMax=true) + 1)
+r += getCSSForHidingLastPreference()
+r += '''
+form[action*="preference"]::before {
+    color: green;
+    content: "Hi, this is my content"
+}
+form[action*="preference"] div.mdl-grid div.mdl-cell:nth-of-type(2) {
+    color: green;
+}
+form[action*="preference"] div[for^=preferences] {
+    color: blue;
+}
+h3, h4, .property-label {
+    font-weight: bold;
+}
+'''
+*/
+
+def addTitleDiv(title) {
+    return '<div class="preference-title">' + title + '</div>'
+}
+
+def addDescriptionDiv(description) {
+    return '<div class="preference-description">' + description + '</div>'
+}
+
+def getDriverCSSWrapper() {
+    metaConfig = getMetaConfig()
+    disableCSS = isCSSDisabled(metaConfig=metaConfig)
+    defaultCSS = '''
+    /* This is part of the CSS for replacing a Command Title */
+    div.mdl-card__title div.mdl-grid div.mdl-grid .mdl-cell p::after {
+        visibility: visible;
+        position: absolute;
+        left: 50%;
+        transform: translate(-50%, 0%);
+        width: calc(100% - 20px);
+        padding-left: 5px;
+        padding-right: 5px;
+        margin-top: 0px;
+    }
+    /* This is general CSS Styling for the Driver page */
+    h3, h4, .property-label {
+        font-weight: bold;
+    }
+    .preference-title {
+        font-weight: bold;
+    }
+    .preference-description {
+        font-style: italic;
+    }
+    '''
+    r = "<style>"
+    
+    if(disableCSS == false) {
+        r += "$defaultCSS "
+        try{
+            // We always need to hide this element when we use CSS
+            r += " ${getCSSForHidingLastPreference()} "
+            
+            if(disableCSS == false) {
+                if(metaConfig.containsKey("hide")) {
+                    if(metaConfig["hide"].containsKey("command")) {
+                        r += getCSSForCommandsToHide(metaConfig["hide"]["command"])
+                    }
+                    if(metaConfig["hide"].containsKey("stateVariable")) {
+                        r += getCSSForStateVariablesToHide(metaConfig["hide"]["stateVariable"])
+                    }
+                    if(metaConfig["hide"].containsKey("currentState")) {
+                        r += getCSSForCurrentStatesToHide(metaConfig["hide"]["currentState"])
+                    }
+                    if(metaConfig["hide"].containsKey("data")) {
+                        r += getCSSForDatasToHide(metaConfig["hide"]["data"])
+                    }
+                    if(metaConfig["hide"].containsKey("preference")) {
+                        r += getCSSForPreferencesToHide(metaConfig["hide"]["preference"])
+                    }
+                }
+                if(metaConfig.containsKey("stateComment")) {
+                    r += "div#stateComment:after { content: \"${metaConfig["stateComment"]}\" }"
+                }
+                r += " ${getDriverCSS()} "
+            }
+        }catch(MissingMethodException e) {
+            if(!e.toString().contains("getDriverCSS()")) {
+                log.warn "getDriverCSS() Error: $e"
+            }
+        } catch(e) {
+            log.warn "getDriverCSS() Error: $e"
+        }
+    }
+    r += " </style>"
+    return r
+}
+
+def getCommandIndex(cmd) {
+    commands = device.getSupportedCommands().unique()
+    i = commands.findIndexOf{ "$it" == cmd}+1
+    //log.debug "getCommandIndex: Seeing these commands: '${commands}', index=$i}"
+    return i
+}
+
+def getCSSForCommandHiding(cmdToHide) {
+    i = getCommandIndex(cmdToHide)
+    r = ""
+    if(i > 0) {
+        r = "div.mdl-card__title div.mdl-grid div.mdl-grid .mdl-cell:nth-of-type($i){display: none;}"
+    }
+    return r
+}
+
+def getCSSForCommandsToHide(commands) {
+    r = ""
+    commands.each {
+        r += getCSSForCommandHiding(it)
+    }
+    return r
+}
+
+def getCSSToChangeCommandTitle(cmd, newTitle) {
+    i = getCommandIndex(cmd)
+    r = ""
+    if(i > 0) {
+        r += "div.mdl-card__title div.mdl-grid div.mdl-grid .mdl-cell:nth-of-type($i) p {visibility: hidden;}"
+        r += "div.mdl-card__title div.mdl-grid div.mdl-grid .mdl-cell:nth-of-type($i) p::after {content: '$newTitle';}"
+    }
+    return r
+}
+
+def getStateVariableIndex(stateVariable) {
+    stateVariables = state.keySet()
+    i = stateVariables.findIndexOf{ "$it" == stateVariable}+1
+    //log.debug "getStateVariableIndex: Seeing these State Variables: '${stateVariables}', index=$i}"
+    return i
+}
+
+def getCSSForStateVariableHiding(stateVariableToHide) {
+    i = getStateVariableIndex(stateVariableToHide)
+    r = ""
+    if(i > 0) {
+        r = "ul#statev li.property-value:nth-of-type($i){display: none;}"
+    }
+    return r
+}
+
+def getCSSForStateVariablesToHide(stateVariables) {
+    r = ""
+    stateVariables.each {
+        r += getCSSForStateVariableHiding(it)
+    }
+    return r
+}
+
+def getCSSForCurrentStatesToHide(currentStates) {
+    r = ""
+    currentStates.each {
+        r += "ul#cstate li#cstate-$it {display: none;}"
+    }
+    return r
+}
+
+def getDataIndex(data) {
+    datas = device.getData().keySet()
+    i = datas.findIndexOf{ "$it" == data}+1
+    //log.debug "getDataIndex: Seeing these Data Keys: '${datas}', index=$i}"
+    return i
+}
+
+def getCSSForDataHiding(dataToHide) {
+    i = getDataIndex(dataToHide)
+    r = ""
+    if(i > 0) {
+        r = "table.property-list tr li.property-value:nth-of-type($i) {display: none;}"
+    }
+    return r
+}
+
+def getCSSForDatasToHide(datas) {
+    r = ""
+    datas.each {
+        r += getCSSForDataHiding(it)
+    }
+    return r
+}
+
+def getPreferenceIndex(preference, returnMax=false) {
+    filteredPrefs = getPreferences()['sections']['input'].name[0]
+    //log.debug "getPreferenceIndex: Seeing these Preferences first: '${filteredPrefs}'"
+    if(filteredPrefs == [] || filteredPrefs == null) {
+        d = getDataValue('preferences')
+        //log.debug "getPreferenceIndex: getDataValue('preferences'): '${d}'"
+        if(d != null && d.length() > 2) {
+            try{
+                filteredPrefs = d[1..d.length()-2].tokenize(',')
+            } catch(e) {
+                // Do nothing
+            }
+        }
+        
+
+    }
+    i = 0
+    if(returnMax == true) {
+        i = filteredPrefs.size()
+    } else {
+        i = filteredPrefs.findIndexOf{ "$it" == preference}+1
+    }
+    //log.debug "getPreferenceIndex: Seeing these Preferences: '${filteredPrefs}', index=$i"
+    return i
+}
+
+def getCSSForPreferenceHiding(preferenceToHide, overrideIndex=0) {
+    i = 0
+    if(overrideIndex == 0) {
+        i = getPreferenceIndex(preferenceToHide)
+    } else {
+        i = overrideIndex
+    }
+    r = ""
+    if(i > 0) {
+        r = "form[action*=\"preference\"] div.mdl-grid div.mdl-cell:nth-of-type($i) {display: none;} "
+    }else if(i == -1) {
+        r = "form[action*=\"preference\"] div.mdl-grid div.mdl-cell:nth-last-child(2) {display: none;} "
+    }
+    return r
+}
+
+def getCSSForPreferencesToHide(preferences) {
+    r = ""
+    preferences.each {
+        r += getCSSForPreferenceHiding(it)
+    }
+    return r
+}
+def getCSSForHidingLastPreference() {
+    return getCSSForPreferenceHiding(null, overrideIndex=-1)
+}
+
+
+// Since refresh, with any number of arguments, is accepted as we always have it declared anyway, 
+// we use it as a wrapper
+// All our "normal" refresh functions take 0 arguments, we can declare one with 1 here...
+def refresh(cmd) {
+    deviceCommand(cmd)
+}
+// Call order: installed() -> configure() -> updated() -> initialize() -> refresh()
+// Calls installed() -> [configure() -> [update_needed_settings(), updated() -> [updatedAdditional(), initialize() -> refresh() -> refreshAdditional()], installedAdditional()]
+def installed() {
+	logging("installed()", 100)
+    
+	configure()
+    try {
+        // In case we have some more to run specific to this Driver
+        installedAdditional()
+    } catch (MissingMethodException e) {
+        // ignore
+    }
+}
+
+// Call order: installed() -> configure()
+def configure() {
+    logging("configure()", 100)
+    def cmds = []
+    if(isDriver()) {
+        cmds = update_needed_settings()
+        try {
+            // Run the getDriverVersion() command
+            newCmds = getDriverVersion()
+            if (newCmds != null && newCmds != []) cmds = cmds + newCmds
+        } catch (MissingMethodException e) {
+            // ignore
+        }
+    }
+    if (cmds != []) cmds
+}
+
+def update_current_properties(cmd)
+{
+    def currentProperties = state.currentProperties ?: [:]
+    currentProperties."${cmd.name}" = cmd.value
+
+    if (state.settings?."${cmd.name}" != null)
+    {
+        if (state.settings."${cmd.name}".toString() == cmd.value)
+        {
+            sendEvent(name:"needUpdate", value:"NO", displayed:false, isStateChange: false)
+        }
+        else
+        {
+            sendEvent(name:"needUpdate", value:"YES", displayed:false, isStateChange: false)
+        }
+    }
+    state.currentProperties = currentProperties
+}
+
+
+
+
+/* Helper functions included in all Tasmota drivers */
+
+// Call order: installed() -> configure() -> updated() -> initialize() -> refresh()
+def refresh() {
+	logging("refresh()", 100)
+    def cmds = []
+    cmds << getAction(getCommandString("Status", "0"), callback="parseConfigureChildDevices")
+    getDriverVersion()
+    //logging("this.binding.variables = ${this.binding.variables}", 1)
+    //logging("settings = ${settings}", 1)
+    //logging("getDefinitionData() = ${getDefinitionData()}", 1)
+    //logging("getPreferences() = ${getPreferences()}", 1)
+    //logging("getSupportedCommands() = ${device.getSupportedCommands()}", 1)
+    //logging("Seeing these commands: ${device.getSupportedCommands()}", 1)
+    updateDataValue('namespace', getDeviceInfoByName('namespace'))
+    /*metaConfig = setCommandsToHide(["on", "hiAgain2", "on"])
+    metaConfig = setStateVariablesToHide(["uptime"], metaConfig=metaConfig)
+    metaConfig = setCurrentStatesToHide(["needUpdate"], metaConfig=metaConfig)
+    metaConfig = setDatasToHide(["namespace"], metaConfig=metaConfig)
+    metaConfig = setPreferencesToHide(["port"], metaConfig=metaConfig)*/
+
+    // This should be the first place we access metaConfig here, so clear and reset...
+    metaConfig = clearThingsToHide()
+    metaConfig = setCommandsToHide([], metaConfig=metaConfig)
+    metaConfig = setStateVariablesToHide(['settings', 'colorMode', 'red', 'green', 'blue', 'mired', 'level', 'saturation', 'mode', 'hue'], metaConfig=metaConfig)
+    metaConfig = setCurrentStatesToHide(['needUpdate'], metaConfig=metaConfig)
+    //metaConfig = setDatasToHide(['preferences', 'namespace', 'appReturn', 'metaConfig'], metaConfig=metaConfig)
+    metaConfig = setDatasToHide(['namespace', 'appReturn'], metaConfig=metaConfig)
+    metaConfig = setPreferencesToHide([], metaConfig=metaConfig)
+    try {
+        // In case we have some more to run specific to this driver
+        refreshAdditional(metaConfig)
+    } catch (MissingMethodException e1) {
+        // ignore
+        try {
+            // In case we have some more to run specific to this driver
+            refreshAdditional()
+        } catch (MissingMethodException e2) {
+            // ignore
+        }
     }
     return cmds
 }
@@ -848,6 +1300,7 @@ def reboot() {
     getAction(getCommandString("Restart", "1"))
 }
 
+// Call order: installed() -> configure() -> updated() 
 def updated()
 {
     logging("updated()", 10)
@@ -904,6 +1357,9 @@ def getMultiCommandString(commands) {
         uri += "user=admin&password=${password}&"
     }
     uri += "cmnd=backlog%20"
+    if(commands.size() > 30) {
+        log.warn "Backlog only supports 30 commands, the last ${commands.size() - 30} will be ignored!"
+    }
     commands.each {cmd->
         if(cmd.containsKey("value")) {
           uri += "${cmd['command']}%20${cmd['value']}%3B%20"
@@ -912,6 +1368,74 @@ def getMultiCommandString(commands) {
         }
     }
     return uri
+}
+
+/*
+    // Stress-testing runInstallCommands() 
+    installCommands = []
+    installCommands.add(["rule1", 'ON Var1#Value DO Var4 0; ENDON'])
+    installCommands.add(["rule2", 'ON Var2#Value DO Var4 0; ENDON'])
+    installCommands.add(["rule3", 'ON Var3#Value DO Var4 0; ENDON'])
+    installCommands.add(["var1", "0"])
+    installCommands.add(["var2", "0"])
+    installCommands.add(["var3", "0"])
+    (1..8).each {
+        installCommands.add(["rule1", "+ ON Var1#Value DO Var4 $it; ENDON"])
+        installCommands.add(["rule2", "+ ON Var2#Value DO Var4 $it; ENDON"])
+        installCommands.add(["rule3", "+ ON Var3#Value DO Var4 $it; ENDON"])
+        installCommands.add(["add1", "1"])
+        installCommands.add(["add2", "1"])
+        installCommands.add(["add3", "1"])
+    }
+    installCommands.add(["rule1", '0'])
+    installCommands.add(["rule2", '0'])
+    installCommands.add(["rule3", '0'])
+    logging("refreshAdditional installCommands=$installCommands", 1)
+    runInstallCommands(installCommands)
+*/
+
+def runInstallCommands(installCommands) {
+    logging("runInstallCommands(installCommands=$installCommands)", 1)
+    def cmds = []
+    backlogs = []
+    rule1 = []
+    rule2 = []
+    rule3 = []
+    installCommands.each {cmd->
+        if(cmd[0].toLowerCase() == "rule1") {
+            rule1.add([command: cmd[0], value:urlEscape(cmd[1])])
+        } else if(cmd[0].toLowerCase() == "rule2") {
+            rule2.add([command: cmd[0], value:urlEscape(cmd[1])])
+        } else if(cmd[0].toLowerCase() == "rule3") {
+            rule3.add([command: cmd[0], value:urlEscape(cmd[1])])
+        } else {
+            backlogs.add([command: cmd[0], value:urlEscape(cmd[1])])
+        }
+    }
+
+    // Backlog inter-command delay in milliseconds
+    cmds << getAction(getCommandString("SetOption34", "20"))
+    pauseExecution(100)
+    // Maximum 30 commands per backlog call
+    while(backlogs.size() > 0) {
+        cmds << getAction(getMultiCommandString(backlogs.take(10)))
+        backlogs = backlogs.drop(10)
+        // If we run this too fast Tasmota can't keep up, 1000ms is enough when 20ms between commands...
+        if(backlogs.size() > 0) pauseExecution(1000)
+        // REALLY don't use pauseExecution often... NOT good for performance...
+    }
+
+    [rule1, rule2, rule3].each {
+        //logging("rule: $it", 1)
+        it.each {rule->
+            // Rules can't run in backlog!
+            cmds << getAction(getCommandString(rule["command"], rule["value"]))
+            //logging("cmd=${rule["command"]}, value=${rule["value"]}", 1)
+            pauseExecution(100)
+            // REALLY don't use pauseExecution often... NOT good for performance...
+        }
+    }
+    cmds << getAction(getCommandString("SetOption34", "200"))
 }
 
 def parseDescriptionAsMap(description) {
@@ -923,21 +1447,44 @@ def parseDescriptionAsMap(description) {
 	}
 }
 
-private getAction(uri){ 
+private getAction(uri, callback="parse"){ 
     logging("Using getAction for '${uri}'...", 0)
-    return httpGetAction(uri)
+    return httpGetAction(uri, callback=callback)
 }
 
 def parse(asyncResponse, data) {
-    // This method could be removed, but is nice for debugging...
+    def events = []
     if(asyncResponse != null) {
         try{
-            logging("parse(asyncResponse.getJson() = \"${asyncResponse.getJson()}\", data = \"${data}\")", 1)
+            logging("parse(asyncResponse.getJson() 2= \"${asyncResponse.getJson()}\", data = \"${data}\")", 1)
+            events << parseResult(asyncResponse.getJson())
+        } catch(MissingMethodException e1) {
+            log.error e1
         } catch(e1) {
             try{
-                logging("parse(asyncResponse.data = \"${asyncResponse.data}\", data = \"${data}\")", 1)
+                logging("parse(asyncResponse.data = \"${asyncResponse.data}\", data = \"${data}\") e1=$e1", 1)
             } catch(e2) {
-                logging("parse(asyncResponse.data = null, data = \"${data}\")", 1)
+                logging("parse(asyncResponse.data = null, data = \"${data}\") Is the device online? e2=$e2", 1)
+            }
+        }
+    } else {
+        logging("parse(asyncResponse.data = null, data = \"${data}\")", 1)
+    }
+    return events
+}
+
+def parseConfigureChildDevices(asyncResponse, data) {
+    if(asyncResponse != null) {
+        try{
+            logging("parse(asyncResponse.getJson() 2= \"${asyncResponse.getJson()}\", data = \"${data}\")", 1)
+            configureChildDevices(asyncResponse, data)
+        } catch(MissingMethodException e1) {
+            log.error e1
+        } catch(e1) {
+            try{
+                logging("parse(asyncResponse.data = \"${asyncResponse.data}\", data = \"${data}\") e1=$e1", 1)
+            } catch(e2) {
+                logging("parse(asyncResponse.data = null, data = \"${data}\") Is the device online? e2=$e2", 1)
             }
         }
     } else {
@@ -945,7 +1492,339 @@ def parse(asyncResponse, data) {
     }
 }
 
-private httpGetAction(uri){ 
+def containsKeyInSubMap(aMap, key) {
+    hasKey = false
+    aMap.find {
+        try{
+            hasKey = it.value.containsKey(key)
+        } catch(e) {
+
+        }
+        hasKey == true
+    }
+    return hasKey
+}
+
+def numOfKeyInSubMap(aMap, key) {
+    numKeys = 0
+    aMap.each {
+        try{
+            if(it.value.containsKey(key)) numKeys += 1
+        } catch(e) {
+            // Do nothing
+        }
+    }
+    return numKeys
+}
+
+def numOfKeysIsMap(aMap) {
+    numKeys = 0
+    aMap.each {
+        if(it.value instanceof java.util.Map) numKeys += 1
+    }
+    return numKeys
+}
+
+TreeMap getKeysWithMapAndId(aMap) {
+    def foundMaps = [:] as TreeMap
+    aMap.each {
+        if(it.value instanceof java.util.Map) {
+            foundMaps[it.key] = it.value
+        }
+    }
+    return foundMaps
+}
+
+def configureChildDevices(asyncResponse, data) {
+    def statusMap = asyncResponse.getJson()
+    logging("configureChildDevices() statusMap=$statusMap", 1)
+    // Use statusMap to determine which Child Devices we should create
+
+    // The built-in Generic Components are:
+    //
+    // Acceleration Sensor
+    // Contact Sensor
+    // Contact/Switch
+    // CT
+    // Dimmer
+    // Metering Switch
+    // Motion Sensor
+    // RGB
+    // RGBW
+    // Smoke Detector
+    // Switch
+    // Temperature Sensor
+    // Water Sensor
+
+    // {"StatusSTS":{"Time":"2020-01-26T01:13:27","Uptime":"15T02:59:27","UptimeSec":1306767,
+    // "Heap":26,"SleepMode":"Dynamic","Sleep":50,"LoadAvg":19,"MqttCount":0,"POWER1":"OFF",
+    // "POWER2":"OFF","POWER3":"OFF","POWER4":"OFF","Wifi":{"AP":1,"SSId":"network",
+    // "BSSId":"4A:11:11:12:CF:11","Channel":1,"RSSI":62,"LinkCount":37,"Downtime":"0T00:05:48"}}}
+
+    // With a dimmer:
+    // {"StatusSTS":{"Time":"2020-01-26T11:58:10","Uptime":"0T00:01:20","UptimeSec":80,"Heap":26,
+    // "SleepMode":"Dynamic","Sleep":50,"LoadAvg":19,"MqttCount":0,"POWER":"OFF","Dimmer":0,
+    // "Fade":"OFF","Speed":1,"LedTable":"ON","Wifi":{"AP":1,"SSId":"network",
+    // "BSSId":"4A:11:11:12:D9:11","Channel":1,"RSSI":100,"LinkCount":1,"Downtime":"0T00:00:06"}}}
+
+    // With an RGB+CW+WW light:
+    // {"StatusSTS":{"Time":"2020-01-26T12:07:57","Uptime":"0T00:06:58","UptimeSec":418,"Heap":27,
+    // "SleepMode":"Dynamic","Sleep":10,"LoadAvg":99,"MqttCount":0,"POWER":"ON","Dimmer":100,
+    // "Color":"000000FF62","HSBColor":"0,0,0","Channel":[0,0,0,100,38],"CT":250,"Scheme":0,
+    // "Fade":"ON","Speed":10,"LedTable":"ON","Wifi":{"AP":1,"SSId":"network",
+    // "BSSId":"4A:11:11:12:D9:11","Channel":1,"RSSI":96,"LinkCount":1,"Downtime":"0T00:00:06"}}}
+    
+
+    // With an RGB+W light:
+    // {"StatusSTS":{"Time":"2020-01-26T12:11:56","Uptime":"0T00:00:26","UptimeSec":26,"Heap":27,
+    // "SleepMode":"Dynamic","Sleep":10,"LoadAvg":99,"MqttCount":0,"POWER":"ON","Dimmer":100,
+    // "Color":"000000FF","HSBColor":"0,0,0","Channel":[0,0,0,100],"Scheme":0,"Fade":"ON",
+    // "Speed":10,"LedTable":"ON","Wifi":{"AP":1,"SSId":"network","BSSId":"4A:11:11:12:D9:11",
+    // "Channel":1,"RSSI":90,"LinkCount":1,"Downtime":"0T00:00:06"}}}
+
+    // With an RGB light:
+    // {"StatusSTS":{"Time":"2020-01-26T12:14:15","Uptime":"0T00:00:19","UptimeSec":19,"Heap":27,
+    // "SleepMode":"Dynamic","Sleep":10,"LoadAvg":99,"MqttCount":0,"POWER":"ON","Dimmer":100,
+    // "Color":"FFFFFF","HSBColor":"0,0,100","Channel":[100,100,100],"Scheme":0,"Fade":"ON",
+    // "Speed":10,"LedTable":"ON","Wifi":{"AP":1,"SSId":"network","BSSId":"4A:11:11:12:D9:11",
+    // "Channel":1,"RSSI":98,"LinkCount":1,"Downtime":"0T00:00:06"}}}
+
+    // With CW+WW ("CT" is available):
+    // {"StatusSTS":{"Time":"2020-01-26T12:16:48","Uptime":"0T00:00:17","UptimeSec":17,"Heap":28,
+    // "SleepMode":"Dynamic","Sleep":10,"LoadAvg":99,"MqttCount":0,"POWER":"ON","Dimmer":100,
+    // "Color":"FF62","HSBColor":"0,0,0","Channel":[100,38],"CT":250,"Fade":"ON","Speed":10,
+    // "LedTable":"ON","Wifi":{"AP":1,"SSId":"network","BSSId":"4A:11:11:12:D9:11",
+    // "Channel":1,"RSSI":94,"LinkCount":1,"Downtime":"0T00:00:06"}}}
+
+    // With CW or WW (PWM1 configured on the correct pin), just the same as a normal dimmer...
+    // {"StatusSTS":{"Time":"2020-01-26T12:19:51","Uptime":"0T00:01:15","UptimeSec":75,"Heap":27,
+    // "SleepMode":"Dynamic","Sleep":10,"LoadAvg":99,"MqttCount":0,"POWER":"ON","Dimmer":71,
+    // "Fade":"ON","Speed":10,"LedTable":"ON","Wifi":{"AP":1,"SSId":"network",
+    // "BSSId":"4A:11:11:12:D9:11","Channel":1,"RSSI":88,"LinkCount":1,"Downtime":"0T00:00:25"}}}
+
+    // Addressable RGB light (has the attribute "Width")
+    // {"StatusSNS":{"Time":"2020-01-26T12:57:30","SR04":{"Distance":8.579}}}
+    // {"StatusSTS":{"Time":"2020-01-26T12:57:30","Uptime":"0T00:02:14","UptimeSec":134,"Heap":21,
+    // "SleepMode":"Dynamic","Sleep":10,"LoadAvg":113,"MqttCount":0,"POWER1":"ON","POWER2":"ON",
+    // "Dimmer":100,"Color":"00FF00","HSBColor":"120,100,100","Channel":[0,100,0],"Scheme":13,
+    // "Width":2,"Fade":"OFF","Speed":1,"LedTable":"ON","Wifi":{"AP":1,"SSId":"network",
+    // "BSSId":"4A:11:11:12:D9:11","Channel":1,"RSSI":100,"Signal":-40,"LinkCount":1,
+    // "Downtime":"0T00:00:09"}}}
+
+    // {"StatusSNS":{"Time":"2020-01-26T01:24:16","BMP280":{"Temperature":23.710,"Pressure":1017.6},
+    // "PressureUnit":"hPa","TempUnit":"C"}}
+
+    // Multiple temperature sensors:
+    // {"Time":"2020-01-26T17:45:30","DS18B20-1":{"Id":"000008BD38BF","Temperature":26.1},
+    // "DS18B20-2":{"Id":"000008BD9714","Temperature":25.1},"DS18B20-3":{"Id":"000008C02C3A",
+    // "Temperature":25.3},"TempUnit":"C"}
+    
+    // For DS18B20, us ID to distinguish them? Then you can't replace them...
+    // For AM2301 the GPIO used is appended.
+    // {"StatusSNS":{"Time":"2020-01-26T20:54:10","DS18B20-1":{"Id":"000008BD38BF","Temperature":25.8},
+    // "DS18B20-2":{"Id":"000008BD9714","Temperature":24.7},"DS18B20-3":{"Id":"000008C02C3A","Temperature":24.9},
+    // "AM2301-12":{"Temperature":25.1,"Humidity":66.4},"AM2301-14":{"Temperature":null,"Humidity":null},"TempUnit":"C"}}
+
+    // D5 = GPIO14
+    // D6 = GPIO12
+    // D7 = GPIO13
+
+    // Distance Sensor
+    // {"StatusSNS":{"Time":"2020-01-26T13:52:19","SR04":{"Distance":11.667}}}
+
+    // {"NAME":"ControlRGBWWCW","GPIO":[17,0,0,0,0,40,0,0,38,39,37,41,0],"FLAG":0,"BASE":18}
+
+    // result: [Time:2020-01-30T11:30:43, DS18B20-1:[Id:000008BD38BF, Temperature:25.3], DS18B20-2:[Id:000008BD9714, Temperature:24.3], DS18B20-3:[Id:000008C02C3A, Temperature:24.4], AM2301-12:[Temperature:24.2, Humidity:68.1], AM2301-14:[Temperature:24.0, Humidity:68.1], TempUnit:C]
+    // result: [Time:2020-01-30T11:31:12, DS18B20-1:[Id:000008BD38BF, Temperature:25.3], DS18B20-2:[Id:000008BD9714, Temperature:24.3], DS18B20-3:[Id:000008C02C3A, Temperature:24.4], AM2301-12:[Temperature:24.2, Humidity:68.0], AM2301-14:[Temperature:24.0, Humidity:68.1], TempUnit:C]
+    // [hasEnergy:false, numTemperature:5, numHumidity:2, numPressure:0, numDistance:0, sensorMap:[AM2301-12:[Temperature:24.2, Humidity:68.1], AM2301-14:[Temperature:24.0, Humidity:68.1], DS18B20-1:[Id:000008BD38BF, Temperature:25.3], DS18B20-2:[Id:000008BD9714, Temperature:24.3], DS18B20-3:[Id:000008C02C3A, Temperature:24.4]], numSwitch:0, isDimmer:false, isAddressable:false, isRGB:false, hasCT:false]
+
+    // SENSOR = {"Time":"2020-01-30T19:15:08","SR04":{"Distance":73.702}}
+
+    // Switch or Metering Switch are the two most likely ones
+    deviceInfo = [:]
+    deviceInfo["hasEnergy"] = false
+    deviceInfo["numTemperature"] = 0
+    deviceInfo["numHumidity"] = 0
+    deviceInfo["numPressure"] = 0
+    deviceInfo["numDistance"] = 0
+    deviceInfo["numSensorGroups"] = 0
+    deviceInfo["sensorMap"] = [:] as TreeMap
+    if(statusMap.containsKey("StatusSNS")) {
+        sns = statusMap["StatusSNS"]
+        deviceInfo["hasEnergy"] = sns.containsKey("ENERGY")
+        deviceInfo["sensorMap"] = getKeysWithMapAndId(sns)
+        deviceInfo["numSensorGroups"] = deviceInfo["sensorMap"].size()
+        deviceInfo["numTemperature"] = numOfKeyInSubMap(sns, "Temperature")
+        deviceInfo["numHumidity"] = numOfKeyInSubMap(sns, "Humidity")
+        deviceInfo["numPressure"] = numOfKeyInSubMap(sns, "Pressure")
+        deviceInfo["numDistance"] = numOfKeyInSubMap(sns, "Distance")
+    }
+
+    deviceInfo["numSwitch"] = 0
+    deviceInfo["isDimmer"] = false
+    deviceInfo["isAddressable"] = false
+    deviceInfo["isRGB"] = false
+    deviceInfo["hasCT"] = false
+    if(statusMap["StatusSTS"] != null) {
+        sts = statusMap["StatusSTS"]
+        deviceInfo["isDimmer"] = sts.containsKey("Dimmer")
+        deviceInfo["isAddressable"] = sts.containsKey("Width")
+        if(sts.containsKey("Color")) deviceInfo["isRGB"] = sts["Color"].length() >= 6
+        deviceInfo["hasCT"] = sts.containsKey("CT")
+
+        if(sts["POWER"] != null) {
+            // This only exist if there is ONLY one switch/bulb
+            deviceInfo["numSwitch"] = 1
+        } else {
+            i = 1
+            while(sts["POWER$i"] != null) {
+                i += 1
+            }
+            deviceInfo["numSwitch"] = i - 1
+        }
+    }
+    logging("Device info found: $deviceInfo", 100)
+    // Create the devices, if needed
+
+    // Switches
+    if(deviceInfo["numSwitch"] > 0) {
+        if(deviceInfo["numSwitch"] > 1 && (
+            deviceInfo["isDimmer"] == true || deviceInfo["isAddressable"] == true || 
+            deviceInfo["isRGB"] == true || deviceInfo["hasCT"] == true)) {
+                log.warn "There's more than one switch and the device is either dimmable, addressable, RGB or has CT capability. This is not fully supported yet, please report which device and settings you're using to the developer."
+            }
+        
+        driverName = ["Tasmota - Universal Switch (Child)", "Generic Component Switch"]
+        if(deviceInfo["hasEnergy"] && (deviceInfo["isAddressable"] == false && deviceInfo["isRGB"] == false && deviceInfo["hasCT"] == false)) {
+            if(deviceInfo["isDimmer"]) {
+                // TODO: Make a Component Dimmer with Metering
+                driverName = ["Tasmota - Universal Dimmer (Child)", "Generic Component Dimmer"]
+            } else {
+                driverName = ["Tasmota - Universal Switch (Child)", "Generic Component Metering Switch"]
+            }
+        } else {
+            if(deviceInfo["hasEnergy"]) {
+                log.warn "This device reports Metering Capability AND has RGB, Color Temperature or is Addressable. Metering values will be ignored... This is NOT supported and may result in errors, please report it to the developer."
+            }
+            if((deviceInfo["isDimmer"] == true || deviceInfo["isAddressable"] == true || 
+                deviceInfo["isRGB"] == true || deviceInfo["hasCT"] == true)) {
+                if(deviceInfo["isAddressable"] == false && deviceInfo["isRGB"] == false && deviceInfo["hasCT"] == false) {
+                    driverName = ["Tasmota - Universal Dimmer (Child)", "Generic Component Dimmer"]
+                } else if(deviceInfo["isAddressable"] == false && deviceInfo["isRGB"] == false && deviceInfo["hasCT"] == true) {
+                    driverName = ["Tasmota - Universal CT/RGB/RGB+CW+WW (Child)", "Generic Component CT"]
+                } else if(deviceInfo["isRGB"] == true && deviceInfo["hasCT"] == false) {
+                    driverName = ["Tasmota - Universal CT/RGB/RGB+CW+WW (Child)", "Generic Component RGB"]
+                } else {
+                    driverName = ["Tasmota - Universal CT/RGB/RGB+CW+WW (Child)", "Generic Component RGBW"]
+                }
+            }
+        }
+        
+        for(i in 1..deviceInfo["numSwitch"]) {
+            namespace = "tasmota"
+            childId = "POWER$i"
+            childName = getChildDeviceNameRoot(keepType=true) + " ${getMinimizedDriverName(driverName[0])} ($childId)"
+            childLabel = "${getMinimizedDriverName(device.getLabel())} ($childId)"
+            logging("createChildDevice: POWER$i", 1)
+            createChildDevice(namespace, driverName, childId, childName, childLabel)
+            
+            // Once the first switch is created we only support one type... At least for now...
+            driverName = ["Tasmota - Universal Switch (Child)", "Generic Component Switch"]
+        }
+    }
+    
+    // Sensors
+    deviceInfo["sensorMap"].each {
+        namespace = "tasmota"
+        driverName = ["Tasmota - Universal Multisensor (Child)"]
+        childId = "${it.key}"
+        childName = getChildDeviceNameRoot(keepType=true) + " ${getMinimizedDriverName(driverName[0])} ($childId)"
+        childLabel = "${getMinimizedDriverName(device.getLabel())} ($childId)"
+        createChildDevice(namespace, driverName, childId, childName, childLabel)
+    }
+
+    // Finally let the default parser have the data as well...
+    parseResult(statusMap)
+}
+
+String getChildDeviceNameRoot(Boolean keepType=false) {
+    childDeviceNameRoot = getDeviceInfoByName('name')
+    if(childDeviceNameRoot.toLowerCase().endsWith(' (parent)')) {
+        childDeviceNameRoot = childDeviceNameRoot.substring(0, childDeviceNameRoot.length()-9)
+    } else if(childDeviceNameRoot.toLowerCase().endsWith(' parent')) {
+        childDeviceNameRoot = childDeviceNameRoot.substring(0, childDeviceNameRoot.length()-7)
+    }
+    if(keepType == false && childDeviceNameRoot.toLowerCase().startsWith('tasmota - ')) {
+        childDeviceNameRoot = childDeviceNameRoot.substring(10, childDeviceNameRoot.length())
+    }
+    return childDeviceNameRoot
+}
+
+String getMinimizedDriverName(String driverName) {
+    logging("getMinimizedDriverName(driverName=$driverName)", 1)
+    if(driverName.toLowerCase().endsWith(' (child)')) {
+        driverName = driverName.substring(0, driverName.length()-8)
+    } else if(driverName.toLowerCase().endsWith(' child')) {
+        driverName = driverName.substring(0, driverName.length()-6)
+    }
+    if(driverName.toLowerCase().endsWith(' (parent)')) {
+        driverName = driverName.substring(0, driverName.length()-9)
+    } else if(driverName.toLowerCase().endsWith(' parent')) {
+        driverName = driverName.substring(0, driverName.length()-7)
+    }
+    if(driverName.toLowerCase().startsWith('tasmota - ')) {
+        driverName = driverName.substring(10, driverName.length())
+    }
+    if(driverName.toLowerCase().startsWith('universal ')) {
+        driverName = driverName.substring(10, driverName.length())
+    }
+    driverName = driverName.replaceAll("Generic Component ", "")
+    logging("getMinimizedDriverName(driverName=$driverName) end", 1)
+    return driverName
+}
+
+def getChildDeviceByActionType(String actionType) {
+    return childDevices.find{it.deviceNetworkId.endsWith("-$actionType")}
+}
+
+private void createChildDevice(String namespace, List driverName, String childId, String childName, String childLabel) {
+    
+    childDevice = childDevices.find{it.deviceNetworkId.endsWith("-$childId")}
+    if(!childDevice && childId.toLowerCase().startsWith("power")) {
+        logging("Looking for $childId, ending in ${childId.substring(5)}", 1)
+        childDevice = childDevices.find{it.deviceNetworkId.endsWith("-${childId.substring(5)}")}
+        if(childDevice) {
+            logging("Setting new Network ID for $childId to '$device.id-$childId'", 1)
+            childDevice.setDeviceNetworkId("$device.id-$childId")
+        }
+    }
+    if (childDevice) {
+        // The device exists, just update it
+        childDevice.setName(childName)
+        logging(childDevice.getData(), 10)
+    } else {
+        s = childName.size()
+        for(i in 0..s) {
+            if(driverName[i].toLowerCase().startsWith('generic component')) {
+                currentNamespace = "hubitat"
+            } else {
+                currentNamespace = namespace
+            }
+            try {
+                addChildDevice(currentNamespace, driverName[i], "$device.id-$childId", [name: childName, label: childLabel, isComponent: false])
+                logging("Created child device '$childLabel' using driver '${driverName[i]}'...", 100)
+            } catch (com.hubitat.app.exception.UnknownDeviceTypeException e) {
+                if(i == s) {
+                    log.error "'${driverName[i]}' driver can't be found! Did you forget to install the child driver?"
+                } else {
+                    log.warn "'${driverName[i]}' driver can't be found! Trying another driver: ${driverName[i+1]}..."
+                }
+            }
+        }
+    }
+}
+
+private httpGetAction(uri, callback="parse"){ 
   updateDNI()
   
   def headers = getHeader()
@@ -958,7 +1837,7 @@ private httpGetAction(uri){
         headers: headers
     )*/
     hubAction = asynchttpGet(
-        "parse",
+        callback,
         [uri: "http://${getHostAddress()}$uri",
         headers: headers]
     )

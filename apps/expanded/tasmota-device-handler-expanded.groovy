@@ -531,7 +531,8 @@ def manuallyAdd(){
 		section {
 			paragraph "This process will manually create a Tasmota-based Device with the entered IP address. Tasmota Connect then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your wifi network."
             input "deviceType", "enum", title:"Device Type", description: "", required: true, options: 
-                ["Tasmota - Universal Parent",
+                ["Tasmota - ZNSN TuyaMCU Wifi Curtain Wall Panel",
+                "Tasmota - Universal Parent",
                 ]
             input "ipAddress", "text", title:"IP Address", description: "", required: true 
 		}

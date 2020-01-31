@@ -133,11 +133,11 @@ def main():
          'alternate_name': 'Tasmota - SK03 Power Monitor Outdoor Plug', \
          'alternate_template': '{"NAME":"SK03 Outdoor","GPIO":[17,0,0,0,133,132,0,0,131,57,56,21,0],"FLAG":0,"BASE":57}',
          'deviceLink': 'https://templates.blakadder.com/SK03_outdoor.html'},
-        {'id': 587, 'file': 'tasmota-generic-pm-plug.groovy' , \
-         'alternate_output_filename': 'tasmota-aoycocr-x10s-pm-plug', \
-         'alternate_name': 'Tasmota - Aoycocr X10S Power Monitor Plug', \
-         'alternate_template': '{"NAME":"Aoycocr X10S","GPIO":[56,0,57,0,21,134,0,0,131,17,132,0,0],"FLAG":0,"BASE":45}',
-         'deviceLink': 'https://templates.blakadder.com/aoycocr_X10S.html'},
+        #{'id': 587, 'file': 'tasmota-generic-pm-plug.groovy' , \
+        # 'alternate_output_filename': 'tasmota-aoycocr-x10s-pm-plug', \
+        # 'alternate_name': 'Tasmota - Aoycocr X10S Power Monitor Plug', \
+        # 'alternate_template': '{"NAME":"Aoycocr X10S","GPIO":[56,0,57,0,21,134,0,0,131,17,132,0,0],"FLAG":0,"BASE":45}',
+        # 'deviceLink': 'https://templates.blakadder.com/aoycocr_X10S.html'},
         {'id': 589, 'file': 'tasmota-generic-rgb-rgbw-controller-bulb-dimmer.groovy',
          'alternate_output_filename': 'tasmota-brilliant-20699-rgbw-bulb', \
          'alternate_name': 'Tasmota - Brilliant 20699 800lm RGBW Bulb', \
@@ -208,7 +208,10 @@ def main():
          'alternate_output_filename': 'tasmota-sonoff-4ch-child', \
          'alternate_name': 'Tasmota - Sonoff 4CH (Child)'},
 
-        {'id': 738, 'file': 'tasmota-znsn-tuyamcu-wifi-curtain-wall-panel.groovy',
+        #{'id': 738, 'file': 'tasmota-znsn-tuyamcu-wifi-curtain-wall-panel.groovy',
+        # 'comment': 'NOT GENERIC - read the instructions', },
+        # The below one is unused and safe for testing:
+        {'id': 587, 'file': 'tasmota-znsn-tuyamcu-wifi-curtain-wall-panel.groovy',
          'comment': 'NOT GENERIC - read the instructions', },
         
         # https://tasmota.github.io/docs/#/devices/Sonoff-RF-Bridge-433pi 
@@ -260,6 +263,7 @@ def main():
 
         # Zigbee
         {'id': 579, 'file': 'zigbee-generic-wifi-switch-plug.groovy' },
+        {'id': 801, 'file': 'zigbee-aqara-smart-curtain-motor.groovy' },
 
         # The following can be overwritten: 
     ]
@@ -295,8 +299,8 @@ def main():
     # As long as we have an id, we can just supply that here instead of the whole config...
     # 651 left over from RF Link Child
     driver_files_testing = [
-    #    {'id': 801, 'file': 'zigbee-aqara-smart-curtain-motor.groovy' },
-    #     {'id':738},  # Wifi Curtain Wall Panel
+        {'id': 801}, {'id': 579},
+         {'id':587},  # Wifi Curtain Wall Panel
     #    {'id':590},
     #    {'id':651},    # Sensor - Distance
     #    {'id':649}, {'id':673}, {'id':674}, {'id':675}, {'id':676}, # RF/IR Children
