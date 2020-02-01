@@ -1,4 +1,9 @@
-/* Helper functions included in all Tasmota drivers using RGB, RGBW or Dimmers */
+/*
+    TASMOTA RGBW METHODS (helpers-tasmota-rgbw)
+
+    Helper functions included in all Tasmota drivers using RGB, RGBW or Dimmers
+    These methods ARE specific to Tasmota
+*/
 def setColorTemperature(value) {
     logging("setColorTemperature('${value}')", 10)
     if(device.currentValue('colorTemperature') != value ) sendEvent(name: "colorTemperature", value: value)
@@ -100,14 +105,6 @@ def setRGB(r,g,b) {
     state.level = hsbColor['level']
     
     return(getAction(getCommandString("Color1", rgbcmd)))
-}
-
-float round2(float number, int scale) {
-    int pow = 10;
-    for (int i = 1; i < scale; i++)
-        pow *= 10;
-    float tmp = number * pow;
-    return ( (float) ( (int) ((tmp - (int) tmp) >= 0.5f ? tmp + 1 : tmp) ) ) / pow;
 }
 
 def setLevel(l, duration) {
@@ -286,3 +283,7 @@ def modeRandomColors() {
     state.mode = 4
     modeSet(state.mode)
 }
+
+/*
+    --END-- TASMOTA RGBW METHODS (helpers-tasmota-rgbw)
+*/

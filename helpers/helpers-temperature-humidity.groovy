@@ -1,4 +1,8 @@
-/* Helper functions included in all drivers with Temperature and Humidity */
+/*
+    TEMPERATURE HUMIDITY METHODS (helpers-temperature-humidity)
+
+    Helper functions included in all drivers with Temperature and Humidity
+*/
 private getAdjustedTemp(value) {
     if(tempRes == null || tempRes == '') {
         decimalLimit = 10
@@ -32,3 +36,7 @@ private getAdjustedPressure(value) {
        return value
     }   
 }
+
+/*
+    --END-- TEMPERATURE HUMIDITY METHODS (helpers-temperature-humidity)
+*/

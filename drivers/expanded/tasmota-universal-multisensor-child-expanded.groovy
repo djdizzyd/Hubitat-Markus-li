@@ -14,9 +14,12 @@
  *  limitations under the License.
  */
 
+// BEGIN:getDefaultImports()
 /* Default Imports */
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
+import java.security.MessageDigest   // Used for MD5 calculations
+// END:  getDefaultImports()
 
 
 metadata {
@@ -39,14 +42,15 @@ metadata {
     }
 
     preferences {
-        
+        // BEGIN:getDefaultMetadataPreferences()
         // Default Preferences
-        
+        generate_preferences(configuration_model_debug())
+        // END:  getDefaultMetadataPreferences()
 
     }
 
     // The below line needs to exist in ALL drivers for custom CSS to work!
-    
+    // BEGIN:getMetadataCustomizationMethods()
     // Here getPreferences() can be used to get the above preferences
     metaDataExporter()
     if(isCSSDisabled() == false) {
@@ -54,8 +58,10 @@ metadata {
             input(name: "hiddenSetting", description: "" + getDriverCSSWrapper(), title: "None", displayDuringSetup: false, type: "paragraph", element: "paragraph")
         }
     }
+    // END:  getMetadataCustomizationMethods()
 }
 
+// BEGIN:getDeviceInfoFunction()
 public getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
@@ -63,11 +69,14 @@ public getDeviceInfoByName(infoName) {
     //logging("deviceInfo[${infoName}] = ${deviceInfo[infoName]}", 1)
     return(deviceInfo[infoName])
 }
+// END:  getDeviceInfoFunction()
+
 
 /* These functions are unique to each driver */
 void parse(List<Map> description) {
     description.each {
-        if (it.name in ["temperature", "humidity", "pressure", "illuminance", "motion", "water"]) {
+        if (it.name in ["temperature", "humidity", "pressure", "pressureWithUnit",
+            "illuminance", "motion", "water", "distance"]) {
             logging(it.descriptionText, 100)
             sendEvent(it)
         }
@@ -85,7 +94,7 @@ void installed() {
     refresh()
 }
 
-void dry() {
+/*void dry() {
     logging("dry()", 1)
     sendEvent(name: "water", value: "dry", isStateChange: true)
 }
@@ -109,17 +118,32 @@ def dryAction() {
 def wetAction() {
     logging("wetAction()", 1)
     wet()
-}
+}*/
 
 void refresh() {
     parent?.componentRefresh(this.device)
 }
 
-/* Helper functions included in all drivers/apps */
-/* Helper Debug functions included in all drivers/apps */
+/*
+    -----------------------------------------------------------------------------
+    Everything below here are LIBRARY includes and should NOT be edited manually!
+    -----------------------------------------------------------------------------
+    --- Nothings to edit here, move along! --------------------------------------
+    -----------------------------------------------------------------------------
+*/
 
-def configuration_model_debug()
-{
+/*
+    ALL DEFAULT METHODS (helpers-all-default)
+
+    Helper functions included in all drivers/apps
+*/
+
+/*
+    ALL DEBUG METHODS (helpers-all-debug)
+
+    Helper Debug functions included in all drivers/apps
+*/
+def configuration_model_debug() {
     if(!isDeveloperHub()) {
         if(!isDriver()) {
             app.removeSetting("logLevel")
@@ -153,12 +177,18 @@ def configuration_model_debug()
     <Item label="Verbose" value="10" />
     <Item label="Reports+Status" value="50" />
     <Item label="Reports" value="99" />
+    // BEGIN:getSpecialDebugEntry()
     <Item label="descriptionText" value="100" />
+    // END:  getSpecialDebugEntry()
 </Value>
 </configuration>
 '''
     }
 }
+
+/*
+    --END-- ALL DEBUG METHODS (helpers-all-debug)
+*/
 
 def isDriver() {
     try {
@@ -188,8 +218,7 @@ def deviceCommand(cmd) {
 	Note: also called from updated()
 */
 // Call order: installed() -> configure() -> updated() -> initialize()
-void initialize()
-{
+void initialize() {
     logging("initialize()", 100)
 	unschedule()
     // disable debug logs after 30 min, unless override is in place
@@ -227,7 +256,7 @@ void initialize()
 	Purpose: automatically disable debug logging after 30 mins.
 	Note: scheduled in Initialize()
 */
-void logsOff(){
+void logsOff() {
     if(runReset != "DEBUG") {
         log.warn "Debug logging disabled..."
         // Setting logLevel to "0" doesn't seem to work, it disables logs, but does not update the UI...
@@ -258,10 +287,6 @@ void logsOff(){
     }
 }
 
-def generateMD5(String s){
-    MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
-}
-
 def isDeveloperHub() {
     return generateMD5(location.hub.zigbeeId) == "125fceabd0413141e34bb859cd15e067"
     //return false
@@ -273,24 +298,6 @@ def getEnvironmentObject() {
     } else {
         return app
     }
-}
-
-def dBmToQuality(dBm) {
-    def quality = 0
-    if(dBm > 0) dBm = dBm * -1
-    if(dBm <= -100) {
-        quality = 0
-    } else if(dBm >= -50) {
-        quality = 100
-    } else {
-        quality = 2 * (dBm + 100)
-    }
-    logging("DBM: $dBm (${quality}%)", 0)
-    return quality
-}
-
-def extractInt( String input ) {
-  return input.replaceAll("[^0-9]", "").toInteger()
 }
 
 private def getFilteredDeviceDriverName() {
@@ -306,79 +313,90 @@ private def getFilteredDeviceDisplayName() {
     return device_display_name
 }
 
-def makeTextBold(s) {
-    if(isDriver()) {
-        return "<b>$s</b>"
-    } else {
-        return "$s"
-    }
-}
-
-def makeTextItalic(s) {
-    if(isDriver()) {
-        return "<i>$s</i>"
-    } else {
-        return "$s"
-    }
-}
-
-def generate_preferences(configuration_model)
-{
+def generate_preferences(configuration_model) {
     def configuration = new XmlSlurper().parseText(configuration_model)
    
-    configuration.Value.each
-    {
-        if(it.@hidden != "true" && it.@disabled != "true"){
-        switch(it.@type)
-        {   
-            case "number":
-                input("${it.@index}", "number",
-                    title:"${addTitleDiv(it.@label)}" + "${it.Help}",
-                    description: makeTextItalic(it.@description),
-                    range: "${it.@min}..${it.@max}",
-                    defaultValue: "${it.@value}",
-                    submitOnChange: it.@submitOnChange == "true",
-                    displayDuringSetup: "${it.@displayDuringSetup}")
-            break
-            case "list":
-                def items = []
-                it.Item.each { items << ["${it.@value}":"${it.@label}"] }
-                input("${it.@index}", "enum",
-                    title:"${addTitleDiv(it.@label)}" + "${it.Help}",
-                    description: makeTextItalic(it.@description),
-                    defaultValue: "${it.@value}",
-                    submitOnChange: it.@submitOnChange == "true",
-                    displayDuringSetup: "${it.@displayDuringSetup}",
-                    options: items)
-            break
-            case "password":
-                input("${it.@index}", "password",
-                    title:"${addTitleDiv(it.@label)}" + "${it.Help}",
-                    description: makeTextItalic(it.@description),
-                    submitOnChange: it.@submitOnChange == "true",
-                    displayDuringSetup: "${it.@displayDuringSetup}")
-            break
-            case "decimal":
-               input("${it.@index}", "decimal",
-                    title:"${addTitleDiv(it.@label)}" + "${it.Help}",
-                    description: makeTextItalic(it.@description),
-                    range: "${it.@min}..${it.@max}",
-                    defaultValue: "${it.@value}",
-                    submitOnChange: it.@submitOnChange == "true",
-                    displayDuringSetup: "${it.@displayDuringSetup}")
-            break
-            case "bool":
-               input("${it.@index}", "bool",
-                    title:"${addTitleDiv(it.@label)}" + "${it.Help}",
-                    description: makeTextItalic(it.@description),
-                    defaultValue: "${it.@value}",
-                    submitOnChange: it.@submitOnChange == "true",
-                    displayDuringSetup: "${it.@displayDuringSetup}")
-            break
-        }
+    configuration.Value.each {
+        if(it.@hidden != "true" && it.@disabled != "true") {
+            switch(it.@type) {   
+                case "number":
+                    input("${it.@index}", "number",
+                        title:"${addTitleDiv(it.@label)}" + "${it.Help}",
+                        description: makeTextItalic(it.@description),
+                        range: "${it.@min}..${it.@max}",
+                        defaultValue: "${it.@value}",
+                        submitOnChange: it.@submitOnChange == "true",
+                        displayDuringSetup: "${it.@displayDuringSetup}")
+                    break
+                case "list":
+                    def items = []
+                    it.Item.each { items << ["${it.@value}":"${it.@label}"] }
+                    input("${it.@index}", "enum",
+                        title:"${addTitleDiv(it.@label)}" + "${it.Help}",
+                        description: makeTextItalic(it.@description),
+                        defaultValue: "${it.@value}",
+                        submitOnChange: it.@submitOnChange == "true",
+                        displayDuringSetup: "${it.@displayDuringSetup}",
+                        options: items)
+                    break
+                case "password":
+                    input("${it.@index}", "password",
+                            title:"${addTitleDiv(it.@label)}" + "${it.Help}",
+                            description: makeTextItalic(it.@description),
+                            submitOnChange: it.@submitOnChange == "true",
+                            displayDuringSetup: "${it.@displayDuringSetup}")
+                    break
+                case "decimal":
+                    input("${it.@index}", "decimal",
+                            title:"${addTitleDiv(it.@label)}" + "${it.Help}",
+                            description: makeTextItalic(it.@description),
+                            range: "${it.@min}..${it.@max}",
+                            defaultValue: "${it.@value}",
+                            submitOnChange: it.@submitOnChange == "true",
+                            displayDuringSetup: "${it.@displayDuringSetup}")
+                    break
+                case "bool":
+                    input("${it.@index}", "bool",
+                            title:"${addTitleDiv(it.@label)}" + "${it.Help}",
+                            description: makeTextItalic(it.@description),
+                            defaultValue: "${it.@value}",
+                            submitOnChange: it.@submitOnChange == "true",
+                            displayDuringSetup: "${it.@displayDuringSetup}")
+                    break
+            }
         }
     }
 }
+
+/*
+    General Mathematical and Number Methods
+*/
+float round2(float number, int scale) {
+    int pow = 10;
+    for (int i = 1; i < scale; i++)
+        pow *= 10;
+    float tmp = number * pow;
+    return ( (float) ( (int) ((tmp - (int) tmp) >= 0.5f ? tmp + 1 : tmp) ) ) / pow;
+}
+
+def generateMD5(String s) {
+    MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
+}
+
+def extractInt(String input) {
+  return input.replaceAll("[^0-9]", "").toInteger()
+}
+
+/*
+    --END-- ALL DEFAULT METHODS (helpers-all-default)
+*/
+
+/*
+    DRIVER METADATA METHODS (helpers-driver-metadata)
+
+    These methods are to be used in (and/or with) the metadata section of drivers and
+    is also what contains the CSS handling and styling.
+*/
 
 // These methods can be executed in both the NORMAL driver scope as well
 // as the Metadata scope.
@@ -786,7 +804,29 @@ def getCSSForHidingLastPreference() {
     return getCSSForPreferenceHiding(null, overrideIndex=-1)
 }
 
+def makeTextBold(s) {
+    // DEPRECATED: Should be replaced by CSS styling!
+    if(isDriver()) {
+        return "<b>$s</b>"
+    } else {
+        return "$s"
+    }
+}
 
+def makeTextItalic(s) {
+    // DEPRECATED: Should be replaced by CSS styling!
+    if(isDriver()) {
+        return "<i>$s</i>"
+    } else {
+        return "$s"
+    }
+}
+
+/*
+    --END-- DRIVER METADATA METHODS (helpers-driver-metadata)
+*/
+
+// BEGIN:getLoggingFunction(specialDebugLevel=True)
 /* Logging function included in all drivers */
 private def logging(message, level) {
     if (infoLogging == true) {
@@ -831,4 +871,5 @@ private def logging(message, level) {
         }
     }
 }
+// END:  getLoggingFunction(specialDebugLevel=True)
 

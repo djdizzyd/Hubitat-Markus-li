@@ -1,3 +1,10 @@
+/*
+    DRIVER DEFAULT METHODS (helpers-driver-default)
+
+    General Methods used in ALL drivers except some CHILD drivers
+    Though some may have no effect in some drivers, they're here to
+    maintain a general structure
+*/
 
 #!include:getHelperFunctions('driver-metadata')
 
@@ -38,8 +45,7 @@ def configure() {
     if (cmds != []) cmds
 }
 
-def update_current_properties(cmd)
-{
+def update_current_properties(cmd) {
     def currentProperties = state.currentProperties ?: [:]
     currentProperties."${cmd.name}" = cmd.value
 
@@ -57,3 +63,6 @@ def update_current_properties(cmd)
     state.currentProperties = currentProperties
 }
 
+/*
+    --END-- DRIVER DEFAULT METHODS (helpers-driver-default)
+*/

@@ -163,7 +163,7 @@ def getDefaultMetadataPreferences():
     #input(description: "Once you change values on this page, the corner of the 'configuration' icon will change to orange until all configuration parameters are updated.", title: "Settings", displayDuringSetup: false, type: "paragraph", element: "paragraph")
     return """
 // Default Preferences
-
+generate_preferences(configuration_model_debug())
 """
 
 def getDefaultMetadataPreferencesLast():

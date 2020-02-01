@@ -35,7 +35,8 @@ metadata {
 /* These functions are unique to each driver */
 void parse(List<Map> description) {
     description.each {
-        if (it.name in ["temperature", "humidity", "pressure", "illuminance", "motion", "water"]) {
+        if (it.name in ["temperature", "humidity", "pressure", "pressureWithUnit",
+            "illuminance", "motion", "water", "distance"]) {
             logging(it.descriptionText, 100)
             sendEvent(it)
         }
@@ -53,7 +54,7 @@ void installed() {
     refresh()
 }
 
-void dry() {
+/*void dry() {
     logging("dry()", 1)
     sendEvent(name: "water", value: "dry", isStateChange: true)
 }
@@ -77,11 +78,19 @@ def dryAction() {
 def wetAction() {
     logging("wetAction()", 1)
     wet()
-}
+}*/
 
 void refresh() {
     parent?.componentRefresh(this.device)
 }
+
+/*
+    -----------------------------------------------------------------------------
+    Everything below here are LIBRARY includes and should NOT be edited manually!
+    -----------------------------------------------------------------------------
+    --- Nothings to edit here, move along! --------------------------------------
+    -----------------------------------------------------------------------------
+*/
 
 #!include:getHelperFunctions('all-default')
 

@@ -14,11 +14,13 @@
  *  limitations under the License.
  */
 
+// BEGIN:getDefaultParentImports()
 /* Default Imports */
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
-/* Default Parent Imports */
 import java.security.MessageDigest   // Used for MD5 calculations
+/* Default Parent Imports */
+// END:  getDefaultParentImports()
 
 
 definition(
@@ -531,9 +533,10 @@ def manuallyAdd(){
 		section {
 			paragraph "This process will manually create a Tasmota-based Device with the entered IP address. Tasmota Connect then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your wifi network."
             input "deviceType", "enum", title:"Device Type", description: "", required: true, options: 
-                ["Tasmota - ZNSN TuyaMCU Wifi Curtain Wall Panel",
-                "Tasmota - Universal Parent",
+                // BEGIN:makeTasmotaConnectDriverListV1()
+                ["Tasmota - Universal Parent",
                 ]
+                // END:  makeTasmotaConnectDriverListV1()
             input "ipAddress", "text", title:"IP Address", description: "", required: true 
 		}
     }
@@ -764,6 +767,7 @@ def initializeAdditional() {
     //runEvery5Minutes("ssdpDiscover")
 }
 
+// BEGIN:getLoggingFunction()
 /* Logging function included in all drivers */
 private def logging(message, level) {
     if (infoLogging == true) {
@@ -803,13 +807,27 @@ private def logging(message, level) {
         }
     }
 }
+// END:  getLoggingFunction()
 
 
-/* Helper functions included in all drivers/apps */
-/* Helper Debug functions included in all drivers/apps */
+/*
+    APP DEFAULT METHODS (helpers-app-default)
 
-def configuration_model_debug()
-{
+    TODO: Write file description
+*/
+
+/*
+    ALL DEFAULT METHODS (helpers-all-default)
+
+    Helper functions included in all drivers/apps
+*/
+
+/*
+    ALL DEBUG METHODS (helpers-all-debug)
+
+    Helper Debug functions included in all drivers/apps
+*/
+def configuration_model_debug() {
     if(!isDeveloperHub()) {
         if(!isDriver()) {
             app.removeSetting("logLevel")
@@ -843,11 +861,17 @@ def configuration_model_debug()
     <Item label="Verbose" value="10" />
     <Item label="Reports+Status" value="50" />
     <Item label="Reports" value="99" />
-    </Value>
+    // BEGIN:getSpecialDebugEntry()
+    // END:  getSpecialDebugEntry()
+</Value>
 </configuration>
 '''
     }
 }
+
+/*
+    --END-- ALL DEBUG METHODS (helpers-all-debug)
+*/
 
 def isDriver() {
     try {
@@ -877,8 +901,7 @@ def deviceCommand(cmd) {
 	Note: also called from updated()
 */
 // Call order: installed() -> configure() -> updated() -> initialize()
-void initialize()
-{
+void initialize() {
     logging("initialize()", 100)
 	unschedule()
     // disable debug logs after 30 min, unless override is in place
@@ -916,7 +939,7 @@ void initialize()
 	Purpose: automatically disable debug logging after 30 mins.
 	Note: scheduled in Initialize()
 */
-void logsOff(){
+void logsOff() {
     if(runReset != "DEBUG") {
         log.warn "Debug logging disabled..."
         // Setting logLevel to "0" doesn't seem to work, it disables logs, but does not update the UI...
@@ -947,10 +970,6 @@ void logsOff(){
     }
 }
 
-def generateMD5(String s){
-    MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
-}
-
 def isDeveloperHub() {
     return generateMD5(location.hub.zigbeeId) == "125fceabd0413141e34bb859cd15e067"
     //return false
@@ -962,24 +981,6 @@ def getEnvironmentObject() {
     } else {
         return app
     }
-}
-
-def dBmToQuality(dBm) {
-    def quality = 0
-    if(dBm > 0) dBm = dBm * -1
-    if(dBm <= -100) {
-        quality = 0
-    } else if(dBm >= -50) {
-        quality = 100
-    } else {
-        quality = 2 * (dBm + 100)
-    }
-    logging("DBM: $dBm (${quality}%)", 0)
-    return quality
-}
-
-def extractInt( String input ) {
-  return input.replaceAll("[^0-9]", "").toInteger()
 }
 
 private def getFilteredDeviceDriverName() {
@@ -995,79 +996,83 @@ private def getFilteredDeviceDisplayName() {
     return device_display_name
 }
 
-def makeTextBold(s) {
-    if(isDriver()) {
-        return "<b>$s</b>"
-    } else {
-        return "$s"
-    }
-}
-
-def makeTextItalic(s) {
-    if(isDriver()) {
-        return "<i>$s</i>"
-    } else {
-        return "$s"
-    }
-}
-
-def generate_preferences(configuration_model)
-{
+def generate_preferences(configuration_model) {
     def configuration = new XmlSlurper().parseText(configuration_model)
    
-    configuration.Value.each
-    {
-        if(it.@hidden != "true" && it.@disabled != "true"){
-        switch(it.@type)
-        {   
-            case "number":
-                input("${it.@index}", "number",
-                    title:"${addTitleDiv(it.@label)}" + "${it.Help}",
-                    description: makeTextItalic(it.@description),
-                    range: "${it.@min}..${it.@max}",
-                    defaultValue: "${it.@value}",
-                    submitOnChange: it.@submitOnChange == "true",
-                    displayDuringSetup: "${it.@displayDuringSetup}")
-            break
-            case "list":
-                def items = []
-                it.Item.each { items << ["${it.@value}":"${it.@label}"] }
-                input("${it.@index}", "enum",
-                    title:"${addTitleDiv(it.@label)}" + "${it.Help}",
-                    description: makeTextItalic(it.@description),
-                    defaultValue: "${it.@value}",
-                    submitOnChange: it.@submitOnChange == "true",
-                    displayDuringSetup: "${it.@displayDuringSetup}",
-                    options: items)
-            break
-            case "password":
-                input("${it.@index}", "password",
-                    title:"${addTitleDiv(it.@label)}" + "${it.Help}",
-                    description: makeTextItalic(it.@description),
-                    submitOnChange: it.@submitOnChange == "true",
-                    displayDuringSetup: "${it.@displayDuringSetup}")
-            break
-            case "decimal":
-               input("${it.@index}", "decimal",
-                    title:"${addTitleDiv(it.@label)}" + "${it.Help}",
-                    description: makeTextItalic(it.@description),
-                    range: "${it.@min}..${it.@max}",
-                    defaultValue: "${it.@value}",
-                    submitOnChange: it.@submitOnChange == "true",
-                    displayDuringSetup: "${it.@displayDuringSetup}")
-            break
-            case "bool":
-               input("${it.@index}", "bool",
-                    title:"${addTitleDiv(it.@label)}" + "${it.Help}",
-                    description: makeTextItalic(it.@description),
-                    defaultValue: "${it.@value}",
-                    submitOnChange: it.@submitOnChange == "true",
-                    displayDuringSetup: "${it.@displayDuringSetup}")
-            break
-        }
+    configuration.Value.each {
+        if(it.@hidden != "true" && it.@disabled != "true") {
+            switch(it.@type) {   
+                case "number":
+                    input("${it.@index}", "number",
+                        title:"${addTitleDiv(it.@label)}" + "${it.Help}",
+                        description: makeTextItalic(it.@description),
+                        range: "${it.@min}..${it.@max}",
+                        defaultValue: "${it.@value}",
+                        submitOnChange: it.@submitOnChange == "true",
+                        displayDuringSetup: "${it.@displayDuringSetup}")
+                    break
+                case "list":
+                    def items = []
+                    it.Item.each { items << ["${it.@value}":"${it.@label}"] }
+                    input("${it.@index}", "enum",
+                        title:"${addTitleDiv(it.@label)}" + "${it.Help}",
+                        description: makeTextItalic(it.@description),
+                        defaultValue: "${it.@value}",
+                        submitOnChange: it.@submitOnChange == "true",
+                        displayDuringSetup: "${it.@displayDuringSetup}",
+                        options: items)
+                    break
+                case "password":
+                    input("${it.@index}", "password",
+                            title:"${addTitleDiv(it.@label)}" + "${it.Help}",
+                            description: makeTextItalic(it.@description),
+                            submitOnChange: it.@submitOnChange == "true",
+                            displayDuringSetup: "${it.@displayDuringSetup}")
+                    break
+                case "decimal":
+                    input("${it.@index}", "decimal",
+                            title:"${addTitleDiv(it.@label)}" + "${it.Help}",
+                            description: makeTextItalic(it.@description),
+                            range: "${it.@min}..${it.@max}",
+                            defaultValue: "${it.@value}",
+                            submitOnChange: it.@submitOnChange == "true",
+                            displayDuringSetup: "${it.@displayDuringSetup}")
+                    break
+                case "bool":
+                    input("${it.@index}", "bool",
+                            title:"${addTitleDiv(it.@label)}" + "${it.Help}",
+                            description: makeTextItalic(it.@description),
+                            defaultValue: "${it.@value}",
+                            submitOnChange: it.@submitOnChange == "true",
+                            displayDuringSetup: "${it.@displayDuringSetup}")
+                    break
+            }
         }
     }
 }
+
+/*
+    General Mathematical and Number Methods
+*/
+float round2(float number, int scale) {
+    int pow = 10;
+    for (int i = 1; i < scale; i++)
+        pow *= 10;
+    float tmp = number * pow;
+    return ( (float) ( (int) ((tmp - (int) tmp) >= 0.5f ? tmp + 1 : tmp) ) ) / pow;
+}
+
+def generateMD5(String s) {
+    MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
+}
+
+def extractInt(String input) {
+  return input.replaceAll("[^0-9]", "").toInteger()
+}
+
+/*
+    --END-- ALL DEFAULT METHODS (helpers-all-default)
+*/
 
 def installed() {
 	logging("installed()", 100)
@@ -1080,7 +1085,15 @@ def installed() {
     }
 }
 
-/* Helper functions included in all Tasmota drivers */
+/*
+    --END-- APP DEFAULT METHODS (helpers-app-default)
+*/
+
+/*
+    TASMOTA METHODS (helpers-tasmota)
+
+    Helper functions included in all Tasmota drivers
+*/
 
 // Call order: installed() -> configure() -> updated() -> initialize() -> refresh()
 def refresh() {
@@ -1091,7 +1104,7 @@ def refresh() {
 
     // Retrieve full status from Tasmota
     cmds << getAction(getCommandString("Status", "0"), callback="parseConfigureChildDevices")
-    
+
     getDriverVersion()
     //logging("this.binding.variables = ${this.binding.variables}", 1)
     //logging("settings = ${settings}", 1)
@@ -1137,8 +1150,7 @@ def reboot() {
 }
 
 // Call order: installed() -> configure() -> updated() 
-def updated()
-{
+def updated() {
     logging("updated()", 10)
     def cmds = [] 
     if(isDriver()) {
@@ -1155,55 +1167,6 @@ def updated()
         // ignore
     }
     if (cmds != [] && cmds != null) cmds
-}
-
-def prepareDNI() {
-    if (useIPAsID) {
-        hexIPAddress = setDeviceNetworkId(ipAddress, true)
-        if(hexIPAddress != null && state.dni != hexIPAddress) {
-            state.dni = hexIPAddress
-            updateDNI()
-        }
-    }
-    else if (state.mac != null && state.dni != state.mac) { 
-        state.dni = setDeviceNetworkId(state.mac)
-        updateDNI()
-    }
-}
-
-
-
-def getCommandString(command, value) {
-    def uri = "/cm?"
-    if (password) {
-        uri += "user=admin&password=${password}&"
-    }
-	if (value) {
-		uri += "cmnd=${command}%20${value}"
-	}
-	else {
-		uri += "cmnd=${command}"
-	}
-    return uri
-}
-
-def getMultiCommandString(commands) {
-    def uri = "/cm?"
-    if (password) {
-        uri += "user=admin&password=${password}&"
-    }
-    uri += "cmnd=backlog%20"
-    if(commands.size() > 30) {
-        log.warn "Backlog only supports 30 commands, the last ${commands.size() - 30} will be ignored!"
-    }
-    commands.each {cmd->
-        if(cmd.containsKey("value")) {
-          uri += "${cmd['command']}%20${cmd['value']}%3B%20"
-        } else {
-          uri += "${cmd['command']}%3B%20"
-        }
-    }
-    return uri
 }
 
 /*
@@ -1229,8 +1192,9 @@ def getMultiCommandString(commands) {
     logging("refreshAdditional installCommands=$installCommands", 1)
     runInstallCommands(installCommands)
 */
-
 def runInstallCommands(installCommands) {
+    // Runs install commands as defined in helpers-device-configurations
+    // Called from update_needed_settings() in parent drivers
     logging("runInstallCommands(installCommands=$installCommands)", 1)
     def cmds = []
     backlogs = []
@@ -1275,6 +1239,7 @@ def runInstallCommands(installCommands) {
 }
 
 def parseDescriptionAsMap(description) {
+    // Used by parse(description) to get descMap
 	description.split(",").inject([:]) { map, param ->
 		def nameAndValue = param.split(":")
         
@@ -1283,12 +1248,13 @@ def parseDescriptionAsMap(description) {
 	}
 }
 
-private getAction(uri, callback="parse"){ 
+private getAction(uri, callback="parse") { 
     logging("Using getAction for '${uri}'...", 0)
     return httpGetAction(uri, callback=callback)
 }
 
 def parse(asyncResponse, data) {
+    // Parse called by default when using asyncHTTP
     def events = []
     if(asyncResponse != null) {
         try{
@@ -1308,6 +1274,13 @@ def parse(asyncResponse, data) {
     }
     return events
 }
+
+
+/*
+    Methods related to configureChildDevices()
+
+    configureChildDevices() detects which child devices to create/update and does the creation/updating
+*/
 
 def parseConfigureChildDevices(asyncResponse, data) {
     if(asyncResponse != null) {
@@ -1372,6 +1345,7 @@ TreeMap getKeysWithMapAndId(aMap) {
 }
 
 def configureChildDevices(asyncResponse, data) {
+    // This detects which child devices to create/update and does the creation/updating
     def statusMap = asyncResponse.getJson()
     logging("configureChildDevices() statusMap=$statusMap", 1)
     // Use statusMap to determine which Child Devices we should create
@@ -1597,6 +1571,7 @@ String getChildDeviceNameRoot(Boolean keepType=false) {
 }
 
 String getMinimizedDriverName(String driverName) {
+    // Remove parts we don't need from the string 
     logging("getMinimizedDriverName(driverName=$driverName)", 1)
     if(driverName.toLowerCase().endsWith(' (child)')) {
         driverName = driverName.substring(0, driverName.length()-8)
@@ -1624,9 +1599,9 @@ def getChildDeviceByActionType(String actionType) {
 }
 
 private void createChildDevice(String namespace, List driverName, String childId, String childName, String childLabel) {
-    
     childDevice = childDevices.find{it.deviceNetworkId.endsWith("-$childId")}
     if(!childDevice && childId.toLowerCase().startsWith("power")) {
+        // If this driver was used to replace an "old" parent driver, rename the child Network ID
         logging("Looking for $childId, ending in ${childId.substring(5)}", 1)
         childDevice = childDevices.find{it.deviceNetworkId.endsWith("-${childId.substring(5)}")}
         if(childDevice) {
@@ -1660,56 +1635,10 @@ private void createChildDevice(String namespace, List driverName, String childId
     }
 }
 
-private httpGetAction(uri, callback="parse"){ 
-  updateDNI()
-  
-  def headers = getHeader()
-  logging("Using httpGetAction for 'http://${getHostAddress()}$uri'...", 0)
-  def hubAction = null
-  try {
-    /*hubAction = new hubitat.device.HubAction(
-        method: "GET",
-        path: uri,
-        headers: headers
-    )*/
-    hubAction = asynchttpGet(
-        callback,
-        [uri: "http://${getHostAddress()}$uri",
-        headers: headers]
-    )
-  } catch (e) {
-    log.error "Error in httpGetAction(uri): $e ('$uri')"
-  }
-  return hubAction    
-}
-
-private postAction(uri, data){ 
-  updateDNI()
-
-  def headers = getHeader()
-
-  def hubAction = null
-  try {
-    hubAction = new hubitat.device.HubAction(
-    method: "POST",
-    path: uri,
-    headers: headers,
-    body: data
-  )
-  } catch (e) {
-    log.error "Error in postAction(uri, data): $e ('$uri', '$data')"
-  }
-  return hubAction    
-}
-
-private onOffCmd(value, endpoint) {
-    logging("onOffCmd, value: $value, endpoint: $endpoint", 1)
-    def cmds = []
-    cmds << getAction(getCommandString("Power$endpoint", "$value"))
-    return cmds
-}
-
-private setDeviceNetworkId(macOrIP, isIP = false){
+/*
+    Tasmota IP Settings and Wifi status
+*/
+private setDeviceNetworkId(macOrIP, isIP = false) {
     def myDNI
     if (isIP == false) {
         myDNI = macOrIP
@@ -1721,7 +1650,26 @@ private setDeviceNetworkId(macOrIP, isIP = false){
     return myDNI
 }
 
-private updateDNI() { 
+def prepareDNI() {
+    // Called from update_needed_settings() and parse(description)
+    if (useIPAsID) {
+        hexIPAddress = setDeviceNetworkId(ipAddress, true)
+        if(hexIPAddress != null && state.dni != hexIPAddress) {
+            state.dni = hexIPAddress
+            updateDNI()
+        }
+    }
+    else if (state.mac != null && state.dni != state.mac) { 
+        state.dni = setDeviceNetworkId(state.mac)
+        updateDNI()
+    }
+}
+
+private updateDNI() {
+    // Called from:
+    // preapreDNI()
+    // httpGetAction(uri, callback="parse")
+    // postAction(uri, data)
     if (state.dni != null && state.dni != "" && device.deviceNetworkId != state.dni) {
         logging("Device Network Id will be set to ${state.dni} from ${device.deviceNetworkId}", 0)
         device.deviceNetworkId = state.dni
@@ -1756,30 +1704,6 @@ private String convertIPtoHex(ipAddress) {
     return hex
 }
 
-private String urlEscape(url) {
-    return(URLEncoder.encode(url).replace("+", "%20"))
-}
-
-private String convertPortToHex(port) {
-	String hexport = port.toString().format( '%04X', port.toInteger() )
-    return hexport
-}
-
-private encodeCredentials(username, password){
-	def userpassascii = "${username}:${password}"
-    def userpass = "Basic " + userpassascii.bytes.encodeBase64().toString()
-    return userpass
-}
-
-private getHeader(userpass = null){
-    def headers = [:]
-    headers.put("Host", getHostAddress())
-    headers.put("Content-Type", "application/x-www-form-urlencoded")
-    if (userpass != null)
-       headers.put("Authorization", userpass)
-    return headers
-}
-
 def sync(ip, port = null) {
     def existingIp = getDataValue("ip")
     def existingPort = getDataValue("port")
@@ -1796,8 +1720,24 @@ def sync(ip, port = null) {
     }
 }
 
-def configuration_model_tasmota()
-{
+def dBmToQuality(dBm) {
+    def quality = 0
+    if(dBm > 0) dBm = dBm * -1
+    if(dBm <= -100) {
+        quality = 0
+    } else if(dBm >= -50) {
+        quality = 100
+    } else {
+        quality = 2 * (dBm + 100)
+    }
+    logging("DBM: $dBm (${quality}%)", 0)
+    return quality
+}
+
+/*
+    Tasmota Preferences Related
+*/
+def configuration_model_tasmota() {
 '''
 <configuration>
 <Value type="password" byteSize="1" index="password" label="Device Password" description="REQUIRED if set on the Device! Otherwise leave empty." min="" max="" value="" setting_type="preference" fw="">
@@ -1807,3 +1747,109 @@ def configuration_model_tasmota()
 </configuration>
 '''
 }
+
+/*
+    HTTP Tasmota API Related
+*/
+private httpGetAction(uri, callback="parse") { 
+  updateDNI()
+  
+  def headers = getHeader()
+  logging("Using httpGetAction for 'http://${getHostAddress()}$uri'...", 0)
+  def hubAction = null
+  try {
+    /*hubAction = new hubitat.device.HubAction(
+        method: "GET",
+        path: uri,
+        headers: headers
+    )*/
+    hubAction = asynchttpGet(
+        callback,
+        [uri: "http://${getHostAddress()}$uri",
+        headers: headers]
+    )
+  } catch (e) {
+    log.error "Error in httpGetAction(uri): $e ('$uri')"
+  }
+  return hubAction    
+}
+
+private postAction(uri, data) { 
+  updateDNI()
+
+  def headers = getHeader()
+
+  def hubAction = null
+  try {
+    hubAction = new hubitat.device.HubAction(
+    method: "POST",
+    path: uri,
+    headers: headers,
+    body: data
+  )
+  } catch (e) {
+    log.error "Error in postAction(uri, data): $e ('$uri', '$data')"
+  }
+  return hubAction    
+}
+
+def getCommandString(command, value) {
+    def uri = "/cm?"
+    if (password) {
+        uri += "user=admin&password=${password}&"
+    }
+	if (value) {
+		uri += "cmnd=${command}%20${value}"
+	}
+	else {
+		uri += "cmnd=${command}"
+	}
+    return uri
+}
+
+def getMultiCommandString(commands) {
+    def uri = "/cm?"
+    if (password) {
+        uri += "user=admin&password=${password}&"
+    }
+    uri += "cmnd=backlog%20"
+    if(commands.size() > 30) {
+        log.warn "Backlog only supports 30 commands, the last ${commands.size() - 30} will be ignored!"
+    }
+    commands.each {cmd->
+        if(cmd.containsKey("value")) {
+          uri += "${cmd['command']}%20${cmd['value']}%3B%20"
+        } else {
+          uri += "${cmd['command']}%3B%20"
+        }
+    }
+    return uri
+}
+
+private String urlEscape(url) {
+    return(URLEncoder.encode(url).replace("+", "%20"))
+}
+
+private String convertPortToHex(port) {
+	String hexport = port.toString().format( '%04X', port.toInteger() )
+    return hexport
+}
+
+private encodeCredentials(username, password) {
+	def userpassascii = "${username}:${password}"
+    def userpass = "Basic " + userpassascii.bytes.encodeBase64().toString()
+    return userpass
+}
+
+private getHeader(userpass = null) {
+    def headers = [:]
+    headers.put("Host", getHostAddress())
+    headers.put("Content-Type", "application/x-www-form-urlencoded")
+    if (userpass != null)
+       headers.put("Authorization", userpass)
+    return headers
+}
+
+/*
+    --END-- TASMOTA METHODS (helpers-tasmota)
+*/

@@ -358,7 +358,7 @@ if (result.containsKey("Dimmer")) {
     dimmer = result.Dimmer
     logging("Dimmer: ${dimmer}", 1)
     state.level = dimmer
-    if(childDevice.currentValue('level') != dimmer ) missingChild = callChildParseByTypeId("POWER1", [[name: "level", value: dimmer]], missingChild)
+    if(childDevice?.currentValue('level') != dimmer ) missingChild = callChildParseByTypeId("POWER1", [[name: "level", value: dimmer]], missingChild)
 }
 if (result.containsKey("Wakeup")) {
     wakeup = result.Wakeup

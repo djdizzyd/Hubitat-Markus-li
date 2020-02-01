@@ -1,3 +1,10 @@
+/*
+    DRIVER METADATA METHODS (helpers-driver-metadata)
+
+    These methods are to be used in (and/or with) the metadata section of drivers and
+    is also what contains the CSS handling and styling.
+*/
+
 // These methods can be executed in both the NORMAL driver scope as well
 // as the Metadata scope.
 private getMetaConfig() {
@@ -403,3 +410,25 @@ def getCSSForPreferencesToHide(preferences) {
 def getCSSForHidingLastPreference() {
     return getCSSForPreferenceHiding(null, overrideIndex=-1)
 }
+
+def makeTextBold(s) {
+    // DEPRECATED: Should be replaced by CSS styling!
+    if(isDriver()) {
+        return "<b>$s</b>"
+    } else {
+        return "$s"
+    }
+}
+
+def makeTextItalic(s) {
+    // DEPRECATED: Should be replaced by CSS styling!
+    if(isDriver()) {
+        return "<i>$s</i>"
+    } else {
+        return "$s"
+    }
+}
+
+/*
+    --END-- DRIVER METADATA METHODS (helpers-driver-metadata)
+*/

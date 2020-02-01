@@ -1,7 +1,9 @@
-/* Helper Debug functions included in all drivers/apps */
+/*
+    ALL DEBUG METHODS (helpers-all-debug)
 
-def configuration_model_debug()
-{
+    Helper Debug functions included in all drivers/apps
+*/
+def configuration_model_debug() {
     if(!isDeveloperHub()) {
         if(!isDriver()) {
             app.removeSetting("logLevel")
@@ -41,3 +43,7 @@ def configuration_model_debug()
 '''
     }
 }
+
+/*
+    --END-- ALL DEBUG METHODS (helpers-all-debug)
+*/

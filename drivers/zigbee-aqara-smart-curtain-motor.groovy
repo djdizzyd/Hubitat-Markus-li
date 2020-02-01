@@ -87,7 +87,7 @@ def reboot() {
 }
 // description:read attr - raw: 05470100000A07003001, dni: 0547, endpoint: 01, cluster: 0000, size: 0A, attrId: 0007, encoding: 30, command: 01, value: 01, parseMap:[raw:05470100000A07003001, dni:0547, endpoint:01, cluster:0000, size:0A, attrId:0007, encoding:30, command:01, value:01, clusterInt:0, attrInt:7]
 // Closed curtain: read attr - raw: 054701000D1055003900000000, dni: 0547, endpoint: 01, cluster: 000D, size: 10, attrId: 0055, encoding: 39, command: 01, value: 00000000
-// PArtially open: msgMap: [raw:054701000D1C5500390000C84200F02300000000, dni:0547, endpoint:01, cluster:000D, size:1C, attrId:0055, encoding:39, command:0A, value:42C80000, clusterInt:13, attrInt:85, additionalAttrs:[[value:00000000, encoding:23, attrId:F000, consumedBytes:7, attrInt:61440]]]
+// Partially open: msgMap: [raw:054701000D1C5500390000C84200F02300000000, dni:0547, endpoint:01, cluster:000D, size:1C, attrId:0055, encoding:39, command:0A, value:42C80000, clusterInt:13, attrInt:85, additionalAttrs:[[value:00000000, encoding:23, attrId:F000, consumedBytes:7, attrInt:61440]]]
 // 0104 000A 01 01 0040 00 0547 00 00 0000 00 00 0000, profileId:0104, clusterId:000A, clusterInt:10, sourceEndpoint:01, destinationEndpoint:01, options:0040, messageType:00, dni:0547, isClusterSpecific:false, isManufacturerSpecific:false, manufacturerId:0000, command:00, direction:00, data:[00, 00]]
 // Fully open: 
 def parse(description) {
@@ -199,8 +199,7 @@ private parseBattery(hexString) {
 	]
 }
 
-def updated()
-{
+def updated() {
     logging("updated()", 10)
     def cmds = [] 
     try {
@@ -212,8 +211,7 @@ def updated()
     if (cmds != [] && cmds != null) cmds
 }
 
-def update_needed_settings()
-{
+def update_needed_settings() {
     
 }
 
@@ -257,12 +255,10 @@ def on() {
 	open()
 }
 
-
 def off() {
     logging("off()", 1)
 	close()
 }
-
 
 def stop() {
     logging("stop()", 1)
@@ -328,9 +324,18 @@ def setPosition(position) {
     }
 }
 
+/*
+    -----------------------------------------------------------------------------
+    Everything below here are LIBRARY includes and should NOT be edited manually!
+    -----------------------------------------------------------------------------
+    --- Nothings to edit here, move along! --------------------------------------
+    -----------------------------------------------------------------------------
+*/
 
 #!include:getDefaultFunctions(driverVersionSpecial="v0.9.0")
 
 #!include:getLoggingFunction()
 
-#!include:getHelperFunctions('default')
+#!include:getHelperFunctions('all-default')
+
+#!include:getHelperFunctions('driver-default')

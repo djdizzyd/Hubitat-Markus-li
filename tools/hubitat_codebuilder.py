@@ -360,18 +360,34 @@ class HubitatCodeBuilder:
                         #self.log.debug(self._definition_string)
                         r['name'] = definition_dict_original['name']
                 includePosition = l.find('#!include:')
+                includeNC = False
+                if(includePosition == -1):
+                    includePosition = l.find('#!includeNC:')
+                    includeNC = True
                 if(includePosition != -1):
                     eval_cmd = l[includePosition+10:].strip()
                     output = self._runEvalCmd(eval_cmd)
+                    if(includeNC == False and eval_cmd.startswith("getHelperFunctions") == False and 
+                        eval_cmd.startswith("getHeaderLicense") == False):
+                        extraNewline = "\n"
+                        if(output.endswith("\n")):
+                            extraNewline = ""
+                        output = "// BEGIN:" + eval_cmd + "\n" + output + extraNewline + "// END:  " + eval_cmd + "\n"
                     if(includePosition > 0):
                         i = 0
                         wd.write(l[:includePosition])
+                        previous_line = None
+                        first_line = 1 if includeNC == False else 0
                         for nl in output.splitlines():
-                            if i != 0:
-                                wd.write(' ' * (includePosition) + nl + '\n')
-                            else:
-                                wd.write(nl + '\n')
+                            nl = nl.rstrip()
+                            if(not (nl == "" and previous_line == "") and
+                                not (nl.strip() == "" and i == first_line)):
+                                if i != 0:
+                                    wd.write(' ' * (includePosition) + nl + '\n')
+                                else:
+                                    wd.write(nl + '\n')
                             i += 1
+                            previous_line = nl
                     else:
                         wd.write(output + '\n')
                 else:

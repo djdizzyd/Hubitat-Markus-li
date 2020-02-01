@@ -1,4 +1,11 @@
-/* Helper functions included when needing Child devices */
+/*
+    CHILD DEVICES METHODS (helpers-childDevices)
+
+    Helper functions included when using Child devices
+    
+    NOTE: MUCH of this is not in use any more, needs cleaning...
+*/
+
 // Get the button number
 private channelNumber(String dni) {
     def ch = dni.split("-")[-1] as Integer
@@ -101,3 +108,7 @@ def deleteChildren() {
   		deleteChildDevice(child.deviceNetworkId)
     }
 }
+
+/*
+    --END-- CHILD DEVICES METHODS (helpers-childDevices)
+*/

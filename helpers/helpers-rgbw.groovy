@@ -1,4 +1,9 @@
-/* Helper functions included in all drivers using RGB, RGBW or Dimmers */
+/*
+    RGBW METHODS (helpers-rgbw)
+
+    Helper functions included in all drivers using RGB, RGBW or Dimmers
+    These methods are NOT specific to Tasmota
+*/
 def setColor(value) {
     logging("setColor('${value}')", 10)
 	if (value != null && value instanceof Map) {
@@ -111,3 +116,7 @@ def pink() {
     logging("pink()", 10)
     return(setRGB(255, 0, 255))
 }
+
+/*
+    --END-- RGBW METHODS (helpers-rgbw)
+*/

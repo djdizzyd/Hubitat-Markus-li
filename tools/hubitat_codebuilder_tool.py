@@ -299,8 +299,8 @@ def main():
     # As long as we have an id, we can just supply that here instead of the whole config...
     # 651 left over from RF Link Child
     driver_files_testing = [
-        {'id': 801}, {'id': 579},
-         {'id':587},  # Wifi Curtain Wall Panel
+    #    {'id': 801}, {'id': 579},  # Zigbee drivers
+    #     {'id':587},  # Wifi Curtain Wall Panel
     #    {'id':590},
     #    {'id':651},    # Sensor - Distance
     #    {'id':649}, {'id':673}, {'id':674}, {'id':675}, {'id':676}, # RF/IR Children
@@ -483,7 +483,7 @@ def main():
 
     
     app_files = [
-        {'id': 97, 'file': 'tasmota-connect.groovy' },
+        #{'id': 97, 'file': 'tasmota-connect.groovy' },
         # 163 is available for re-use
         #{'id': 163, 'file': 'tasmota-connect-test.groovy' },
         {'id': 289, 'file': 'tasmota-device-handler.groovy' },

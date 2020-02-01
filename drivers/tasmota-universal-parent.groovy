@@ -192,35 +192,6 @@ def refreshAdditional(metaConfig) {
     metaConfig = setPreferencesToHide([], metaConfig=metaConfig)*/
 }
 
-def on() {
-	logging("on()",50)
-    //logging("device.namespace: ${getDeviceInfoByName('namespace')}, device.driverName: ${getDeviceInfoByName('name')}", 50)
-    def cmds = []
-    // Power0 doesn't work correctly for Tuya devices yet
-    //cmds << getAction(getCommandString("Power0", "1"))
-    Integer numSwitchesI = numSwitches.toInteger()
-    
-    for (i in 1..numSwitchesI) {
-        cmds << getAction(getCommandString("Power$i", "1"))
-    }
-    //return delayBetween(cmds, 500)
-    return cmds
-}
-
-def off() {
-    logging("off()",50)
-    def cmds = []
-    // Power0 doesn't work correctly for Tuya devices yet
-    //cmds << getAction(getCommandString("Power0", "0"))
-    Integer numSwitchesI = numSwitches.toInteger()
-    
-    for (i in 1..numSwitchesI) {
-        cmds << getAction(getCommandString("Power$i", "0"))
-    }
-    //return delayBetween(cmds, 500)
-    return cmds
-}
-
 /* The parse(description) function is included and auto-expanded from external files */
 def parse(description) {
     #!include:getGenericTasmotaNewParseHeader()
@@ -243,8 +214,7 @@ def parseResult(result) {
 }
 
 // Call order: installed() -> configure() -> initialize() -> updated() -> update_needed_settings()
-def update_needed_settings()
-{
+def update_needed_settings() {
     #!include:getUpdateNeededSettingsTasmotaHeader()
 
     // Get the Device Configuration
@@ -267,7 +237,7 @@ def update_needed_settings()
     runInstallCommands(installCommands)
 
     //
-    // https://github.com/arendst/Tasmota/wiki/commands
+    // https://tasmota.github.io/docs/#/Commands
     //SetOption66
     //Set publishing TuyaReceived to MQTT  »6.7.0
     //0 = disable publishing TuyaReceived over MQTT (default)
@@ -382,6 +352,14 @@ void componentRefresh(cd) {
     logging("componentRefresh(cd=${cd.displayName} (${cd.deviceNetworkId})) actionType=${getDeviceActionType(cd.deviceNetworkId)}", 1)
     refresh()
 }
+
+/*
+    -----------------------------------------------------------------------------
+    Everything below here are LIBRARY includes and should NOT be edited manually!
+    -----------------------------------------------------------------------------
+    --- Nothings to edit here, move along! --------------------------------------
+    -----------------------------------------------------------------------------
+*/
 
 #!include:getDefaultFunctions()
 

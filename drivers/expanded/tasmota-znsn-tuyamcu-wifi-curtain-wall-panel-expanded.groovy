@@ -1,3 +1,5 @@
+
+// BEGIN:getHeaderLicense()
  /**
  *  Copyright 2020 Markus Liljergren
  *
@@ -13,10 +15,18 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+// END:getHeaderLicense()
 
+
+
+// BEGIN:getDefaultImports()
 /* Default Imports */
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
+import java.security.MessageDigest   // Used for MD5 calculations
+
+
+// END:getDefaultImports()
 
 
 metadata {
@@ -25,21 +35,32 @@ metadata {
         capability "Switch"
         capability "WindowShade"
         
+        // BEGIN:getDefaultMetadataCapabilities()
+        
         // Default Capabilities
         capability "Refresh"
         capability "Configuration"
+        
+        // END:getDefaultMetadataCapabilities()
         
         attribute   "dimState", "number"
         attribute   "tuyaMCU", "string"
         attribute   "position", "number"
         attribute   "target", "number"
         
+        // BEGIN:getDefaultMetadataAttributes()
+        
         // Default Attributes
         
+        // END:getDefaultMetadataAttributes()
 
+        
+        // BEGIN:getDefaultMetadataCommands()
         
         // Default Commands
         command "reboot"
+        
+        // END:getDefaultMetadataCommands()
         command "stop"
 	}
 
@@ -48,11 +69,17 @@ metadata {
     
     preferences {
         
-        // Default Preferences
+        // BEGIN:getDefaultMetadataPreferences()
         
+        // Default Preferences
+        generate_preferences(configuration_model_debug())
+        
+        // END:getDefaultMetadataPreferences()
         //input(name: "numSwitches", type: "enum", title: "<b>Number of Switches</b>", description: "<i>Set the number of buttons on the switch (default 1)</i>", options: ["1", "2", "3", "4"], defaultValue: "1", displayDuringSetup: true, required: true)
         //input(name: "lowLevel", type: "string", title: "<b>Dimming Range (low)</b>", description: '<i>Used to calibrate the MINIMUM dimming level, see <a href="https://tasmota.github.io/docs/#/TuyaMCU?id=dimmers">here</a> for details.</i>', displayDuringSetup: true, required: false)
         //input(name: "highLevel", type: "string", title: "<b>Dimming Range (high)</b>", description: '<i>Used to calibrate the MINIMUM dimming level, see <a href="https://tasmota.github.io/docs/#/TuyaMCU?id=dimmers">here</a> for details.</i>', displayDuringSetup: true, required: false)
+        
+        // BEGIN:getDefaultMetadataPreferencesForTasmota(False) # False = No TelePeriod setting
         
         // Default Preferences for Tasmota
         generate_preferences(configuration_model_tasmota())
@@ -64,9 +91,13 @@ metadata {
         input(name: "moduleNumber", type: "number", title: addTitleDiv("Module Number"), description: "ADVANCED: " + addDescriptionDiv("Module Number used in Tasmota. If Device Template is set, this value is IGNORED. (default: -1 (use the default for the driver))"), displayDuringSetup: true, required: false, defaultValue: -1)
         input(name: "deviceTemplateInput", type: "string", title: addTitleDiv("Device Template"), description: "ADVANCED: " + addDescriptionDiv("Set this to a Device Template for Tasmota, leave it EMPTY to use the driver default. Set it to 0 to NOT use a Template. NAME can be maximum 14 characters! (Example: {\"NAME\":\"S120\",\"GPIO\":[0,0,0,0,0,21,0,0,0,52,90,0,0],\"FLAG\":0,\"BASE\":18})"), displayDuringSetup: true, required: false)
         input(name: "useIPAsID", type: "bool", title: addTitleDiv("IP as Network ID"), description: "ADVANCED: " + addDescriptionDiv("Not needed under normal circumstances. Setting this when not needed can break updates. This requires the IP to be static or set to not change in your DHCP server. It will force the use of IP as network ID. When in use, set Override IP to true and input the correct Device IP Address. See the release thread in the Hubitat forum for details and guidance."), displayDuringSetup: true, required: false)
+        
+        // END:getDefaultMetadataPreferencesForTasmota(False) # False = No TelePeriod setting
 	}
 }
 
+
+// BEGIN:getDeviceInfoFunction()
 public getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
@@ -74,6 +105,8 @@ public getDeviceInfoByName(infoName) {
     //logging("deviceInfo[${infoName}] = ${deviceInfo[infoName]}", 1)
     return(deviceInfo[infoName])
 }
+// END:getDeviceInfoFunction()
+
 
 /* These functions are unique to each driver */
 def installedAdditional() {
@@ -115,6 +148,8 @@ def setPosition(targetPosition) {
 }
 
 def parse(description) {
+    
+    // BEGIN:getGenericTasmotaParseHeader()
     // parse() Generic Tasmota-device header BEGINS here
     //log.debug "Parsing: ${description}"
     def events = []
@@ -136,10 +171,13 @@ def parse(description) {
             logging("========== Parsing Report ==========",99)
             def slurper = new JsonSlurper()
             def result = slurper.parseText(body)
-            
+    
             logging("result: ${result}",0)
             // parse() Generic header ENDS here
+    
+    // END:getGenericTasmotaParseHeader()
             
+            // BEGIN:getTasmotaParserForBasicData()
             
             // Standard Basic Data parsing
             
@@ -201,7 +239,7 @@ def parse(description) {
                 updateDataValue("firmware", result.Version)
             }
             // When it is a Template, it looks a bit different
-            if (result.containsKey("NAME") && result.containsKey("GPIO") && result.containsKey("FLAG") && result.containsKey("BASE")) {  
+            if (result.containsKey("NAME") && result.containsKey("GPIO") && result.containsKey("FLAG") && result.containsKey("BASE")) {
                 n = result.toMapString()
                 n = n.replaceAll(', ',',')
                 n = n.replaceAll('\\[','{').replaceAll('\\]','}')
@@ -233,6 +271,10 @@ def parse(description) {
                 updateDataValue('uptime', result.Uptime)
             }
             
+            // END:getTasmotaParserForBasicData()
+            
+            // BEGIN:getTasmotaParserForWifi()
+            
             // Standard Wifi Data parsing
             if (result.containsKey("Wifi")) {
                 if (result.Wifi.containsKey("AP")) {
@@ -253,6 +295,8 @@ def parse(description) {
                     logging("SSId: $result.Wifi.SSId",99)
                 }
             }
+            
+            // END:getTasmotaParserForWifi()
             if (result.containsKey("Dimmer")) {
                 events << createEvent(name: "position", value: result.Dimmer)
                 target = device.currentValue("target")
@@ -297,6 +341,8 @@ def parse(description) {
                     }
                 }
             }
+        
+        // BEGIN:getGenericTasmotaParseFooter()
         // parse() Generic Tasmota-device footer BEGINS here
             } else {
                 //log.debug "Response is not JSON: $body"
@@ -312,6 +358,7 @@ def parse(description) {
         
         return events
         // parse() Generic footer ENDS here
+        // END:getGenericTasmotaParseFooter()
 }
 
 def updateRules() {
@@ -347,6 +394,8 @@ def updateRules() {
 
 def update_needed_settings()
 {
+    
+    // BEGIN:getUpdateNeededSettingsTasmotaHeader()
     // updateNeededSettings() Generic header BEGINS here
     def cmds = []
     def currentProperties = state.currentProperties ?: [:]
@@ -369,7 +418,11 @@ def update_needed_settings()
     prepareDNI()
     
     // updateNeededSettings() Generic header ENDS here
+    
+    // END:getUpdateNeededSettingsTasmotaHeader()
 
+    
+    // BEGIN:getUpdateNeededSettingsTasmotaDynamicModuleCommand(54)
     
     // Tasmota Module and Template selection command (autogenerated)
     cmds << getAction(getCommandString("Module", null))
@@ -389,7 +442,7 @@ def update_needed_settings()
         defaultDeviceTemplate = ''
     }
     if(deviceTemplateInput != null) deviceTemplateInput = deviceTemplateInput.replaceAll(' ','')
-    if(disableModuleSelection == false && ((deviceTemplateInput != null && deviceTemplateInput != "") || 
+    if(disableModuleSelection == false && ((deviceTemplateInput != null && deviceTemplateInput != "") ||
                                            (useDefaultTemplate && defaultDeviceTemplate != ""))) {
         if(useDefaultTemplate == false && deviceTemplateInput != null && deviceTemplateInput != "") {
             usedDeviceTemplate = deviceTemplateInput
@@ -435,6 +488,8 @@ def update_needed_settings()
         logging("Setting the Module has been disabled!", 10)
     }
     
+    // END:getUpdateNeededSettingsTasmotaDynamicModuleCommand(54)
+    
     //
     // https://github.com/arendst/Tasmota/wiki/commands
     //SetOption66
@@ -448,6 +503,8 @@ def update_needed_settings()
 
     //cmds << getAction(getCommandString("SetOption81", "0")) // Set PCF8574 component behavior for all ports as inverted (default=0)
     
+    
+    // BEGIN:getUpdateNeededSettingsTasmotaFooter()
     
     // updateNeededSettings() Generic footer BEGINS here
     cmds << getAction(getCommandString("SetOption113", "1")) // Hubitat Enabled
@@ -466,8 +523,12 @@ def update_needed_settings()
     sendEvent(name:"needUpdate", value: isUpdateNeeded, displayed:false, isStateChange: false)
     return cmds
     // updateNeededSettings() Generic footer ENDS here
+    
+    // END:getUpdateNeededSettingsTasmotaFooter()
 }
 
+
+// BEGIN:getDefaultFunctions()
 /* Default functions go here */
 private def getDriverVersion() {
     //comment = "NOT GENERIC - read the instructions"
@@ -479,7 +540,11 @@ private def getDriverVersion() {
     return version
 }
 
+// END:getDefaultFunctions()
 
+
+
+// BEGIN:getLoggingFunction()
 /* Logging function included in all drivers */
 private def logging(message, level) {
     if (infoLogging == true) {
@@ -520,10 +585,26 @@ private def logging(message, level) {
     }
 }
 
+// END:getLoggingFunction()
 
-/* Helper functions included in all drivers/apps */
-/* Helper Debug functions included in all drivers/apps */
 
+/*
+    DEFAULT METHODS (helpers-default)
+
+    This include should NOT be used, refactor to include the different 
+    parts separately!
+*/
+
+/*
+    ALL DEFAULT METHODS (helpers-all-default)
+
+    Helper functions included in all drivers/apps
+*/
+/*
+    ALL DEBUG METHODS (helpers-all-debug)
+
+    Helper Debug functions included in all drivers/apps
+*/
 def configuration_model_debug()
 {
     if(!isDeveloperHub()) {
@@ -559,11 +640,19 @@ def configuration_model_debug()
     <Item label="Verbose" value="10" />
     <Item label="Reports+Status" value="50" />
     <Item label="Reports" value="99" />
-    </Value>
+    
+    // BEGIN:getSpecialDebugEntry()
+    
+    // END:getSpecialDebugEntry()
+</Value>
 </configuration>
 '''
     }
 }
+
+/*
+    --END-- ALL DEBUG METHODS (helpers-all-debug)
+*/
 
 def isDriver() {
     try {
@@ -784,6 +873,22 @@ def generate_preferences(configuration_model)
         }
     }
 }
+
+/*
+    --END-- ALL DEFAULT METHODS (helpers-all-default)
+*/
+/*
+    DRIVER DEFAULT METHODS (helpers-driver-default)
+
+    TODO: Write file description
+*/
+
+/*
+    DRIVER METADATA METHODS (helpers-driver-metadata)
+
+    These methods are to be used in (and/or with) the metadata section of drivers and
+    is also what contains the CSS handling and styling.
+*/
 
 // These methods can be executed in both the NORMAL driver scope as well
 // as the Metadata scope.
@@ -1191,6 +1296,9 @@ def getCSSForHidingLastPreference() {
     return getCSSForPreferenceHiding(null, overrideIndex=-1)
 }
 
+/*
+    --END-- DRIVER METADATA METHODS (helpers-driver-metadata)
+*/
 
 // Since refresh, with any number of arguments, is accepted as we always have it declared anyway, 
 // we use it as a wrapper
@@ -1248,10 +1356,19 @@ def update_current_properties(cmd)
     state.currentProperties = currentProperties
 }
 
+/*
+    --END-- DRIVER DEFAULT METHODS (helpers-driver-default)
+*/
 
+/*
+    --END-- DEFAULT METHODS (helpers-default)
+*/
 
+/*
+    TASMOTA METHODS (helpers-tasmota)
 
-/* Helper functions included in all Tasmota drivers */
+    Helper functions included in all Tasmota drivers
+*/
 
 // Call order: installed() -> configure() -> updated() -> initialize() -> refresh()
 def refresh() {
@@ -1262,7 +1379,7 @@ def refresh() {
 
     // Retrieve full status from Tasmota
     cmds << getAction(getCommandString("Status", "0"), callback="parseConfigureChildDevices")
-    
+
     getDriverVersion()
     //logging("this.binding.variables = ${this.binding.variables}", 1)
     //logging("settings = ${settings}", 1)
@@ -1978,3 +2095,7 @@ def configuration_model_tasmota()
 </configuration>
 '''
 }
+
+/*
+    --END-- TASMOTA METHODS (helpers-tasmota)
+*/

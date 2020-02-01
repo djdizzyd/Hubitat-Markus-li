@@ -1,3 +1,9 @@
+/*
+    APP DEFAULT METHODS (helpers-app-default)
+
+    TODO: Write file description
+*/
+
 #!include:getHelperFunctions('all-default')
 
 def installed() {
@@ -10,3 +16,7 @@ def installed() {
         // ignore
     }
 }
+
+/*
+    --END-- APP DEFAULT METHODS (helpers-app-default)
+*/

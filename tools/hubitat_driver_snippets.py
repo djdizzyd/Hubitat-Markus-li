@@ -40,11 +40,11 @@ def getDefaultImports():
     return """/* Default Imports */
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
+import java.security.MessageDigest   // Used for MD5 calculations
 """
 
 def getDefaultParentImports():
     return getDefaultImports() + """/* Default Parent Imports */
-import java.security.MessageDigest   // Used for MD5 calculations
 """
 
 def getUpdateNeededSettingsTasmotaHeader():
