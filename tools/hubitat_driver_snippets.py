@@ -180,6 +180,7 @@ cmds << getAction(getCommandString("TempRes", (tempRes == '' || tempRes == null 
 
 def getUpdateNeededSettingsTasmotaFooter():
     return """
+cmds << getAction(getCommandString("TelePeriod", "${getTelePeriod()}"))
 // updateNeededSettings() Generic footer BEGINS here
 cmds << getAction(getCommandString("SetOption113", "1")) // Hubitat Enabled
 // Disabling Emulation so that we don't flood the logs with upnp traffic

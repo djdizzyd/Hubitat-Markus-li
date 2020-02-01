@@ -41,7 +41,7 @@ capability "PressureMeasurement"
 
 def getDefaultParentMetadataAttributes():
     return """
-// Default Attributes
+// Default Parent Attributes
 attribute   "ip", "string"
 attribute   "ipLink", "string"
 attribute   "module", "string"
@@ -52,7 +52,7 @@ attribute   "wifiSignal", "string"
 def getDefaultMetadataAttributes():
     return """
 // Default Attributes
-
+attribute   "driver", "string"
 """
 
 def getDefaultMetadataAttributesForEnergyMonitor():

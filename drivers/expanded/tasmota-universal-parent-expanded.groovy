@@ -33,13 +33,17 @@ metadata {
         capability "PresenceSensor"
         
         // BEGIN:getDefaultParentMetadataAttributes()
-        // Default Attributes
+        // Default Parent Attributes
         attribute   "ip", "string"
         attribute   "ipLink", "string"
         attribute   "module", "string"
         attribute   "templateData", "string"
         attribute   "wifiSignal", "string"
         // END:  getDefaultParentMetadataAttributes()
+        // BEGIN:getDefaultMetadataAttributes()
+        // Default Attributes
+        attribute   "driver", "string"
+        // END:  getDefaultMetadataAttributes()
 
         // BEGIN:getMetadataCommandsForHandlingChildDevices()
         // Commands for handling Child Devices
@@ -485,8 +489,6 @@ def updatedAdditional() {
     logging("updatedAdditional()", 1)
     //Runs when saving settings
     setDisableCSS(disableCSS)
-
-    
 }
 
 def getDriverCSS() {
@@ -680,8 +682,27 @@ def parse(description) {
     // END:  getGenericTasmotaNewParseFooter()
 }
 
+def updatePresence(String presence, createEventCall=false) {
+    // presence - ENUM ["present", "not present"]
+    if(presence == "present") {
+        timeout = getTelePeriod()
+        timeout += (timeout * 0.1 > 60 ? Math.round(timeout * 0.1) : 60)
+        //log.warn "Setting as present with timeout: $timeout"
+        runIn(timeout, "updatePresence", [data: "not present"])
+    } else {
+        log.warn "Presence time-out reached, setting device as 'not present'!"
+    }
+    if(createEventCall == true) {
+        return createEvent(name: "presence", value: presence)
+    } else {
+        return sendEvent(name: "presence", value: presence)
+    }
+}
+
 def parseResult(result) {
+
     def events = []
+    events << updatePresence("present", createEventCall=true)
     logging("parseResult: $result", 1)
     // BEGIN:getTasmotaNewParserForBasicData()
     // Standard Basic Data parsing
@@ -1096,6 +1117,7 @@ def update_needed_settings() {
     //cmds << getAction(getCommandString("SetOption81", "0")) // Set PCF8574 component behavior for all ports as inverted (default=0)
 
     // BEGIN:getUpdateNeededSettingsTasmotaFooter()
+    cmds << getAction(getCommandString("TelePeriod", "${getTelePeriod()}"))
     // updateNeededSettings() Generic footer BEGINS here
     cmds << getAction(getCommandString("SetOption113", "1")) // Hubitat Enabled
     // Disabling Emulation so that we don't flood the logs with upnp traffic
@@ -2819,6 +2841,10 @@ private updateDNI() {
         logging("Device Network Id will be set to ${state.dni} from ${device.deviceNetworkId}", 0)
         device.deviceNetworkId = state.dni
     }
+}
+
+def getTelePeriod() {
+    return (telePeriod != null && telePeriod.isInteger() ? telePeriod.toInteger() : 300)
 }
 
 private getHostAddress() {

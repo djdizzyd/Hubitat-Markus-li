@@ -147,6 +147,23 @@ def runInstallCommands(installCommands) {
     cmds << getAction(getCommandString("SetOption34", "200"))
 }
 
+def updatePresence(String presence, createEventCall=false) {
+    // presence - ENUM ["present", "not present"]
+    if(presence == "present") {
+        timeout = getTelePeriod()
+        timeout += (timeout * 0.1 > 60 ? Math.round(timeout * 0.1) : 60)
+        //log.warn "Setting as present with timeout: $timeout"
+        runIn(timeout, "updatePresence", [data: "not present"])
+    } else {
+        log.warn "Presence time-out reached, setting device as 'not present'!"
+    }
+    if(createEventCall == true) {
+        return createEvent(name: "presence", value: presence)
+    } else {
+        return sendEvent(name: "presence", value: presence)
+    }
+}
+
 def parseDescriptionAsMap(description) {
     // Used by parse(description) to get descMap
 	description.split(",").inject([:]) { map, param ->
@@ -583,6 +600,10 @@ private updateDNI() {
         logging("Device Network Id will be set to ${state.dni} from ${device.deviceNetworkId}", 0)
         device.deviceNetworkId = state.dni
     }
+}
+
+def getTelePeriod() {
+    return (telePeriod != null && telePeriod.isInteger() ? telePeriod.toInteger() : 300)
 }
 
 private getHostAddress() {

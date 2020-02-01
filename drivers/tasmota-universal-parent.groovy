@@ -8,6 +8,7 @@ metadata {
         capability "PresenceSensor"
         
         #!include:getDefaultParentMetadataAttributes()
+        #!include:getDefaultMetadataAttributes()
 
         #!include:getMetadataCommandsForHandlingChildDevices()
         #!include:getDefaultMetadataCommands()
@@ -52,8 +53,6 @@ def updatedAdditional() {
     logging("updatedAdditional()", 1)
     //Runs when saving settings
     setDisableCSS(disableCSS)
-
-    
 }
 
 def getDriverCSS() {
@@ -200,7 +199,9 @@ def parse(description) {
 }
 
 def parseResult(result) {
+
     def events = []
+    events << updatePresence("present", createEventCall=true)
     logging("parseResult: $result", 1)
     #!include:getTasmotaNewParserForBasicData()
     #!include:getTasmotaNewParserForParentSwitch()

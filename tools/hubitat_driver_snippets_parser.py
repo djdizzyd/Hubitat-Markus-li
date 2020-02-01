@@ -170,7 +170,9 @@ if (result.containsKey("Wifi")) {
     if (result.Wifi.containsKey("RSSI")) {
         logging("RSSI: $result.Wifi.RSSI",99)
         quality = "${dBmToQuality(result.Wifi.RSSI)}%"
-        if(device.currentValue('wifiSignal') != quality) events << createEvent(name: "wifiSignal", value: quality)
+        if(device.currentValue('wifiSignal') != quality) {
+            events << createEvent(name: "wifiSignal", value: quality)
+        }
     }
     if (result.Wifi.containsKey("SSId")) {
         logging("SSId: $result.Wifi.SSId",99)

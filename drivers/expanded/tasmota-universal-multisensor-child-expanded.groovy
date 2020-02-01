@@ -38,7 +38,7 @@ metadata {
         attribute  "distance", "string"
         attribute  "pressureWithUnit", "string"
 
-        command "clear"
+        //command "clear"
     }
 
     preferences {

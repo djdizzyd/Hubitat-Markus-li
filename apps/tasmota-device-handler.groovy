@@ -8,7 +8,7 @@ definition(
     author: "Markus Liljergren (markus-li)",
     description: "Device Manager for Tasmota",
     category: "Convenience",
-    //TODO: Replace these icons
+    //TODO: Replace these icons???
     iconUrl:   "",
     iconX2Url: "",
     iconX3Url: ""
@@ -28,6 +28,8 @@ preferences {
 }
 
 // https://docs.smartthings.com/en/latest/smartapp-developers-guide/preferences-and-settings.html#preferences-and-settings
+
+#!include:getHelperFunctions('device-configurations')
 
 def getMillisSinceDate(myDate) {
     
