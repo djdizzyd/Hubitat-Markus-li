@@ -370,6 +370,10 @@ void componentRefresh(cd) {
 
 #!include:getHelperFunctions('all-default')
 
+#!include:getHelperFunctions('driver-metadata')
+
+#!include:getHelperFunctions('styling')
+
 #!include:getHelperFunctions('driver-default')
 
 #!include:getHelperFunctions('childDevices')

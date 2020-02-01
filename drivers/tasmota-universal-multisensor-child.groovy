@@ -96,4 +96,6 @@ void refresh() {
 
 #!include:getHelperFunctions('driver-metadata')
 
+#!include:getHelperFunctions('styling')
+
 #!include:getLoggingFunction(specialDebugLevel=True)

@@ -191,14 +191,6 @@ h3, h4, .property-label {
 '''
 */
 
-def addTitleDiv(title) {
-    return '<div class="preference-title">' + title + '</div>'
-}
-
-def addDescriptionDiv(description) {
-    return '<div class="preference-description">' + description + '</div>'
-}
-
 def getDriverCSSWrapper() {
     metaConfig = getMetaConfig()
     disableCSS = isCSSDisabled(metaConfig=metaConfig)
@@ -409,24 +401,6 @@ def getCSSForPreferencesToHide(preferences) {
 }
 def getCSSForHidingLastPreference() {
     return getCSSForPreferenceHiding(null, overrideIndex=-1)
-}
-
-def makeTextBold(s) {
-    // DEPRECATED: Should be replaced by CSS styling!
-    if(isDriver()) {
-        return "<b>$s</b>"
-    } else {
-        return "$s"
-    }
-}
-
-def makeTextItalic(s) {
-    // DEPRECATED: Should be replaced by CSS styling!
-    if(isDriver()) {
-        return "<i>$s</i>"
-    } else {
-        return "$s"
-    }
 }
 
 /*

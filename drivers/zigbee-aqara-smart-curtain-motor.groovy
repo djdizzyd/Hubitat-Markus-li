@@ -338,4 +338,8 @@ def setPosition(position) {
 
 #!include:getHelperFunctions('all-default')
 
+#!include:getHelperFunctions('driver-metadata')
+
+#!include:getHelperFunctions('styling')
+
 #!include:getHelperFunctions('driver-default')

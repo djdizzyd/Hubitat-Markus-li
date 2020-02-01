@@ -682,23 +682,6 @@ def parse(description) {
     // END:  getGenericTasmotaNewParseFooter()
 }
 
-def updatePresence(String presence, createEventCall=false) {
-    // presence - ENUM ["present", "not present"]
-    if(presence == "present") {
-        timeout = getTelePeriod()
-        timeout += (timeout * 0.1 > 60 ? Math.round(timeout * 0.1) : 60)
-        //log.warn "Setting as present with timeout: $timeout"
-        runIn(timeout, "updatePresence", [data: "not present"])
-    } else {
-        log.warn "Presence time-out reached, setting device as 'not present'!"
-    }
-    if(createEventCall == true) {
-        return createEvent(name: "presence", value: presence)
-    } else {
-        return sendEvent(name: "presence", value: presence)
-    }
-}
-
 def parseResult(result) {
 
     def events = []
@@ -1585,14 +1568,6 @@ def extractInt(String input) {
 */
 
 /*
-    DRIVER DEFAULT METHODS (helpers-driver-default)
-
-    General Methods used in ALL drivers except some CHILD drivers
-    Though some may have no effect in some drivers, they're here to
-    maintain a general structure
-*/
-
-/*
     DRIVER METADATA METHODS (helpers-driver-metadata)
 
     These methods are to be used in (and/or with) the metadata section of drivers and
@@ -1784,14 +1759,6 @@ h3, h4, .property-label {
 }
 '''
 */
-
-def addTitleDiv(title) {
-    return '<div class="preference-title">' + title + '</div>'
-}
-
-def addDescriptionDiv(description) {
-    return '<div class="preference-description">' + description + '</div>'
-}
 
 def getDriverCSSWrapper() {
     metaConfig = getMetaConfig()
@@ -2005,6 +1972,23 @@ def getCSSForHidingLastPreference() {
     return getCSSForPreferenceHiding(null, overrideIndex=-1)
 }
 
+/*
+    --END-- DRIVER METADATA METHODS (helpers-driver-metadata)
+*/
+
+/*
+    STYLING (helpers-styling)
+
+    Helper functions included in all Drivers and Apps using Styling
+*/
+def addTitleDiv(title) {
+    return '<div class="preference-title">' + title + '</div>'
+}
+
+def addDescriptionDiv(description) {
+    return '<div class="preference-description">' + description + '</div>'
+}
+
 def makeTextBold(s) {
     // DEPRECATED: Should be replaced by CSS styling!
     if(isDriver()) {
@@ -2024,7 +2008,15 @@ def makeTextItalic(s) {
 }
 
 /*
-    --END-- DRIVER METADATA METHODS (helpers-driver-metadata)
+    --END-- STYLING METHODS (helpers-styling)
+*/
+
+/*
+    DRIVER DEFAULT METHODS (helpers-driver-default)
+
+    General Methods used in ALL drivers except some CHILD drivers
+    Though some may have no effect in some drivers, they're here to
+    maintain a general structure
 */
 
 // Since refresh, with any number of arguments, is accepted as we always have it declared anyway, 
@@ -2266,36 +2258,41 @@ private getAdjustedPressure(value) {
 def refresh() {
 	logging("refresh()", 100)
     def cmds = []
-    // Clear all old state variables
-    state.clear()
-
-    // Retrieve full status from Tasmota
-    cmds << getAction(getCommandString("Status", "0"), callback="parseConfigureChildDevices")
-
-    getDriverVersion()
-    //logging("this.binding.variables = ${this.binding.variables}", 1)
-    //logging("settings = ${settings}", 1)
-    //logging("getDefinitionData() = ${getDefinitionData()}", 1)
-    //logging("getPreferences() = ${getPreferences()}", 1)
-    //logging("getSupportedCommands() = ${device.getSupportedCommands()}", 1)
-    //logging("Seeing these commands: ${device.getSupportedCommands()}", 1)
-    updateDataValue('namespace', getDeviceInfoByName('namespace'))
-    /*metaConfig = setCommandsToHide(["on", "hiAgain2", "on"])
-    metaConfig = setStateVariablesToHide(["uptime"], metaConfig=metaConfig)
-    metaConfig = setCurrentStatesToHide(["needUpdate"], metaConfig=metaConfig)
-    metaConfig = setDatasToHide(["namespace"], metaConfig=metaConfig)
-    metaConfig = setPreferencesToHide(["port"], metaConfig=metaConfig)*/
-
-    // This should be the first place we access metaConfig here, so clear and reset...
-    metaConfig = clearThingsToHide()
-    metaConfig = setCommandsToHide([], metaConfig=metaConfig)
-    metaConfig = setStateVariablesToHide(['settings', 'colorMode', 'red', 'green', 'blue', 
-        'mired', 'level', 'saturation', 'mode', 'hue'], metaConfig=metaConfig)
     
-    metaConfig = setCurrentStatesToHide(['needUpdate'], metaConfig=metaConfig)
-    //metaConfig = setDatasToHide(['preferences', 'namespace', 'appReturn', 'metaConfig'], metaConfig=metaConfig)
-    metaConfig = setDatasToHide(['namespace', 'appReturn'], metaConfig=metaConfig)
-    metaConfig = setPreferencesToHide([], metaConfig=metaConfig)
+    if(isDriver()) {
+        // Clear all old state variables, but ONLY in a driver!
+        state.clear()
+
+        // Retrieve full status from Tasmota
+        cmds << getAction(getCommandString("Status", "0"), callback="parseConfigureChildDevices")
+        getDriverVersion()
+
+        updateDataValue('namespace', getDeviceInfoByName('namespace'))
+
+        //logging("this.binding.variables = ${this.binding.variables}", 1)
+        //logging("settings = ${settings}", 1)
+        //logging("getDefinitionData() = ${getDefinitionData()}", 1)
+        //logging("getPreferences() = ${getPreferences()}", 1)
+        //logging("getSupportedCommands() = ${device.getSupportedCommands()}", 1)
+        //logging("Seeing these commands: ${device.getSupportedCommands()}", 1)
+        
+        /*metaConfig = setCommandsToHide(["on", "hiAgain2", "on"])
+        metaConfig = setStateVariablesToHide(["uptime"], metaConfig=metaConfig)
+        metaConfig = setCurrentStatesToHide(["needUpdate"], metaConfig=metaConfig)
+        metaConfig = setDatasToHide(["namespace"], metaConfig=metaConfig)
+        metaConfig = setPreferencesToHide(["port"], metaConfig=metaConfig)*/
+
+        // This should be the first place we access metaConfig here, so clear and reset...
+        metaConfig = clearThingsToHide()
+        metaConfig = setCommandsToHide([], metaConfig=metaConfig)
+        metaConfig = setStateVariablesToHide(['settings', 'colorMode', 'red', 'green', 'blue', 
+            'mired', 'level', 'saturation', 'mode', 'hue'], metaConfig=metaConfig)
+        
+        metaConfig = setCurrentStatesToHide(['needUpdate'], metaConfig=metaConfig)
+        //metaConfig = setDatasToHide(['preferences', 'namespace', 'appReturn', 'metaConfig'], metaConfig=metaConfig)
+        metaConfig = setDatasToHide(['namespace', 'appReturn'], metaConfig=metaConfig)
+        metaConfig = setPreferencesToHide([], metaConfig=metaConfig)
+    }
     try {
         // In case we have some more to run specific to this driver
         refreshAdditional(metaConfig)
@@ -2403,6 +2400,23 @@ def runInstallCommands(installCommands) {
         }
     }
     cmds << getAction(getCommandString("SetOption34", "200"))
+}
+
+def updatePresence(String presence, createEventCall=false) {
+    // presence - ENUM ["present", "not present"]
+    if(presence == "present") {
+        timeout = getTelePeriod()
+        timeout += (timeout * 0.1 > 60 ? Math.round(timeout * 0.1) : 60)
+        //log.warn "Setting as present with timeout: $timeout"
+        runIn(timeout, "updatePresence", [data: "not present"])
+    } else {
+        log.warn "Presence time-out reached, setting device as 'not present'!"
+    }
+    if(createEventCall == true) {
+        return createEvent(name: "presence", value: presence)
+    } else {
+        return sendEvent(name: "presence", value: presence)
+    }
 }
 
 def parseDescriptionAsMap(description) {

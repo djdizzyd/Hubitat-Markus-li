@@ -575,7 +575,11 @@ def getDeviceDriverName(device) {
     } catch(e) {
         logging("Failed getting DriverName ($e), trying again...", 1)
         device = getTasmotaDevice(device.deviceNetworkId)
-        driverName = runDeviceCommand(device, 'getDeviceInfoByName', args=['name'])
+        try{
+            driverName = runDeviceCommand(device, 'getDeviceInfoByName', args=['name'])
+        } catch(e1) {
+            driverName = "Unknown"
+        }
     }
     if (driverName.startsWith("Tasmota - ")) driverName = driverName.substring(10)
     logging("Found Driver Name: '$driverName'", 0)
@@ -614,8 +618,6 @@ def footer() {
         paragraph('<div style="color:#382e2b; text-align:center">' + app.label + ' - Copyright&nbsp;2020&nbsp;Markus&nbsp;Liljergren - <a href="https://github.com/markus-li/Hubitat/tree/release" target="_blank">GitHub repo</a></div>')
     }
 }
-
-
 
 /*
 	installedAdditional
@@ -662,7 +664,9 @@ def runDeviceCommand(device, cmd, args=[]) {
     
     device.refresh(JsonOutput.toJson([cmd: cmd, args: args]))
     //device.deviceCommand(JsonOutput.toJson([cmd: cmd, args: args]))
+    r = null
     r = jsonSlurper.parseText(device.getDataValue('appReturn'))
+    
     device.updateDataValue('appReturn', null)
     return r
 }
@@ -750,3 +754,5 @@ def initializeAdditional() {
 #!include:getHelperFunctions('app-default')
 
 #!include:getHelperFunctions('tasmota')
+
+#!include:getHelperFunctions('styling')

@@ -584,14 +584,6 @@ h3, h4, .property-label {
 '''
 */
 
-def addTitleDiv(title) {
-    return '<div class="preference-title">' + title + '</div>'
-}
-
-def addDescriptionDiv(description) {
-    return '<div class="preference-description">' + description + '</div>'
-}
-
 def getDriverCSSWrapper() {
     metaConfig = getMetaConfig()
     disableCSS = isCSSDisabled(metaConfig=metaConfig)
@@ -804,6 +796,23 @@ def getCSSForHidingLastPreference() {
     return getCSSForPreferenceHiding(null, overrideIndex=-1)
 }
 
+/*
+    --END-- DRIVER METADATA METHODS (helpers-driver-metadata)
+*/
+
+/*
+    STYLING (helpers-styling)
+
+    Helper functions included in all Drivers and Apps using Styling
+*/
+def addTitleDiv(title) {
+    return '<div class="preference-title">' + title + '</div>'
+}
+
+def addDescriptionDiv(description) {
+    return '<div class="preference-description">' + description + '</div>'
+}
+
 def makeTextBold(s) {
     // DEPRECATED: Should be replaced by CSS styling!
     if(isDriver()) {
@@ -823,7 +832,7 @@ def makeTextItalic(s) {
 }
 
 /*
-    --END-- DRIVER METADATA METHODS (helpers-driver-metadata)
+    --END-- STYLING METHODS (helpers-styling)
 */
 
 // BEGIN:getLoggingFunction(specialDebugLevel=True)

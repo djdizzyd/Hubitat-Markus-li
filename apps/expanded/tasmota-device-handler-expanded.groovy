@@ -951,7 +951,11 @@ def getDeviceDriverName(device) {
     } catch(e) {
         logging("Failed getting DriverName ($e), trying again...", 1)
         device = getTasmotaDevice(device.deviceNetworkId)
-        driverName = runDeviceCommand(device, 'getDeviceInfoByName', args=['name'])
+        try{
+            driverName = runDeviceCommand(device, 'getDeviceInfoByName', args=['name'])
+        } catch(e1) {
+            driverName = "Unknown"
+        }
     }
     if (driverName.startsWith("Tasmota - ")) driverName = driverName.substring(10)
     logging("Found Driver Name: '$driverName'", 0)
@@ -990,8 +994,6 @@ def footer() {
         paragraph('<div style="color:#382e2b; text-align:center">' + app.label + ' - Copyright&nbsp;2020&nbsp;Markus&nbsp;Liljergren - <a href="https://github.com/markus-li/Hubitat/tree/release" target="_blank">GitHub repo</a></div>')
     }
 }
-
-
 
 /*
 	installedAdditional
@@ -1038,7 +1040,9 @@ def runDeviceCommand(device, cmd, args=[]) {
     
     device.refresh(JsonOutput.toJson([cmd: cmd, args: args]))
     //device.deviceCommand(JsonOutput.toJson([cmd: cmd, args: args]))
+    r = null
     r = jsonSlurper.parseText(device.getDataValue('appReturn'))
+    
     device.updateDataValue('appReturn', null)
     return r
 }
@@ -1453,36 +1457,41 @@ def installed() {
 def refresh() {
 	logging("refresh()", 100)
     def cmds = []
-    // Clear all old state variables
-    state.clear()
-
-    // Retrieve full status from Tasmota
-    cmds << getAction(getCommandString("Status", "0"), callback="parseConfigureChildDevices")
-
-    getDriverVersion()
-    //logging("this.binding.variables = ${this.binding.variables}", 1)
-    //logging("settings = ${settings}", 1)
-    //logging("getDefinitionData() = ${getDefinitionData()}", 1)
-    //logging("getPreferences() = ${getPreferences()}", 1)
-    //logging("getSupportedCommands() = ${device.getSupportedCommands()}", 1)
-    //logging("Seeing these commands: ${device.getSupportedCommands()}", 1)
-    updateDataValue('namespace', getDeviceInfoByName('namespace'))
-    /*metaConfig = setCommandsToHide(["on", "hiAgain2", "on"])
-    metaConfig = setStateVariablesToHide(["uptime"], metaConfig=metaConfig)
-    metaConfig = setCurrentStatesToHide(["needUpdate"], metaConfig=metaConfig)
-    metaConfig = setDatasToHide(["namespace"], metaConfig=metaConfig)
-    metaConfig = setPreferencesToHide(["port"], metaConfig=metaConfig)*/
-
-    // This should be the first place we access metaConfig here, so clear and reset...
-    metaConfig = clearThingsToHide()
-    metaConfig = setCommandsToHide([], metaConfig=metaConfig)
-    metaConfig = setStateVariablesToHide(['settings', 'colorMode', 'red', 'green', 'blue', 
-        'mired', 'level', 'saturation', 'mode', 'hue'], metaConfig=metaConfig)
     
-    metaConfig = setCurrentStatesToHide(['needUpdate'], metaConfig=metaConfig)
-    //metaConfig = setDatasToHide(['preferences', 'namespace', 'appReturn', 'metaConfig'], metaConfig=metaConfig)
-    metaConfig = setDatasToHide(['namespace', 'appReturn'], metaConfig=metaConfig)
-    metaConfig = setPreferencesToHide([], metaConfig=metaConfig)
+    if(isDriver()) {
+        // Clear all old state variables, but ONLY in a driver!
+        state.clear()
+
+        // Retrieve full status from Tasmota
+        cmds << getAction(getCommandString("Status", "0"), callback="parseConfigureChildDevices")
+        getDriverVersion()
+
+        updateDataValue('namespace', getDeviceInfoByName('namespace'))
+
+        //logging("this.binding.variables = ${this.binding.variables}", 1)
+        //logging("settings = ${settings}", 1)
+        //logging("getDefinitionData() = ${getDefinitionData()}", 1)
+        //logging("getPreferences() = ${getPreferences()}", 1)
+        //logging("getSupportedCommands() = ${device.getSupportedCommands()}", 1)
+        //logging("Seeing these commands: ${device.getSupportedCommands()}", 1)
+        
+        /*metaConfig = setCommandsToHide(["on", "hiAgain2", "on"])
+        metaConfig = setStateVariablesToHide(["uptime"], metaConfig=metaConfig)
+        metaConfig = setCurrentStatesToHide(["needUpdate"], metaConfig=metaConfig)
+        metaConfig = setDatasToHide(["namespace"], metaConfig=metaConfig)
+        metaConfig = setPreferencesToHide(["port"], metaConfig=metaConfig)*/
+
+        // This should be the first place we access metaConfig here, so clear and reset...
+        metaConfig = clearThingsToHide()
+        metaConfig = setCommandsToHide([], metaConfig=metaConfig)
+        metaConfig = setStateVariablesToHide(['settings', 'colorMode', 'red', 'green', 'blue', 
+            'mired', 'level', 'saturation', 'mode', 'hue'], metaConfig=metaConfig)
+        
+        metaConfig = setCurrentStatesToHide(['needUpdate'], metaConfig=metaConfig)
+        //metaConfig = setDatasToHide(['preferences', 'namespace', 'appReturn', 'metaConfig'], metaConfig=metaConfig)
+        metaConfig = setDatasToHide(['namespace', 'appReturn'], metaConfig=metaConfig)
+        metaConfig = setPreferencesToHide([], metaConfig=metaConfig)
+    }
     try {
         // In case we have some more to run specific to this driver
         refreshAdditional(metaConfig)
@@ -1590,6 +1599,23 @@ def runInstallCommands(installCommands) {
         }
     }
     cmds << getAction(getCommandString("SetOption34", "200"))
+}
+
+def updatePresence(String presence, createEventCall=false) {
+    // presence - ENUM ["present", "not present"]
+    if(presence == "present") {
+        timeout = getTelePeriod()
+        timeout += (timeout * 0.1 > 60 ? Math.round(timeout * 0.1) : 60)
+        //log.warn "Setting as present with timeout: $timeout"
+        runIn(timeout, "updatePresence", [data: "not present"])
+    } else {
+        log.warn "Presence time-out reached, setting device as 'not present'!"
+    }
+    if(createEventCall == true) {
+        return createEvent(name: "presence", value: presence)
+    } else {
+        return sendEvent(name: "presence", value: presence)
+    }
 }
 
 def parseDescriptionAsMap(description) {
@@ -2210,4 +2236,39 @@ private getHeader(userpass = null) {
 
 /*
     --END-- TASMOTA METHODS (helpers-tasmota)
+*/
+
+/*
+    STYLING (helpers-styling)
+
+    Helper functions included in all Drivers and Apps using Styling
+*/
+def addTitleDiv(title) {
+    return '<div class="preference-title">' + title + '</div>'
+}
+
+def addDescriptionDiv(description) {
+    return '<div class="preference-description">' + description + '</div>'
+}
+
+def makeTextBold(s) {
+    // DEPRECATED: Should be replaced by CSS styling!
+    if(isDriver()) {
+        return "<b>$s</b>"
+    } else {
+        return "$s"
+    }
+}
+
+def makeTextItalic(s) {
+    // DEPRECATED: Should be replaced by CSS styling!
+    if(isDriver()) {
+        return "<i>$s</i>"
+    } else {
+        return "$s"
+    }
+}
+
+/*
+    --END-- STYLING METHODS (helpers-styling)
 */

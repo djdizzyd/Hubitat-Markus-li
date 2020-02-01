@@ -8,36 +8,41 @@
 def refresh() {
 	logging("refresh()", 100)
     def cmds = []
-    // Clear all old state variables
-    state.clear()
-
-    // Retrieve full status from Tasmota
-    cmds << getAction(getCommandString("Status", "0"), callback="parseConfigureChildDevices")
-
-    getDriverVersion()
-    //logging("this.binding.variables = ${this.binding.variables}", 1)
-    //logging("settings = ${settings}", 1)
-    //logging("getDefinitionData() = ${getDefinitionData()}", 1)
-    //logging("getPreferences() = ${getPreferences()}", 1)
-    //logging("getSupportedCommands() = ${device.getSupportedCommands()}", 1)
-    //logging("Seeing these commands: ${device.getSupportedCommands()}", 1)
-    updateDataValue('namespace', getDeviceInfoByName('namespace'))
-    /*metaConfig = setCommandsToHide(["on", "hiAgain2", "on"])
-    metaConfig = setStateVariablesToHide(["uptime"], metaConfig=metaConfig)
-    metaConfig = setCurrentStatesToHide(["needUpdate"], metaConfig=metaConfig)
-    metaConfig = setDatasToHide(["namespace"], metaConfig=metaConfig)
-    metaConfig = setPreferencesToHide(["port"], metaConfig=metaConfig)*/
-
-    // This should be the first place we access metaConfig here, so clear and reset...
-    metaConfig = clearThingsToHide()
-    metaConfig = setCommandsToHide([], metaConfig=metaConfig)
-    metaConfig = setStateVariablesToHide(['settings', 'colorMode', 'red', 'green', 'blue', 
-        'mired', 'level', 'saturation', 'mode', 'hue'], metaConfig=metaConfig)
     
-    metaConfig = setCurrentStatesToHide(['needUpdate'], metaConfig=metaConfig)
-    //metaConfig = setDatasToHide(['preferences', 'namespace', 'appReturn', 'metaConfig'], metaConfig=metaConfig)
-    metaConfig = setDatasToHide(['namespace', 'appReturn'], metaConfig=metaConfig)
-    metaConfig = setPreferencesToHide([], metaConfig=metaConfig)
+    if(isDriver()) {
+        // Clear all old state variables, but ONLY in a driver!
+        state.clear()
+
+        // Retrieve full status from Tasmota
+        cmds << getAction(getCommandString("Status", "0"), callback="parseConfigureChildDevices")
+        getDriverVersion()
+
+        updateDataValue('namespace', getDeviceInfoByName('namespace'))
+
+        //logging("this.binding.variables = ${this.binding.variables}", 1)
+        //logging("settings = ${settings}", 1)
+        //logging("getDefinitionData() = ${getDefinitionData()}", 1)
+        //logging("getPreferences() = ${getPreferences()}", 1)
+        //logging("getSupportedCommands() = ${device.getSupportedCommands()}", 1)
+        //logging("Seeing these commands: ${device.getSupportedCommands()}", 1)
+        
+        /*metaConfig = setCommandsToHide(["on", "hiAgain2", "on"])
+        metaConfig = setStateVariablesToHide(["uptime"], metaConfig=metaConfig)
+        metaConfig = setCurrentStatesToHide(["needUpdate"], metaConfig=metaConfig)
+        metaConfig = setDatasToHide(["namespace"], metaConfig=metaConfig)
+        metaConfig = setPreferencesToHide(["port"], metaConfig=metaConfig)*/
+
+        // This should be the first place we access metaConfig here, so clear and reset...
+        metaConfig = clearThingsToHide()
+        metaConfig = setCommandsToHide([], metaConfig=metaConfig)
+        metaConfig = setStateVariablesToHide(['settings', 'colorMode', 'red', 'green', 'blue', 
+            'mired', 'level', 'saturation', 'mode', 'hue'], metaConfig=metaConfig)
+        
+        metaConfig = setCurrentStatesToHide(['needUpdate'], metaConfig=metaConfig)
+        //metaConfig = setDatasToHide(['preferences', 'namespace', 'appReturn', 'metaConfig'], metaConfig=metaConfig)
+        metaConfig = setDatasToHide(['namespace', 'appReturn'], metaConfig=metaConfig)
+        metaConfig = setPreferencesToHide([], metaConfig=metaConfig)
+    }
     try {
         // In case we have some more to run specific to this driver
         refreshAdditional(metaConfig)
