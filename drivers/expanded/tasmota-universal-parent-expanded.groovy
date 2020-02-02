@@ -1368,6 +1368,8 @@ def configuration_model_debug() {
 
 def isDriver() {
     try {
+        
+        
         // If this fails, this is not a driver...
         getDeviceDataByName('_unimportant')
         logging("This IS a driver!", 0)

@@ -100,7 +100,15 @@ def mainPage() {
                         href("configureTasmotaDevice", title:"${getMaterialIcon('', 'he-bulb_1 icon-small')} $cDev.label", description:"", params: [did: cDev.deviceNetworkId])
                         
                         lastActivity = getTimeStringSinceDateWithMaximum(cDev.getLastActivity(), 2*60*60*1000)
-                        
+                        // Status
+                        deviceStatus = cDev.currentState('presence')
+                        if(deviceStatus == null || deviceStatus == "not present") {
+                            deviceStatus = "Timeout"
+                        } else {
+                            deviceStatus = "Available"
+                        }
+
+                        // Wifi
                         wifiSignalQuality = cDev.currentState('wifiSignal')
                         wifiSignalQualityRed = true
                         if(wifiSignalQuality != null) {
@@ -120,6 +128,7 @@ def mainPage() {
                                         [data:"${wifiSignalQuality}", red:wifiSignalQualityRed],
                                         [data:firmware, red:firmware == "null"],
                                         [data:driverVersion, red:driverVersion == "null"],
+                                        [data:deviceStatus, red:deviceStatus != "Available"],
                                         [data:driverName, red:driverName == "null"],])
                                 // it.label
                             //btnParagraph([[href:getDeviceConfigLink(cDev.id), target:"_blank", title:"Config"],
@@ -438,6 +447,7 @@ def getDeviceTable(deviceInfo, extra="") {
     content += '<th style="width: 33px;"><div>Wifi</div></th>'
     content += '<th style="width: 100px;"><div>Firmware</div></th>'
     content += '<th style="width: 60px;"><div>Driver</div></th>'
+    content += '<th style="width: 60px;"><div>Status</div></th>'
     content += '<th style=""><div>Type</div></th>'
     content += '</tr><tr>'
 
@@ -464,8 +474,11 @@ def getDeviceTable(deviceInfo, extra="") {
     // Driver Version
     content += getDeviceTableCell([title:deviceInfo[6]['data'], red:deviceInfo[6]['red']], false)
 
-    // Driver Type
+    // Status
     content += getDeviceTableCell([title:deviceInfo[7]['data'], red:deviceInfo[7]['red']], false)
+
+    // Driver Type
+    content += getDeviceTableCell([title:deviceInfo[8]['data'], red:deviceInfo[8]['red']], false)
 
     content += '</tr>'
     content += '<tr>'
@@ -666,7 +679,7 @@ def runDeviceCommand(device, cmd, args=[]) {
     //device.deviceCommand(JsonOutput.toJson([cmd: cmd, args: args]))
     r = null
     r = jsonSlurper.parseText(device.getDataValue('appReturn'))
-    
+
     device.updateDataValue('appReturn', null)
     return r
 }

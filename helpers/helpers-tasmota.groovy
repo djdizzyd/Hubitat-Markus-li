@@ -283,19 +283,19 @@ def configureChildDevices(asyncResponse, data) {
 
     // The built-in Generic Components are:
     //
-    // Acceleration Sensor
-    // Contact Sensor
-    // Contact/Switch
-    // CT
-    // Dimmer
-    // Metering Switch
-    // Motion Sensor
-    // RGB
-    // RGBW
-    // Smoke Detector
-    // Switch
-    // Temperature Sensor
-    // Water Sensor
+    // Acceleration Sensor - ID: 189
+    // Contact Sensor      - ID: 192
+    // Contact/Switch      - ID: 199
+    // CT                  - ID: 198
+    // Dimmer              - ID: 187
+    // Metering Switch     - ID: 188
+    // Motion Sensor       - ID: 197
+    // RGB                 - ID: 195
+    // RGBW                - ID: 191
+    // Smoke Detector      - ID: 196
+    // Switch              - ID: 190
+    // Temperature Sensor  - ID: 200
+    // Water Sensor        - ID: 194
 
     // {"StatusSTS":{"Time":"2020-01-26T01:13:27","Uptime":"15T02:59:27","UptimeSec":1306767,
     // "Heap":26,"SleepMode":"Dynamic","Sleep":50,"LoadAvg":19,"MqttCount":0,"POWER1":"OFF",

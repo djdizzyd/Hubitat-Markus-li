@@ -256,10 +256,14 @@ def main():
         {'id': 737, 'file': 'tasmota-generic-wifi-dimmer.groovy' },
 
         # Universal drivers
-        # Replacing 557 with the new Universal driver
-        #{'id': 557, 'file': 'tasmota-ykyc-001-pm-plug.groovy' },
-        {'id': 557, 'file': 'tasmota-universal-parent.groovy', 'specialDebugLabel': 'descriptionText' },
-        {'id': 550, 'file': 'tasmota-universal-multisensor-child.groovy', 'specialDebugLabel': 'descriptionText' },
+        {'id': 865, 'file': 'tasmota-universal-parent.groovy', 'specialDebugLabel': 'descriptionText' },
+        {'id': 866, 'file': 'tasmota-universal-multisensor-child.groovy', 'specialDebugLabel': 'descriptionText' },
+        {'id': 867, 'file': 'tasmota-universal-parent.groovy', 'specialDebugLabel': 'descriptionText',
+         'alternate_output_filename': 'tasmota-universal-parent-testing', \
+         'alternate_name': 'Tasmota - Universal Parent Testing' },
+        {'id': 868, 'file': 'tasmota-universal-multisensor-child.groovy', 'specialDebugLabel': 'descriptionText',
+         'alternate_output_filename': 'tasmota-universal-multisensor-testing-child', \
+         'alternate_name': 'Tasmota - Universal Multisensor Testing (Child)' },
 
         # Zigbee
         {'id': 579, 'file': 'zigbee-generic-wifi-switch-plug.groovy' },
@@ -299,6 +303,9 @@ def main():
     # As long as we have an id, we can just supply that here instead of the whole config...
     # 651 left over from RF Link Child
     driver_files_testing = [
+        {'id': 865}, {'id': 866},  # Universal Drivers RELEASE
+        {'id': 867}, {'id': 868},  # Universal Drivers TESTING
+        
     #    {'id': 801}, {'id': 579},  # Zigbee drivers
     #     {'id':587},  # Wifi Curtain Wall Panel
     #    {'id':590},
@@ -313,7 +320,7 @@ def main():
     #   {'id':641},{'id':642},
     #   {'id':650},{'id':651},  # RFLink
     #    {'id':648},  # Sonoff RF Bridge
-        {'id':557}, {'id':550}, # Universal Parent + Universal Children
+    #    {'id':865}, {'id':550}, # Universal Parent + Universal Children
     #    {'id':589}, {'id':591},
     #     {'id':551},{'id':578}, {'id':362}, {'id':645}, {'id':590}, {'id':588}, 
     #    {'id': 0, 'file': 'tasmota-generic-thp-device.groovy' , \
@@ -321,7 +328,7 @@ def main():
     #     'alternate_name': 'WRONG Tasmota - Sonoff TH', \
     #     'alternate_module': '4'},
     ]
-    
+    # 222, 145, 144, 163, 161
     # 
     #expected_num_drivers = 1
 
