@@ -382,14 +382,14 @@ def configureChildDevices(asyncResponse, data) {
     // SENSOR = {"Time":"2020-01-30T19:15:08","SR04":{"Distance":73.702}}
 
     // Switch or Metering Switch are the two most likely ones
-    deviceInfo = [:]
+    def deviceInfo = [:]
     deviceInfo["hasEnergy"] = false
     deviceInfo["numTemperature"] = 0
     deviceInfo["numHumidity"] = 0
     deviceInfo["numPressure"] = 0
     deviceInfo["numDistance"] = 0
     deviceInfo["numSensorGroups"] = 0
-    deviceInfo["sensorMap"] = [:] as TreeMap
+    deviceInfo["sensorMap"] = [:]
     if(statusMap.containsKey("StatusSNS")) {
         sns = statusMap["StatusSNS"]
         deviceInfo["hasEnergy"] = sns.containsKey("ENERGY")
@@ -425,6 +425,7 @@ def configureChildDevices(asyncResponse, data) {
         }
     }
     logging("Device info found: $deviceInfo", 100)
+
     // Create the devices, if needed
 
     // Switches
@@ -468,14 +469,15 @@ def configureChildDevices(asyncResponse, data) {
             childLabel = "${getMinimizedDriverName(device.getLabel())} ($childId)"
             logging("createChildDevice: POWER$i", 1)
             createChildDevice(namespace, driverName, childId, childName, childLabel)
-            
             // Once the first switch is created we only support one type... At least for now...
             driverName = ["Tasmota - Universal Switch (Child)", "Generic Component Switch"]
         }
     }
     
     // Sensors
+    logging("Available in sensorMap: ${deviceInfo["sensorMap"]}, size:${deviceInfo["numSensorGroups"]}", 0)
     deviceInfo["sensorMap"].each {
+        logging("sensorMap: $it.key", 0)
         namespace = "tasmota"
         driverName = ["Tasmota - Universal Multisensor (Child)"]
         childId = "${it.key}"
@@ -483,7 +485,7 @@ def configureChildDevices(asyncResponse, data) {
         childLabel = "${getMinimizedDriverName(device.getLabel())} ($childId)"
         createChildDevice(namespace, driverName, childId, childName, childLabel)
     }
-
+    //logging("After sensor creation...", 0)
     // Finally let the default parser have the data as well...
     parseResult(statusMap)
 }
@@ -530,6 +532,7 @@ def getChildDeviceByActionType(String actionType) {
 }
 
 private void createChildDevice(String namespace, List driverName, String childId, String childName, String childLabel) {
+    logging("createChildDevice(namespace=$namespace, driverName=$driverName, childId=$childId, childName=$childName, childLabel=$childLabel)", 1)
     childDevice = childDevices.find{it.deviceNetworkId.endsWith("-$childId")}
     if(!childDevice && childId.toLowerCase().startsWith("power")) {
         // If this driver was used to replace an "old" parent driver, rename the child Network ID
@@ -545,6 +548,7 @@ private void createChildDevice(String namespace, List driverName, String childId
         childDevice.setName(childName)
         logging(childDevice.getData(), 10)
     } else {
+        logging("The child device doesn't exist, create it...", 0)
         s = childName.size()
         for(i in 0..s) {
             if(driverName[i].toLowerCase().startsWith('generic component')) {

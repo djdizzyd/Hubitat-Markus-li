@@ -194,11 +194,12 @@ def refreshAdditional(metaConfig) {
 /* The parse(description) function is included and auto-expanded from external files */
 def parse(description) {
     #!include:getGenericTasmotaNewParseHeader()
-        events << parseResult(result)
+        (eventData, missingChild) = parseResult(result, missingChild)
+        events << eventData
     #!include:getGenericTasmotaNewParseFooter()
 }
 
-def parseResult(result) {
+def parseResult(result, missingChild=false) {
 
     def events = []
     events << updatePresence("present", createEventCall=true)
@@ -211,7 +212,7 @@ def parseResult(result) {
     #!include:getTasmotaNewParserForSensors()
     #!include:getTasmotaNewParserForWifi()
 
-    return events
+    return [events, missingChild]
 }
 
 // Call order: installed() -> configure() -> initialize() -> updated() -> update_needed_settings()
@@ -263,7 +264,7 @@ Boolean callChildParseByTypeId(String deviceTypeId, event, missingChild) {
             cd.parse(event)
         } else {
             // We're missing a device...
-            log.warn("childParse() can't FIND the device ${cd?.displayName}! Did you delete something?")
+            log.warn("childParse() can't FIND the device ${cd?.displayName}! (childId: ${"$device.id-$deviceTypeId"}) Did you delete something?")
             missingChild = true
         }
     } catch(e) {

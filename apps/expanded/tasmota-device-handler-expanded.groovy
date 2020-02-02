@@ -239,6 +239,12 @@ TreeMap getDeviceConfigurations() {
         template: '{"NAME":"S120 Plug","GPIO":[0,0,0,0,0,21,0,0,0,52,90,0,0],"FLAG":0,"BASE":18}',
         installCommands: [["SetOption81", "1"]],
         deviceLink: 'https://templates.blakadder.com/brilliantsmart_20676.html'],
+        
+        [typeId: 's120-plug-bmp280' ,
+        name: 'S120 USB Charger Plug + BMP280',
+        template: '{"NAME":"S120THPPlug","GPIO":[0,6,0,5,0,21,0,0,0,52,90,0,0],"FLAG":0,"BASE":18}',
+        installCommands: [["SetOption81", "1"]],
+        deviceLink: 'https://templates.blakadder.com/brilliantsmart_20676.html'],
 
         [typeId: 'brilliantsmart-20676-plug' ,
         name: 'BrilliantSmart 20676 USB Charger Plug',
@@ -901,8 +907,7 @@ def manuallyAdd(){
 			paragraph "This process will manually create a Tasmota-based Device with the entered IP address. Tasmota Connect then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your wifi network."
             input "deviceType", "enum", title:"Device Type", description: "", required: true, options: 
                 // BEGIN:makeTasmotaConnectDriverListV1()
-                ["Tasmota - Universal Parent",
-                "Tasmota - Universal Parent Testing",
+                ["Tasmota - Universal Parent Testing",
                 ]
                 // END:  makeTasmotaConnectDriverListV1()
             input "ipAddress", "text", title:"IP Address", description: "", required: true 
@@ -1248,7 +1253,7 @@ def configuration_model_debug() {
 def isDriver() {
     try {
         
-        
+
         // If this fails, this is not a driver...
         getDeviceDataByName('_unimportant')
         logging("This IS a driver!", 0)
@@ -1324,11 +1329,11 @@ void logsOff() {
             device.clearSetting("logLevel")
             device.removeSetting("logLevel")
             device.updateSetting("logLevel", "0")
-            state.settings.remove("logLevel")
+            state?.settings?.remove("logLevel")
             device.clearSetting("debugLogging")
             device.removeSetting("debugLogging")
             device.updateSetting("debugLogging", "false")
-            state.settings.remove("debugLogging")
+            state?.settings?.remove("debugLogging")
             
         } else {
             //app.clearSetting("logLevel")
@@ -1748,19 +1753,19 @@ def configureChildDevices(asyncResponse, data) {
 
     // The built-in Generic Components are:
     //
-    // Acceleration Sensor
-    // Contact Sensor
-    // Contact/Switch
-    // CT
-    // Dimmer
-    // Metering Switch
-    // Motion Sensor
-    // RGB
-    // RGBW
-    // Smoke Detector
-    // Switch
-    // Temperature Sensor
-    // Water Sensor
+    // Acceleration Sensor - ID: 189
+    // Contact Sensor      - ID: 192
+    // Contact/Switch      - ID: 199
+    // CT                  - ID: 198
+    // Dimmer              - ID: 187
+    // Metering Switch     - ID: 188
+    // Motion Sensor       - ID: 197
+    // RGB                 - ID: 195
+    // RGBW                - ID: 191
+    // Smoke Detector      - ID: 196
+    // Switch              - ID: 190
+    // Temperature Sensor  - ID: 200
+    // Water Sensor        - ID: 194
 
     // {"StatusSTS":{"Time":"2020-01-26T01:13:27","Uptime":"15T02:59:27","UptimeSec":1306767,
     // "Heap":26,"SleepMode":"Dynamic","Sleep":50,"LoadAvg":19,"MqttCount":0,"POWER1":"OFF",
@@ -1847,14 +1852,14 @@ def configureChildDevices(asyncResponse, data) {
     // SENSOR = {"Time":"2020-01-30T19:15:08","SR04":{"Distance":73.702}}
 
     // Switch or Metering Switch are the two most likely ones
-    deviceInfo = [:]
+    def deviceInfo = [:]
     deviceInfo["hasEnergy"] = false
     deviceInfo["numTemperature"] = 0
     deviceInfo["numHumidity"] = 0
     deviceInfo["numPressure"] = 0
     deviceInfo["numDistance"] = 0
     deviceInfo["numSensorGroups"] = 0
-    deviceInfo["sensorMap"] = [:] as TreeMap
+    deviceInfo["sensorMap"] = [:]
     if(statusMap.containsKey("StatusSNS")) {
         sns = statusMap["StatusSNS"]
         deviceInfo["hasEnergy"] = sns.containsKey("ENERGY")
@@ -1890,6 +1895,7 @@ def configureChildDevices(asyncResponse, data) {
         }
     }
     logging("Device info found: $deviceInfo", 100)
+
     // Create the devices, if needed
 
     // Switches
@@ -1933,14 +1939,15 @@ def configureChildDevices(asyncResponse, data) {
             childLabel = "${getMinimizedDriverName(device.getLabel())} ($childId)"
             logging("createChildDevice: POWER$i", 1)
             createChildDevice(namespace, driverName, childId, childName, childLabel)
-            
             // Once the first switch is created we only support one type... At least for now...
             driverName = ["Tasmota - Universal Switch (Child)", "Generic Component Switch"]
         }
     }
     
     // Sensors
+    logging("Available in sensorMap: ${deviceInfo["sensorMap"]}, size:${deviceInfo["numSensorGroups"]}", 0)
     deviceInfo["sensorMap"].each {
+        logging("sensorMap: $it.key", 0)
         namespace = "tasmota"
         driverName = ["Tasmota - Universal Multisensor (Child)"]
         childId = "${it.key}"
@@ -1948,7 +1955,7 @@ def configureChildDevices(asyncResponse, data) {
         childLabel = "${getMinimizedDriverName(device.getLabel())} ($childId)"
         createChildDevice(namespace, driverName, childId, childName, childLabel)
     }
-
+    //logging("After sensor creation...", 0)
     // Finally let the default parser have the data as well...
     parseResult(statusMap)
 }
@@ -1995,6 +2002,7 @@ def getChildDeviceByActionType(String actionType) {
 }
 
 private void createChildDevice(String namespace, List driverName, String childId, String childName, String childLabel) {
+    logging("createChildDevice(namespace=$namespace, driverName=$driverName, childId=$childId, childName=$childName, childLabel=$childLabel)", 1)
     childDevice = childDevices.find{it.deviceNetworkId.endsWith("-$childId")}
     if(!childDevice && childId.toLowerCase().startsWith("power")) {
         // If this driver was used to replace an "old" parent driver, rename the child Network ID
@@ -2010,6 +2018,7 @@ private void createChildDevice(String namespace, List driverName, String childId
         childDevice.setName(childName)
         logging(childDevice.getData(), 10)
     } else {
+        logging("The child device doesn't exist, create it...", 0)
         s = childName.size()
         for(i in 0..s) {
             if(driverName[i].toLowerCase().startsWith('generic component')) {

@@ -221,7 +221,7 @@ class HubitatCodeBuilder:
             output = 'public getDeviceInfoByName(infoName) { \n' + \
                 '    // DO NOT EDIT: This is generated from the metadata!\n' + \
                 '    // TODO: Figure out how to get this from Hubitat instead of generating this?\n' + \
-                '    deviceInfo = ' + ds + '\n' + \
+                '    def deviceInfo = ' + ds + '\n' + \
                 '    //logging("deviceInfo[${infoName}] = ${deviceInfo[infoName]}", 1)\n' + \
                 '    return(deviceInfo[infoName])\n' + \
                 '}'

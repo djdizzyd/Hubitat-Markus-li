@@ -9,7 +9,7 @@
 def isDriver() {
     try {
         
-        
+
         // If this fails, this is not a driver...
         getDeviceDataByName('_unimportant')
         logging("This IS a driver!", 0)
@@ -85,11 +85,11 @@ void logsOff() {
             device.clearSetting("logLevel")
             device.removeSetting("logLevel")
             device.updateSetting("logLevel", "0")
-            state.settings.remove("logLevel")
+            state?.settings?.remove("logLevel")
             device.clearSetting("debugLogging")
             device.removeSetting("debugLogging")
             device.updateSetting("debugLogging", "false")
-            state.settings.remove("debugLogging")
+            state?.settings?.remove("debugLogging")
             
         } else {
             //app.clearSetting("logLevel")

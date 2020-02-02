@@ -19,6 +19,13 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "Python: openwrt_sort_dhcp.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/tools/openwrt_sort_dhcp.py",
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Python: BitBucketConverterMinimal.py",
             "type": "python",
             "request": "launch",

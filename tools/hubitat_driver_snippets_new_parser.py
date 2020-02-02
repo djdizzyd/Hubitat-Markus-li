@@ -53,7 +53,7 @@ def getGenericTasmotaNewParseFooter():
 
 if(missingChild == true) {
     log.warn "DISABLED: Missing a child device, refreshing..."
-    refresh()
+    //refresh()
 }
 if (!device.currentValue("ip") || (device.currentValue("ip") != getDataValue("ip"))) {
     curIP = getDataValue("ip")
@@ -183,7 +183,6 @@ if (result.containsKey("Wifi")) {
 def getTasmotaNewParserForParentSwitch():
     return """
 // Standard Switch Data parsing
-Integer numSwitchesI = numSwitches.toInteger()
 if (result.containsKey("POWER") && result.containsKey("POWER1") == false) {
     logging("parser: POWER (child): $result.POWER",1)
     //events << childSendState("1", result.POWER.toLowerCase())

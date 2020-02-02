@@ -307,6 +307,12 @@ TreeMap getDeviceConfigurations() {
         template: '{"NAME":"S120 Plug","GPIO":[0,0,0,0,0,21,0,0,0,52,90,0,0],"FLAG":0,"BASE":18}',
         installCommands: [["SetOption81", "1"]],
         deviceLink: 'https://templates.blakadder.com/brilliantsmart_20676.html'],
+        
+        [typeId: 's120-plug-bmp280' ,
+        name: 'S120 USB Charger Plug + BMP280',
+        template: '{"NAME":"S120THPPlug","GPIO":[0,6,0,5,0,21,0,0,0,52,90,0,0],"FLAG":0,"BASE":18}',
+        installCommands: [["SetOption81", "1"]],
+        deviceLink: 'https://templates.blakadder.com/brilliantsmart_20676.html'],
 
         [typeId: 'brilliantsmart-20676-plug' ,
         name: 'BrilliantSmart 20676 USB Charger Plug',
@@ -658,7 +664,8 @@ def parse(description) {
             // parse() Generic header ENDS here
     
     // END:  getGenericTasmotaNewParseHeader()
-        events << parseResult(result)
+        (eventData, missingChild) = parseResult(result, missingChild)
+        events << eventData
     // BEGIN:getGenericTasmotaNewParseFooter()
     // parse() Generic Tasmota-device footer BEGINS here
     } else {
@@ -668,7 +675,7 @@ def parse(description) {
     
     if(missingChild == true) {
         log.warn "DISABLED: Missing a child device, refreshing..."
-        refresh()
+        //refresh()
     }
     if (!device.currentValue("ip") || (device.currentValue("ip") != getDataValue("ip"))) {
         curIP = getDataValue("ip")
@@ -682,7 +689,7 @@ def parse(description) {
     // END:  getGenericTasmotaNewParseFooter()
 }
 
-def parseResult(result) {
+def parseResult(result, missingChild=false) {
 
     def events = []
     events << updatePresence("present", createEventCall=true)
@@ -778,7 +785,6 @@ def parseResult(result) {
     // END:  getTasmotaNewParserForBasicData()
     // BEGIN:getTasmotaNewParserForParentSwitch()
     // Standard Switch Data parsing
-    Integer numSwitchesI = numSwitches.toInteger()
     if (result.containsKey("POWER") && result.containsKey("POWER1") == false) {
         logging("parser: POWER (child): $result.POWER",1)
         //events << childSendState("1", result.POWER.toLowerCase())
@@ -976,7 +982,7 @@ def parseResult(result) {
     }
     // END:  getTasmotaNewParserForWifi()
 
-    return events
+    return [events, missingChild]
 }
 
 // Call order: installed() -> configure() -> initialize() -> updated() -> update_needed_settings()
@@ -1134,7 +1140,7 @@ Boolean callChildParseByTypeId(String deviceTypeId, event, missingChild) {
             cd.parse(event)
         } else {
             // We're missing a device...
-            log.warn("childParse() can't FIND the device ${cd?.displayName}! Did you delete something?")
+            log.warn("childParse() can't FIND the device ${cd?.displayName}! (childId: ${"$device.id-$deviceTypeId"}) Did you delete something?")
             missingChild = true
         }
     } catch(e) {
@@ -1369,7 +1375,7 @@ def configuration_model_debug() {
 def isDriver() {
     try {
         
-        
+
         // If this fails, this is not a driver...
         getDeviceDataByName('_unimportant')
         logging("This IS a driver!", 0)
@@ -1445,11 +1451,11 @@ void logsOff() {
             device.clearSetting("logLevel")
             device.removeSetting("logLevel")
             device.updateSetting("logLevel", "0")
-            state.settings.remove("logLevel")
+            state?.settings.remove("logLevel")
             device.clearSetting("debugLogging")
             device.removeSetting("debugLogging")
             device.updateSetting("debugLogging", "false")
-            state.settings.remove("debugLogging")
+            state?.settings.remove("debugLogging")
             
         } else {
             //app.clearSetting("logLevel")
@@ -2535,19 +2541,19 @@ def configureChildDevices(asyncResponse, data) {
 
     // The built-in Generic Components are:
     //
-    // Acceleration Sensor
-    // Contact Sensor
-    // Contact/Switch
-    // CT
-    // Dimmer
-    // Metering Switch
-    // Motion Sensor
-    // RGB
-    // RGBW
-    // Smoke Detector
-    // Switch
-    // Temperature Sensor
-    // Water Sensor
+    // Acceleration Sensor - ID: 189
+    // Contact Sensor      - ID: 192
+    // Contact/Switch      - ID: 199
+    // CT                  - ID: 198
+    // Dimmer              - ID: 187
+    // Metering Switch     - ID: 188
+    // Motion Sensor       - ID: 197
+    // RGB                 - ID: 195
+    // RGBW                - ID: 191
+    // Smoke Detector      - ID: 196
+    // Switch              - ID: 190
+    // Temperature Sensor  - ID: 200
+    // Water Sensor        - ID: 194
 
     // {"StatusSTS":{"Time":"2020-01-26T01:13:27","Uptime":"15T02:59:27","UptimeSec":1306767,
     // "Heap":26,"SleepMode":"Dynamic","Sleep":50,"LoadAvg":19,"MqttCount":0,"POWER1":"OFF",
@@ -2641,7 +2647,7 @@ def configureChildDevices(asyncResponse, data) {
     deviceInfo["numPressure"] = 0
     deviceInfo["numDistance"] = 0
     deviceInfo["numSensorGroups"] = 0
-    deviceInfo["sensorMap"] = [:] as TreeMap
+    deviceInfo["sensorMap"] = [:]
     if(statusMap.containsKey("StatusSNS")) {
         sns = statusMap["StatusSNS"]
         deviceInfo["hasEnergy"] = sns.containsKey("ENERGY")
@@ -2727,7 +2733,9 @@ def configureChildDevices(asyncResponse, data) {
     }
     
     // Sensors
+    logging("Available in sensorMap: ${deviceInfo["sensorMap"]}", 0)
     deviceInfo["sensorMap"].each {
+        logging("sensorMap: $it.key", 0)
         namespace = "tasmota"
         driverName = ["Tasmota - Universal Multisensor (Child)"]
         childId = "${it.key}"
@@ -2735,7 +2743,7 @@ def configureChildDevices(asyncResponse, data) {
         childLabel = "${getMinimizedDriverName(device.getLabel())} ($childId)"
         createChildDevice(namespace, driverName, childId, childName, childLabel)
     }
-
+    logging("After sensor creation...", 0)
     // Finally let the default parser have the data as well...
     parseResult(statusMap)
 }
@@ -2782,6 +2790,7 @@ def getChildDeviceByActionType(String actionType) {
 }
 
 private void createChildDevice(String namespace, List driverName, String childId, String childName, String childLabel) {
+    logging("createChildDevice(namespace=$namespace, driverName=$driverName, childId=$childId, childName=$childName, childLabel=$childLabel)", 1)
     childDevice = childDevices.find{it.deviceNetworkId.endsWith("-$childId")}
     if(!childDevice && childId.toLowerCase().startsWith("power")) {
         // If this driver was used to replace an "old" parent driver, rename the child Network ID
@@ -2797,6 +2806,7 @@ private void createChildDevice(String namespace, List driverName, String childId
         childDevice.setName(childName)
         logging(childDevice.getData(), 10)
     } else {
+        logging("The child device doesn't exist, create it...", 0)
         s = childName.size()
         for(i in 0..s) {
             if(driverName[i].toLowerCase().startsWith('generic component')) {
