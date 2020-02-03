@@ -112,7 +112,7 @@ def parse(description) {
         long theValue = Long.parseLong(msgMap["value"], 16)
         curtainPosition = theValue.intValue()
         logging("GETTING POSITION from cluster 0102: int => ${curtainPosition}", 1)
-        events << positionEvent(curtainPosition)
+        positionEvent(curtainPosition)
         //read attr - raw: 63A1010102080800204E, dni: 63A1, endpoint: 01, cluster: 0102, size: 08, attrId: 0008, encoding: 20, command: 0A, value: 4E
         //read attr - raw: 63A1010102080800203B, dni: 63A1, endpoint: 01, cluster: 0102, size: 08, attrId: 0008, encoding: 20, command: 0A, value: 3B | parseMap:[raw:63A1010102080800203B, dni:63A1, endpoint:01, cluster:0102, size:08, attrId:0008, encoding:20, command:0A, value:3B, clusterInt:258, attrInt:8]
     } else if (msgMap["cluster"] == "0000" && (msgMap["attrId"] == "FF01" || msgMap["attrId"] == "FF02")) {
@@ -121,7 +121,7 @@ def parse(description) {
         // TODO: Test this, I don't have the battery version...
         // 1C (file separator??) is missing in the beginning of the value after doing this encoding...
         if(getDeviceDataByName('model') != "lumi.curtain") {
-            events << createEvent(parseBattery(msgMap["value"].getBytes().encodeHex().toString().toUpperCase()))
+            sendEvent(parseBattery(msgMap["value"].getBytes().encodeHex().toString().toUpperCase()))
         }
         //read attr - raw: 63A10100004001FF421C03281E05210F00642000082120110727000000000000000009210002, dni: 63A1, endpoint: 01, cluster: 0000, size: 40, attrId: FF01, encoding: 42, command: 0A, value: 1C03281E05210F00642000082120110727000000000000000009210002, parseMap:[raw:63A10100004001FF421C03281E05210F00642000082120110727000000000000000009210002, dni:63A1, endpoint:01, cluster:0000, size:40, attrId:FF01, encoding:42, command:0A, value:(!d ! '	!, clusterInt:0, attrInt:65281]
     } else if (msgMap["cluster"] == "000D" && msgMap["attrId"] == "0055") {
@@ -131,7 +131,7 @@ def parse(description) {
 			float floatValue = Float.intBitsToFloat(theValue.intValue());
 			logging("GETTING POSITION: long => ${theValue}, float => ${floatValue}", 1)
 			curtainPosition = floatValue.intValue()
-			events << positionEvent(curtainPosition)
+			positionEvent(curtainPosition)
 		} else if (msgMap["size"] == "28" && msgMap["value"] == "00000000") {
 			logging("done…", 1)
 			sendHubCommand(zigbee.readAttribute(CLUSTER_WINDOW_POSITION, POSITION_ATTR_VALUE))                
@@ -141,7 +141,7 @@ def parse(description) {
             def bat = msgMap["value"]
             long value = Long.parseLong(bat, 16)/2
             logging("Battery: ${value}%, ${bat}", 1)
-            events << createEvent(name:"battery", value: value)
+            sendEvent(name:"battery", value: value)
         }
 
 	} else if (msgMap["clusterId"] == "000A") {
@@ -168,11 +168,9 @@ def positionEvent(curtainPosition) {
         logging("Closed", 1)
         windowShadeStatus = "closed"
     }
-	def events = []
-	events << createEvent(name:"windowShade", value: windowShadeStatus)
-	events << createEvent(name:"position", value: curtainPosition)
-	events << createEvent(name:"switch", value: (windowShadeStatus == "closed" ? "off" : "on"))
-	return events
+	sendEvent(name:"windowShade", value: windowShadeStatus)
+	sendEvent(name:"position", value: curtainPosition)
+	sendEvent(name:"switch", value: (windowShadeStatus == "closed" ? "off" : "on"))
 }
 
 // Convert raw 4 digit integer voltage value into percentage based on minVolts/maxVolts range
@@ -211,7 +209,7 @@ def updated() {
     if (cmds != [] && cmds != null) cmds
 }
 
-def update_needed_settings() {
+def updateNeededSettings() {
     
 }
 

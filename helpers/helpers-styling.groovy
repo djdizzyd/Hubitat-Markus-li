@@ -3,15 +3,15 @@
 
     Helper functions included in all Drivers and Apps using Styling
 */
-def addTitleDiv(title) {
+String addTitleDiv(title) {
     return '<div class="preference-title">' + title + '</div>'
 }
 
-def addDescriptionDiv(description) {
+String addDescriptionDiv(description) {
     return '<div class="preference-description">' + description + '</div>'
 }
 
-def makeTextBold(s) {
+String makeTextBold(s) {
     // DEPRECATED: Should be replaced by CSS styling!
     if(isDriver()) {
         return "<b>$s</b>"
@@ -20,7 +20,7 @@ def makeTextBold(s) {
     }
 }
 
-def makeTextItalic(s) {
+String makeTextItalic(s) {
     // DEPRECATED: Should be replaced by CSS styling!
     if(isDriver()) {
         return "<i>$s</i>"

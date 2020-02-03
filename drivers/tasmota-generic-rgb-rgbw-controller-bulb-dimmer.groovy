@@ -54,7 +54,7 @@ def parse(description) {
         #!include:getGenericTasmotaParseFooter()
 }
 
-def update_needed_settings() {
+def updateNeededSettings() {
     #!include:getUpdateNeededSettingsTasmotaHeader()
 
     #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand()  # With no arguments this will not set anything by default

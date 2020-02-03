@@ -4,6 +4,7 @@
     Helper functions included in all drivers with Temperature and Humidity
 */
 private getAdjustedTemp(value) {
+    def decimalLimit
     if(tempRes == null || tempRes == '') {
         decimalLimit = 10
     } else {

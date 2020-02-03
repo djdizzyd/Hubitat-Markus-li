@@ -4,12 +4,12 @@
     Helper functions included in all Tasmota drivers using RGB, RGBW or Dimmers
     These methods ARE specific to Tasmota
 */
-def setColorTemperature(value) {
+void setColorTemperature(value) {
     logging("setColorTemperature('${value}')", 10)
     if(device.currentValue('colorTemperature') != value ) sendEvent(name: "colorTemperature", value: value)
     // 153..500 = set color temperature from 153 (cold) to 500 (warm) for CT lights
     // Tasmota use mired to measure color temperature
-    t = value != null ?  (value as Integer) : 0
+    int t = value != null ?  (value as Integer) : 0
     // First make sure we have a Kelvin value we can more or less handle
     // 153 mired is approx. 6536K
     // 500 mired = 2000K
@@ -27,14 +27,14 @@ def setColorTemperature(value) {
     getAction(getCommandString("CT", "${t}"))
 }
 
-def setHSB(h, s, b) {
+void setHSB(h, s, b) {
     logging("setHSB('${h}','${s}','${b}')", 10)
-    return(setHSB(h, s, b, true))
+    setHSB(h, s, b, true)
 }
 
-def setHSB(h, s, b, callWhite) {
+void setHSB(h, s, b, callWhite) {
     logging("setHSB('${h}','${s}','${b}', callWhite=${String.valueOf(callWhite)})", 10)
-    adjusted = False
+    Boolean adjusted = False
     if(h == null || h == 'NaN') {
         h = state != null && state.containsKey("hue") ? state.hue : 0
         adjusted = True
@@ -50,11 +50,11 @@ def setHSB(h, s, b, callWhite) {
     if(adjusted) {
         logging("ADJUSTED setHSB('${h}','${s}','${b}'", 1)
     }
-    adjustedH = Math.round(h*3.6)
+    int adjustedH = Math.round(h*3.6)
     if( adjustedH > 360 ) { adjustedH = 360 }
     if( b < 0 ) b = 0
     if( b > 100 ) b = 100
-    hsbcmd = "${adjustedH},${s},${b}"
+    String hsbcmd = "${adjustedH},${s},${b}"
     logging("hsbcmd = ${hsbcmd}", 1)
     state.hue = h
     state.saturation = s
@@ -63,17 +63,17 @@ def setHSB(h, s, b, callWhite) {
     if (hsbcmd.startsWith("0,0,")) {
         //state.colorMode = "white"
         //if(device.currentValue("colorMode") != "CT" ) sendEvent(name: "colorMode", value: "CT")
-        return(white())
-        //return(getAction(getCommandString("hsbcolor", hsbcmd)))
+        white()
+        //getAction(getCommandString("hsbcolor", hsbcmd))
     } else {
         //if(device.currentValue("colorMode") != "RGB" ) sendEvent(name: "colorMode", value: "RGB")
-        return(getAction(getCommandString("HsbColor", hsbcmd)))
+        getAction(getCommandString("HsbColor", hsbcmd))
     }
 }
 
-def setRGB(r,g,b) {   
+void setRGB(r,g,b) {   
     logging("setRGB('${r}','${g}','${b}')", 10)
-    adjusted = False
+    Boolean adjusted = False
     if(r == null || r == 'NaN') {
         r = 0
         adjusted = True
@@ -89,13 +89,13 @@ def setRGB(r,g,b) {
     if(adjusted) {
         logging("ADJUSTED setRGB('${r}','${g}','${b}')", 1)
     }
-    rgbcmd = "${r},${g},${b}"
+    String rgbcmd = "${r},${g},${b}"
     logging("rgbcmd = ${rgbcmd}", 1)
     state.red = r
     state.green = g
     state.blue = b
     // Calculate from RGB values
-    hsbColor = rgbToHSB(r, g, b)
+    def hsbColor = rgbToHSB(r, g, b)
     logging("hsbColor from RGB: ${hsbColor}", 1)
     state.colorMode = "RGB"
     //if(device.currentValue("colorMode") != "RGB" ) sendEvent(name: "colorMode", value: "RGB")
@@ -104,47 +104,46 @@ def setRGB(r,g,b) {
     state.saturation = hsbColor['saturation']
     state.level = hsbColor['level']
     
-    return(getAction(getCommandString("Color1", rgbcmd)))
+    getAction(getCommandString("Color1", rgbcmd))
 }
 
-def setLevel(l, duration) {
+void setLevel(l, duration) {
     if (duration == 0) {
         if (state.colorMode == "RGB") {
-            return(setHSB(null, null, l))
+            setHSB(null, null, l)
         } else {
             state.level = l
-            return(getAction(getCommandString("Dimmer", "${l}")))
+            getAction(getCommandString("Dimmer", "${l}"))
         }
-    }
-    else if (duration > 0) {
+    } else if (duration > 0) {
         if (state.colorMode == "RGB") {
-            return(setHSB(null, null, l))
+            setHSB(null, null, l)
         } else {
             if (duration > 5400) {
                 log.warn "Maximum supported dimming duration is 5400 seconds due to current implementation method used."
                 duration = 5400 // Maximum duration is 1.5 hours
             } 
-            cLevel = state.level
+            int cLevel = state.level
             
-            levelDistance = l - cLevel
-            direction = 1
+            int levelDistance = l - cLevel
+            int direction = 1
             if(levelDistance < 0) {
                 direction = -1
                 levelDistance = levelDistance * -1
             }
-            steps = 13
-            increment = Math.round(((levelDistance as Float)  / steps) as Float)
+            int steps = 13
+            int increment = Math.round(((levelDistance as Float)  / steps) as Float)
             if(increment <= 1 && levelDistance < steps) {
                 steps = levelDistance
             }
             // Each Backlog command has 200ms delay, deduct that delay and add 1 second extra
             duration = ((duration as Float) - (2 * steps * 0.2) + 1) as Float
-            stepTime = round2((duration / steps) as Float, 1)
-            stepTimeTasmota = Math.round((stepTime as Float) * 10)
-            lastStepTime = round2((stepTime + (duration - (stepTime * steps)) as Float), 1)
-            lastStepTimeTasmota = Math.round((lastStepTime as Float) * 10)
-            fadeCommands = []
-            cmdLevel = cLevel
+            Float stepTime = round2((duration / steps) as Float, 1)
+            int stepTimeTasmota = Math.round((stepTime as Float) * 10)
+            Float lastStepTime = round2((stepTime + (duration - (stepTime * steps)) as Float), 1)
+            int lastStepTimeTasmota = Math.round((lastStepTime as Float) * 10)
+            List fadeCommands = []
+            int cmdLevel = cLevel
             fadeCommands.add([command: "Fade", value: "1"])
             fadeCommands.add([command: "Speed", value: "20"])
             if(steps > 0) {
@@ -163,26 +162,23 @@ def setLevel(l, duration) {
                 fadeCommands.add([command: "Dimmer", value: "$l"])
             }
             fadeCommands.add([command: "Fade", value: "0"])
-            cmdData = [cLevel:cLevel, levelDistance:levelDistance, direction:direction, steps:steps, increment:increment, stepTime:stepTime, lastStepTime:lastStepTime]
             //fadeCommands = "Fade 1;Speed ${speed};Dimmer ${l};Delay ${duration};Fade 0"
-            logging("fadeCommands: '" + fadeCommands + "', cmdData=$cmdData", 1)
-            return(getAction(getMultiCommandString(fadeCommands)))
+            logging("fadeCommands: '" + fadeCommands + "', cmdData=${[cLevel:cLevel, levelDistance:levelDistance, direction:direction, steps:steps, increment:increment, stepTime:stepTime, lastStepTime:lastStepTime]}", 1)
+            getAction(getMultiCommandString(fadeCommands))
         }
    }
 }
 
-def stopLevelChange() {
+void stopLevelChange() {
     // Since sending a backlog command without arguments will cancel any current level change we have, 
-    // then that is what we do...
-    cmds = []
-    cmds << getAction(getMultiCommandString([[command: "Fade", value: "0"]]))
-    cmds << getAction(getCommandString("Backlog", null))
-    return cmds
+    // so that is what we do...
+    getAction(getCommandString("Fade", "0"))
+    getAction(getCommandString("Backlog", null))
 }
 
-def startLevelChange(String direction) {
-    cLevel = state.level
-    delay = 30
+void startLevelChange(String direction) {
+    int cLevel = state.level
+    int delay = 30
     if(direction == "up") {
         if(cLevel != null) {
             delay = Math.round(((delay / 100) * (100-cLevel)) as Float)
@@ -196,15 +192,15 @@ def startLevelChange(String direction) {
     }
 }
 
-def whiteForPlatform() {
+void whiteForPlatform() {
     logging("whiteForPlatform()", 10)
-    l = state.level
+    int l = state.level
     //state.colorMode = "white"
     if (l < 10) l = 10
     l = Math.round(l * 2.55).toInteger()
     if (l > 255) l = 255
-    lHex = l.toHexString(l)
-    hexCmd = "#${lHex}${lHex}${lHex}${lHex}${lHex}"
+    def lHex = l.toHexString(l)
+    String hexCmd = "#${lHex}${lHex}${lHex}${lHex}${lHex}"
     logging("hexCmd='${hexCmd}'", 1)
     state.hue = 0
     state.saturation = 0
@@ -213,16 +209,16 @@ def whiteForPlatform() {
     state.blue = l
     state.colorMode = "CT"
     //if(device.currentValue("colorMode") != "CT" ) sendEvent(name: "colorMode", value: "CT")
-    return(getAction(getCommandString("Color1", hexCmd)))
+    getAction(getCommandString("Color1", hexCmd))
 }
 
 // Functions to set RGBW Mode
-def modeSet(mode) {
+void modeSet(int mode) {
     logging("modeSet('${mode}')", 10)
     getAction(getCommandString("Scheme", "${mode}"))
 }
 
-def modeNext() {
+void modeNext() {
     logging("modeNext()", 10)
     if (state.mode < 4) {
         state.mode = state.mode + 1
@@ -232,7 +228,7 @@ def modeNext() {
     modeSet(state.mode)
 }
 
-def modePrevious() {
+void modePrevious() {
     if (state.mode > 0) {
         state.mode = state.mode - 1
     } else {
@@ -241,25 +237,25 @@ def modePrevious() {
     modeSet(state.mode)
 }
 
-def modeSingleColor() {
+void modeSingleColor() {
     state.mode = 0
     modeSet(state.mode)
 }
 
-def modeWakeUp() {
+void modeWakeUp() {
     logging("modeWakeUp()", 1)
     state.mode = 1
     modeSet(state.mode)
 }
 
-def modeWakeUp(wakeUpDuration) {
-    level = device.currentValue('level')
-    nlevel = level > 10 ? level : 10
+void modeWakeUp(int wakeUpDuration) {
+    int level = device.currentValue('level')
+    int nlevel = level > 10 ? level : 10
     logging("modeWakeUp(wakeUpDuration ${wakeUpDuration}, current level: ${nlevel})", 1)
     modeWakeUp(wakeUpDuration, nlevel)
 }
 
-def modeWakeUp(wakeUpDuration, level) {
+void modeWakeUp(wakeUpDuration, level) {
     logging("modeWakeUp(wakeUpDuration ${wakeUpDuration}, level: ${level})", 1)
     state.mode = 1
     wakeUpDuration = wakeUpDuration < 1 ? 1 : wakeUpDuration > 3000 ? 3000 : wakeUpDuration
@@ -269,17 +265,17 @@ def modeWakeUp(wakeUpDuration, level) {
                                     [command: "Wakeup", value: "${level}"]]))
 }
 
-def modeCycleUpColors() {
+void modeCycleUpColors() {
     state.mode = 2
     modeSet(state.mode)
 }
 
-def modeCycleDownColors() {
+void modeCycleDownColors() {
     state.mode = 3
     modeSet(state.mode)
 }
 
-def modeRandomColors() {
+void modeRandomColors() {
     state.mode = 4
     modeSet(state.mode)
 }

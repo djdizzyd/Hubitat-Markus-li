@@ -4,7 +4,7 @@
     Helper functions included in all drivers using RGB, RGBW or Dimmers
     These methods are NOT specific to Tasmota
 */
-def setColor(value) {
+void setColor(value) {
     logging("setColor('${value}')", 10)
 	if (value != null && value instanceof Map) {
         def h = value.containsKey("hue") ? value.hue : 0
@@ -16,20 +16,20 @@ def setColor(value) {
     }
 }
 
-def setHue(h) {
+void setHue(h) {
     logging("setHue('${h}')", 10)
-    return(setHSB(h, null, null))
+    setHSB(h, null, null)
 }
 
-def setSaturation(s) {
+void setSaturation(s) {
     logging("setSaturation('${s}')", 10)
-    return(setHSB(null, s, null))
+    setHSB(null, s, null)
 }
 
-def setLevel(b) {
+void setLevel(b) {
     logging("setLevel('${b}')", 10)
     //return(setHSB(null, null, b))
-    return(setLevel(b, 0))
+    setLevel(b, 0)
 }
 
 def rgbToHSB(red, green, blue) {
@@ -81,40 +81,40 @@ def rgbToHSB(red, green, blue) {
 }
 
 // Fixed colours
-def white() {
+void white() {
     logging("white()", 10)
     // This is separated to be able to reuse functions between platforms
-    return(whiteForPlatform())
+    whiteForPlatform()
 }
 
-def red() {
+void red() {
     logging("red()", 10)
-    return(setRGB(255, 0, 0))
+    setRGB(255, 0, 0)
 }
 
-def green() {
+void green() {
     logging("green()", 10)
-    return(setRGB(0, 255, 0))
+    setRGB(0, 255, 0)
 }
 
-def blue() {
+void blue() {
     logging("blue()", 10)
-    return(setRGB(0, 0, 255))
+    setRGB(0, 0, 255)
 }
 
-def yellow() {
+void yellow() {
     logging("yellow()", 10)
-    return(setRGB(255, 255, 0))
+    setRGB(255, 255, 0)
 }
 
-def lightBlue() {
+void lightBlue() {
     logging("lightBlue()", 10)
-    return(setRGB(0, 255, 255))
+    setRGB(0, 255, 255)
 }
 
-def pink() {
+void pink() {
     logging("pink()", 10)
-    return(setRGB(255, 0, 255))
+    setRGB(255, 0, 255)
 }
 
 /*

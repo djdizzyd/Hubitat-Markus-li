@@ -6,10 +6,8 @@
 
 #!include:getHelperFunctions('all-debug')
 
-def isDriver() {
+Boolean isDriver() {
     try {
-        
-
         // If this fails, this is not a driver...
         getDeviceDataByName('_unimportant')
         logging("This IS a driver!", 0)
@@ -20,7 +18,7 @@ def isDriver() {
     }
 }
 
-def deviceCommand(cmd) {
+void deviceCommand(cmd) {
     def jsonSlurper = new JsonSlurper()
     cmd = jsonSlurper.parseText(cmd)
     logging("deviceCommand: ${cmd}", 0)
@@ -46,7 +44,7 @@ void initialize() {
         } else {
             log.warn "Debug logging will NOT BE AUTOMATICALLY DISABLED!"
         }
-        runIn(1800, logsOff)
+        runIn(1800, "logsOff")
     }
     if(isDriver()) {
         if(!isDeveloperHub()) {
@@ -105,9 +103,8 @@ void logsOff() {
     }
 }
 
-def isDeveloperHub() {
-    return generateMD5(location.hub.zigbeeId) == "125fceabd0413141e34bb859cd15e067"
-    //return false
+Boolean isDeveloperHub() {
+    return generateMD5(location.hub.zigbeeId as String) == "125fceabd0413141e34bb859cd15e067"
 }
 
 def getEnvironmentObject() {
@@ -119,7 +116,7 @@ def getEnvironmentObject() {
 }
 
 private def getFilteredDeviceDriverName() {
-    deviceDriverName = getDeviceInfoByName('name')
+    def deviceDriverName = getDeviceInfoByName('name')
     if(deviceDriverName.toLowerCase().endsWith(' (parent)')) {
         deviceDriverName = deviceDriverName.substring(0, deviceDriverName.length()-9)
     }
@@ -127,8 +124,8 @@ private def getFilteredDeviceDriverName() {
 }
 
 private def getFilteredDeviceDisplayName() {
-    device_display_name = device.displayName.replace(' (parent)', '').replace(' (Parent)', '')
-    return device_display_name
+    def deviceDisplayName = device.displayName.replace(' (parent)', '').replace(' (Parent)', '')
+    return deviceDisplayName
 }
 
 def generate_preferences(configuration_model) {
@@ -189,19 +186,19 @@ def generate_preferences(configuration_model) {
 /*
     General Mathematical and Number Methods
 */
-float round2(float number, int scale) {
+Float round2(float number, int scale) {
     int pow = 10;
     for (int i = 1; i < scale; i++)
         pow *= 10;
-    float tmp = number * pow;
-    return ( (float) ( (int) ((tmp - (int) tmp) >= 0.5f ? tmp + 1 : tmp) ) ) / pow;
+    Float tmp = number * pow;
+    return ( (Float) ( (int) ((tmp - (int) tmp) >= 0.5f ? tmp + 1 : tmp) ) ) / pow;
 }
 
-def generateMD5(String s) {
-    MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
+String generateMD5(String s) {
+    return MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
 }
 
-def extractInt(String input) {
+int extractInt(String input) {
   return input.replaceAll("[^0-9]", "").toInteger()
 }
 

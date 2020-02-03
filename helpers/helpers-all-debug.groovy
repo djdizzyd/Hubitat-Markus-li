@@ -3,7 +3,7 @@
 
     Helper Debug functions included in all drivers/apps
 */
-def configuration_model_debug() {
+String configuration_model_debug() {
     if(!isDeveloperHub()) {
         if(!isDriver()) {
             app.removeSetting("logLevel")

@@ -7,9 +7,9 @@
 
 // These methods can be executed in both the NORMAL driver scope as well
 // as the Metadata scope.
-private getMetaConfig() {
+private Map getMetaConfig() {
     // This method can ALSO be executed in the Metadata Scope
-    metaConfig = getDataValue('metaConfig')
+    def metaConfig = getDataValue('metaConfig')
     if(metaConfig == null) {
         metaConfig = [:]
     } else {
@@ -18,22 +18,20 @@ private getMetaConfig() {
     return metaConfig
 }
 
-def isCSSDisabled(metaConfig=null) {
+Boolean isCSSDisabled(Map metaConfig=null) {
     if(metaConfig==null) metaConfig = getMetaConfig()
-    disableCSS = false
+    Boolean disableCSS = false
     if(metaConfig.containsKey("disableCSS")) disableCSS = metaConfig["disableCSS"]
     return disableCSS
 }
 
 // These methods are used to set which elements to hide. 
 // They have to be executed in the NORMAL driver scope.
-
-
-private saveMetaConfig(metaConfig) {
+private void saveMetaConfig(Map metaConfig) {
     updateDataValue('metaConfig', JsonOutput.toJson(metaConfig))
 }
 
-private setSomethingToHide(String type, something, metaConfig=null) {
+private Map setSomethingToHide(String type, List something, Map metaConfig=null) {
     if(metaConfig==null) metaConfig = getMetaConfig()
     def oldData = []
     something = something.unique()
@@ -56,20 +54,19 @@ private setSomethingToHide(String type, something, metaConfig=null) {
     return metaConfig
 }
 
-private clearTypeToHide(type, metaConfig=null) {
+private Map clearTypeToHide(String type, Map metaConfig=null) {
     if(metaConfig==null) metaConfig = getMetaConfig()
-    something = something.unique()
     if(!metaConfig.containsKey("hide")) {
-        metaConfig["hide"] = ["$type":[]]
+        metaConfig["hide"] = [(type):[]]
     } else {
-        metaConfig["hide"]["$type"] = []
+        metaConfig["hide"][(type)] = []
     }
     saveMetaConfig(metaConfig)
     logging("clearTypeToHide() = ${metaConfig}", 1)
     return metaConfig
 }
 
-def clearThingsToHide(metaConfig=null) {
+Map clearThingsToHide(Map metaConfig=null) {
     metaConfig = setSomethingToHide("other", [], metaConfig=metaConfig)
     metaConfig["hide"] = [:]
     saveMetaConfig(metaConfig)
@@ -77,15 +74,15 @@ def clearThingsToHide(metaConfig=null) {
     return metaConfig
 }
 
-def setDisableCSS(valueBool, metaConfig=null) {
+Map setDisableCSS(Boolean value, Map metaConfig=null) {
     if(metaConfig==null) metaConfig = getMetaConfig()
-    metaConfig["disableCSS"] = valueBool
+    metaConfig["disableCSS"] = value
     saveMetaConfig(metaConfig)
-    logging("setDisableCSS(valueBool = $valueBool) = ${metaConfig}", 1)
+    logging("setDisableCSS(value = $value) = ${metaConfig}", 1)
     return metaConfig
 }
 
-def setStateCommentInCSS(stateComment, metaConfig=null) {
+Map setStateCommentInCSS(String stateComment, Map metaConfig=null) {
     if(metaConfig==null) metaConfig = getMetaConfig()
     metaConfig["stateComment"] = stateComment
     saveMetaConfig(metaConfig)
@@ -93,61 +90,61 @@ def setStateCommentInCSS(stateComment, metaConfig=null) {
     return metaConfig
 }
 
-def setCommandsToHide(commands, metaConfig=null) {
+Map setCommandsToHide(List commands, Map metaConfig=null) {
     metaConfig = setSomethingToHide("command", commands, metaConfig=metaConfig)
     logging("setCommandsToHide(${commands})", 1)
     return metaConfig
 }
 
-def clearCommandsToHide(metaConfig=null) {
+Map clearCommandsToHide(Map metaConfig=null) {
     metaConfig = clearTypeToHide("command", metaConfig=metaConfig)
     logging("clearCommandsToHide(metaConfig=${metaConfig})", 1)
     return metaConfig
 }
 
-def setStateVariablesToHide(stateVariables, metaConfig=null) {
+Map setStateVariablesToHide(List stateVariables, Map metaConfig=null) {
     metaConfig = setSomethingToHide("stateVariable", stateVariables, metaConfig=metaConfig)
     logging("setStateVariablesToHide(${stateVariables})", 1)
     return metaConfig
 }
 
-def clearStateVariablesToHide(metaConfig=null) {
+Map clearStateVariablesToHide(Map metaConfig=null) {
     metaConfig = clearTypeToHide("stateVariable", metaConfig=metaConfig)
     logging("clearStateVariablesToHide(metaConfig=${metaConfig})", 1)
     return metaConfig
 }
 
-def setCurrentStatesToHide(currentStates, metaConfig=null) {
+Map setCurrentStatesToHide(List currentStates, Map metaConfig=null) {
     metaConfig = setSomethingToHide("currentState", currentStates, metaConfig=metaConfig)
     logging("setCurrentStatesToHide(${currentStates})", 1)
     return metaConfig
 }
 
-def clearCurrentStatesToHide(metaConfig=null) {
+Map clearCurrentStatesToHide(Map metaConfig=null) {
     metaConfig = clearTypeToHide("currentState", metaConfig=metaConfig)
     logging("clearCurrentStatesToHide(metaConfig=${metaConfig})", 1)
     return metaConfig
 }
 
-def setDatasToHide(datas, metaConfig=null) {
+Map setDatasToHide(List datas, Map metaConfig=null) {
     metaConfig = setSomethingToHide("data", datas, metaConfig=metaConfig)
     logging("setDatasToHide(${datas})", 1)
     return metaConfig
 }
 
-def clearDatasToHide(metaConfig=null) {
+Map clearDatasToHide(Map metaConfig=null) {
     metaConfig = clearTypeToHide("data", metaConfig=metaConfig)
     logging("clearDatasToHide(metaConfig=${metaConfig})", 1)
     return metaConfig
 }
 
-def setPreferencesToHide(preferences, metaConfig=null) {
+Map setPreferencesToHide(List preferences, Map metaConfig=null) {
     metaConfig = setSomethingToHide("preference", preferences, metaConfig=metaConfig)
     logging("setPreferencesToHide(${preferences})", 1)
     return metaConfig
 }
 
-def clearPreferencesToHide(metaConfig=null) {
+Map clearPreferencesToHide(Map metaConfig=null) {
     metaConfig = clearTypeToHide("preference", metaConfig=metaConfig)
     logging("clearPreferencesToHide(metaConfig=${metaConfig})", 1)
     return metaConfig
@@ -156,7 +153,7 @@ def clearPreferencesToHide(metaConfig=null) {
 // These methods are for executing inside the metadata section of a driver.
 def metaDataExporter() {
     //log.debug "getEXECUTOR_TYPE = ${getEXECUTOR_TYPE()}"
-    filteredPrefs = getPreferences()['sections']['input'].name[0]
+    List filteredPrefs = getPreferences()['sections']['input'].name[0]
     //log.debug "filteredPrefs = ${filteredPrefs}"
     if(filteredPrefs != []) updateDataValue('preferences', "${filteredPrefs}".replaceAll("\\s",""))
 }
@@ -191,10 +188,10 @@ h3, h4, .property-label {
 '''
 */
 
-def getDriverCSSWrapper() {
-    metaConfig = getMetaConfig()
-    disableCSS = isCSSDisabled(metaConfig=metaConfig)
-    defaultCSS = '''
+String getDriverCSSWrapper() {
+    Map metaConfig = getMetaConfig()
+    Boolean disableCSS = isCSSDisabled(metaConfig=metaConfig)
+    String defaultCSS = '''
     /* This is part of the CSS for replacing a Command Title */
     div.mdl-card__title div.mdl-grid div.mdl-grid .mdl-cell p::after {
         visibility: visible;
@@ -217,7 +214,7 @@ def getDriverCSSWrapper() {
         font-style: italic;
     }
     '''
-    r = "<style>"
+    String r = "<style>"
     
     if(disableCSS == false) {
         r += "$defaultCSS "
@@ -260,33 +257,33 @@ def getDriverCSSWrapper() {
     return r
 }
 
-def getCommandIndex(cmd) {
-    commands = device.getSupportedCommands().unique()
-    i = commands.findIndexOf{ "$it" == cmd}+1
+int getCommandIndex(String cmd) {
+    List commands = device.getSupportedCommands().unique()
+    int i = commands.findIndexOf{ "$it" == cmd}+1
     //log.debug "getCommandIndex: Seeing these commands: '${commands}', index=$i}"
     return i
 }
 
-def getCSSForCommandHiding(cmdToHide) {
-    i = getCommandIndex(cmdToHide)
-    r = ""
+String getCSSForCommandHiding(String cmdToHide) {
+    int i = getCommandIndex(cmdToHide)
+    String r = ""
     if(i > 0) {
         r = "div.mdl-card__title div.mdl-grid div.mdl-grid .mdl-cell:nth-of-type($i){display: none;}"
     }
     return r
 }
 
-def getCSSForCommandsToHide(commands) {
-    r = ""
+String getCSSForCommandsToHide(List commands) {
+    String r = ""
     commands.each {
         r += getCSSForCommandHiding(it)
     }
     return r
 }
 
-def getCSSToChangeCommandTitle(cmd, newTitle) {
-    i = getCommandIndex(cmd)
-    r = ""
+String getCSSToChangeCommandTitle(String cmd, String newTitle) {
+    int i = getCommandIndex(cmd)
+    String r = ""
     if(i > 0) {
         r += "div.mdl-card__title div.mdl-grid div.mdl-grid .mdl-cell:nth-of-type($i) p {visibility: hidden;}"
         r += "div.mdl-card__title div.mdl-grid div.mdl-grid .mdl-cell:nth-of-type($i) p::after {content: '$newTitle';}"
@@ -294,64 +291,64 @@ def getCSSToChangeCommandTitle(cmd, newTitle) {
     return r
 }
 
-def getStateVariableIndex(stateVariable) {
-    stateVariables = state.keySet()
-    i = stateVariables.findIndexOf{ "$it" == stateVariable}+1
+int getStateVariableIndex(String stateVariable) {
+    def stateVariables = state.keySet()
+    int i = stateVariables.findIndexOf{ "$it" == stateVariable}+1
     //log.debug "getStateVariableIndex: Seeing these State Variables: '${stateVariables}', index=$i}"
     return i
 }
 
-def getCSSForStateVariableHiding(stateVariableToHide) {
-    i = getStateVariableIndex(stateVariableToHide)
-    r = ""
+String getCSSForStateVariableHiding(String stateVariableToHide) {
+    int i = getStateVariableIndex(stateVariableToHide)
+    String r = ""
     if(i > 0) {
         r = "ul#statev li.property-value:nth-of-type($i){display: none;}"
     }
     return r
 }
 
-def getCSSForStateVariablesToHide(stateVariables) {
-    r = ""
+String getCSSForStateVariablesToHide(List stateVariables) {
+    String r = ""
     stateVariables.each {
         r += getCSSForStateVariableHiding(it)
     }
     return r
 }
 
-def getCSSForCurrentStatesToHide(currentStates) {
-    r = ""
+String getCSSForCurrentStatesToHide(List currentStates) {
+    String r = ""
     currentStates.each {
         r += "ul#cstate li#cstate-$it {display: none;}"
     }
     return r
 }
 
-def getDataIndex(data) {
-    datas = device.getData().keySet()
-    i = datas.findIndexOf{ "$it" == data}+1
+int getDataIndex(String data) {
+    def datas = device.getData().keySet()
+    int i = datas.findIndexOf{ "$it" == data}+1
     //log.debug "getDataIndex: Seeing these Data Keys: '${datas}', index=$i}"
     return i
 }
 
-def getCSSForDataHiding(dataToHide) {
-    i = getDataIndex(dataToHide)
-    r = ""
+String getCSSForDataHiding(String dataToHide) {
+    int i = getDataIndex(dataToHide)
+    String r = ""
     if(i > 0) {
         r = "table.property-list tr li.property-value:nth-of-type($i) {display: none;}"
     }
     return r
 }
 
-def getCSSForDatasToHide(datas) {
-    r = ""
+String  getCSSForDatasToHide(List datas) {
+    String r = ""
     datas.each {
         r += getCSSForDataHiding(it)
     }
     return r
 }
 
-def getPreferenceIndex(preference, returnMax=false) {
-    filteredPrefs = getPreferences()['sections']['input'].name[0]
+int getPreferenceIndex(String preference, Boolean returnMax=false) {
+    def filteredPrefs = getPreferences()['sections']['input'].name[0]
     //log.debug "getPreferenceIndex: Seeing these Preferences first: '${filteredPrefs}'"
     if(filteredPrefs == [] || filteredPrefs == null) {
         d = getDataValue('preferences')
@@ -366,7 +363,7 @@ def getPreferenceIndex(preference, returnMax=false) {
         
 
     }
-    i = 0
+    int i = 0
     if(returnMax == true) {
         i = filteredPrefs.size()
     } else {
@@ -376,14 +373,14 @@ def getPreferenceIndex(preference, returnMax=false) {
     return i
 }
 
-def getCSSForPreferenceHiding(preferenceToHide, overrideIndex=0) {
-    i = 0
+String getCSSForPreferenceHiding(String preferenceToHide, int overrideIndex=0) {
+    int i = 0
     if(overrideIndex == 0) {
         i = getPreferenceIndex(preferenceToHide)
     } else {
         i = overrideIndex
     }
-    r = ""
+    String r = ""
     if(i > 0) {
         r = "form[action*=\"preference\"] div.mdl-grid div.mdl-cell:nth-of-type($i) {display: none;} "
     }else if(i == -1) {
@@ -392,14 +389,15 @@ def getCSSForPreferenceHiding(preferenceToHide, overrideIndex=0) {
     return r
 }
 
-def getCSSForPreferencesToHide(preferences) {
-    r = ""
+String getCSSForPreferencesToHide(List preferences) {
+    String r = ""
     preferences.each {
         r += getCSSForPreferenceHiding(it)
     }
     return r
 }
-def getCSSForHidingLastPreference() {
+
+String getCSSForHidingLastPreference() {
     return getCSSForPreferenceHiding(null, overrideIndex=-1)
 }
 

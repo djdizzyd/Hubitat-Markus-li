@@ -7,14 +7,13 @@
 // Call order: installed() -> configure() -> updated() -> initialize() -> refresh()
 def refresh() {
 	logging("refresh()", 100)
-    def cmds = []
-    
+    def metaConfig = null
     if(isDriver()) {
         // Clear all old state variables, but ONLY in a driver!
         state.clear()
 
         // Retrieve full status from Tasmota
-        cmds << getAction(getCommandString("Status", "0"), callback="parseConfigureChildDevices")
+        getAction(getCommandString("Status", "0"), callback="parseConfigureChildDevices")
         getDriverVersion()
 
         updateDataValue('namespace', getDeviceInfoByName('namespace'))
@@ -55,7 +54,6 @@ def refresh() {
             // ignore
         }
     }
-    return cmds
 }
 
 def reboot() {
@@ -64,15 +62,13 @@ def reboot() {
 }
 
 // Call order: installed() -> configure() -> updated() 
-def updated() {
+void updated() {
     logging("updated()", 10)
-    def cmds = [] 
     if(isDriver()) {
-        cmds = update_needed_settings()
+        updateNeededSettings()
         //sendEvent(name: "checkInterval", value: 2 * 15 * 60 + 2 * 60, displayed: false, data: [protocol: "lan", hubHardwareId: device.hub.hardwareID])
         sendEvent(name:"needUpdate", value: device.currentValue("needUpdate"), displayed:false, isStateChange: false)
     }
-    logging(cmds, 0)
     try {
         // Also run initialize(), if it exists...
         initialize()
@@ -80,7 +76,6 @@ def updated() {
     } catch (MissingMethodException e) {
         // ignore
     }
-    if (cmds != [] && cmds != null) cmds
 }
 
 /*
@@ -106,15 +101,14 @@ def updated() {
     logging("refreshAdditional installCommands=$installCommands", 1)
     runInstallCommands(installCommands)
 */
-def runInstallCommands(installCommands) {
+void runInstallCommands(installCommands) {
     // Runs install commands as defined in helpers-device-configurations
-    // Called from update_needed_settings() in parent drivers
+    // Called from updateNeededSettings() in parent drivers
     logging("runInstallCommands(installCommands=$installCommands)", 1)
-    def cmds = []
-    backlogs = []
-    rule1 = []
-    rule2 = []
-    rule3 = []
+    List backlogs = []
+    List rule1 = []
+    List rule2 = []
+    List rule3 = []
     installCommands.each {cmd->
         if(cmd[0].toLowerCase() == "rule1") {
             rule1.add([command: cmd[0], value:urlEscape(cmd[1])])
@@ -128,11 +122,11 @@ def runInstallCommands(installCommands) {
     }
 
     // Backlog inter-command delay in milliseconds
-    cmds << getAction(getCommandString("SetOption34", "20"))
+    getAction(getCommandString("SetOption34", "20"))
     pauseExecution(100)
     // Maximum 30 commands per backlog call
     while(backlogs.size() > 0) {
-        cmds << getAction(getMultiCommandString(backlogs.take(10)))
+        getAction(getMultiCommandString(backlogs.take(10)))
         backlogs = backlogs.drop(10)
         // If we run this too fast Tasmota can't keep up, 1000ms is enough when 20ms between commands...
         if(backlogs.size() > 0) pauseExecution(1000)
@@ -143,30 +137,27 @@ def runInstallCommands(installCommands) {
         //logging("rule: $it", 1)
         it.each {rule->
             // Rules can't run in backlog!
-            cmds << getAction(getCommandString(rule["command"], rule["value"]))
+            getAction(getCommandString(rule["command"], rule["value"]))
             //logging("cmd=${rule["command"]}, value=${rule["value"]}", 1)
             pauseExecution(100)
             // REALLY don't use pauseExecution often... NOT good for performance...
         }
     }
-    cmds << getAction(getCommandString("SetOption34", "200"))
+    getAction(getCommandString("SetOption34", "200"))
 }
 
-def updatePresence(String presence, createEventCall=false) {
+def updatePresence(String presence) {
     // presence - ENUM ["present", "not present"]
-    if(presence == "present") {
-        timeout = getTelePeriod()
+    logging("updatePresence(presence=$presence)", 1)
+    int timeout = getTelePeriod()
+    if(presence == "present") {    
         timeout += (timeout * 0.1 > 60 ? Math.round(timeout * 0.1) : 60)
         //log.warn "Setting as present with timeout: $timeout"
         runIn(timeout, "updatePresence", [data: "not present"])
     } else {
         log.warn "Presence time-out reached, setting device as 'not present'!"
     }
-    if(createEventCall == true) {
-        return createEvent(name: "presence", value: presence)
-    } else {
-        return sendEvent(name: "presence", value: presence)
-    }
+    sendEvent(name: "presence", value: presence, isStateChange: true, descriptionText: "No update received from the Tasmota device for ${timeout} seconds...")
 }
 
 def parseDescriptionAsMap(description) {
@@ -181,16 +172,15 @@ def parseDescriptionAsMap(description) {
 
 private getAction(uri, callback="parse") { 
     logging("Using getAction for '${uri}'...", 0)
-    return httpGetAction(uri, callback=callback)
+    httpGetAction(uri, callback=callback)
 }
 
 def parse(asyncResponse, data) {
     // Parse called by default when using asyncHTTP
-    def events = []
     if(asyncResponse != null) {
         try{
             logging("parse(asyncResponse.getJson() 2= \"${asyncResponse.getJson()}\", data = \"${data}\")", 1)
-            events << parseResult(asyncResponse.getJson())
+            parseResult(asyncResponse.getJson())
         } catch(MissingMethodException e1) {
             log.error e1
         } catch(e1) {
@@ -203,7 +193,6 @@ def parse(asyncResponse, data) {
     } else {
         logging("parse(asyncResponse.data = null, data = \"${data}\")", 1)
     }
-    return events
 }
 
 
@@ -232,8 +221,8 @@ def parseConfigureChildDevices(asyncResponse, data) {
     }
 }
 
-def containsKeyInSubMap(aMap, key) {
-    hasKey = false
+Boolean containsKeyInSubMap(aMap, key) {
+    Boolean hasKey = false
     aMap.find {
         try{
             hasKey = it.value.containsKey(key)
@@ -245,8 +234,8 @@ def containsKeyInSubMap(aMap, key) {
     return hasKey
 }
 
-def numOfKeyInSubMap(aMap, key) {
-    numKeys = 0
+int numOfKeyInSubMap(aMap, String key) {
+    int numKeys = 0
     aMap.each {
         try{
             if(it.value.containsKey(key)) numKeys += 1
@@ -258,7 +247,7 @@ def numOfKeyInSubMap(aMap, key) {
 }
 
 def numOfKeysIsMap(aMap) {
-    numKeys = 0
+    int numKeys = 0
     aMap.each {
         if(it.value instanceof java.util.Map) numKeys += 1
     }
@@ -429,14 +418,14 @@ def configureChildDevices(asyncResponse, data) {
     // Create the devices, if needed
 
     // Switches
+    def driverName = ["Tasmota - Universal Switch (Child)", "Generic Component Switch"]
+    def namespace = "tasmota"
     if(deviceInfo["numSwitch"] > 0) {
         if(deviceInfo["numSwitch"] > 1 && (
             deviceInfo["isDimmer"] == true || deviceInfo["isAddressable"] == true || 
             deviceInfo["isRGB"] == true || deviceInfo["hasCT"] == true)) {
                 log.warn "There's more than one switch and the device is either dimmable, addressable, RGB or has CT capability. This is not fully supported yet, please report which device and settings you're using to the developer."
-            }
-        
-        driverName = ["Tasmota - Universal Switch (Child)", "Generic Component Switch"]
+        }
         if(deviceInfo["hasEnergy"] && (deviceInfo["isAddressable"] == false && deviceInfo["isRGB"] == false && deviceInfo["hasCT"] == false)) {
             if(deviceInfo["isDimmer"]) {
                 // TODO: Make a Component Dimmer with Metering
@@ -464,9 +453,9 @@ def configureChildDevices(asyncResponse, data) {
         
         for(i in 1..deviceInfo["numSwitch"]) {
             namespace = "tasmota"
-            childId = "POWER$i"
-            childName = getChildDeviceNameRoot(keepType=true) + " ${getMinimizedDriverName(driverName[0])} ($childId)"
-            childLabel = "${getMinimizedDriverName(device.getLabel())} ($childId)"
+            def childId = "POWER$i"
+            def childName = getChildDeviceNameRoot(keepType=true) + " ${getMinimizedDriverName(driverName[0])} ($childId)"
+            def childLabel = "${getMinimizedDriverName(device.getLabel())} ($childId)"
             logging("createChildDevice: POWER$i", 1)
             createChildDevice(namespace, driverName, childId, childName, childLabel)
             // Once the first switch is created we only support one type... At least for now...
@@ -480,9 +469,9 @@ def configureChildDevices(asyncResponse, data) {
         logging("sensorMap: $it.key", 0)
         namespace = "tasmota"
         driverName = ["Tasmota - Universal Multisensor (Child)"]
-        childId = "${it.key}"
-        childName = getChildDeviceNameRoot(keepType=true) + " ${getMinimizedDriverName(driverName[0])} ($childId)"
-        childLabel = "${getMinimizedDriverName(device.getLabel())} ($childId)"
+        def childId = "${it.key}"
+        def childName = getChildDeviceNameRoot(keepType=true) + " ${getMinimizedDriverName(driverName[0])} ($childId)"
+        def childLabel = "${getMinimizedDriverName(device.getLabel())} ($childId)"
         createChildDevice(namespace, driverName, childId, childName, childLabel)
     }
     //logging("After sensor creation...", 0)
@@ -491,7 +480,7 @@ def configureChildDevices(asyncResponse, data) {
 }
 
 String getChildDeviceNameRoot(Boolean keepType=false) {
-    childDeviceNameRoot = getDeviceInfoByName('name')
+    String childDeviceNameRoot = getDeviceInfoByName('name')
     if(childDeviceNameRoot.toLowerCase().endsWith(' (parent)')) {
         childDeviceNameRoot = childDeviceNameRoot.substring(0, childDeviceNameRoot.length()-9)
     } else if(childDeviceNameRoot.toLowerCase().endsWith(' parent')) {
@@ -533,7 +522,7 @@ def getChildDeviceByActionType(String actionType) {
 
 private void createChildDevice(String namespace, List driverName, String childId, String childName, String childLabel) {
     logging("createChildDevice(namespace=$namespace, driverName=$driverName, childId=$childId, childName=$childName, childLabel=$childLabel)", 1)
-    childDevice = childDevices.find{it.deviceNetworkId.endsWith("-$childId")}
+    def childDevice = childDevices.find{it.deviceNetworkId.endsWith("-$childId")}
     if(!childDevice && childId.toLowerCase().startsWith("power")) {
         // If this driver was used to replace an "old" parent driver, rename the child Network ID
         logging("Looking for $childId, ending in ${childId.substring(5)}", 1)
@@ -549,12 +538,11 @@ private void createChildDevice(String namespace, List driverName, String childId
         logging(childDevice.getData(), 10)
     } else {
         logging("The child device doesn't exist, create it...", 0)
-        s = childName.size()
+        int s = childName.size()
         for(i in 0..s) {
+            def currentNamespace = namespace
             if(driverName[i].toLowerCase().startsWith('generic component')) {
                 currentNamespace = "hubitat"
-            } else {
-                currentNamespace = namespace
             }
             try {
                 addChildDevice(currentNamespace, driverName[i], "$device.id-$childId", [name: childName, label: childLabel, isComponent: false])
@@ -586,9 +574,9 @@ private setDeviceNetworkId(macOrIP, isIP = false) {
 }
 
 def prepareDNI() {
-    // Called from update_needed_settings() and parse(description)
+    // Called from updateNeededSettings() and parse(description)
     if (useIPAsID) {
-        hexIPAddress = setDeviceNetworkId(ipAddress, true)
+        def hexIPAddress = setDeviceNetworkId(ipAddress, true)
         if(hexIPAddress != null && state.dni != hexIPAddress) {
             state.dni = hexIPAddress
             updateDNI()
@@ -676,7 +664,7 @@ def dBmToQuality(dBm) {
 /*
     Tasmota Preferences Related
 */
-def configuration_model_tasmota() {
+String configuration_model_tasmota() {
 '''
 <configuration>
 <Value type="password" byteSize="1" index="password" label="Device Password" description="REQUIRED if set on the Device! Otherwise leave empty." min="" max="" value="" setting_type="preference" fw="">
@@ -695,14 +683,13 @@ private httpGetAction(uri, callback="parse") {
   
   def headers = getHeader()
   logging("Using httpGetAction for 'http://${getHostAddress()}$uri'...", 0)
-  def hubAction = null
   try {
     /*hubAction = new hubitat.device.HubAction(
         method: "GET",
         path: uri,
         headers: headers
     )*/
-    hubAction = asynchttpGet(
+    asynchttpGet(
         callback,
         [uri: "http://${getHostAddress()}$uri",
         headers: headers]
@@ -710,7 +697,6 @@ private httpGetAction(uri, callback="parse") {
   } catch (e) {
     log.error "Error in httpGetAction(uri): $e ('$uri')"
   }
-  return hubAction    
 }
 
 private postAction(uri, data) { 

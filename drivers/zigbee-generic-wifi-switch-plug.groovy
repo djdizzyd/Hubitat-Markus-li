@@ -91,7 +91,7 @@ def updated()
     if (cmds != [] && cmds != null) cmds
 }
 
-def update_needed_settings()
+def updateNeededSettings()
 {
     
 }

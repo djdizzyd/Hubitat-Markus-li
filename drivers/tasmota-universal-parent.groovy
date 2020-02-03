@@ -194,15 +194,19 @@ def refreshAdditional(metaConfig) {
 /* The parse(description) function is included and auto-expanded from external files */
 def parse(description) {
     #!include:getGenericTasmotaNewParseHeader()
-        (eventData, missingChild) = parseResult(result, missingChild)
-        events << eventData
+        missingChild = parseResult(result, missingChild)
     #!include:getGenericTasmotaNewParseFooter()
 }
 
-def parseResult(result, missingChild=false) {
+def parseResult(result) {
+    def missingChild = false
+    missingChild = parseResult(result, missingChild)
+    return missingChild
+}
 
-    def events = []
-    events << updatePresence("present", createEventCall=true)
+def parseResult(result, missingChild) {
+
+    updatePresence("present")
     logging("parseResult: $result", 1)
     #!include:getTasmotaNewParserForBasicData()
     #!include:getTasmotaNewParserForParentSwitch()
@@ -212,23 +216,23 @@ def parseResult(result, missingChild=false) {
     #!include:getTasmotaNewParserForSensors()
     #!include:getTasmotaNewParserForWifi()
 
-    return [events, missingChild]
+    return missingChild
 }
 
-// Call order: installed() -> configure() -> initialize() -> updated() -> update_needed_settings()
-def update_needed_settings() {
+// Call order: installed() -> configure() -> initialize() -> updated() -> updateNeededSettings()
+def updateNeededSettings() {
     #!include:getUpdateNeededSettingsTasmotaHeader()
 
     // Get the Device Configuration
     if(deviceConfig == null) deviceConfig = "01generic-device"
-    deviceConfigMap = getDeviceConfiguration(deviceConfig)
+    def deviceConfigMap = getDeviceConfiguration(deviceConfig)
     
-    deviceTemplateInput = deviceConfigMap?.template
-    moduleNumber = deviceConfigMap?.module
+    def deviceTemplateInput = deviceConfigMap?.template
+    def moduleNumber = deviceConfigMap?.module
     if(deviceTemplateInput == "") deviceTemplateInput = null
     if(moduleNumber == "") moduleNumber = null
 
-    logging("update_needed_settings: deviceConfigMap=$deviceConfigMap, deviceTemplateInput=$deviceTemplateInput, moduleNumber=$moduleNumber", 0)
+    logging("updateNeededSettings: deviceConfigMap=$deviceConfigMap, deviceTemplateInput=$deviceTemplateInput, moduleNumber=$moduleNumber", 0)
 
     #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand()
 

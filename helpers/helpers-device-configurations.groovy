@@ -12,7 +12,7 @@ TreeMap getDeviceConfigurations() {
     // typeId HAS to be unique
     // 
     // For the rest of the settings, see below to figure it out :P
-    deviceConfigurations = [
+    List deviceConfigurations = [
         [typeId: 'sonoff-basic-r3', 
          name: 'Sonoff Basic R3',
          module: 1,
@@ -187,7 +187,7 @@ TreeMap getDeviceConfigurations() {
         template: '{"NAME":"S120 Plug","GPIO":[0,0,0,0,0,21,0,0,0,52,90,0,0],"FLAG":0,"BASE":18}',
         installCommands: [["SetOption81", "1"]],
         deviceLink: 'https://templates.blakadder.com/brilliantsmart_20676.html'],
-        
+
         [typeId: 's120-plug-bmp280' ,
         name: 'S120 USB Charger Plug + BMP280',
         template: '{"NAME":"S120THPPlug","GPIO":[0,6,0,5,0,21,0,0,0,52,90,0,0],"FLAG":0,"BASE":18}',
@@ -322,7 +322,7 @@ TreeMap getDeviceConfigurations() {
         deviceLink: ''],
     ]
 
-    deviceConfigurationsMap = [:] as TreeMap
+    TreeMap deviceConfigurationsMap = [:] as TreeMap
     deviceConfigurations.each{
         deviceConfigurationsMap[it["typeId"]] = it
     }
@@ -330,7 +330,7 @@ TreeMap getDeviceConfigurations() {
 }
 
 def getDeviceConfiguration(String typeId) {
-    deviceConfigurationsMap = getDeviceConfigurations()
+    TreeMap deviceConfigurationsMap = getDeviceConfigurations()
     try{
         return deviceConfigurationsMap[typeId]
     } catch(e) {
@@ -340,10 +340,10 @@ def getDeviceConfiguration(String typeId) {
 }
 
 def getDeviceConfigurationsAsListOption() {
-    deviceConfigurationsMap = getDeviceConfigurations()
+    TreeMap deviceConfigurationsMap = getDeviceConfigurations()
     def items = []
     deviceConfigurationsMap.each { k, v ->
-        label = v["name"]
+        def label = v["name"]
         if(v.containsKey("comment") && v["comment"].length() > 0) {
             label += " (${v["comment"]})"
         }
