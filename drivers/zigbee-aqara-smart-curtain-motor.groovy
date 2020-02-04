@@ -128,8 +128,8 @@ def parse(description) {
         logging("cluster 000D", 1)
 		if (msgMap["size"] == "16" || msgMap["size"] == "1C" || msgMap["size"] == "10") {
 			long theValue = Long.parseLong(msgMap["value"], 16)
-			float floatValue = Float.intBitsToFloat(theValue.intValue());
-			logging("GETTING POSITION: long => ${theValue}, float => ${floatValue}", 1)
+			BigDecimal floatValue = Float.intBitsToFloat(theValue.intValue());
+			logging("GETTING POSITION: long => ${theValue}, BigDecimal => ${floatValue}", 1)
 			curtainPosition = floatValue.intValue()
 			positionEvent(curtainPosition)
 		} else if (msgMap["size"] == "28" && msgMap["value"] == "00000000") {
@@ -283,7 +283,7 @@ def clearPosition() {
 
 def setPosition(position) {
     if (position == null) {position = 0}
-    position = position as int
+    position = position as Integer
     logging("setPosition(position: ${position})", 1)
     Integer  currentPosition = device.currentValue("position")
     if (position > currentPosition) {
@@ -314,7 +314,7 @@ def setPosition(position) {
         return cmd
     } else {
         if(mode == true){
-            position = (100 - position) as int
+            position = (100 - position) as Integer
         }
         logging("Set Position: ${position}%", 1)
         //logging("zigbee.writeAttribute(getCLUSTER_WINDOW_POSITION()=${CLUSTER_WINDOW_POSITION}, getPOSITION_ATTR_VALUE()=${POSITION_ATTR_VALUE}, getENCODING_SIZE()=${ENCODING_SIZE}, position=${Float.floatToIntBits(position)})", 1)

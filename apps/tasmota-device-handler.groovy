@@ -38,10 +38,10 @@ def getMillisSinceDate(myDate) {
 }
 
 def getTimeStringSinceMillis(millis) {
-    def seconds = (int) (millis / 1000) % 60
-    def minutes = (int) (millis / (1000*60)) % 60
-    def hours = (int) (millis / (1000*60*60)) % 24
-    def days = (int) (millis / (1000*60*60*24))
+    def seconds = (Integer) (millis / 1000) % 60
+    def minutes = (Integer) (millis / (1000*60)) % 60
+    def hours = (Integer) (millis / (1000*60*60)) % 24
+    def days = (Integer) (millis / (1000*60*60*24))
     return String.format("%dT%02d:%02d:%02d", days, hours, minutes, seconds)
 }
 

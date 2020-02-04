@@ -35,19 +35,19 @@ void setLevel(b) {
 def rgbToHSB(red, green, blue) {
     // All credits for this function goes to Joe Julian (joejulian):
     // https://gist.github.com/joejulian/970fcd5ecf3b792bc78a6d6ebc59a55f
-    float r = red / 255f
-    float g = green / 255f
-    float b = blue / 255f
-    float max = [r, g, b].max()
-    float min = [r, g, b].min()
-    float delta = max - min
+    BigDecimal r = red / 255f
+    BigDecimal g = green / 255f
+    BigDecimal b = blue / 255f
+    BigDecimal max = [r, g, b].max()
+    BigDecimal min = [r, g, b].min()
+    BigDecimal delta = max - min
     def hue = 0
     def saturation = 0
     if (max == min) {
         hue = 0
     } else if (max == r) {
         def h1 = (g - b) / delta / 6
-        def h2 = h1.asType(int)
+        def h2 = h1.asType(Integer)
         if (h1 < 0) {
             hue = (360 * (1 + h1 - h2)).round()
         } else {
@@ -74,9 +74,9 @@ def rgbToHSB(red, green, blue) {
     def level = max * 100
     
     return [
-        "hue": hue.asType(int),
-        "saturation": saturation.asType(int),
-        "level": level.asType(int),
+        "hue": hue.asType(Integer),
+        "saturation": saturation.asType(Integer),
+        "level": level.asType(Integer),
     ]
 }
 

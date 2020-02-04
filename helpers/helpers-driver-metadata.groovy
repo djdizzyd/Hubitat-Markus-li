@@ -257,15 +257,15 @@ String getDriverCSSWrapper() {
     return r
 }
 
-int getCommandIndex(String cmd) {
+Integer getCommandIndex(String cmd) {
     List commands = device.getSupportedCommands().unique()
-    int i = commands.findIndexOf{ "$it" == cmd}+1
+    Integer i = commands.findIndexOf{ "$it" == cmd}+1
     //log.debug "getCommandIndex: Seeing these commands: '${commands}', index=$i}"
     return i
 }
 
 String getCSSForCommandHiding(String cmdToHide) {
-    int i = getCommandIndex(cmdToHide)
+    Integer i = getCommandIndex(cmdToHide)
     String r = ""
     if(i > 0) {
         r = "div.mdl-card__title div.mdl-grid div.mdl-grid .mdl-cell:nth-of-type($i){display: none;}"
@@ -282,7 +282,7 @@ String getCSSForCommandsToHide(List commands) {
 }
 
 String getCSSToChangeCommandTitle(String cmd, String newTitle) {
-    int i = getCommandIndex(cmd)
+    Integer i = getCommandIndex(cmd)
     String r = ""
     if(i > 0) {
         r += "div.mdl-card__title div.mdl-grid div.mdl-grid .mdl-cell:nth-of-type($i) p {visibility: hidden;}"
@@ -291,15 +291,15 @@ String getCSSToChangeCommandTitle(String cmd, String newTitle) {
     return r
 }
 
-int getStateVariableIndex(String stateVariable) {
+Integer getStateVariableIndex(String stateVariable) {
     def stateVariables = state.keySet()
-    int i = stateVariables.findIndexOf{ "$it" == stateVariable}+1
+    Integer i = stateVariables.findIndexOf{ "$it" == stateVariable}+1
     //log.debug "getStateVariableIndex: Seeing these State Variables: '${stateVariables}', index=$i}"
     return i
 }
 
 String getCSSForStateVariableHiding(String stateVariableToHide) {
-    int i = getStateVariableIndex(stateVariableToHide)
+    Integer i = getStateVariableIndex(stateVariableToHide)
     String r = ""
     if(i > 0) {
         r = "ul#statev li.property-value:nth-of-type($i){display: none;}"
@@ -323,15 +323,15 @@ String getCSSForCurrentStatesToHide(List currentStates) {
     return r
 }
 
-int getDataIndex(String data) {
+Integer getDataIndex(String data) {
     def datas = device.getData().keySet()
-    int i = datas.findIndexOf{ "$it" == data}+1
+    Integer i = datas.findIndexOf{ "$it" == data}+1
     //log.debug "getDataIndex: Seeing these Data Keys: '${datas}', index=$i}"
     return i
 }
 
 String getCSSForDataHiding(String dataToHide) {
-    int i = getDataIndex(dataToHide)
+    Integer i = getDataIndex(dataToHide)
     String r = ""
     if(i > 0) {
         r = "table.property-list tr li.property-value:nth-of-type($i) {display: none;}"
@@ -347,7 +347,7 @@ String  getCSSForDatasToHide(List datas) {
     return r
 }
 
-int getPreferenceIndex(String preference, Boolean returnMax=false) {
+Integer getPreferenceIndex(String preference, Boolean returnMax=false) {
     def filteredPrefs = getPreferences()['sections']['input'].name[0]
     //log.debug "getPreferenceIndex: Seeing these Preferences first: '${filteredPrefs}'"
     if(filteredPrefs == [] || filteredPrefs == null) {
@@ -363,7 +363,7 @@ int getPreferenceIndex(String preference, Boolean returnMax=false) {
         
 
     }
-    int i = 0
+    Integer i = 0
     if(returnMax == true) {
         i = filteredPrefs.size()
     } else {
@@ -373,8 +373,8 @@ int getPreferenceIndex(String preference, Boolean returnMax=false) {
     return i
 }
 
-String getCSSForPreferenceHiding(String preferenceToHide, int overrideIndex=0) {
-    int i = 0
+String getCSSForPreferenceHiding(String preferenceToHide, Integer overrideIndex=0) {
+    Integer i = 0
     if(overrideIndex == 0) {
         i = getPreferenceIndex(preferenceToHide)
     } else {

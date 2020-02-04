@@ -390,7 +390,7 @@ def getCalculateB0():
     logging('inputStr: ' + inputStr, 0)
     inputStr = inputStr.replace(' ', '')
     //logging('inputStr.substring(4,6): ' + inputStr.substring(4,6), 0)
-    int numBuckets = Integer.parseInt(inputStr.substring(4,6), 16)
+    Integer numBuckets = Integer.parseInt(inputStr.substring(4,6), 16)
     List buckets = []
 
     logging('numBuckets: ' + numBuckets.toString(), 0)
@@ -400,7 +400,7 @@ def getCalculateB0():
     
     logging('outAux1: ' + outAux, 0)
     
-    int j = 0
+    Integer j = 0
     for(i in (0..numBuckets-1)){
         outAux = outAux + inputStr.substring(6+i*4,10+i*4) + " "
         j = i
@@ -411,7 +411,7 @@ def getCalculateB0():
 
     String dataStr = outAux.replace(' ', '')
     outAux = outAux + ' 55'
-    int length = (dataStr.length() / 2).toInteger()
+    Integer length = (dataStr.length() / 2).toInteger()
     outAux = "AA B0 " + String.format(' %02X ', length.toInteger()) + outAux
     logging('outAux4: ' + outAux, 0)
     logging('outAux: ' + outAux.replace(' ', ''), 10)

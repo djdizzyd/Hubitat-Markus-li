@@ -9,7 +9,7 @@ void setColorTemperature(value) {
     if(device.currentValue('colorTemperature') != value ) sendEvent(name: "colorTemperature", value: value)
     // 153..500 = set color temperature from 153 (cold) to 500 (warm) for CT lights
     // Tasmota use mired to measure color temperature
-    int t = value != null ?  (value as Integer) : 0
+    Integer t = value != null ?  (value as Integer) : 0
     // First make sure we have a Kelvin value we can more or less handle
     // 153 mired is approx. 6536K
     // 500 mired = 2000K
@@ -50,7 +50,7 @@ void setHSB(h, s, b, callWhite) {
     if(adjusted) {
         logging("ADJUSTED setHSB('${h}','${s}','${b}'", 1)
     }
-    int adjustedH = Math.round(h*3.6)
+    Integer adjustedH = Math.round(h*3.6)
     if( adjustedH > 360 ) { adjustedH = 360 }
     if( b < 0 ) b = 0
     if( b > 100 ) b = 100
@@ -123,27 +123,27 @@ void setLevel(l, duration) {
                 log.warn "Maximum supported dimming duration is 5400 seconds due to current implementation method used."
                 duration = 5400 // Maximum duration is 1.5 hours
             } 
-            int cLevel = state.level
+            Integer cLevel = state.level
             
-            int levelDistance = l - cLevel
-            int direction = 1
+            Integer levelDistance = l - cLevel
+            Integer direction = 1
             if(levelDistance < 0) {
                 direction = -1
                 levelDistance = levelDistance * -1
             }
-            int steps = 13
-            int increment = Math.round(((levelDistance as Float)  / steps) as Float)
+            Integer steps = 13
+            Integer increment = Math.round(((levelDistance as Float)  / steps) as Float)
             if(increment <= 1 && levelDistance < steps) {
                 steps = levelDistance
             }
             // Each Backlog command has 200ms delay, deduct that delay and add 1 second extra
             duration = ((duration as Float) - (2 * steps * 0.2) + 1) as Float
-            Float stepTime = round2((duration / steps) as Float, 1)
-            int stepTimeTasmota = Math.round((stepTime as Float) * 10)
-            Float lastStepTime = round2((stepTime + (duration - (stepTime * steps)) as Float), 1)
-            int lastStepTimeTasmota = Math.round((lastStepTime as Float) * 10)
+            BigDecimal stepTime = round2((duration / steps) as Float, 1)
+            Integer stepTimeTasmota = Math.round((stepTime as Float) * 10)
+            BigDecimal lastStepTime = round2((stepTime + (duration - (stepTime * steps)) as Float), 1)
+            Integer lastStepTimeTasmota = Math.round((lastStepTime as Float) * 10)
             List fadeCommands = []
-            int cmdLevel = cLevel
+            Integer cmdLevel = cLevel
             fadeCommands.add([command: "Fade", value: "1"])
             fadeCommands.add([command: "Speed", value: "20"])
             if(steps > 0) {
@@ -177,8 +177,8 @@ void stopLevelChange() {
 }
 
 void startLevelChange(String direction) {
-    int cLevel = state.level
-    int delay = 30
+    Integer cLevel = state.level
+    Integer delay = 30
     if(direction == "up") {
         if(cLevel != null) {
             delay = Math.round(((delay / 100) * (100-cLevel)) as Float)
@@ -194,7 +194,7 @@ void startLevelChange(String direction) {
 
 void whiteForPlatform() {
     logging("whiteForPlatform()", 10)
-    int l = state.level
+    Integer l = state.level
     //state.colorMode = "white"
     if (l < 10) l = 10
     l = Math.round(l * 2.55).toInteger()
@@ -213,7 +213,7 @@ void whiteForPlatform() {
 }
 
 // Functions to set RGBW Mode
-void modeSet(int mode) {
+void modeSet(Integer mode) {
     logging("modeSet('${mode}')", 10)
     getAction(getCommandString("Scheme", "${mode}"))
 }
@@ -248,9 +248,9 @@ void modeWakeUp() {
     modeSet(state.mode)
 }
 
-void modeWakeUp(int wakeUpDuration) {
-    int level = device.currentValue('level')
-    int nlevel = level > 10 ? level : 10
+void modeWakeUp(Integer wakeUpDuration) {
+    Integer level = device.currentValue('level')
+    Integer nlevel = level > 10 ? level : 10
     logging("modeWakeUp(wakeUpDuration ${wakeUpDuration}, current level: ${nlevel})", 1)
     modeWakeUp(wakeUpDuration, nlevel)
 }

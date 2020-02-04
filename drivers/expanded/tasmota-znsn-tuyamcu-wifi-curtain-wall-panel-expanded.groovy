@@ -392,7 +392,7 @@ def updateRules() {
     return cmds
 }
 
-def update_needed_settings()
+def updateNeededSettings()
 {
     
     // BEGIN:getUpdateNeededSettingsTasmotaHeader()
@@ -1307,7 +1307,7 @@ def refresh(cmd) {
     deviceCommand(cmd)
 }
 // Call order: installed() -> configure() -> updated() -> initialize() -> refresh()
-// Calls installed() -> [configure() -> [update_needed_settings(), updated() -> [updatedAdditional(), initialize() -> refresh() -> refreshAdditional()], installedAdditional()]
+// Calls installed() -> [configure() -> [updateNeededSettings(), updated() -> [updatedAdditional(), initialize() -> refresh() -> refreshAdditional()], installedAdditional()]
 def installed() {
 	logging("installed()", 100)
     
@@ -1325,7 +1325,7 @@ def configure() {
     logging("configure()", 100)
     def cmds = []
     if(isDriver()) {
-        cmds = update_needed_settings()
+        cmds = updateNeededSettings()
         try {
             // Run the getDriverVersion() command
             newCmds = getDriverVersion()
@@ -1430,7 +1430,7 @@ def updated()
     logging("updated()", 10)
     def cmds = [] 
     if(isDriver()) {
-        cmds = update_needed_settings()
+        cmds = updateNeededSettings()
         //sendEvent(name: "checkInterval", value: 2 * 15 * 60 + 2 * 60, displayed: false, data: [protocol: "lan", hubHardwareId: device.hub.hardwareID])
         sendEvent(name:"needUpdate", value: device.currentValue("needUpdate"), displayed:false, isStateChange: false)
     }

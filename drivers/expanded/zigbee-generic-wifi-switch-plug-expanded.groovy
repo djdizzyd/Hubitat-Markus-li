@@ -185,7 +185,7 @@ def updated()
     if (cmds != [] && cmds != null) cmds
 }
 
-def update_needed_settings()
+def updateNeededSettings()
 {
     
 }
@@ -970,7 +970,7 @@ def refresh(cmd) {
     deviceCommand(cmd)
 }
 // Call order: installed() -> configure() -> updated() -> initialize() -> refresh()
-// Calls installed() -> [configure() -> [update_needed_settings(), updated() -> [updatedAdditional(), initialize() -> refresh() -> refreshAdditional()], installedAdditional()]
+// Calls installed() -> [configure() -> [updateNeededSettings(), updated() -> [updatedAdditional(), initialize() -> refresh() -> refreshAdditional()], installedAdditional()]
 def installed() {
 	logging("installed()", 100)
     
@@ -988,7 +988,7 @@ def configure() {
     logging("configure()", 100)
     def cmds = []
     if(isDriver()) {
-        cmds = update_needed_settings()
+        cmds = updateNeededSettings()
         try {
             // Run the getDriverVersion() command
             newCmds = getDriverVersion()

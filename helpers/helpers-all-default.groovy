@@ -186,19 +186,19 @@ def generate_preferences(configuration_model) {
 /*
     General Mathematical and Number Methods
 */
-Float round2(float number, int scale) {
-    int pow = 10;
-    for (int i = 1; i < scale; i++)
+BigDecimal round2(BigDecimal number, Integer scale) {
+    Integer pow = 10;
+    for (Integer i = 1; i < scale; i++)
         pow *= 10;
-    Float tmp = number * pow;
-    return ( (Float) ( (int) ((tmp - (int) tmp) >= 0.5f ? tmp + 1 : tmp) ) ) / pow;
+    BigDecimal tmp = number * pow;
+    return ( (Float) ( (Integer) ((tmp - (Integer) tmp) >= 0.5f ? tmp + 1 : tmp) ) ) / pow;
 }
 
 String generateMD5(String s) {
     return MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
 }
 
-int extractInt(String input) {
+Integer extractInt(String input) {
   return input.replaceAll("[^0-9]", "").toInteger()
 }
 

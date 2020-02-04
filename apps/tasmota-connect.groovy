@@ -144,7 +144,7 @@ def deviceDiscovery(params=[:])
 {
 	def devices = devicesDiscovered()
     
-	int deviceRefreshCount = !state.deviceRefreshCount ? 0 : state.deviceRefreshCount as int
+	Integer deviceRefreshCount = !state.deviceRefreshCount ? 0 : state.deviceRefreshCount as Integer
 	state.deviceRefreshCount = deviceRefreshCount + 1
 	def refreshInterval = 20
     

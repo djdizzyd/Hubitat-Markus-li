@@ -149,7 +149,7 @@ void runInstallCommands(installCommands) {
 def updatePresence(String presence) {
     // presence - ENUM ["present", "not present"]
     logging("updatePresence(presence=$presence)", 1)
-    int timeout = getTelePeriod()
+    Integer timeout = getTelePeriod()
     if(presence == "present") {    
         timeout += (timeout * 0.1 > 60 ? Math.round(timeout * 0.1) : 60)
         //log.warn "Setting as present with timeout: $timeout"
@@ -234,8 +234,8 @@ Boolean containsKeyInSubMap(aMap, key) {
     return hasKey
 }
 
-int numOfKeyInSubMap(aMap, String key) {
-    int numKeys = 0
+Integer numOfKeyInSubMap(aMap, String key) {
+    Integer numKeys = 0
     aMap.each {
         try{
             if(it.value.containsKey(key)) numKeys += 1
@@ -247,7 +247,7 @@ int numOfKeyInSubMap(aMap, String key) {
 }
 
 def numOfKeysIsMap(aMap) {
-    int numKeys = 0
+    Integer numKeys = 0
     aMap.each {
         if(it.value instanceof java.util.Map) numKeys += 1
     }
@@ -538,7 +538,7 @@ private void createChildDevice(String namespace, List driverName, String childId
         logging(childDevice.getData(), 10)
     } else {
         logging("The child device doesn't exist, create it...", 0)
-        int s = childName.size()
+        Integer s = childName.size()
         for(i in 0..s) {
             def currentNamespace = namespace
             if(driverName[i].toLowerCase().startsWith('generic component')) {
