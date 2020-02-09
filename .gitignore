@@ -6,3 +6,4 @@ hubitat_hubspider.cfg
 /drivers/OLD_drivers
 /__hubitat_checksums
 /drivers/expanded/*-testing*-expanded.groovy
+/private
