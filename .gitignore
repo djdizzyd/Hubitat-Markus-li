@@ -7,3 +7,4 @@ hubitat_hubspider.cfg
 /__hubitat_checksums
 /drivers/expanded/*-testing*-expanded.groovy
 /private
+/_tmpdhcp*
