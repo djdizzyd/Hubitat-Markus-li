@@ -6,7 +6,7 @@
 
 #!include:getHelperFunctions('all-debug')
 
-Boolean isDriver() {
+boolean isDriver() {
     try {
         // If this fails, this is not a driver...
         getDeviceDataByName('_unimportant')

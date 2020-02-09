@@ -45,6 +45,7 @@ void parse(List<Map> description) {
 
 void updated() {
     log.info "updated()"
+    refresh()
 }
 
 void installed() {
@@ -54,33 +55,8 @@ void installed() {
     refresh()
 }
 
-/*void dry() {
-    logging("dry()", 1)
-    sendEvent(name: "water", value: "dry", isStateChange: true)
-}
-
-void wet() {
-    logging("wet()", 1)
-    sendEvent(name: "water", value: "wet", isStateChange: true)
-}
-
-void clear() {
-    logging("clear()", 1)
-    dry()
-}
-
-// These are called when Action occurs, called from actionHandler()
-def dryAction() {
-    logging("dryAction()", 1)
-    dry()
-}
-
-def wetAction() {
-    logging("wetAction()", 1)
-    wet()
-}*/
-
 void refresh() {
+    #!include:getChildComponentMetaConfigCommands()
     parent?.componentRefresh(this.device)
 }
 

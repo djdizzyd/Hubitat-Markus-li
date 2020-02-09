@@ -31,49 +31,47 @@ preferences {
 
 #!include:getHelperFunctions('device-configurations')
 
-def getMillisSinceDate(myDate) {
+Long getMillisSinceDate(myDate) {
     
     //myDate
     return now() - myDate.getTime()
 }
 
-def getTimeStringSinceMillis(millis) {
-    def seconds = (Integer) (millis / 1000) % 60
-    def minutes = (Integer) (millis / (1000*60)) % 60
-    def hours = (Integer) (millis / (1000*60*60)) % 24
-    def days = (Integer) (millis / (1000*60*60*24))
+String getTimeStringSinceMillis(millis) {
+    Integer seconds = (Integer) (millis / 1000) % 60
+    Integer minutes = (Integer) (millis / (1000*60)) % 60
+    Integer hours = (Integer) (millis / (1000*60*60)) % 24
+    Integer days = (Integer) (millis / (1000*60*60*24))
     return String.format("%dT%02d:%02d:%02d", days, hours, minutes, seconds)
 }
 
-def getTimeStringSinceDate(myDate) {
+String getTimeStringSinceDate(myDate) {
     return getTimeStringSinceMillis(getMillisSinceDate(myDate))
 }
 
-def getTimeStringSinceDateWithMaximum(myDate, maxMillis) {
+Map getTimeStringSinceDateWithMaximum(myDate, maxMillis) {
     def millis = getMillisSinceDate(myDate)
     return [time:getTimeStringSinceMillis(millis), red:millis > maxMillis]
 }
 
-def getAppTitle() {
+void makeAppTitle() {
     section(getElementStyle('title', getMaterialIcon('build', 'icon-large') + "${app.label}" + getCSSStyles())){
         }
 }
 
-def mainPage() {
-	dynamicPage(name: "mainPage", nextPage: null, uninstall: true, install: true) {
-        getAppTitle() // Also contains the CSS
-        
+Map mainPage() {
+	return dynamicPage(name: "mainPage", nextPage: null, uninstall: true, install: true) {
+        makeAppTitle() // Also contains the CSS
+        logging("Building mainPage", 1)
         // Hubitat green: #81BC00
         // box-shadow: 2px 3px #A9A9A9
         installCheck()
         initializeAdditional()
-
         if (state.appInstalled == 'COMPLETE') {
             section(getElementStyle('header', getMaterialIcon('settings_applications') + "Configure App"), hideable: true, hidden: false){
                 getElementStyle('separator')
                 //input(name: "sendToAWSwitch", type: "bool", defaultValue: "false", title: "Use App Watchdog to track this apps version info?", description: "Update App Watchdog", submitOnChange: "true")}
                 generate_preferences(configuration_model_debug())
-
             
             //input(name: "pushAll", type: "bool", defaultValue: "false", submitOnChange: true, title: "Only send Push if there is something to actually report", description: "Push All")
             //href "deviceDiscoveryCancel", title:"Cancel Discover Device", description:""
@@ -94,14 +92,15 @@ def mainPage() {
                 href("refreshDevices", title:getMaterialIcon('autorenew') + "Refresh Devices", description: "")
 
                 state.devices.each { rawDev ->
-                    cDev = getTasmotaDevice(rawDev.deviceNetworkId)
+                    def cDev = getTasmotaDevice(rawDev.deviceNetworkId)
                     //getLastActivity()
                     if(cDev != null) {
                         href("configureTasmotaDevice", title:"${getMaterialIcon('', 'he-bulb_1 icon-small')} $cDev.label", description:"", params: [did: cDev.deviceNetworkId])
                         
-                        lastActivity = getTimeStringSinceDateWithMaximum(cDev.getLastActivity(), 2*60*60*1000)
+                        Map lastActivity = getTimeStringSinceDateWithMaximum(cDev.getLastActivity(), 2*60*60*1000)
                         // Status
-                        deviceStatus = cDev.currentState('presence')
+                        def deviceStatus = cDev.currentState('presence')?.value
+                        logging("$cDev.id - deviceStatus = $deviceStatus", 1)
                         if(deviceStatus == null || deviceStatus == "not present") {
                             deviceStatus = "Timeout"
                         } else {
@@ -109,17 +108,18 @@ def mainPage() {
                         }
 
                         // Wifi
-                        wifiSignalQuality = cDev.currentState('wifiSignal')
-                        wifiSignalQualityRed = true
+                        def wifiSignalQuality = cDev.currentState('wifiSignal')
+                        
+                        boolean wifiSignalQualityRed = true
                         if(wifiSignalQuality != null) {
                             wifiSignalQuality = wifiSignalQuality.value
-                            quality = extractInt(wifiSignalQuality)
-                            wifiSignalQualityRed = quality < 50
+                            wifiSignalQualityRed = extractInt(wifiSignalQuality) < 50
                         }
-                        uptime = "${cDev.getDeviceDataByName('uptime')}"
-                        firmware = "${cDev.getDeviceDataByName('firmware')}"
-                        driverVersion = "${cDev.getDeviceDataByName('driver')}"
-                        driverName = "${getDeviceDriverName(cDev)}"
+                        logging("$cDev.id - wifiSignalQuality = $wifiSignalQuality", 1)
+                        String uptime = "${cDev.getDeviceDataByName('uptime')}"
+                        String firmware = "${cDev.getDeviceDataByName('firmware')}"
+                        String driverVersion = "${cDev.getDeviceDataByName('driver')}"
+                        String driverName = "${getDeviceDriverName(cDev)}"
                         getDeviceTable([[href:getDeviceConfigLink(cDev.id)],
                                         [data:rawDev['data']['ip']],
                                         //[data:runDeviceCommand(getTasmotaDevice(cDev.deviceNetworkId), 'getDeviceDataByName', ['uptime'])],])
@@ -143,7 +143,6 @@ def mainPage() {
                     }
 
                 }
-                it = test
             }
             section(getElementStyle('header', "More things"), hideable: true, hidden: true){
                 paragraph("Select the devices to configure, if the device doesn't use a compatible driver it will be ignored, so selecting too many or the wrong ones, doesn't matter. Easiest is probably to just select all devices. Only Parent devices are shown.")
@@ -156,14 +155,13 @@ def mainPage() {
             }
         }
         footer()
-
     }
 }
 
 def refreshDevices(){
     logging("refreshDevices()", 1)
-    numDevices = 0
-    numDevicesSuccess = 0
+    Integer numDevices = 0
+    Integer numDevicesSuccess = 0
     getAllTasmotaDevices().each {
         numDevices += 1
         try{
@@ -175,26 +173,26 @@ def refreshDevices(){
             log.warn("Failed to Refresh Device \"${it.label}\" (${it.id})")
         }
     }
-    result = "COMPLETE REFRESH FAILURE!"
+    String result = "COMPLETE REFRESH FAILURE!"
     if(numDevicesSuccess == numDevices) {
         result = "All $numDevices Device(s) have been refreshed!"
     } else {
         result = "PARTIAL FAILURE: $numDevicesSuccess of $numDevices Device(s) have been refreshed! (${numDevices - numDevicesSuccess} failed!)"
     }
     updatedAdditional()
-    resultPage("refreshDevices", "Devices Refreshed", result)
+    return resultPage("refreshDevices", "Devices Refreshed", result)
 }
 
-def resultPage(){
+Map resultPage(){
     logging("resultPage()", 1)
-    resultPage("resultPage", "Result Page", "My little result...")
+    return resultPage("resultPage", "Result Page", "My little result...")
 }
 
-def resultPage(name, title, result, nextPage = "mainPage"){
+Map resultPage(name, title, result, nextPage = "mainPage"){
     logging("resultPage(name = $name, title = $title, result = $result, nextPage = $nextPage)", 1)
 
-    dynamicPage(name: name, title: "", nextPage: nextPage) {
-        getAppTitle() // Also contains the CSS
+    return dynamicPage(name: name, title: "", nextPage: nextPage) {
+        makeAppTitle() // Also contains the CSS
 
         section(getElementStyle('header', getMaterialIcon('done') + "Action Completed"), hideable: true, hidden: false){
             paragraph("<div style=\"font-size: 16px;\">${result}</div>")
@@ -222,7 +220,7 @@ def getElementStyle(style, content=""){
     }
 }
 
-def getMaterialIcon(iconName, extraClass='') {
+String getMaterialIcon(iconName, extraClass='') {
     // Browse icons here
     // https://material.io/resources/icons/?style=baseline
     // known HE icons (set as class): he-bulb_1, he-settings1, he-file1, he-default_dashboard_icon, he-calendar1
@@ -231,7 +229,7 @@ def getMaterialIcon(iconName, extraClass='') {
 }
 
 //#.form div.mdl-cell h4.pre {
-def getCSSStyles() {
+String getCSSStyles() {
     return '''<style>
 /* General App Styles */
 .btn {
@@ -386,9 +384,9 @@ div.mdl-button--raised h4.pre {
 </style>'''
 }
 
-def btnParagraph(buttons, extra="") {
+Map btnParagraph(buttons, extra="") {
     //getDeviceConfigLink(it.id)
-    def content = '<table style="border-spacing: 10px 0px"><tr>'
+    String content = '<table style="border-spacing: 10px 0px"><tr>'
     buttons.each {
         //content += '<td class="btn btn-default btn-lg hrefElem mdl-button--raised mdl-shadow--2dp">'
         content += '<td>'
@@ -404,7 +402,7 @@ def btnParagraph(buttons, extra="") {
 //                                '<td class="btn btn-default btn-lg hrefElem mdl-button--raised mdl-shadow--2dp"><a style="color: #000;" href="' + "${getDeviceTasmotaConfigLink(it['data']['ip'])}" + '" target="deviceWebConfig">Tasmota&nbsp;Web&nbsp;Config (' + it['data']['ip'] + ')</a></td> )
     }
     content += '</tr></table>' // + extra
-    paragraph(content) 
+    return paragraph(content) 
 }
 
 def getDeviceTableCell(deviceInfoEntry, link=true) {

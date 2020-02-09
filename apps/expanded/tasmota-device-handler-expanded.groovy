@@ -412,49 +412,47 @@ def getDeviceConfigurationsAsListOption() {
     --END-- DEVICE CONFIGURATIONS METHODS (helpers-device-configurations)
 */
 
-def getMillisSinceDate(myDate) {
+Long getMillisSinceDate(myDate) {
     
     //myDate
     return now() - myDate.getTime()
 }
 
-def getTimeStringSinceMillis(millis) {
-    def seconds = (Integer) (millis / 1000) % 60
-    def minutes = (Integer) (millis / (1000*60)) % 60
-    def hours = (Integer) (millis / (1000*60*60)) % 24
-    def days = (Integer) (millis / (1000*60*60*24))
+String getTimeStringSinceMillis(millis) {
+    Integer seconds = (Integer) (millis / 1000) % 60
+    Integer minutes = (Integer) (millis / (1000*60)) % 60
+    Integer hours = (Integer) (millis / (1000*60*60)) % 24
+    Integer days = (Integer) (millis / (1000*60*60*24))
     return String.format("%dT%02d:%02d:%02d", days, hours, minutes, seconds)
 }
 
-def getTimeStringSinceDate(myDate) {
+String getTimeStringSinceDate(myDate) {
     return getTimeStringSinceMillis(getMillisSinceDate(myDate))
 }
 
-def getTimeStringSinceDateWithMaximum(myDate, maxMillis) {
+Map getTimeStringSinceDateWithMaximum(myDate, maxMillis) {
     def millis = getMillisSinceDate(myDate)
     return [time:getTimeStringSinceMillis(millis), red:millis > maxMillis]
 }
 
-def getAppTitle() {
+void makeAppTitle() {
     section(getElementStyle('title', getMaterialIcon('build', 'icon-large') + "${app.label}" + getCSSStyles())){
         }
 }
 
-def mainPage() {
-	dynamicPage(name: "mainPage", nextPage: null, uninstall: true, install: true) {
-        getAppTitle() // Also contains the CSS
-        
+Map mainPage() {
+	return dynamicPage(name: "mainPage", nextPage: null, uninstall: true, install: true) {
+        makeAppTitle() // Also contains the CSS
+        logging("Building mainPage", 1)
         // Hubitat green: #81BC00
         // box-shadow: 2px 3px #A9A9A9
         installCheck()
         initializeAdditional()
-
         if (state.appInstalled == 'COMPLETE') {
             section(getElementStyle('header', getMaterialIcon('settings_applications') + "Configure App"), hideable: true, hidden: false){
                 getElementStyle('separator')
                 //input(name: "sendToAWSwitch", type: "bool", defaultValue: "false", title: "Use App Watchdog to track this apps version info?", description: "Update App Watchdog", submitOnChange: "true")}
                 generate_preferences(configuration_model_debug())
-
             
             //input(name: "pushAll", type: "bool", defaultValue: "false", submitOnChange: true, title: "Only send Push if there is something to actually report", description: "Push All")
             //href "deviceDiscoveryCancel", title:"Cancel Discover Device", description:""
@@ -475,14 +473,15 @@ def mainPage() {
                 href("refreshDevices", title:getMaterialIcon('autorenew') + "Refresh Devices", description: "")
 
                 state.devices.each { rawDev ->
-                    cDev = getTasmotaDevice(rawDev.deviceNetworkId)
+                    def cDev = getTasmotaDevice(rawDev.deviceNetworkId)
                     //getLastActivity()
                     if(cDev != null) {
                         href("configureTasmotaDevice", title:"${getMaterialIcon('', 'he-bulb_1 icon-small')} $cDev.label", description:"", params: [did: cDev.deviceNetworkId])
                         
-                        lastActivity = getTimeStringSinceDateWithMaximum(cDev.getLastActivity(), 2*60*60*1000)
+                        Map lastActivity = getTimeStringSinceDateWithMaximum(cDev.getLastActivity(), 2*60*60*1000)
                         // Status
-                        deviceStatus = cDev.currentState('presence')
+                        def deviceStatus = cDev.currentState('presence')?.value
+                        logging("$cDev.id - deviceStatus = $deviceStatus", 1)
                         if(deviceStatus == null || deviceStatus == "not present") {
                             deviceStatus = "Timeout"
                         } else {
@@ -490,17 +489,18 @@ def mainPage() {
                         }
 
                         // Wifi
-                        wifiSignalQuality = cDev.currentState('wifiSignal')
-                        wifiSignalQualityRed = true
+                        def wifiSignalQuality = cDev.currentState('wifiSignal')
+                        
+                        boolean wifiSignalQualityRed = true
                         if(wifiSignalQuality != null) {
                             wifiSignalQuality = wifiSignalQuality.value
-                            quality = extractInt(wifiSignalQuality)
-                            wifiSignalQualityRed = quality < 50
+                            wifiSignalQualityRed = extractInt(wifiSignalQuality) < 50
                         }
-                        uptime = "${cDev.getDeviceDataByName('uptime')}"
-                        firmware = "${cDev.getDeviceDataByName('firmware')}"
-                        driverVersion = "${cDev.getDeviceDataByName('driver')}"
-                        driverName = "${getDeviceDriverName(cDev)}"
+                        logging("$cDev.id - wifiSignalQuality = $wifiSignalQuality", 1)
+                        String uptime = "${cDev.getDeviceDataByName('uptime')}"
+                        String firmware = "${cDev.getDeviceDataByName('firmware')}"
+                        String driverVersion = "${cDev.getDeviceDataByName('driver')}"
+                        String driverName = "${getDeviceDriverName(cDev)}"
                         getDeviceTable([[href:getDeviceConfigLink(cDev.id)],
                                         [data:rawDev['data']['ip']],
                                         //[data:runDeviceCommand(getTasmotaDevice(cDev.deviceNetworkId), 'getDeviceDataByName', ['uptime'])],])
@@ -524,7 +524,6 @@ def mainPage() {
                     }
 
                 }
-                it = test
             }
             section(getElementStyle('header', "More things"), hideable: true, hidden: true){
                 paragraph("Select the devices to configure, if the device doesn't use a compatible driver it will be ignored, so selecting too many or the wrong ones, doesn't matter. Easiest is probably to just select all devices. Only Parent devices are shown.")
@@ -537,14 +536,13 @@ def mainPage() {
             }
         }
         footer()
-
     }
 }
 
 def refreshDevices(){
     logging("refreshDevices()", 1)
-    numDevices = 0
-    numDevicesSuccess = 0
+    Integer numDevices = 0
+    Integer numDevicesSuccess = 0
     getAllTasmotaDevices().each {
         numDevices += 1
         try{
@@ -556,26 +554,26 @@ def refreshDevices(){
             log.warn("Failed to Refresh Device \"${it.label}\" (${it.id})")
         }
     }
-    result = "COMPLETE REFRESH FAILURE!"
+    String result = "COMPLETE REFRESH FAILURE!"
     if(numDevicesSuccess == numDevices) {
         result = "All $numDevices Device(s) have been refreshed!"
     } else {
         result = "PARTIAL FAILURE: $numDevicesSuccess of $numDevices Device(s) have been refreshed! (${numDevices - numDevicesSuccess} failed!)"
     }
     updatedAdditional()
-    resultPage("refreshDevices", "Devices Refreshed", result)
+    return resultPage("refreshDevices", "Devices Refreshed", result)
 }
 
-def resultPage(){
+Map resultPage(){
     logging("resultPage()", 1)
-    resultPage("resultPage", "Result Page", "My little result...")
+    return resultPage("resultPage", "Result Page", "My little result...")
 }
 
-def resultPage(name, title, result, nextPage = "mainPage"){
+Map resultPage(name, title, result, nextPage = "mainPage"){
     logging("resultPage(name = $name, title = $title, result = $result, nextPage = $nextPage)", 1)
 
-    dynamicPage(name: name, title: "", nextPage: nextPage) {
-        getAppTitle() // Also contains the CSS
+    return dynamicPage(name: name, title: "", nextPage: nextPage) {
+        makeAppTitle() // Also contains the CSS
 
         section(getElementStyle('header', getMaterialIcon('done') + "Action Completed"), hideable: true, hidden: false){
             paragraph("<div style=\"font-size: 16px;\">${result}</div>")
@@ -603,7 +601,7 @@ def getElementStyle(style, content=""){
     }
 }
 
-def getMaterialIcon(iconName, extraClass='') {
+String getMaterialIcon(iconName, extraClass='') {
     // Browse icons here
     // https://material.io/resources/icons/?style=baseline
     // known HE icons (set as class): he-bulb_1, he-settings1, he-file1, he-default_dashboard_icon, he-calendar1
@@ -612,7 +610,7 @@ def getMaterialIcon(iconName, extraClass='') {
 }
 
 //#.form div.mdl-cell h4.pre {
-def getCSSStyles() {
+String getCSSStyles() {
     return '''<style>
 /* General App Styles */
 .btn {
@@ -767,9 +765,9 @@ div.mdl-button--raised h4.pre {
 </style>'''
 }
 
-def btnParagraph(buttons, extra="") {
+Map btnParagraph(buttons, extra="") {
     //getDeviceConfigLink(it.id)
-    def content = '<table style="border-spacing: 10px 0px"><tr>'
+    String content = '<table style="border-spacing: 10px 0px"><tr>'
     buttons.each {
         //content += '<td class="btn btn-default btn-lg hrefElem mdl-button--raised mdl-shadow--2dp">'
         content += '<td>'
@@ -785,7 +783,7 @@ def btnParagraph(buttons, extra="") {
 //                                '<td class="btn btn-default btn-lg hrefElem mdl-button--raised mdl-shadow--2dp"><a style="color: #000;" href="' + "${getDeviceTasmotaConfigLink(it['data']['ip'])}" + '" target="deviceWebConfig">Tasmota&nbsp;Web&nbsp;Config (' + it['data']['ip'] + ')</a></td> )
     }
     content += '</tr></table>' // + extra
-    paragraph(content) 
+    return paragraph(content) 
 }
 
 def getDeviceTableCell(deviceInfoEntry, link=true) {
@@ -1252,7 +1250,7 @@ String configuration_model_debug() {
     --END-- ALL DEBUG METHODS (helpers-all-debug)
 */
 
-Boolean isDriver() {
+boolean isDriver() {
     try {
         // If this fails, this is not a driver...
         getDeviceDataByName('_unimportant')
@@ -1474,7 +1472,7 @@ def installed() {
 */
 
 // Call order: installed() -> configure() -> updated() -> initialize() -> refresh()
-def refresh() {
+void refresh() {
 	logging("refresh()", 100)
     def metaConfig = null
     if(isDriver()) {
@@ -1525,7 +1523,7 @@ def refresh() {
     }
 }
 
-def reboot() {
+void reboot() {
 	logging("reboot()", 10)
     getAction(getCommandString("Restart", "1"))
 }
@@ -1534,7 +1532,9 @@ def reboot() {
 void updated() {
     logging("updated()", 10)
     if(isDriver()) {
+        logging("before updateNeededSettings()", 10)
         updateNeededSettings()
+        logging("after updateNeededSettings()", 10)
         //sendEvent(name: "checkInterval", value: 2 * 15 * 60 + 2 * 60, displayed: false, data: [protocol: "lan", hubHardwareId: device.hub.hardwareID])
         sendEvent(name:"needUpdate", value: device.currentValue("needUpdate"), displayed:false, isStateChange: false)
     }
@@ -1615,10 +1615,10 @@ void runInstallCommands(installCommands) {
     getAction(getCommandString("SetOption34", "200"))
 }
 
-def updatePresence(String presence) {
+void updatePresence(String presence) {
     // presence - ENUM ["present", "not present"]
     logging("updatePresence(presence=$presence)", 1)
-    Integer timeout = getTelePeriod()
+    Integer timeout = getTelePeriodValue()
     if(presence == "present") {    
         timeout += (timeout * 0.1 > 60 ? Math.round(timeout * 0.1) : 60)
         //log.warn "Setting as present with timeout: $timeout"
@@ -1629,13 +1629,16 @@ def updatePresence(String presence) {
     sendEvent(name: "presence", value: presence, isStateChange: true, descriptionText: "No update received from the Tasmota device for ${timeout} seconds...")
 }
 
-def parseDescriptionAsMap(description) {
+Map parseDescriptionAsMap(description) {
     // Used by parse(description) to get descMap
 	description.split(",").inject([:]) { map, param ->
 		def nameAndValue = param.split(":")
         
-        if (nameAndValue.length == 2) map += [(nameAndValue[0].trim()):nameAndValue[1].trim()]
-        else map += [(nameAndValue[0].trim()):""]
+        if (nameAndValue.length == 2) { 
+            map += [(nameAndValue[0].trim()):nameAndValue[1].trim()]
+        } else {
+            map += [(nameAndValue[0].trim()):""]
+        }
 	}
 }
 
@@ -1671,7 +1674,7 @@ def parse(asyncResponse, data) {
     configureChildDevices() detects which child devices to create/update and does the creation/updating
 */
 
-def parseConfigureChildDevices(asyncResponse, data) {
+void parseConfigureChildDevices(asyncResponse, data) {
     if(asyncResponse != null) {
         try{
             logging("parse(asyncResponse.getJson() 2= \"${asyncResponse.getJson()}\", data = \"${data}\")", 1)
@@ -1715,7 +1718,7 @@ Integer numOfKeyInSubMap(aMap, String key) {
     return numKeys
 }
 
-def numOfKeysIsMap(aMap) {
+Integer numOfKeysIsMap(aMap) {
     Integer numKeys = 0
     aMap.each {
         if(it.value instanceof java.util.Map) numKeys += 1
@@ -1733,7 +1736,7 @@ TreeMap getKeysWithMapAndId(aMap) {
     return foundMaps
 }
 
-def configureChildDevices(asyncResponse, data) {
+void configureChildDevices(asyncResponse, data) {
     // This detects which child devices to create/update and does the creation/updating
     def statusMap = asyncResponse.getJson()
     logging("configureChildDevices() statusMap=$statusMap", 1)
@@ -2030,8 +2033,8 @@ private void createChildDevice(String namespace, List driverName, String childId
 /*
     Tasmota IP Settings and Wifi status
 */
-private setDeviceNetworkId(macOrIP, isIP = false) {
-    def myDNI
+private String setDeviceNetworkId(String macOrIP, boolean isIP = false) {
+    String myDNI
     if (isIP == false) {
         myDNI = macOrIP
     } else {
@@ -2042,7 +2045,7 @@ private setDeviceNetworkId(macOrIP, isIP = false) {
     return myDNI
 }
 
-def prepareDNI() {
+void prepareDNI() {
     // Called from updateNeededSettings() and parse(description)
     if (useIPAsID) {
         def hexIPAddress = setDeviceNetworkId(ipAddress, true)
@@ -2050,14 +2053,13 @@ def prepareDNI() {
             state.dni = hexIPAddress
             updateDNI()
         }
-    }
-    else if (state.mac != null && state.dni != state.mac) { 
+    } else if (state.mac != null && state.dni != state.mac) { 
         state.dni = setDeviceNetworkId(state.mac)
         updateDNI()
     }
 }
 
-private updateDNI() {
+private void updateDNI() {
     // Called from:
     // preapreDNI()
     // httpGetAction(uri, callback="parse")
@@ -2068,11 +2070,13 @@ private updateDNI() {
     }
 }
 
-def getTelePeriod() {
+Integer getTelePeriodValue() {
+    // Naming this getTelePeriod() will cause Error 500 and other unexpected behavior when
+    // telePeriod isn't set to anything...
     return (telePeriod != null && telePeriod.isInteger() ? telePeriod.toInteger() : 300)
 }
 
-private getHostAddress() {
+private String getHostAddress() {
     if (port == null) {
         port = 80
     }
@@ -2100,9 +2104,9 @@ private String convertIPtoHex(ipAddress) {
     return hex
 }
 
-def sync(ip, port = null) {
-    def existingIp = getDataValue("ip")
-    def existingPort = getDataValue("port")
+void sync(ip, port = null) {
+    String existingIp = getDataValue("ip")
+    String existingPort = getDataValue("port")
     logging("Running sync()", 1)
     if (ip && ip != existingIp) {
         updateDataValue("ip", ip)
@@ -2116,8 +2120,8 @@ def sync(ip, port = null) {
     }
 }
 
-def dBmToQuality(dBm) {
-    def quality = 0
+Integer dBmToQuality(Integer dBm) {
+    Integer quality = 0
     if(dBm > 0) dBm = dBm * -1
     if(dBm <= -100) {
         quality = 0
@@ -2147,7 +2151,7 @@ String configuration_model_tasmota() {
 /*
     HTTP Tasmota API Related
 */
-private httpGetAction(uri, callback="parse") { 
+private void httpGetAction(uri, callback="parse") { 
   updateDNI()
   
   def headers = getHeader()
@@ -2187,7 +2191,7 @@ private postAction(uri, data) {
   return hubAction    
 }
 
-def getCommandString(command, value) {
+String getCommandString(command, value) {
     def uri = "/cm?"
     if (password) {
         uri += "user=admin&password=${password}&"
@@ -2201,8 +2205,8 @@ def getCommandString(command, value) {
     return uri
 }
 
-def getMultiCommandString(commands) {
-    def uri = "/cm?"
+String getMultiCommandString(commands) {
+    String uri = "/cm?"
     if (password) {
         uri += "user=admin&password=${password}&"
     }
@@ -2229,14 +2233,14 @@ private String convertPortToHex(port) {
     return hexport
 }
 
-private encodeCredentials(username, password) {
-	def userpassascii = "${username}:${password}"
-    def userpass = "Basic " + userpassascii.bytes.encodeBase64().toString()
+private encodeCredentials(String username, String password) {
+	String userpassascii = "${username}:${password}"
+    String userpass = "Basic " + userpassascii.bytes.encodeBase64().toString()
     return userpass
 }
 
-private getHeader(userpass = null) {
-    def headers = [:]
+private Map getHeader(userpass = null) {
+    Map headers = [:]
     headers.put("Host", getHostAddress())
     headers.put("Content-Type", "application/x-www-form-urlencoded")
     if (userpass != null)

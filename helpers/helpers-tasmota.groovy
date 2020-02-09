@@ -5,7 +5,7 @@
 */
 
 // Call order: installed() -> configure() -> updated() -> initialize() -> refresh()
-def refresh() {
+void refresh() {
 	logging("refresh()", 100)
     def metaConfig = null
     if(isDriver()) {
@@ -56,7 +56,7 @@ def refresh() {
     }
 }
 
-def reboot() {
+void reboot() {
 	logging("reboot()", 10)
     getAction(getCommandString("Restart", "1"))
 }
@@ -65,7 +65,9 @@ def reboot() {
 void updated() {
     logging("updated()", 10)
     if(isDriver()) {
+        logging("before updateNeededSettings()", 10)
         updateNeededSettings()
+        logging("after updateNeededSettings()", 10)
         //sendEvent(name: "checkInterval", value: 2 * 15 * 60 + 2 * 60, displayed: false, data: [protocol: "lan", hubHardwareId: device.hub.hardwareID])
         sendEvent(name:"needUpdate", value: device.currentValue("needUpdate"), displayed:false, isStateChange: false)
     }
@@ -146,10 +148,10 @@ void runInstallCommands(installCommands) {
     getAction(getCommandString("SetOption34", "200"))
 }
 
-def updatePresence(String presence) {
+void updatePresence(String presence) {
     // presence - ENUM ["present", "not present"]
     logging("updatePresence(presence=$presence)", 1)
-    Integer timeout = getTelePeriod()
+    Integer timeout = getTelePeriodValue()
     if(presence == "present") {    
         timeout += (timeout * 0.1 > 60 ? Math.round(timeout * 0.1) : 60)
         //log.warn "Setting as present with timeout: $timeout"
@@ -160,13 +162,16 @@ def updatePresence(String presence) {
     sendEvent(name: "presence", value: presence, isStateChange: true, descriptionText: "No update received from the Tasmota device for ${timeout} seconds...")
 }
 
-def parseDescriptionAsMap(description) {
+Map parseDescriptionAsMap(description) {
     // Used by parse(description) to get descMap
 	description.split(",").inject([:]) { map, param ->
 		def nameAndValue = param.split(":")
         
-        if (nameAndValue.length == 2) map += [(nameAndValue[0].trim()):nameAndValue[1].trim()]
-        else map += [(nameAndValue[0].trim()):""]
+        if (nameAndValue.length == 2) { 
+            map += [(nameAndValue[0].trim()):nameAndValue[1].trim()]
+        } else {
+            map += [(nameAndValue[0].trim()):""]
+        }
 	}
 }
 
@@ -202,7 +207,7 @@ def parse(asyncResponse, data) {
     configureChildDevices() detects which child devices to create/update and does the creation/updating
 */
 
-def parseConfigureChildDevices(asyncResponse, data) {
+void parseConfigureChildDevices(asyncResponse, data) {
     if(asyncResponse != null) {
         try{
             logging("parse(asyncResponse.getJson() 2= \"${asyncResponse.getJson()}\", data = \"${data}\")", 1)
@@ -246,7 +251,7 @@ Integer numOfKeyInSubMap(aMap, String key) {
     return numKeys
 }
 
-def numOfKeysIsMap(aMap) {
+Integer numOfKeysIsMap(aMap) {
     Integer numKeys = 0
     aMap.each {
         if(it.value instanceof java.util.Map) numKeys += 1
@@ -264,7 +269,7 @@ TreeMap getKeysWithMapAndId(aMap) {
     return foundMaps
 }
 
-def configureChildDevices(asyncResponse, data) {
+void configureChildDevices(asyncResponse, data) {
     // This detects which child devices to create/update and does the creation/updating
     def statusMap = asyncResponse.getJson()
     logging("configureChildDevices() statusMap=$statusMap", 1)
@@ -561,8 +566,8 @@ private void createChildDevice(String namespace, List driverName, String childId
 /*
     Tasmota IP Settings and Wifi status
 */
-private setDeviceNetworkId(macOrIP, isIP = false) {
-    def myDNI
+private String setDeviceNetworkId(String macOrIP, boolean isIP = false) {
+    String myDNI
     if (isIP == false) {
         myDNI = macOrIP
     } else {
@@ -573,7 +578,7 @@ private setDeviceNetworkId(macOrIP, isIP = false) {
     return myDNI
 }
 
-def prepareDNI() {
+void prepareDNI() {
     // Called from updateNeededSettings() and parse(description)
     if (useIPAsID) {
         def hexIPAddress = setDeviceNetworkId(ipAddress, true)
@@ -581,14 +586,13 @@ def prepareDNI() {
             state.dni = hexIPAddress
             updateDNI()
         }
-    }
-    else if (state.mac != null && state.dni != state.mac) { 
+    } else if (state.mac != null && state.dni != state.mac) { 
         state.dni = setDeviceNetworkId(state.mac)
         updateDNI()
     }
 }
 
-private updateDNI() {
+private void updateDNI() {
     // Called from:
     // preapreDNI()
     // httpGetAction(uri, callback="parse")
@@ -599,11 +603,13 @@ private updateDNI() {
     }
 }
 
-def getTelePeriod() {
+Integer getTelePeriodValue() {
+    // Naming this getTelePeriod() will cause Error 500 and other unexpected behavior when
+    // telePeriod isn't set to anything...
     return (telePeriod != null && telePeriod.isInteger() ? telePeriod.toInteger() : 300)
 }
 
-private getHostAddress() {
+private String getHostAddress() {
     if (port == null) {
         port = 80
     }
@@ -631,9 +637,9 @@ private String convertIPtoHex(ipAddress) {
     return hex
 }
 
-def sync(ip, port = null) {
-    def existingIp = getDataValue("ip")
-    def existingPort = getDataValue("port")
+void sync(ip, port = null) {
+    String existingIp = getDataValue("ip")
+    String existingPort = getDataValue("port")
     logging("Running sync()", 1)
     if (ip && ip != existingIp) {
         updateDataValue("ip", ip)
@@ -647,8 +653,8 @@ def sync(ip, port = null) {
     }
 }
 
-def dBmToQuality(dBm) {
-    def quality = 0
+Integer dBmToQuality(Integer dBm) {
+    Integer quality = 0
     if(dBm > 0) dBm = dBm * -1
     if(dBm <= -100) {
         quality = 0
@@ -678,7 +684,7 @@ String configuration_model_tasmota() {
 /*
     HTTP Tasmota API Related
 */
-private httpGetAction(uri, callback="parse") { 
+private void httpGetAction(uri, callback="parse") { 
   updateDNI()
   
   def headers = getHeader()
@@ -718,7 +724,7 @@ private postAction(uri, data) {
   return hubAction    
 }
 
-def getCommandString(command, value) {
+String getCommandString(command, value) {
     def uri = "/cm?"
     if (password) {
         uri += "user=admin&password=${password}&"
@@ -732,8 +738,8 @@ def getCommandString(command, value) {
     return uri
 }
 
-def getMultiCommandString(commands) {
-    def uri = "/cm?"
+String getMultiCommandString(commands) {
+    String uri = "/cm?"
     if (password) {
         uri += "user=admin&password=${password}&"
     }
@@ -760,14 +766,14 @@ private String convertPortToHex(port) {
     return hexport
 }
 
-private encodeCredentials(username, password) {
-	def userpassascii = "${username}:${password}"
-    def userpass = "Basic " + userpassascii.bytes.encodeBase64().toString()
+private encodeCredentials(String username, String password) {
+	String userpassascii = "${username}:${password}"
+    String userpass = "Basic " + userpassascii.bytes.encodeBase64().toString()
     return userpass
 }
 
-private getHeader(userpass = null) {
-    def headers = [:]
+private Map getHeader(userpass = null) {
+    Map headers = [:]
     headers.put("Host", getHostAddress())
     headers.put("Content-Type", "application/x-www-form-urlencoded")
     if (userpass != null)

@@ -269,6 +269,9 @@ def main():
         {'id': 579, 'file': 'zigbee-generic-wifi-switch-plug.groovy' },
         {'id': 801, 'file': 'zigbee-aqara-smart-curtain-motor.groovy' },
 
+        # Virtual
+        {'id': 962, 'file': 'javascript-injection-driver.groovy' },
+
         # The following can be overwritten: 
     ]
     # Future devices to implement support for:
@@ -304,8 +307,8 @@ def main():
     # 651 left over from RF Link Child
     driver_files_testing = [
     #    {'id': 865}, {'id': 866},  # Universal Drivers RELEASE
+        {'id': 962}, # Javascript Injection Driver
         {'id': 867}, {'id': 868},  # Universal Drivers TESTING
-        
     #    {'id': 801}, {'id': 579},  # Zigbee drivers
     #     {'id':587},  # Wifi Curtain Wall Panel
     #    {'id':590},

@@ -123,7 +123,7 @@ if (result.containsKey("Module") && !result.containsKey("Version")) {
 }
 // When it is a Template, it looks a bit different and is NOT valid JSON...
 if (result.containsKey("NAME") && result.containsKey("GPIO") && result.containsKey("FLAG") && result.containsKey("BASE")) {  
-    n = result.toMapString()
+    def n = result.toMapString()
     n = n.replaceAll(', ',',')
     n = n.replaceAll('\\\\[','{').replaceAll('\\\\]','}')
     n = n.replaceAll('NAME:', '"NAME":"').replaceAll(',GPIO:\\\\{', '","GPIO":\\\\[')
@@ -170,7 +170,7 @@ if (result.containsKey("Wifi")) {
     }
     if (result.Wifi.containsKey("RSSI")) {
         logging("RSSI: $result.Wifi.RSSI",99)
-        quality = "${dBmToQuality(result.Wifi.RSSI)}%"
+        String quality = "${dBmToQuality(result.Wifi.RSSI)}%"
         if(device.currentValue('wifiSignal') != quality) sendEvent(name: "wifiSignal", value: quality)
     }
     if (result.Wifi.containsKey("SSId")) {
@@ -323,7 +323,7 @@ def getTasmotaNewParserForRGBWDevice():
 if(true) {
     def childDevice = getChildDeviceByActionType("POWER1")
     if (result.containsKey("HSBColor")) {
-        hsbColor = result.HSBColor.tokenize(",")
+        def hsbColor = result.HSBColor.tokenize(",")
         hsbColor[0] = Math.round((hsbColor[0] as Integer) / 3.6)
         hsbColor[1] = hsbColor[1] as Integer
         hsbColor[2] = hsbColor[2] as Integer
@@ -332,9 +332,9 @@ if(true) {
         if(childDevice?.currentValue('saturation') != hsbColor[1] ) missingChild = callChildParseByTypeId("POWER1", [[name: "saturation", value: hsbColor[1]]], missingChild)
     }
     if (result.containsKey("Color")) {
-        color = result.Color
+        def color = result.Color
         logging("Color: ${color}", 1)
-        mode = "RGB"
+        def mode = "RGB"
         if(color.length() > 6 && color.startsWith("000000")) {
             mode = "CT"
         }
@@ -342,7 +342,7 @@ if(true) {
         if(childDevice?.currentValue('colorMode') != mode ) missingChild = callChildParseByTypeId("POWER1", [[name: "colorMode", value: mode]], missingChild)
     }
     if (result.containsKey("CT")) {
-        t = Math.round(1000000/result.CT)
+        def t = Math.round(1000000/result.CT)
         if(childDevice?.currentValue('colorTemperature') != t ) missingChild = callChildParseByTypeId("POWER1", [[name: "colorTemperature", value: t]], missingChild)
         logging("CT: $result.CT ($t)",99)
     }
@@ -355,13 +355,13 @@ def getTasmotaNewParserForDimmableDevice():
 if(true) {
     def childDevice = getChildDeviceByActionType("POWER1")
     if (result.containsKey("Dimmer")) {
-        dimmer = result.Dimmer
+        def dimmer = result.Dimmer
         logging("Dimmer: ${dimmer}", 1)
         state.level = dimmer
         if(childDevice?.currentValue('level') != dimmer ) missingChild = callChildParseByTypeId("POWER1", [[name: "level", value: dimmer]], missingChild)
     }
     if (result.containsKey("Wakeup")) {
-        wakeup = result.Wakeup
+        def wakeup = result.Wakeup
         logging("Wakeup: ${wakeup}", 1)
         //sendEvent(name: "wakeup", value: wakeup)
     }
@@ -374,7 +374,7 @@ def getTasmotaNewParserForRGBWIRRemote():
 if (result.containsKey("IrReceived")) {
     logging("Found key IrReceived in parse()", 1)
     if (result.IrReceived.containsKey("Data")) {
-        irData = result.IrReceived.Data
+        def irData = result.IrReceived.Data
         if(irData == '0x00F7C03F') on()
         if(irData == '0x00F740BF') off()
         if(irData == '0x00F7E01F') white()

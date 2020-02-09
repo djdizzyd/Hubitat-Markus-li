@@ -16,7 +16,6 @@ metadata {
 
 	preferences {
         #!include:getDefaultParentMetadataPreferences()
-
         input(name: "deviceConfig", type: "enum", title: addTitleDiv("Device Configuration"), 
             description: addDescriptionDiv("Select a Device Configuration (default: Generic Device)<br/>'Generic Device' doesn't configure device Template and/or Module on Tasmota. Child devices and types are auto-detected as well as auto-created and does NOT depend on this setting."), 
             options: getDeviceConfigurationsAsListOption(), defaultValue: "01generic-device", 
@@ -220,7 +219,7 @@ def parseResult(result, missingChild) {
 }
 
 // Call order: installed() -> configure() -> initialize() -> updated() -> updateNeededSettings()
-def updateNeededSettings() {
+void updateNeededSettings() {
     #!include:getUpdateNeededSettingsTasmotaHeader()
 
     // Get the Device Configuration
@@ -235,12 +234,13 @@ def updateNeededSettings() {
     logging("updateNeededSettings: deviceConfigMap=$deviceConfigMap, deviceTemplateInput=$deviceTemplateInput, moduleNumber=$moduleNumber", 0)
 
     #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand()
-
+    logging("After getUpdateNeededSettingsTasmotaDynamicModuleCommand", 1)
     // TODO: Process device-type specific settings here...
 
     installCommands = deviceConfigMap?.installCommands
     if(installCommands == null || installCommands == '') installCommands = []
-    runInstallCommands(installCommands)
+    logging("Got to just before runInstallCommands", 1)
+    //runInstallCommands(installCommands)
 
     //
     // https://tasmota.github.io/docs/#/Commands
@@ -248,9 +248,9 @@ def updateNeededSettings() {
     //Set publishing TuyaReceived to MQTT  »6.7.0
     //0 = disable publishing TuyaReceived over MQTT (default)
     //1 = enable publishing TuyaReceived over MQTT
-    //cmds << getAction(getCommandString("SetOption66", "1"))
+    //getAction(getCommandString("SetOption66", "1"))
 
-    //cmds << getAction(getCommandString("SetOption81", "0")) // Set PCF8574 component behavior for all ports as inverted (default=0)
+    //getAction(getCommandString("SetOption81", "0")) // Set PCF8574 component behavior for all ports as inverted (default=0)
 
     #!include:getUpdateNeededSettingsTasmotaFooter()
 }
