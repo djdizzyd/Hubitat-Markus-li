@@ -1,10 +1,9 @@
-/*
-    ALL DEFAULT METHODS (helpers-all-default)
-
-    Helper functions included in all drivers/apps
-*/
-
 #!include:getHelperFunctions('all-debug')
+/**
+ * ALL DEFAULT METHODS (helpers-all-default)
+ *
+ * Helper functions included in all drivers/apps
+ */
 
 boolean isDriver() {
     try {
@@ -66,12 +65,11 @@ void initialize() {
     refresh()
 }
 
-/*
-	logsOff
-
-	Purpose: automatically disable debug logging after 30 mins.
-	Note: scheduled in Initialize()
-*/
+/**
+ * Automatically disable debug logging after 30 mins.
+ *
+ * Note: scheduled in Initialize()
+ */
 void logsOff() {
     if(runReset != "DEBUG") {
         log.warn "Debug logging disabled..."
@@ -202,6 +200,6 @@ Integer extractInt(String input) {
   return input.replaceAll("[^0-9]", "").toInteger()
 }
 
-/*
-    --END-- ALL DEFAULT METHODS (helpers-all-default)
-*/
+/**
+ * --END-- ALL DEFAULT METHODS (helpers-all-default)
+ */

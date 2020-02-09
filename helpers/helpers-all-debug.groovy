@@ -1,8 +1,8 @@
-/*
-    ALL DEBUG METHODS (helpers-all-debug)
-
-    Helper Debug functions included in all drivers/apps
-*/
+/**
+ * ALL DEBUG METHODS (helpers-all-debug)
+ *
+ * Helper Debug functions included in all drivers/apps
+ */
 String configuration_model_debug() {
     if(!isDeveloperHub()) {
         if(!isDriver()) {
@@ -44,6 +44,6 @@ String configuration_model_debug() {
     }
 }
 
-/*
-    --END-- ALL DEBUG METHODS (helpers-all-debug)
-*/
+/**
+ *   --END-- ALL DEBUG METHODS (helpers-all-debug)
+ */

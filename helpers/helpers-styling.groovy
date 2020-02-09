@@ -1,8 +1,8 @@
-/*
-    STYLING (helpers-styling)
-
-    Helper functions included in all Drivers and Apps using Styling
-*/
+/**
+ * STYLING (helpers-styling)
+ *
+ * Helper functions included in all Drivers and Apps using Styling
+ */
 String addTitleDiv(title) {
     return '<div class="preference-title">' + title + '</div>'
 }
@@ -29,6 +29,6 @@ String makeTextItalic(s) {
     }
 }
 
-/*
-    --END-- STYLING METHODS (helpers-styling)
-*/
+/**
+ * --END-- STYLING METHODS (helpers-styling)
+ */

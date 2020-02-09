@@ -1,8 +1,8 @@
-/*
-    TEMPERATURE HUMIDITY METHODS (helpers-temperature-humidity)
-
-    Helper functions included in all drivers with Temperature and Humidity
-*/
+/**
+ * TEMPERATURE HUMIDITY METHODS (helpers-temperature-humidity)
+ *
+ * Helper functions included in all drivers with Temperature and Humidity
+ */
 private getAdjustedTemp(value) {
     def decimalLimit
     if(tempRes == null || tempRes == '') {

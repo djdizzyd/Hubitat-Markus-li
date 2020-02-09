@@ -1,8 +1,8 @@
-/*
-    DEVICE CONFIGURATIONS METHODS (helpers-device-configurations)
-
-    Device configurations and functions for using them
-*/
+/**
+ * DEVICE CONFIGURATIONS METHODS (helpers-device-configurations)
+ *
+ *   Device configurations and functions for using them
+ */
 TreeMap getDeviceConfigurations() {
     // To add more devices, just add them below ;)
     // Don't forget that BOTH the App and the Universal driver needs to have this configuration.
@@ -354,6 +354,6 @@ def getDeviceConfigurationsAsListOption() {
     return items
 }
 
-/*
-    --END-- DEVICE CONFIGURATIONS METHODS (helpers-device-configurations)
-*/
+/**
+ * --END-- DEVICE CONFIGURATIONS METHODS (helpers-device-configurations)
+ */

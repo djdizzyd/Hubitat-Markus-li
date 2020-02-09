@@ -1,8 +1,8 @@
-/*
-    TASMOTA METHODS (helpers-tasmota)
-
-    Helper functions included in all Tasmota drivers
-*/
+/**
+ * TASMOTA METHODS (helpers-tasmota)
+ *
+ * Helper functions included in all Tasmota drivers
+ */
 
 // Call order: installed() -> configure() -> updated() -> initialize() -> refresh()
 void refresh() {
@@ -781,6 +781,6 @@ private Map getHeader(userpass = null) {
     return headers
 }
 
-/*
-    --END-- TASMOTA METHODS (helpers-tasmota)
-*/
+/**
+ * --END-- TASMOTA METHODS (helpers-tasmota)
+ */

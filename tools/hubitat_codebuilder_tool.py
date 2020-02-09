@@ -24,6 +24,7 @@ import logging
 from colorama import init, Fore, Style
 import sys
 init()
+sys.path.insert(0, "private/tools")
 
 #logging.basicConfig(level=logging.DEBUG,
 #    format="%(asctime)s:%(levelname)s:%(message)s")

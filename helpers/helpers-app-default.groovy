@@ -1,10 +1,9 @@
-/*
-    APP DEFAULT METHODS (helpers-app-default)
-
-    TODO: Write file description
-*/
-
 #!include:getHelperFunctions('all-default')
+/**
+ * APP DEFAULT METHODS (helpers-app-default)
+ *
+ * Methods used in all APPS
+ */
 
 def installed() {
 	logging("installed()", 100)
@@ -17,6 +16,6 @@ def installed() {
     }
 }
 
-/*
-    --END-- APP DEFAULT METHODS (helpers-app-default)
-*/
+/**
+ * --END-- APP DEFAULT METHODS (helpers-app-default)
+ */

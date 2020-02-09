@@ -20,7 +20,7 @@ from hubitat_codebuilder import HubitatCodeBuilderError
 """
 
 def getHeaderLicense():
-    return """ /**
+    return """/**
  *  Copyright 2020 Markus Liljergren
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +37,7 @@ def getHeaderLicense():
  */"""
 
 def getDefaultImports():
-    return """/* Default Imports */
+    return """/** Default Imports */
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 import java.security.MessageDigest   // Used for MD5 calculations

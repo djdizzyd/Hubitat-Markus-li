@@ -2,7 +2,7 @@
     CHILD DEVICES METHODS (helpers-childDevices)
 
     Helper functions included when using Child devices
-    
+
     NOTE: MUCH of this is not in use any more, needs cleaning...
 */
 
@@ -109,6 +109,6 @@ def deleteChildren() {
     }
 }
 
-/*
-    --END-- CHILD DEVICES METHODS (helpers-childDevices)
-*/
+/**
+ *   --END-- CHILD DEVICES METHODS (helpers-childDevices)
+ */

@@ -1,9 +1,9 @@
-/*
-    RGBW METHODS (helpers-rgbw)
-
-    Helper functions included in all drivers using RGB, RGBW or Dimmers
-    These methods are NOT specific to Tasmota
-*/
+/**
+ * RGBW METHODS (helpers-rgbw)
+ *
+ * Helper functions included in all drivers using RGB, RGBW or Dimmers
+ * These methods are NOT specific to Tasmota
+ */
 void setColor(value) {
     logging("setColor('${value}')", 10)
 	if (value != null && value instanceof Map) {
@@ -117,6 +117,6 @@ void pink() {
     setRGB(255, 0, 255)
 }
 
-/*
-    --END-- RGBW METHODS (helpers-rgbw)
-*/
+/**
+ * --END-- RGBW METHODS (helpers-rgbw)
+ */

@@ -1,10 +1,10 @@
-/*
-    DRIVER DEFAULT METHODS (helpers-driver-default)
-
-    General Methods used in ALL drivers except some CHILD drivers
-    Though some may have no effect in some drivers, they're here to
-    maintain a general structure
-*/
+/**
+ * DRIVER DEFAULT METHODS (helpers-driver-default)
+ *
+ * General Methods used in ALL drivers except some CHILD drivers
+ * Though some may have no effect in some drivers, they're here to
+ * maintain a general structure
+ */
 
 // Since refresh, with any number of arguments, is accepted as we always have it declared anyway, 
 // we use it as a wrapper
@@ -41,6 +41,6 @@ void configure() {
     }
 }
 
-/*
-    --END-- DRIVER DEFAULT METHODS (helpers-driver-default)
-*/
+/**
+ * --END-- DRIVER DEFAULT METHODS (helpers-driver-default)
+ */

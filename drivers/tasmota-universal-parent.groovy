@@ -255,7 +255,7 @@ void updateNeededSettings() {
     #!include:getUpdateNeededSettingsTasmotaFooter()
 }
 
-// Calls TO Child devices
+/** Calls TO Child devices */
 Boolean callChildParseByTypeId(String deviceTypeId, event, missingChild) {
     event.each{
         if(it.containsKey("descriptionText") == false) {
@@ -290,7 +290,7 @@ String getDeviceActionType(String childDeviceNetworkId) {
     return childDeviceNetworkId.tokenize("-")[1]
 }
 
-// Calls FROM Child devices
+/** Calls FROM Child devices */
 void componentOn(cd) {
     actionType = getDeviceActionType(cd.deviceNetworkId)
     logging("componentOn(cd=${cd.displayName} (${cd.deviceNetworkId})) actionType=${getDeviceActionType(cd.deviceNetworkId)}", 1)
@@ -359,13 +359,13 @@ void componentRefresh(cd) {
     refresh()
 }
 
-/*
-    -----------------------------------------------------------------------------
-    Everything below here are LIBRARY includes and should NOT be edited manually!
-    -----------------------------------------------------------------------------
-    --- Nothings to edit here, move along! --------------------------------------
-    -----------------------------------------------------------------------------
-*/
+/**
+ * -----------------------------------------------------------------------------
+ * Everything below here are LIBRARY includes and should NOT be edited manually!
+ * -----------------------------------------------------------------------------
+ * --- Nothings to edit here, move along! --------------------------------------
+ * -----------------------------------------------------------------------------
+ */
 
 #!include:getDefaultFunctions()
 

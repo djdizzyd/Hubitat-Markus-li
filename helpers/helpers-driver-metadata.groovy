@@ -1,9 +1,9 @@
-/*
-    DRIVER METADATA METHODS (helpers-driver-metadata)
-
-    These methods are to be used in (and/or with) the metadata section of drivers and
-    is also what contains the CSS handling and styling.
-*/
+/**
+ * DRIVER METADATA METHODS (helpers-driver-metadata)
+ *
+ * These methods are to be used in (and/or with) the metadata section of drivers and
+ * is also what contains the CSS handling and styling.
+ */
 
 // These methods can be executed in both the NORMAL driver scope as well
 // as the Metadata scope.
@@ -401,6 +401,6 @@ String getCSSForHidingLastPreference() {
     return getCSSForPreferenceHiding(null, overrideIndex=-1)
 }
 
-/*
-    --END-- DRIVER METADATA METHODS (helpers-driver-metadata)
-*/
+/**
+ * --END-- DRIVER METADATA METHODS (helpers-driver-metadata)
+ */

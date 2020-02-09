@@ -1,9 +1,9 @@
-/*
-    TASMOTA RGBW METHODS (helpers-tasmota-rgbw)
-
-    Helper functions included in all Tasmota drivers using RGB, RGBW or Dimmers
-    These methods ARE specific to Tasmota
-*/
+/**
+ * TASMOTA RGBW METHODS (helpers-tasmota-rgbw)
+ *
+ * Helper functions included in all Tasmota drivers using RGB, RGBW or Dimmers
+ * These methods ARE specific to Tasmota
+ */
 void setColorTemperature(value) {
     logging("setColorTemperature('${value}')", 10)
     if(device.currentValue('colorTemperature') != value ) sendEvent(name: "colorTemperature", value: value)
@@ -280,6 +280,6 @@ void modeRandomColors() {
     modeSet(state.mode)
 }
 
-/*
-    --END-- TASMOTA RGBW METHODS (helpers-tasmota-rgbw)
-*/
+/**
+ * --END-- TASMOTA RGBW METHODS (helpers-tasmota-rgbw)
+ */

@@ -1,4 +1,4 @@
- /**
+/**
  *  Copyright 2020 Markus Liljergren
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,7 @@
  */
 
 // BEGIN:getDefaultParentImports()
-/* Default Imports */
+/** Default Imports */
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 import java.security.MessageDigest   // Used for MD5 calculations
@@ -52,11 +52,11 @@ preferences {
 
 // https://docs.smartthings.com/en/latest/smartapp-developers-guide/preferences-and-settings.html#preferences-and-settings
 
-/*
-    DEVICE CONFIGURATIONS METHODS (helpers-device-configurations)
-
-    Device configurations and functions for using them
-*/
+/**
+ * DEVICE CONFIGURATIONS METHODS (helpers-device-configurations)
+ *
+ *   Device configurations and functions for using them
+ */
 TreeMap getDeviceConfigurations() {
     // To add more devices, just add them below ;)
     // Don't forget that BOTH the App and the Universal driver needs to have this configuration.
@@ -408,9 +408,9 @@ def getDeviceConfigurationsAsListOption() {
     return items
 }
 
-/*
-    --END-- DEVICE CONFIGURATIONS METHODS (helpers-device-configurations)
-*/
+/**
+ * --END-- DEVICE CONFIGURATIONS METHODS (helpers-device-configurations)
+ */
 
 Long getMillisSinceDate(myDate) {
     
@@ -1187,23 +1187,11 @@ private def logging(message, level) {
 // END:  getLoggingFunction()
 
 
-/*
-    APP DEFAULT METHODS (helpers-app-default)
-
-    TODO: Write file description
-*/
-
-/*
-    ALL DEFAULT METHODS (helpers-all-default)
-
-    Helper functions included in all drivers/apps
-*/
-
-/*
-    ALL DEBUG METHODS (helpers-all-debug)
-
-    Helper Debug functions included in all drivers/apps
-*/
+/**
+ * ALL DEBUG METHODS (helpers-all-debug)
+ *
+ * Helper Debug functions included in all drivers/apps
+ */
 String configuration_model_debug() {
     if(!isDeveloperHub()) {
         if(!isDriver()) {
@@ -1246,9 +1234,14 @@ String configuration_model_debug() {
     }
 }
 
-/*
-    --END-- ALL DEBUG METHODS (helpers-all-debug)
-*/
+/**
+ *   --END-- ALL DEBUG METHODS (helpers-all-debug)
+ */
+/**
+ * ALL DEFAULT METHODS (helpers-all-default)
+ *
+ * Helper functions included in all drivers/apps
+ */
 
 boolean isDriver() {
     try {
@@ -1310,12 +1303,11 @@ void initialize() {
     refresh()
 }
 
-/*
-	logsOff
-
-	Purpose: automatically disable debug logging after 30 mins.
-	Note: scheduled in Initialize()
-*/
+/**
+ * Automatically disable debug logging after 30 mins.
+ *
+ * Note: scheduled in Initialize()
+ */
 void logsOff() {
     if(runReset != "DEBUG") {
         log.warn "Debug logging disabled..."
@@ -1446,9 +1438,14 @@ Integer extractInt(String input) {
   return input.replaceAll("[^0-9]", "").toInteger()
 }
 
-/*
-    --END-- ALL DEFAULT METHODS (helpers-all-default)
-*/
+/**
+ * --END-- ALL DEFAULT METHODS (helpers-all-default)
+ */
+/**
+ * APP DEFAULT METHODS (helpers-app-default)
+ *
+ * Methods used in all APPS
+ */
 
 def installed() {
 	logging("installed()", 100)
@@ -1461,15 +1458,15 @@ def installed() {
     }
 }
 
-/*
-    --END-- APP DEFAULT METHODS (helpers-app-default)
-*/
+/**
+ * --END-- APP DEFAULT METHODS (helpers-app-default)
+ */
 
-/*
-    TASMOTA METHODS (helpers-tasmota)
-
-    Helper functions included in all Tasmota drivers
-*/
+/**
+ * TASMOTA METHODS (helpers-tasmota)
+ *
+ * Helper functions included in all Tasmota drivers
+ */
 
 // Call order: installed() -> configure() -> updated() -> initialize() -> refresh()
 void refresh() {
@@ -2248,15 +2245,15 @@ private Map getHeader(userpass = null) {
     return headers
 }
 
-/*
-    --END-- TASMOTA METHODS (helpers-tasmota)
-*/
+/**
+ * --END-- TASMOTA METHODS (helpers-tasmota)
+ */
 
-/*
-    STYLING (helpers-styling)
-
-    Helper functions included in all Drivers and Apps using Styling
-*/
+/**
+ * STYLING (helpers-styling)
+ *
+ * Helper functions included in all Drivers and Apps using Styling
+ */
 String addTitleDiv(title) {
     return '<div class="preference-title">' + title + '</div>'
 }
@@ -2283,6 +2280,6 @@ String makeTextItalic(s) {
     }
 }
 
-/*
-    --END-- STYLING METHODS (helpers-styling)
-*/
+/**
+ * --END-- STYLING METHODS (helpers-styling)
+ */
