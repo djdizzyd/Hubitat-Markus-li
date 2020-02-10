@@ -11,7 +11,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-driverVersion = "v0.9.5T"
+driverVersion = "v1.0.0210Ta"
 
 from hubitat_codebuilder import HubitatCodeBuilderError
 

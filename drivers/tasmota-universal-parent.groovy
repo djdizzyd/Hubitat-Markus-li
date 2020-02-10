@@ -144,10 +144,10 @@ def refreshAdditional(metaConfig) {
     metaConfig = setStateVariablesToHide(['mac'], metaConfig=metaConfig)
     logging("hideExtended=$hideExtended, hideAdvanced=$hideAdvanced", 1)
     if(hideExtended == null || hideExtended == true) {
-        metaConfig = setPreferencesToHide(['hideAdvanced', 'ipAddress', 'override', 'telePeriod'], metaConfig=metaConfig)
+        metaConfig = setPreferencesToHide(['hideAdvanced', 'ipAddress', 'override', 'useIPAsID', 'telePeriod'], metaConfig=metaConfig)
     }
     if(hideExtended == null || hideExtended == true || hideAdvanced == null || hideAdvanced == true) {
-        metaConfig = setPreferencesToHide(['disableModuleSelection', 'moduleNumber', 'deviceTemplateInput', 'useIPAsID', 'port', 'disableCSS'], metaConfig=metaConfig)
+        metaConfig = setPreferencesToHide(['disableModuleSelection', 'moduleNumber', 'deviceTemplateInput', , 'port', 'disableCSS'], metaConfig=metaConfig)
     }
     if(hideDangerousCommands == null || hideDangerousCommands == true) {
         metaConfig = setCommandsToHide(['deleteChildren'], metaConfig=metaConfig)
@@ -256,11 +256,12 @@ void updateNeededSettings() {
 }
 
 /** Calls TO Child devices */
-Boolean callChildParseByTypeId(String deviceTypeId, event, missingChild) {
+boolean callChildParseByTypeId(String deviceTypeId, event, boolean missingChild) {
     event.each{
         if(it.containsKey("descriptionText") == false) {
             it["descriptionText"] = "'$it.name' set to '$it.value'"
         }
+        it["isStateChange"] = false
     }
     try {
         cd = getChildDevice("$device.id-$deviceTypeId")

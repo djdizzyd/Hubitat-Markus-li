@@ -18,9 +18,9 @@ private Map getMetaConfig() {
     return metaConfig
 }
 
-Boolean isCSSDisabled(Map metaConfig=null) {
+boolean isCSSDisabled(Map metaConfig=null) {
     if(metaConfig==null) metaConfig = getMetaConfig()
-    Boolean disableCSS = false
+    boolean disableCSS = false
     if(metaConfig.containsKey("disableCSS")) disableCSS = metaConfig["disableCSS"]
     return disableCSS
 }
@@ -74,7 +74,7 @@ Map clearThingsToHide(Map metaConfig=null) {
     return metaConfig
 }
 
-Map setDisableCSS(Boolean value, Map metaConfig=null) {
+Map setDisableCSS(boolean value, Map metaConfig=null) {
     if(metaConfig==null) metaConfig = getMetaConfig()
     metaConfig["disableCSS"] = value
     saveMetaConfig(metaConfig)
@@ -190,7 +190,7 @@ h3, h4, .property-label {
 
 String getDriverCSSWrapper() {
     Map metaConfig = getMetaConfig()
-    Boolean disableCSS = isCSSDisabled(metaConfig=metaConfig)
+    boolean disableCSS = isCSSDisabled(metaConfig=metaConfig)
     String defaultCSS = '''
     /* This is part of the CSS for replacing a Command Title */
     div.mdl-card__title div.mdl-grid div.mdl-grid .mdl-cell p::after {
@@ -347,7 +347,7 @@ String  getCSSForDatasToHide(List datas) {
     return r
 }
 
-Integer getPreferenceIndex(String preference, Boolean returnMax=false) {
+Integer getPreferenceIndex(String preference, boolean returnMax=false) {
     def filteredPrefs = getPreferences()['sections']['input'].name[0]
     //log.debug "getPreferenceIndex: Seeing these Preferences first: '${filteredPrefs}'"
     if(filteredPrefs == [] || filteredPrefs == null) {

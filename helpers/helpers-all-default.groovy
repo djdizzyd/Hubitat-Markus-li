@@ -1,4 +1,5 @@
 #!include:getHelperFunctions('all-debug')
+
 /**
  * ALL DEFAULT METHODS (helpers-all-default)
  *
@@ -101,7 +102,7 @@ void logsOff() {
     }
 }
 
-Boolean isDeveloperHub() {
+boolean isDeveloperHub() {
     return generateMD5(location.hub.zigbeeId as String) == "125fceabd0413141e34bb859cd15e067"
 }
 

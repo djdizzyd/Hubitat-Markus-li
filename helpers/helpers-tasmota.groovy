@@ -4,6 +4,41 @@
  * Helper functions included in all Tasmota drivers
  */
 
+// Calls installed() -> installedPreConfigure()
+void installedPreConfigure() {
+    // This is run FIRST in installed()
+    if(isDriver()) {
+        // This is only run ONCE after install
+        
+        logging("Inside installedPreConfigure()", 1)
+        logging("Password: ${decrypt(getDataValue('password'))}", 1)
+        String pass = decrypt(getDataValue('password'))
+        if(pass != null && pass != "" && pass != "[installed]") {
+            device.updateSetting("password", [value: pass, type: "password"])
+        }
+        
+    }
+}
+
+// Call order: installed() -> configure() -> updated() 
+void updated() {
+    logging("updated()", 10)
+    if(isDriver()) {
+        logging("before updateNeededSettings()", 10)
+        updateNeededSettings()
+        logging("after updateNeededSettings()", 10)
+        //sendEvent(name: "checkInterval", value: 2 * 15 * 60 + 2 * 60, displayed: false, data: [protocol: "lan", hubHardwareId: device.hub.hardwareID])
+        //sendEvent(name:"needUpdate", value: device.currentValue("needUpdate"), displayed:false, isStateChange: false)
+    }
+    try {
+        // Also run initialize(), if it exists...
+        initialize()
+        updatedAdditional()
+    } catch (MissingMethodException e) {
+        // ignore
+    }
+}
+
 // Call order: installed() -> configure() -> updated() -> initialize() -> refresh()
 void refresh() {
 	logging("refresh()", 100)
@@ -39,7 +74,7 @@ void refresh() {
         
         metaConfig = setCurrentStatesToHide(['needUpdate'], metaConfig=metaConfig)
         //metaConfig = setDatasToHide(['preferences', 'namespace', 'appReturn', 'metaConfig'], metaConfig=metaConfig)
-        metaConfig = setDatasToHide(['namespace', 'appReturn'], metaConfig=metaConfig)
+        metaConfig = setDatasToHide(['namespace', 'appReturn', 'ip', 'port', 'password'], metaConfig=metaConfig)
         metaConfig = setPreferencesToHide([], metaConfig=metaConfig)
     }
     try {
@@ -59,25 +94,6 @@ void refresh() {
 void reboot() {
 	logging("reboot()", 10)
     getAction(getCommandString("Restart", "1"))
-}
-
-// Call order: installed() -> configure() -> updated() 
-void updated() {
-    logging("updated()", 10)
-    if(isDriver()) {
-        logging("before updateNeededSettings()", 10)
-        updateNeededSettings()
-        logging("after updateNeededSettings()", 10)
-        //sendEvent(name: "checkInterval", value: 2 * 15 * 60 + 2 * 60, displayed: false, data: [protocol: "lan", hubHardwareId: device.hub.hardwareID])
-        sendEvent(name:"needUpdate", value: device.currentValue("needUpdate"), displayed:false, isStateChange: false)
-    }
-    try {
-        // Also run initialize(), if it exists...
-        initialize()
-        updatedAdditional()
-    } catch (MissingMethodException e) {
-        // ignore
-    }
 }
 
 /*
@@ -152,14 +168,16 @@ void updatePresence(String presence) {
     // presence - ENUM ["present", "not present"]
     logging("updatePresence(presence=$presence)", 1)
     Integer timeout = getTelePeriodValue()
+    timeout += (timeout * 0.1 > 60 ? Math.round(timeout * 0.1) : 60) + 60
+    String descriptionText = "No update received from the Tasmota device for ${timeout} seconds..."
     if(presence == "present") {    
-        timeout += (timeout * 0.1 > 60 ? Math.round(timeout * 0.1) : 60)
+        descriptionText = "Device is available"
         //log.warn "Setting as present with timeout: $timeout"
         runIn(timeout, "updatePresence", [data: "not present"])
     } else {
         log.warn "Presence time-out reached, setting device as 'not present'!"
     }
-    sendEvent(name: "presence", value: presence, isStateChange: true, descriptionText: "No update received from the Tasmota device for ${timeout} seconds...")
+    sendEvent(name: "presence", value: presence, isStateChange: false, descriptionText: descriptionText)
 }
 
 Map parseDescriptionAsMap(description) {
@@ -226,8 +244,8 @@ void parseConfigureChildDevices(asyncResponse, data) {
     }
 }
 
-Boolean containsKeyInSubMap(aMap, key) {
-    Boolean hasKey = false
+boolean containsKeyInSubMap(aMap, key) {
+    boolean hasKey = false
     aMap.find {
         try{
             hasKey = it.value.containsKey(key)
@@ -484,7 +502,7 @@ void configureChildDevices(asyncResponse, data) {
     parseResult(statusMap)
 }
 
-String getChildDeviceNameRoot(Boolean keepType=false) {
+String getChildDeviceNameRoot(boolean keepType=false) {
     String childDeviceNameRoot = getDeviceInfoByName('name')
     if(childDeviceNameRoot.toLowerCase().endsWith(' (parent)')) {
         childDeviceNameRoot = childDeviceNameRoot.substring(0, childDeviceNameRoot.length()-9)
@@ -637,14 +655,14 @@ private String convertIPtoHex(ipAddress) {
     return hex
 }
 
-void sync(ip, port = null) {
+void sync(String ip, Integer port = null) {
     String existingIp = getDataValue("ip")
     String existingPort = getDataValue("port")
     logging("Running sync()", 1)
-    if (ip && ip != existingIp) {
+    if (ip != null && ip != existingIp.toInteger()) {
         updateDataValue("ip", ip)
-        sendEvent(name: 'ip', value: ip)
-        sendEvent(name: "ipLink", value: "<a target=\"device\" href=\"http://$ip\">$ip</a>")
+        sendEvent(name: 'ip', value: ip, isStateChange: false)
+        sendEvent(name: "ipLink", value: "<a target=\"device\" href=\"http://$ip\">$ip</a>", isStateChange: false)
         logging("IP set to ${ip}", 1)
     }
     if (port && port != existingPort) {
@@ -684,7 +702,7 @@ String configuration_model_tasmota() {
 /*
     HTTP Tasmota API Related
 */
-private void httpGetAction(uri, callback="parse") { 
+private void httpGetAction(String uri, callback="parse") { 
   updateDNI()
   
   def headers = getHeader()
@@ -705,7 +723,7 @@ private void httpGetAction(uri, callback="parse") {
   }
 }
 
-private postAction(uri, data) { 
+private postAction(String uri, String data) { 
   updateDNI()
 
   def headers = getHeader()
@@ -724,7 +742,7 @@ private postAction(uri, data) {
   return hubAction    
 }
 
-String getCommandString(command, value) {
+String getCommandString(String command, String value) {
     def uri = "/cm?"
     if (password) {
         uri += "user=admin&password=${password}&"
@@ -757,11 +775,11 @@ String getMultiCommandString(commands) {
     return uri
 }
 
-private String urlEscape(url) {
+private String urlEscape(String url) {
     return(URLEncoder.encode(url).replace("+", "%20"))
 }
 
-private String convertPortToHex(port) {
+private String convertPortToHex(Integer port) {
 	String hexport = port.toString().format( '%04X', port.toInteger() )
     return hexport
 }
@@ -772,7 +790,7 @@ private encodeCredentials(String username, String password) {
     return userpass
 }
 
-private Map getHeader(userpass = null) {
+private Map getHeader(String userpass = null) {
     Map headers = [:]
     headers.put("Host", getHostAddress())
     headers.put("Content-Type", "application/x-www-form-urlencoded")

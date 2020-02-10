@@ -34,7 +34,7 @@ void setHSB(h, s, b) {
 
 void setHSB(h, s, b, callWhite) {
     logging("setHSB('${h}','${s}','${b}', callWhite=${String.valueOf(callWhite)})", 10)
-    Boolean adjusted = False
+    boolean adjusted = False
     if(h == null || h == 'NaN') {
         h = state != null && state.containsKey("hue") ? state.hue : 0
         adjusted = True
@@ -73,7 +73,7 @@ void setHSB(h, s, b, callWhite) {
 
 void setRGB(r,g,b) {   
     logging("setRGB('${r}','${g}','${b}')", 10)
-    Boolean adjusted = False
+    boolean adjusted = False
     if(r == null || r == 'NaN') {
         r = 0
         adjusted = True

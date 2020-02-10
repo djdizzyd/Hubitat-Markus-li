@@ -38,6 +38,6 @@ private getAdjustedPressure(value) {
     }   
 }
 
-/*
-    --END-- TEMPERATURE HUMIDITY METHODS (helpers-temperature-humidity)
-*/
+/**
+ *   --END-- TEMPERATURE HUMIDITY METHODS (helpers-temperature-humidity)
+ */

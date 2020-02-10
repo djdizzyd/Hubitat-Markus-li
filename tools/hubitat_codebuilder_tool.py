@@ -307,7 +307,7 @@ def main():
     # As long as we have an id, we can just supply that here instead of the whole config...
     # 651 left over from RF Link Child
     driver_files_testing = [
-    #    {'id': 865}, {'id': 866},  # Universal Drivers RELEASE
+        {'id': 865}, {'id': 866},  # Universal Drivers RELEASE
         {'id': 962}, # Javascript Injection Driver
         {'id': 867}, {'id': 868},  # Universal Drivers TESTING
     #    {'id': 801}, {'id': 579},  # Zigbee drivers

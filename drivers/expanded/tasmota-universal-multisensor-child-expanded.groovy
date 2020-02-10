@@ -1,4 +1,4 @@
- /**
+/**
  *  Copyright 2020 Markus Liljergren
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,10 +15,12 @@
  */
 
 // BEGIN:getDefaultImports()
-/* Default Imports */
+/** Default Imports */
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 import java.security.MessageDigest   // Used for MD5 calculations
+//import groovy.transform.TypeChecked
+//import groovy.transform.TypeCheckingMode
 // END:  getDefaultImports()
 
 
@@ -65,7 +67,7 @@ metadata {
 public getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    deviceInfo = ['name': 'Tasmota - Universal Multisensor (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-universal-multisensor-child-expanded.groovy']
+    def deviceInfo = ['name': 'Tasmota - Universal Multisensor (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-universal-multisensor-child-expanded.groovy']
     //logging("deviceInfo[${infoName}] = ${deviceInfo[infoName]}", 1)
     return(deviceInfo[infoName])
 }
@@ -85,6 +87,7 @@ void parse(List<Map> description) {
 
 void updated() {
     log.info "updated()"
+    refresh()
 }
 
 void installed() {
@@ -94,56 +97,30 @@ void installed() {
     refresh()
 }
 
-/*void dry() {
-    logging("dry()", 1)
-    sendEvent(name: "water", value: "dry", isStateChange: true)
-}
-
-void wet() {
-    logging("wet()", 1)
-    sendEvent(name: "water", value: "wet", isStateChange: true)
-}
-
-void clear() {
-    logging("clear()", 1)
-    dry()
-}
-
-// These are called when Action occurs, called from actionHandler()
-def dryAction() {
-    logging("dryAction()", 1)
-    dry()
-}
-
-def wetAction() {
-    logging("wetAction()", 1)
-    wet()
-}*/
-
 void refresh() {
+    // BEGIN:getChildComponentMetaConfigCommands()
+    // metaConfig is what contains all fields to hide and other configuration
+    // processed in the "metadata" context of the driver.
+    def metaConfig = clearThingsToHide()
+    metaConfig = setDatasToHide(['metaConfig', 'isComponent', 'preferences', 'label', 'name'], metaConfig=metaConfig)
+    // END:  getChildComponentMetaConfigCommands()
     parent?.componentRefresh(this.device)
 }
 
-/*
-    -----------------------------------------------------------------------------
-    Everything below here are LIBRARY includes and should NOT be edited manually!
-    -----------------------------------------------------------------------------
-    --- Nothings to edit here, move along! --------------------------------------
-    -----------------------------------------------------------------------------
-*/
+/**
+ * -----------------------------------------------------------------------------
+ * Everything below here are LIBRARY includes and should NOT be edited manually!
+ * -----------------------------------------------------------------------------
+ * --- Nothings to edit here, move along! --------------------------------------
+ * -----------------------------------------------------------------------------
+ */
 
-/*
-    ALL DEFAULT METHODS (helpers-all-default)
-
-    Helper functions included in all drivers/apps
-*/
-
-/*
-    ALL DEBUG METHODS (helpers-all-debug)
-
-    Helper Debug functions included in all drivers/apps
-*/
-def configuration_model_debug() {
+/**
+ * ALL DEBUG METHODS (helpers-all-debug)
+ *
+ * Helper Debug functions included in all drivers/apps
+ */
+String configuration_model_debug() {
     if(!isDeveloperHub()) {
         if(!isDriver()) {
             app.removeSetting("logLevel")
@@ -186,14 +163,18 @@ def configuration_model_debug() {
     }
 }
 
-/*
-    --END-- ALL DEBUG METHODS (helpers-all-debug)
-*/
+/**
+ *   --END-- ALL DEBUG METHODS (helpers-all-debug)
+ */
 
-def isDriver() {
+/**
+ * ALL DEFAULT METHODS (helpers-all-default)
+ *
+ * Helper functions included in all drivers/apps
+ */
+
+boolean isDriver() {
     try {
-        
-
         // If this fails, this is not a driver...
         getDeviceDataByName('_unimportant')
         logging("This IS a driver!", 0)
@@ -204,7 +185,7 @@ def isDriver() {
     }
 }
 
-def deviceCommand(cmd) {
+void deviceCommand(cmd) {
     def jsonSlurper = new JsonSlurper()
     cmd = jsonSlurper.parseText(cmd)
     logging("deviceCommand: ${cmd}", 0)
@@ -230,7 +211,7 @@ void initialize() {
         } else {
             log.warn "Debug logging will NOT BE AUTOMATICALLY DISABLED!"
         }
-        runIn(1800, logsOff)
+        runIn(1800, "logsOff")
     }
     if(isDriver()) {
         if(!isDeveloperHub()) {
@@ -252,12 +233,11 @@ void initialize() {
     refresh()
 }
 
-/*
-	logsOff
-
-	Purpose: automatically disable debug logging after 30 mins.
-	Note: scheduled in Initialize()
-*/
+/**
+ * Automatically disable debug logging after 30 mins.
+ *
+ * Note: scheduled in Initialize()
+ */
 void logsOff() {
     if(runReset != "DEBUG") {
         log.warn "Debug logging disabled..."
@@ -269,11 +249,11 @@ void logsOff() {
             device.clearSetting("logLevel")
             device.removeSetting("logLevel")
             device.updateSetting("logLevel", "0")
-            state?.settings.remove("logLevel")
+            state?.settings?.remove("logLevel")
             device.clearSetting("debugLogging")
             device.removeSetting("debugLogging")
             device.updateSetting("debugLogging", "false")
-            state?.settings.remove("debugLogging")
+            state?.settings?.remove("debugLogging")
             
         } else {
             //app.clearSetting("logLevel")
@@ -289,9 +269,8 @@ void logsOff() {
     }
 }
 
-def isDeveloperHub() {
-    return generateMD5(location.hub.zigbeeId) == "125fceabd0413141e34bb859cd15e067"
-    //return false
+boolean isDeveloperHub() {
+    return generateMD5(location.hub.zigbeeId as String) == "125fceabd0413141e34bb859cd15e067"
 }
 
 def getEnvironmentObject() {
@@ -303,7 +282,7 @@ def getEnvironmentObject() {
 }
 
 private def getFilteredDeviceDriverName() {
-    deviceDriverName = getDeviceInfoByName('name')
+    def deviceDriverName = getDeviceInfoByName('name')
     if(deviceDriverName.toLowerCase().endsWith(' (parent)')) {
         deviceDriverName = deviceDriverName.substring(0, deviceDriverName.length()-9)
     }
@@ -311,8 +290,8 @@ private def getFilteredDeviceDriverName() {
 }
 
 private def getFilteredDeviceDisplayName() {
-    device_display_name = device.displayName.replace(' (parent)', '').replace(' (Parent)', '')
-    return device_display_name
+    def deviceDisplayName = device.displayName.replace(' (parent)', '').replace(' (Parent)', '')
+    return deviceDisplayName
 }
 
 def generate_preferences(configuration_model) {
@@ -373,38 +352,38 @@ def generate_preferences(configuration_model) {
 /*
     General Mathematical and Number Methods
 */
-float round2(float number, int scale) {
-    int pow = 10;
-    for (int i = 1; i < scale; i++)
+BigDecimal round2(BigDecimal number, Integer scale) {
+    Integer pow = 10;
+    for (Integer i = 1; i < scale; i++)
         pow *= 10;
-    float tmp = number * pow;
-    return ( (float) ( (int) ((tmp - (int) tmp) >= 0.5f ? tmp + 1 : tmp) ) ) / pow;
+    BigDecimal tmp = number * pow;
+    return ( (Float) ( (Integer) ((tmp - (Integer) tmp) >= 0.5f ? tmp + 1 : tmp) ) ) / pow;
 }
 
-def generateMD5(String s) {
-    MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
+String generateMD5(String s) {
+    return MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
 }
 
-def extractInt(String input) {
+Integer extractInt(String input) {
   return input.replaceAll("[^0-9]", "").toInteger()
 }
 
-/*
-    --END-- ALL DEFAULT METHODS (helpers-all-default)
-*/
+/**
+ * --END-- ALL DEFAULT METHODS (helpers-all-default)
+ */
 
-/*
-    DRIVER METADATA METHODS (helpers-driver-metadata)
-
-    These methods are to be used in (and/or with) the metadata section of drivers and
-    is also what contains the CSS handling and styling.
-*/
+/**
+ * DRIVER METADATA METHODS (helpers-driver-metadata)
+ *
+ * These methods are to be used in (and/or with) the metadata section of drivers and
+ * is also what contains the CSS handling and styling.
+ */
 
 // These methods can be executed in both the NORMAL driver scope as well
 // as the Metadata scope.
-private getMetaConfig() {
+private Map getMetaConfig() {
     // This method can ALSO be executed in the Metadata Scope
-    metaConfig = getDataValue('metaConfig')
+    def metaConfig = getDataValue('metaConfig')
     if(metaConfig == null) {
         metaConfig = [:]
     } else {
@@ -413,22 +392,20 @@ private getMetaConfig() {
     return metaConfig
 }
 
-def isCSSDisabled(metaConfig=null) {
+boolean isCSSDisabled(Map metaConfig=null) {
     if(metaConfig==null) metaConfig = getMetaConfig()
-    disableCSS = false
+    boolean disableCSS = false
     if(metaConfig.containsKey("disableCSS")) disableCSS = metaConfig["disableCSS"]
     return disableCSS
 }
 
 // These methods are used to set which elements to hide. 
 // They have to be executed in the NORMAL driver scope.
-
-
-private saveMetaConfig(metaConfig) {
+private void saveMetaConfig(Map metaConfig) {
     updateDataValue('metaConfig', JsonOutput.toJson(metaConfig))
 }
 
-private setSomethingToHide(String type, something, metaConfig=null) {
+private Map setSomethingToHide(String type, List something, Map metaConfig=null) {
     if(metaConfig==null) metaConfig = getMetaConfig()
     def oldData = []
     something = something.unique()
@@ -451,20 +428,19 @@ private setSomethingToHide(String type, something, metaConfig=null) {
     return metaConfig
 }
 
-private clearTypeToHide(type, metaConfig=null) {
+private Map clearTypeToHide(String type, Map metaConfig=null) {
     if(metaConfig==null) metaConfig = getMetaConfig()
-    something = something.unique()
     if(!metaConfig.containsKey("hide")) {
-        metaConfig["hide"] = ["$type":[]]
+        metaConfig["hide"] = [(type):[]]
     } else {
-        metaConfig["hide"]["$type"] = []
+        metaConfig["hide"][(type)] = []
     }
     saveMetaConfig(metaConfig)
     logging("clearTypeToHide() = ${metaConfig}", 1)
     return metaConfig
 }
 
-def clearThingsToHide(metaConfig=null) {
+Map clearThingsToHide(Map metaConfig=null) {
     metaConfig = setSomethingToHide("other", [], metaConfig=metaConfig)
     metaConfig["hide"] = [:]
     saveMetaConfig(metaConfig)
@@ -472,15 +448,15 @@ def clearThingsToHide(metaConfig=null) {
     return metaConfig
 }
 
-def setDisableCSS(valueBool, metaConfig=null) {
+Map setDisableCSS(boolean value, Map metaConfig=null) {
     if(metaConfig==null) metaConfig = getMetaConfig()
-    metaConfig["disableCSS"] = valueBool
+    metaConfig["disableCSS"] = value
     saveMetaConfig(metaConfig)
-    logging("setDisableCSS(valueBool = $valueBool) = ${metaConfig}", 1)
+    logging("setDisableCSS(value = $value) = ${metaConfig}", 1)
     return metaConfig
 }
 
-def setStateCommentInCSS(stateComment, metaConfig=null) {
+Map setStateCommentInCSS(String stateComment, Map metaConfig=null) {
     if(metaConfig==null) metaConfig = getMetaConfig()
     metaConfig["stateComment"] = stateComment
     saveMetaConfig(metaConfig)
@@ -488,61 +464,61 @@ def setStateCommentInCSS(stateComment, metaConfig=null) {
     return metaConfig
 }
 
-def setCommandsToHide(commands, metaConfig=null) {
+Map setCommandsToHide(List commands, Map metaConfig=null) {
     metaConfig = setSomethingToHide("command", commands, metaConfig=metaConfig)
     logging("setCommandsToHide(${commands})", 1)
     return metaConfig
 }
 
-def clearCommandsToHide(metaConfig=null) {
+Map clearCommandsToHide(Map metaConfig=null) {
     metaConfig = clearTypeToHide("command", metaConfig=metaConfig)
     logging("clearCommandsToHide(metaConfig=${metaConfig})", 1)
     return metaConfig
 }
 
-def setStateVariablesToHide(stateVariables, metaConfig=null) {
+Map setStateVariablesToHide(List stateVariables, Map metaConfig=null) {
     metaConfig = setSomethingToHide("stateVariable", stateVariables, metaConfig=metaConfig)
     logging("setStateVariablesToHide(${stateVariables})", 1)
     return metaConfig
 }
 
-def clearStateVariablesToHide(metaConfig=null) {
+Map clearStateVariablesToHide(Map metaConfig=null) {
     metaConfig = clearTypeToHide("stateVariable", metaConfig=metaConfig)
     logging("clearStateVariablesToHide(metaConfig=${metaConfig})", 1)
     return metaConfig
 }
 
-def setCurrentStatesToHide(currentStates, metaConfig=null) {
+Map setCurrentStatesToHide(List currentStates, Map metaConfig=null) {
     metaConfig = setSomethingToHide("currentState", currentStates, metaConfig=metaConfig)
     logging("setCurrentStatesToHide(${currentStates})", 1)
     return metaConfig
 }
 
-def clearCurrentStatesToHide(metaConfig=null) {
+Map clearCurrentStatesToHide(Map metaConfig=null) {
     metaConfig = clearTypeToHide("currentState", metaConfig=metaConfig)
     logging("clearCurrentStatesToHide(metaConfig=${metaConfig})", 1)
     return metaConfig
 }
 
-def setDatasToHide(datas, metaConfig=null) {
+Map setDatasToHide(List datas, Map metaConfig=null) {
     metaConfig = setSomethingToHide("data", datas, metaConfig=metaConfig)
     logging("setDatasToHide(${datas})", 1)
     return metaConfig
 }
 
-def clearDatasToHide(metaConfig=null) {
+Map clearDatasToHide(Map metaConfig=null) {
     metaConfig = clearTypeToHide("data", metaConfig=metaConfig)
     logging("clearDatasToHide(metaConfig=${metaConfig})", 1)
     return metaConfig
 }
 
-def setPreferencesToHide(preferences, metaConfig=null) {
+Map setPreferencesToHide(List preferences, Map metaConfig=null) {
     metaConfig = setSomethingToHide("preference", preferences, metaConfig=metaConfig)
     logging("setPreferencesToHide(${preferences})", 1)
     return metaConfig
 }
 
-def clearPreferencesToHide(metaConfig=null) {
+Map clearPreferencesToHide(Map metaConfig=null) {
     metaConfig = clearTypeToHide("preference", metaConfig=metaConfig)
     logging("clearPreferencesToHide(metaConfig=${metaConfig})", 1)
     return metaConfig
@@ -551,7 +527,7 @@ def clearPreferencesToHide(metaConfig=null) {
 // These methods are for executing inside the metadata section of a driver.
 def metaDataExporter() {
     //log.debug "getEXECUTOR_TYPE = ${getEXECUTOR_TYPE()}"
-    filteredPrefs = getPreferences()['sections']['input'].name[0]
+    List filteredPrefs = getPreferences()['sections']['input'].name[0]
     //log.debug "filteredPrefs = ${filteredPrefs}"
     if(filteredPrefs != []) updateDataValue('preferences', "${filteredPrefs}".replaceAll("\\s",""))
 }
@@ -586,10 +562,10 @@ h3, h4, .property-label {
 '''
 */
 
-def getDriverCSSWrapper() {
-    metaConfig = getMetaConfig()
-    disableCSS = isCSSDisabled(metaConfig=metaConfig)
-    defaultCSS = '''
+String getDriverCSSWrapper() {
+    Map metaConfig = getMetaConfig()
+    boolean disableCSS = isCSSDisabled(metaConfig=metaConfig)
+    String defaultCSS = '''
     /* This is part of the CSS for replacing a Command Title */
     div.mdl-card__title div.mdl-grid div.mdl-grid .mdl-cell p::after {
         visibility: visible;
@@ -612,7 +588,7 @@ def getDriverCSSWrapper() {
         font-style: italic;
     }
     '''
-    r = "<style>"
+    String r = "<style>"
     
     if(disableCSS == false) {
         r += "$defaultCSS "
@@ -655,33 +631,33 @@ def getDriverCSSWrapper() {
     return r
 }
 
-def getCommandIndex(cmd) {
-    commands = device.getSupportedCommands().unique()
-    i = commands.findIndexOf{ "$it" == cmd}+1
+Integer getCommandIndex(String cmd) {
+    List commands = device.getSupportedCommands().unique()
+    Integer i = commands.findIndexOf{ "$it" == cmd}+1
     //log.debug "getCommandIndex: Seeing these commands: '${commands}', index=$i}"
     return i
 }
 
-def getCSSForCommandHiding(cmdToHide) {
-    i = getCommandIndex(cmdToHide)
-    r = ""
+String getCSSForCommandHiding(String cmdToHide) {
+    Integer i = getCommandIndex(cmdToHide)
+    String r = ""
     if(i > 0) {
         r = "div.mdl-card__title div.mdl-grid div.mdl-grid .mdl-cell:nth-of-type($i){display: none;}"
     }
     return r
 }
 
-def getCSSForCommandsToHide(commands) {
-    r = ""
+String getCSSForCommandsToHide(List commands) {
+    String r = ""
     commands.each {
         r += getCSSForCommandHiding(it)
     }
     return r
 }
 
-def getCSSToChangeCommandTitle(cmd, newTitle) {
-    i = getCommandIndex(cmd)
-    r = ""
+String getCSSToChangeCommandTitle(String cmd, String newTitle) {
+    Integer i = getCommandIndex(cmd)
+    String r = ""
     if(i > 0) {
         r += "div.mdl-card__title div.mdl-grid div.mdl-grid .mdl-cell:nth-of-type($i) p {visibility: hidden;}"
         r += "div.mdl-card__title div.mdl-grid div.mdl-grid .mdl-cell:nth-of-type($i) p::after {content: '$newTitle';}"
@@ -689,64 +665,64 @@ def getCSSToChangeCommandTitle(cmd, newTitle) {
     return r
 }
 
-def getStateVariableIndex(stateVariable) {
-    stateVariables = state.keySet()
-    i = stateVariables.findIndexOf{ "$it" == stateVariable}+1
+Integer getStateVariableIndex(String stateVariable) {
+    def stateVariables = state.keySet()
+    Integer i = stateVariables.findIndexOf{ "$it" == stateVariable}+1
     //log.debug "getStateVariableIndex: Seeing these State Variables: '${stateVariables}', index=$i}"
     return i
 }
 
-def getCSSForStateVariableHiding(stateVariableToHide) {
-    i = getStateVariableIndex(stateVariableToHide)
-    r = ""
+String getCSSForStateVariableHiding(String stateVariableToHide) {
+    Integer i = getStateVariableIndex(stateVariableToHide)
+    String r = ""
     if(i > 0) {
         r = "ul#statev li.property-value:nth-of-type($i){display: none;}"
     }
     return r
 }
 
-def getCSSForStateVariablesToHide(stateVariables) {
-    r = ""
+String getCSSForStateVariablesToHide(List stateVariables) {
+    String r = ""
     stateVariables.each {
         r += getCSSForStateVariableHiding(it)
     }
     return r
 }
 
-def getCSSForCurrentStatesToHide(currentStates) {
-    r = ""
+String getCSSForCurrentStatesToHide(List currentStates) {
+    String r = ""
     currentStates.each {
         r += "ul#cstate li#cstate-$it {display: none;}"
     }
     return r
 }
 
-def getDataIndex(data) {
-    datas = device.getData().keySet()
-    i = datas.findIndexOf{ "$it" == data}+1
+Integer getDataIndex(String data) {
+    def datas = device.getData().keySet()
+    Integer i = datas.findIndexOf{ "$it" == data}+1
     //log.debug "getDataIndex: Seeing these Data Keys: '${datas}', index=$i}"
     return i
 }
 
-def getCSSForDataHiding(dataToHide) {
-    i = getDataIndex(dataToHide)
-    r = ""
+String getCSSForDataHiding(String dataToHide) {
+    Integer i = getDataIndex(dataToHide)
+    String r = ""
     if(i > 0) {
         r = "table.property-list tr li.property-value:nth-of-type($i) {display: none;}"
     }
     return r
 }
 
-def getCSSForDatasToHide(datas) {
-    r = ""
+String  getCSSForDatasToHide(List datas) {
+    String r = ""
     datas.each {
         r += getCSSForDataHiding(it)
     }
     return r
 }
 
-def getPreferenceIndex(preference, returnMax=false) {
-    filteredPrefs = getPreferences()['sections']['input'].name[0]
+Integer getPreferenceIndex(String preference, boolean returnMax=false) {
+    def filteredPrefs = getPreferences()['sections']['input'].name[0]
     //log.debug "getPreferenceIndex: Seeing these Preferences first: '${filteredPrefs}'"
     if(filteredPrefs == [] || filteredPrefs == null) {
         d = getDataValue('preferences')
@@ -761,7 +737,7 @@ def getPreferenceIndex(preference, returnMax=false) {
         
 
     }
-    i = 0
+    Integer i = 0
     if(returnMax == true) {
         i = filteredPrefs.size()
     } else {
@@ -771,14 +747,14 @@ def getPreferenceIndex(preference, returnMax=false) {
     return i
 }
 
-def getCSSForPreferenceHiding(preferenceToHide, overrideIndex=0) {
-    i = 0
+String getCSSForPreferenceHiding(String preferenceToHide, Integer overrideIndex=0) {
+    Integer i = 0
     if(overrideIndex == 0) {
         i = getPreferenceIndex(preferenceToHide)
     } else {
         i = overrideIndex
     }
-    r = ""
+    String r = ""
     if(i > 0) {
         r = "form[action*=\"preference\"] div.mdl-grid div.mdl-cell:nth-of-type($i) {display: none;} "
     }else if(i == -1) {
@@ -787,35 +763,36 @@ def getCSSForPreferenceHiding(preferenceToHide, overrideIndex=0) {
     return r
 }
 
-def getCSSForPreferencesToHide(preferences) {
-    r = ""
+String getCSSForPreferencesToHide(List preferences) {
+    String r = ""
     preferences.each {
         r += getCSSForPreferenceHiding(it)
     }
     return r
 }
-def getCSSForHidingLastPreference() {
+
+String getCSSForHidingLastPreference() {
     return getCSSForPreferenceHiding(null, overrideIndex=-1)
 }
 
-/*
-    --END-- DRIVER METADATA METHODS (helpers-driver-metadata)
-*/
+/**
+ * --END-- DRIVER METADATA METHODS (helpers-driver-metadata)
+ */
 
-/*
-    STYLING (helpers-styling)
-
-    Helper functions included in all Drivers and Apps using Styling
-*/
-def addTitleDiv(title) {
+/**
+ * STYLING (helpers-styling)
+ *
+ * Helper functions included in all Drivers and Apps using Styling
+ */
+String addTitleDiv(title) {
     return '<div class="preference-title">' + title + '</div>'
 }
 
-def addDescriptionDiv(description) {
+String addDescriptionDiv(description) {
     return '<div class="preference-description">' + description + '</div>'
 }
 
-def makeTextBold(s) {
+String makeTextBold(s) {
     // DEPRECATED: Should be replaced by CSS styling!
     if(isDriver()) {
         return "<b>$s</b>"
@@ -824,7 +801,7 @@ def makeTextBold(s) {
     }
 }
 
-def makeTextItalic(s) {
+String makeTextItalic(s) {
     // DEPRECATED: Should be replaced by CSS styling!
     if(isDriver()) {
         return "<i>$s</i>"
@@ -833,9 +810,9 @@ def makeTextItalic(s) {
     }
 }
 
-/*
-    --END-- STYLING METHODS (helpers-styling)
-*/
+/**
+ * --END-- STYLING METHODS (helpers-styling)
+ */
 
 // BEGIN:getLoggingFunction(specialDebugLevel=True)
 /* Logging function included in all drivers */

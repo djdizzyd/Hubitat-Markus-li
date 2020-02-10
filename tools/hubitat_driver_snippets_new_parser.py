@@ -22,7 +22,7 @@ def descMap = parseDescriptionAsMap(description)
 def body
 //logging("descMap: ${descMap}", 0)
 
-Boolean missingChild = false
+boolean missingChild = false
 
 if (!state.mac || state.mac != descMap["mac"]) {
     logging("Mac address of device found ${descMap["mac"]}",1)
@@ -57,8 +57,8 @@ if(missingChild == true) {
 if (!device.currentValue("ip") || (device.currentValue("ip") != getDataValue("ip"))) {
     def curIP = getDataValue("ip")
     logging("Setting IP: $curIP", 1)
-    sendEvent(name: 'ip', value: curIP)
-    sendEvent(name: "ipLink", value: "<a target=\\"device\\" href=\\"http://$curIP\\">$curIP</a>")
+    sendEvent(name: 'ip', value: curIP, isStateChange: false)
+    sendEvent(name: "ipLink", value: "<a target=\\"device\\" href=\\"http://$curIP\\">$curIP</a>", isStateChange: false)
 }
 
 return events
@@ -105,9 +105,9 @@ if (result.containsKey("Hostname")) {
 }
 if (result.containsKey("IPAddress") && (override == false || override == null)) {
     logging("IPAddress: $result.IPAddress",99)
-    sendEvent(name: "ip", value: "$result.IPAddress")
+    sendEvent(name: "ip", value: "$result.IPAddress", isStateChange: false)
     //logging("ipLink: <a target=\\"device\\" href=\\"http://$result.IPAddress\\">$result.IPAddress</a>",10)
-    sendEvent(name: "ipLink", value: "<a target=\\"device\\" href=\\"http://$result.IPAddress\\">$result.IPAddress</a>")
+    sendEvent(name: "ipLink", value: "<a target=\\"device\\" href=\\"http://$result.IPAddress\\">$result.IPAddress</a>", isStateChange: false)
 }
 if (result.containsKey("WebServerMode")) {
     logging("WebServerMode: $result.WebServerMode",99)
@@ -119,7 +119,7 @@ if (result.containsKey("Version")) {
 if (result.containsKey("Module") && !result.containsKey("Version")) {
     // The check for Version is here to avoid using the wrong message
     logging("Module: $result.Module",50)
-    sendEvent(name: "module", value: "$result.Module")
+    sendEvent(name: "module", value: "$result.Module", isStateChange: false)
 }
 // When it is a Template, it looks a bit different and is NOT valid JSON...
 if (result.containsKey("NAME") && result.containsKey("GPIO") && result.containsKey("FLAG") && result.containsKey("BASE")) {  
@@ -130,14 +130,14 @@ if (result.containsKey("NAME") && result.containsKey("GPIO") && result.containsK
     n = n.replaceAll('\\\\},FLAG', '\\\\],"FLAG"').replaceAll('BASE', '"BASE"')
     // TODO: Learn how to do this the right way in Groovy
     logging("Template: $n",50)
-    sendEvent(name: "templateData", value: "${n}")
+    sendEvent(name: "templateData", value: "${n}", isStateChange: false)
 }
 if (result.containsKey("RestartReason")) {
     logging("RestartReason: $result.RestartReason",99)
 }
 if (result.containsKey("TuyaMCU")) {
     logging("TuyaMCU: $result.TuyaMCU",99)
-    sendEvent(name: "tuyaMCU", value: "$result.TuyaMCU")
+    sendEvent(name: "tuyaMCU", value: "$result.TuyaMCU", isStateChange: false)
 }
 if (result.containsKey("SetOption81")) {
     logging("SetOption81: $result.SetOption81",99)
@@ -171,7 +171,7 @@ if (result.containsKey("Wifi")) {
     if (result.Wifi.containsKey("RSSI")) {
         logging("RSSI: $result.Wifi.RSSI",99)
         String quality = "${dBmToQuality(result.Wifi.RSSI)}%"
-        if(device.currentValue('wifiSignal') != quality) sendEvent(name: "wifiSignal", value: quality)
+        if(device.currentValue('wifiSignal') != quality) sendEvent(name: "wifiSignal", value: quality, isStateChange: false)
     }
     if (result.Wifi.containsKey("SSId")) {
         logging("SSId: $result.Wifi.SSId",99)

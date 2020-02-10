@@ -23,6 +23,7 @@ preferences {
      page(name: "resultPage")
      page(name: "configureTasmotaDevice")
      page(name: "addDevices", title: "Add Tasmota-based Device", content: "addDevices")
+     page(name: "deviceDiscovery")
      page(name: "manuallyAdd")
      page(name: "manuallyAddConfirm")
 }
@@ -72,6 +73,7 @@ Map mainPage() {
                 getElementStyle('separator')
                 //input(name: "sendToAWSwitch", type: "bool", defaultValue: "false", title: "Use App Watchdog to track this apps version info?", description: "Update App Watchdog", submitOnChange: "true")}
                 generate_preferences(configuration_model_debug())
+                input("passwordDefault", "password", title:"Default Tasmota Password", submitOnChange: true, displayDuringSetup: true)
             
             //input(name: "pushAll", type: "bool", defaultValue: "false", submitOnChange: true, title: "Only send Push if there is something to actually report", description: "Push All")
             //href "deviceDiscoveryCancel", title:"Cancel Discover Device", description:""
@@ -120,16 +122,16 @@ Map mainPage() {
                         String firmware = "${cDev.getDeviceDataByName('firmware')}"
                         String driverVersion = "${cDev.getDeviceDataByName('driver')}"
                         String driverName = "${getDeviceDriverName(cDev)}"
-                        getDeviceTable([[href:getDeviceConfigLink(cDev.id)],
-                                        [data:rawDev['data']['ip']],
+                        getDeviceTable([href:           [href:getDeviceConfigLink(cDev.id)],
+                                        ip:             [data:rawDev['data']['ip']],
                                         //[data:runDeviceCommand(getTasmotaDevice(cDev.deviceNetworkId), 'getDeviceDataByName', ['uptime'])],])
-                                        [data:uptime, red:uptime == "null"],
-                                        [data:lastActivity['time'], red:lastActivity['red']],
-                                        [data:"${wifiSignalQuality}", red:wifiSignalQualityRed],
-                                        [data:firmware, red:firmware == "null"],
-                                        [data:driverVersion, red:driverVersion == "null"],
-                                        [data:deviceStatus, red:deviceStatus != "Available"],
-                                        [data:driverName, red:driverName == "null"],])
+                                        uptime:         [data:uptime, red:uptime == "null"],
+                                        lastActivity:   [data:lastActivity['time'], red:lastActivity['red']],
+                                        wifi:           [data:"${wifiSignalQuality}", red:wifiSignalQualityRed],
+                                        firmware:       [data:firmware, red:firmware == "null"],
+                                        driverVersion:  [data:driverVersion, red:driverVersion == "null"],
+                                        deviceStatus:   [data:deviceStatus, red:deviceStatus != "Available"],
+                                        driverName:     [data:driverName, red:driverName == "null"],])
                                 // it.label
                             //btnParagraph([[href:getDeviceConfigLink(cDev.id), target:"_blank", title:"Config"],
                             //            [href:getDeviceTasmotaConfigLink(cDev['data']['ip']), target:"_blank", title:'Tasmota&nbsp;Web&nbsp;Config (' + cDev['data']['ip'] + ')']],
@@ -444,39 +446,39 @@ def getDeviceTable(deviceInfo, extra="") {
     content += '<th style="width: 80px;"><div>Heartbeat</div></th>'
     content += '<th style="width: 33px;"><div>Wifi</div></th>'
     content += '<th style="width: 100px;"><div>Firmware</div></th>'
-    content += '<th style="width: 60px;"><div>Driver</div></th>'
+    content += '<th style="width: 80px;"><div>Driver</div></th>'
     content += '<th style="width: 60px;"><div>Status</div></th>'
     content += '<th style=""><div>Type</div></th>'
     content += '</tr><tr>'
 
     // Config Link
-    content += getDeviceTableCell([href:deviceInfo[0]['href'], 
+    content += getDeviceTableCell([href:deviceInfo['href']['href'], 
         target:'_blank', title:getMaterialIcon('', 'he-settings1 icon-tiny device-config_btn_icon')])
 
     // Tasmota Web Config Link
-    content += getDeviceTableCell([class:'device-config_btn', href:getDeviceTasmotaConfigLink(deviceInfo[1]['data']), 
-        target:'_blank', title:deviceInfo[1]['data']])
+    content += getDeviceTableCell([class:'device-config_btn', href:getDeviceTasmotaConfigLink(deviceInfo['ip']['data']), 
+        target:'_blank', title:deviceInfo['ip']['data']])
 
     // Tasmota Device Uptime
-    content += getDeviceTableCell([title:deviceInfo[2]['data'], red:deviceInfo[2]['red']], false)
+    content += getDeviceTableCell([title:deviceInfo['uptime']['data'], red:deviceInfo['uptime']['red']], false)
 
     // Tasmota Heartbeat
-    content += getDeviceTableCell([title:deviceInfo[3]['data'], red:deviceInfo[3]['red']], false)
+    content += getDeviceTableCell([title:deviceInfo['lastActivity']['data'], red:deviceInfo['lastActivity']['red']], false)
 
     // Wifi Signal Quality
-    content += getDeviceTableCell([title:deviceInfo[4]['data'], red:deviceInfo[4]['red']], false)
+    content += getDeviceTableCell([title:deviceInfo['wifi']['data'], red:deviceInfo['wifi']['red']], false)
 
     // Firmware Version
-    content += getDeviceTableCell([title:deviceInfo[5]['data'], red:deviceInfo[5]['red']], false)
+    content += getDeviceTableCell([title:deviceInfo['firmware']['data'], red:deviceInfo['firmware']['red']], false)
 
     // Driver Version
-    content += getDeviceTableCell([title:deviceInfo[6]['data'], red:deviceInfo[6]['red']], false)
+    content += getDeviceTableCell([title:deviceInfo['driverVersion']['data'], red:deviceInfo['driverVersion']['red']], false)
 
     // Status
-    content += getDeviceTableCell([title:deviceInfo[7]['data'], red:deviceInfo[7]['red']], false)
+    content += getDeviceTableCell([title:deviceInfo['deviceStatus']['data'], red:deviceInfo['deviceStatus']['red']], false)
 
     // Driver Type
-    content += getDeviceTableCell([title:deviceInfo[8]['data'], red:deviceInfo[8]['red']], false)
+    content += getDeviceTableCell([title:deviceInfo['driverName']['data'], red:deviceInfo['driverName']['red']], false)
 
     content += '</tr>'
     content += '<tr>'
@@ -520,35 +522,61 @@ def configureTasmotaDevice(params) {
     //}
 }
 
+//
+def deviceDiscovery(){
+   dynamicPage(name: "deviceDiscovery", title: "Discover Tasmota-based Devices", nextPage: "mainPage") {
+		section {
+			paragraph "NOT FUNCTIONAL: This process will automatically discover your device, this may take a few minutes. Please be patient. Tasmota Device Handler then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your WiFi network."
+            /*input "deviceType", "enum", title:"Device Type", description: "", required: true, options: 
+                #!include:makeTasmotaConnectDriverListV1()
+            input "ipAddress", "text", title:"IP Address", description: "", required: true */
+		}
+    }
+}
+
+
 def manuallyAdd(){
    dynamicPage(name: "manuallyAdd", title: "Manually add a Tasmota-based Device", nextPage: "manuallyAddConfirm") {
 		section {
-			paragraph "This process will manually create a Tasmota-based Device with the entered IP address. Tasmota Connect then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your wifi network."
-            input "deviceType", "enum", title:"Device Type", description: "", required: true, options: 
+            paragraph "This process will manually create a Tasmota-based Device with the entered IP address. Tasmota Device Handler then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your wifi network."
+            input "deviceType", "enum", title:"Device Type", description: "", required: true, submitOnChange: false, options: 
                 #!include:makeTasmotaConnectDriverListV1()
-            input "ipAddress", "text", title:"IP Address", description: "", required: true 
+            input("ipAddress", "text", title:"IP Address", description: "", required: true, submitOnChange: false)
+            input("deviceLabel", "text", title:"Device Label", description: "", required: true, defaultValue: (deviceType ? deviceType : "Tasmota - Universal Parent") + " (%device_ip%)")
+            paragraph("'%device_ip%' = insert device IP here")
+            input("passwordDevice", "password", title:"Tasmota Device Password", description: "Only needed if set in Tasmota.", defaultValue: passwordDefault, submitOnChange: true, displayDuringSetup: true)
+            paragraph("Only needed if set in Tasmota.")
 		}
     }
 }
 
 def manuallyAddConfirm(){
    if ( ipAddress =~ /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/) {
-       logging("Creating Tasmota-based Wifi Device with dni: ${convertIPtoHex(ipAddress)}", 1)
-       addChildDevice("tasmota", deviceType ? deviceType : "Tasmota - Generic Wifi Switch/Plug", "${convertIPtoHex(ipAddress)}", location.hubs[0].id, [
-           "label": (deviceType ? deviceType : "Tasmota - Generic Wifi Switch/Plug") + " (${ipAddress})",
+        logging("Creating Tasmota-based Wifi Device with dni: ${convertIPtoHex(ipAddress)}", 1)
+        if(passwordDevice == null || passwordDevice == "") {
+           passwordDevice = "[installed]"
+        }
+        def child = addChildDevice("tasmota", deviceType ? deviceType : "Tasmota - Universal Parent", "${convertIPtoHex(ipAddress)}", location.hubs[0].id, [
+           "label": (deviceLabel ? deviceLabel : "Tasmota - Universal Parent (%device_ip%)").replace("%device_ip%", "${ipAddress}"),
            "data": [
            "ip": ipAddress,
-           "port": "80" 
+           "port": "80",
+           "password": encrypt(passwordDevice)
            ]
-       ])
-   
-       app.updateSetting("ipAddress", "")
+        ])
+
+        // We do this to get everything setup correctly
+        child.refresh()
+
+        app.updateSetting("ipAddress", "")
+        app.updateSetting("deviceLabel", "")
+        app.updateSetting("passwordDevice", "")
             
-       dynamicPage(name: "manuallyAddConfirm", title: "Manually add a Tasmota-based Device", nextPage: "mainPage") {
-		   section {
-			   paragraph "The device has been added. Press next to return to the main page."
-	    	}
-       }
+        dynamicPage(name: "manuallyAddConfirm", title: "Manually add a Tasmota-based Device", nextPage: "mainPage") {
+            section {
+                paragraph "The device has been added. Press next to return to the main page."
+            }
+        }
     } else {
         dynamicPage(name: "manuallyAddConfirm", title: "Manually add a Tasmota-based Device", nextPage: "mainPage") {
 		    section {

@@ -17,6 +17,12 @@ void refresh(cmd) {
 void installed() {
 	logging("installed()", 100)
     
+    try {
+        // Used by certain types of drivers, like Tasmota Parent drivers
+        installedPreConfigure()
+    } catch (MissingMethodException e) {
+        // ignore
+    }
 	configure()
     try {
         // In case we have some more to run specific to this Driver
