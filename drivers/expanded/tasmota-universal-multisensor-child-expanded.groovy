@@ -18,7 +18,8 @@
 /** Default Imports */
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
-import java.security.MessageDigest   // Used for MD5 calculations
+// Used for MD5 calculations
+import java.security.MessageDigest
 //import groovy.transform.TypeChecked
 //import groovy.transform.TypeCheckingMode
 // END:  getDefaultImports()
@@ -26,7 +27,7 @@ import java.security.MessageDigest   // Used for MD5 calculations
 
 metadata {
     // Do NOT rename the child driver name unless you also change the corresponding code in the Parent!
-    definition (name: "Tasmota - Universal Multisensor (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-universal-multisensor-child-expanded.groovy") {
+    definition (name: "Tasmota - Universal Multisensor (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-multisensor-child-expanded.groovy") {
         capability "Sensor"
         capability "TemperatureMeasurement"       // Attributes: temperature - NUMBER
         capability "RelativeHumidityMeasurement"  // Attributes: humidity - NUMBER
@@ -67,7 +68,7 @@ metadata {
 public getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    def deviceInfo = ['name': 'Tasmota - Universal Multisensor (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-universal-multisensor-child-expanded.groovy']
+    def deviceInfo = ['name': 'Tasmota - Universal Multisensor (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-multisensor-child-expanded.groovy']
     //logging("deviceInfo[${infoName}] = ${deviceInfo[infoName]}", 1)
     return(deviceInfo[infoName])
 }

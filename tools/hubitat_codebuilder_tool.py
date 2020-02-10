@@ -72,8 +72,8 @@ except SyntaxError as e:
 # NOTE: All function names use mixedCaps since this is used with Groovy and it makes
 #       it less confusing not changing style all the time. 
 def main():
-    base_repo_url = 'https://github.com/markus-li/Hubitat/blob/release/drivers/expanded/'
-    base_raw_repo_url = 'https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/'
+    base_repo_url = 'https://github.com/markus-li/Hubitat/blob/development/drivers/expanded/'
+    base_raw_repo_url = 'https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/'
 
     # Get us a Code Builder...
     

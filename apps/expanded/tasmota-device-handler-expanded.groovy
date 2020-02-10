@@ -18,7 +18,8 @@
 /** Default Imports */
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
-import java.security.MessageDigest   // Used for MD5 calculations
+// Used for MD5 calculations
+import java.security.MessageDigest
 //import groovy.transform.TypeChecked
 //import groovy.transform.TypeCheckingMode
 /* Default Parent Imports */
@@ -911,7 +912,6 @@ def deviceDiscovery(){
             /*input "deviceType", "enum", title:"Device Type", description: "", required: true, options: 
                 // BEGIN:makeTasmotaConnectDriverListV1()
                 ["Tasmota - Universal Parent",
-                "Tasmota - Universal Parent Testing",
                 ]
                 // END:  makeTasmotaConnectDriverListV1()
             input "ipAddress", "text", title:"IP Address", description: "", required: true */
@@ -927,7 +927,6 @@ def manuallyAdd(){
             input "deviceType", "enum", title:"Device Type", description: "", required: true, submitOnChange: false, options: 
                 // BEGIN:makeTasmotaConnectDriverListV1()
                 ["Tasmota - Universal Parent",
-                "Tasmota - Universal Parent Testing",
                 ]
                 // END:  makeTasmotaConnectDriverListV1()
             input("ipAddress", "text", title:"IP Address", description: "", required: true, submitOnChange: false)

@@ -40,7 +40,8 @@ def getDefaultImports():
     return """/** Default Imports */
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
-import java.security.MessageDigest   // Used for MD5 calculations
+// Used for MD5 calculations
+import java.security.MessageDigest
 //import groovy.transform.TypeChecked
 //import groovy.transform.TypeCheckingMode
 """

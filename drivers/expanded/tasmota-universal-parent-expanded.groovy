@@ -18,7 +18,8 @@
 /** Default Imports */
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
-import java.security.MessageDigest   // Used for MD5 calculations
+// Used for MD5 calculations
+import java.security.MessageDigest
 //import groovy.transform.TypeChecked
 //import groovy.transform.TypeCheckingMode
 /* Default Parent Imports */
@@ -26,7 +27,7 @@ import java.security.MessageDigest   // Used for MD5 calculations
 
 
 metadata {
-	definition (name: "Tasmota - Universal Parent", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-universal-parent-expanded.groovy") {
+	definition (name: "Tasmota - Universal Parent", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-parent-expanded.groovy") {
         // BEGIN:getDefaultMetadataCapabilities()
         // Default Capabilities
         capability "Refresh"
@@ -113,7 +114,7 @@ metadata {
 public getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    def deviceInfo = ['name': 'Tasmota - Universal Parent', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/release/drivers/expanded/tasmota-universal-parent-expanded.groovy']
+    def deviceInfo = ['name': 'Tasmota - Universal Parent', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-parent-expanded.groovy']
     //logging("deviceInfo[${infoName}] = ${deviceInfo[infoName]}", 1)
     return(deviceInfo[infoName])
 }
