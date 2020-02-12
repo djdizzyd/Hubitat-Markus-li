@@ -220,6 +220,41 @@ TreeMap getDeviceConfigurations() {
          template: '{"NAME":"Sonoff S31","GPIO":[17,145,0,146,0,0,0,0,21,56,0,0,0],"FLAG":0,"BASE":41}',
          installCommands: [["SetOption81", "1"], ["LedPower", "1"], ["LedState", "8"]],
          deviceLink: 'https://templates.blakadder.com/sonoff_S31.html'],
+        
+        [typeId: 'sonoff-ifan02',
+         name: 'Sonoff iFan02',
+         module: 44,
+         //template: '{"NAME":"Sonoff iFan02","GPIO":[17,255,0,255,23,22,18,19,21,56,20,24,0],"FLAG":0,"BASE":44}',
+         installCommands: [['Rule1', '0']],
+         deviceLink: 'https://templates.blakadder.com/sonoff_ifan02.html'],
+
+        [typeId: 'sonoff-ifan03-no_beep-m44',
+         name: 'Sonoff iFan03 (No Beep) M44',
+         template: '{"NAME":"Sonoff iFan03","GPIO":[17,255,0,255,0,0,29,33,23,56,22,24,0],"FLAG":0,"BASE":44}',
+         installCommands: [["SetOption67", "0"], ['Rule1', '0']],
+         deviceLink: 'https://templates.blakadder.com/sonoff_ifan03.html'],
+
+        [typeId: 'sonoff-ifan03-beep-m44',
+         name: 'Sonoff iFan03 (Beep) M44',
+         template: '{"NAME":"Sonoff iFan03","GPIO":[17,255,0,255,0,0,29,33,23,56,22,24,0],"FLAG":0,"BASE":44}',
+         installCommands: [["SetOption67", "0"],
+                           ['Rule1', 'ON Fanspeed#Data>=1 DO Buzzer %value%; ENDON ON Fanspeed#Data==0 DO Buzzer 1; ENDON'],
+                           ['Rule1', '1']],
+         deviceLink: 'https://templates.blakadder.com/sonoff_ifan03.html'],
+
+        [typeId: 'sonoff-ifan03-no_beep-m71',
+         name: 'Sonoff iFan03 (No Beep) M71',
+         module: 71,
+         //template: '{"NAME":"SonoffiFan03","GPIO":[17,148,0,149,0,0,29,161,23,56,22,24,0],"FLAG":0,"BASE":71}',
+         installCommands: [["SetOption67", "0"], ['Rule1', '0']],
+         deviceLink: 'https://templates.blakadder.com/sonoff_ifan03.html'],
+
+        [typeId: 'sonoff-ifan03-beep-m71',
+         name: 'Sonoff iFan03 (Beep) M71',
+         module: 71,
+         //template: '{"NAME":"SonoffiFan03","GPIO":[17,148,0,149,0,0,29,161,23,56,22,24,0],"FLAG":0,"BASE":71}',
+         installCommands: [["SetOption67", "1"], ['Rule1', '0']],
+         deviceLink: 'https://templates.blakadder.com/sonoff_ifan03.html'],
 
         [typeId: 'kmc-4-pm-plug',
          name: 'KMC 4 Power Monitor Plug',
@@ -334,6 +369,12 @@ TreeMap getDeviceConfigurations() {
         template: '{"NAME":"PrimeCCRC13PK","GPIO":[0,0,0,0,57,56,0,0,21,122,0,0,0],"FLAG":0,"BASE":18}',
         installCommands: [],
         deviceLink: 'https://templates.blakadder.com/prime_CCRCWFII113PK.html'],
+
+        [typeId: 'ykyc-wj1y0-10a', 
+        name: 'YKYC-WJ1Y0-10A PM Plug',
+        template: '{"NAME":"YKYC-001PMPlug","GPIO":[0,17,0,57,133,132,0,0,130,56,21,0,0],"FLAG":0,"BASE":18}',
+        installCommands: [],
+        deviceLink: ''],
 
         [typeId: 'tuyamcu-wifi-dimmer', 
         name: 'TuyaMCU Wifi Dimmer',
@@ -658,7 +699,7 @@ def parse(description) {
     
     if (body && body != "") {
         if(body.startsWith("{") || body.startsWith("[")) {
-            logging("========== Parsing Report ==========",99)
+            boolean log99 = logging("========== Parsing Report ==========", 99)
             def slurper = new JsonSlurper()
             def result = slurper.parseText(body)
     
@@ -690,16 +731,16 @@ def parse(description) {
     // END:  getGenericTasmotaNewParseFooter()
 }
 
-def parseResult(result) {
-    def missingChild = false
+boolean parseResult(result) {
+    boolean missingChild = false
     missingChild = parseResult(result, missingChild)
     return missingChild
 }
 
-def parseResult(result, missingChild) {
+boolean parseResult(result, missingChild) {
 
     updatePresence("present")
-    logging("parseResult: $result", 1)
+    boolean log99 = logging("parseResult: $result", 99)
     // BEGIN:getTasmotaNewParserForBasicData()
     // Standard Basic Data parsing
     
@@ -723,19 +764,19 @@ def parseResult(result, missingChild) {
         logging("StatusSTS: $result.StatusSTS",99)
         result << result.StatusSTS
     }
-    if (result.containsKey("LoadAvg")) {
+    if (log99 == true && result.containsKey("LoadAvg")) {
         logging("LoadAvg: $result.LoadAvg",99)
     }
-    if (result.containsKey("Sleep")) {
+    if (log99 == true && result.containsKey("Sleep")) {
         logging("Sleep: $result.Sleep",99)
     }
-    if (result.containsKey("SleepMode")) {
+    if (log99 == true && result.containsKey("SleepMode")) {
         logging("SleepMode: $result.SleepMode",99)
     }
-    if (result.containsKey("Vcc")) {
+    if (log99 == true && result.containsKey("Vcc")) {
         logging("Vcc: $result.Vcc",99)
     }
-    if (result.containsKey("Hostname")) {
+    if (log99 == true && result.containsKey("Hostname")) {
         logging("Hostname: $result.Hostname",99)
     }
     if (result.containsKey("IPAddress") && (override == false || override == null)) {
@@ -744,7 +785,7 @@ def parseResult(result, missingChild) {
         //logging("ipLink: <a target=\"device\" href=\"http://$result.IPAddress\">$result.IPAddress</a>",10)
         sendEvent(name: "ipLink", value: "<a target=\"device\" href=\"http://$result.IPAddress\">$result.IPAddress</a>", isStateChange: false)
     }
-    if (result.containsKey("WebServerMode")) {
+    if (log99 == true && result.containsKey("WebServerMode")) {
         logging("WebServerMode: $result.WebServerMode",99)
     }
     if (result.containsKey("Version")) {
@@ -767,17 +808,17 @@ def parseResult(result, missingChild) {
         logging("Template: $n",50)
         sendEvent(name: "templateData", value: "${n}", isStateChange: false)
     }
-    if (result.containsKey("RestartReason")) {
+    if (log99 == true && result.containsKey("RestartReason")) {
         logging("RestartReason: $result.RestartReason",99)
     }
     if (result.containsKey("TuyaMCU")) {
         logging("TuyaMCU: $result.TuyaMCU",99)
         sendEvent(name: "tuyaMCU", value: "$result.TuyaMCU", isStateChange: false)
     }
-    if (result.containsKey("SetOption81")) {
+    if (log99 == true && result.containsKey("SetOption81")) {
         logging("SetOption81: $result.SetOption81",99)
     }
-    if (result.containsKey("SetOption113")) {
+    if (log99 == true && result.containsKey("SetOption113")) {
         logging("SetOption113 (Hubitat enabled): $result.SetOption113",99)
     }
     if (result.containsKey("Uptime")) {
@@ -806,6 +847,25 @@ def parseResult(result, missingChild) {
         }
     }
     // END:  getTasmotaNewParserForParentSwitch()
+    // BEGIN:getTasmotaNewParserForFanMode()
+    // Fan Mode parsing
+    if (result.containsKey("FanSpeed")) {
+        String speed = "off"
+        switch(result.FanSpeed) {
+            case "1":
+                speed = "low"
+                break
+            case "2":
+                speed = "medium"
+                break
+            case "3":
+                speed = "high"
+                break
+        }
+        logging("parser: FanSpeed: $result.FanSpeed, speed = $speed", 1)
+        missingChild = callChildParseByTypeId("FAN", [[name:"speed", value: speed]], missingChild)
+    }
+    // END:  getTasmotaNewParserForFanMode()
     // BEGIN:getTasmotaNewParserForEnergyMonitor()
     // Standard Energy Monitor Data parsing
     if (result.containsKey("StatusSNS")) {
@@ -880,9 +940,8 @@ def parseResult(result, missingChild) {
             state.level = dimmer
             if(childDevice?.currentValue('level') != dimmer ) missingChild = callChildParseByTypeId("POWER1", [[name: "level", value: dimmer]], missingChild)
         }
-        if (result.containsKey("Wakeup")) {
-            def wakeup = result.Wakeup
-            logging("Wakeup: ${wakeup}", 1)
+        if (log99 == true && result.containsKey("Wakeup")) {
+            logging("Wakeup: ${result.Wakeup}", 1)
             //sendEvent(name: "wakeup", value: wakeup)
         }
     }
@@ -901,9 +960,9 @@ def parseResult(result, missingChild) {
             if(childDevice?.currentValue('saturation') != hsbColor[1] ) missingChild = callChildParseByTypeId("POWER1", [[name: "saturation", value: hsbColor[1]]], missingChild)
         }
         if (result.containsKey("Color")) {
-            def color = result.Color
+            String color = result.Color
             logging("Color: ${color}", 1)
-            def mode = "RGB"
+            String mode = "RGB"
             if(color.length() > 6 && color.startsWith("000000")) {
                 mode = "CT"
             }
@@ -911,7 +970,7 @@ def parseResult(result, missingChild) {
             if(childDevice?.currentValue('colorMode') != mode ) missingChild = callChildParseByTypeId("POWER1", [[name: "colorMode", value: mode]], missingChild)
         }
         if (result.containsKey("CT")) {
-            def t = Math.round(1000000/result.CT)
+            Integer t = Math.round(1000000/result.CT)
             if(childDevice?.currentValue('colorTemperature') != t ) missingChild = callChildParseByTypeId("POWER1", [[name: "colorTemperature", value: t]], missingChild)
             logging("CT: $result.CT ($t)",99)
         }
@@ -971,21 +1030,22 @@ def parseResult(result, missingChild) {
     // BEGIN:getTasmotaNewParserForWifi()
     // Standard Wifi Data parsing
     if (result.containsKey("Wifi")) {
-        if (result.Wifi.containsKey("AP")) {
+        if (log99 == true && result.Wifi.containsKey("AP")) {
             logging("AP: $result.Wifi.AP",99)
         }
-        if (result.Wifi.containsKey("BSSId")) {
+        if (log99 == true && result.Wifi.containsKey("BSSId")) {
             logging("BSSId: $result.Wifi.BSSId",99)
         }
-        if (result.Wifi.containsKey("Channel")) {
+        if (log99 == true && result.Wifi.containsKey("Channel")) {
             logging("Channel: $result.Wifi.Channel",99)
         }
         if (result.Wifi.containsKey("RSSI")) {
             logging("RSSI: $result.Wifi.RSSI",99)
-            String quality = "${dBmToQuality(result.Wifi.RSSI)}%"
+            // In Tasmota RSSI is actually the % already, no conversion needed...
+            String quality = "${result.Wifi.RSSI}%"
             if(device.currentValue('wifiSignal') != quality) sendEvent(name: "wifiSignal", value: quality, isStateChange: false)
         }
-        if (result.Wifi.containsKey("SSId")) {
+        if (log99 == true && result.Wifi.containsKey("SSId")) {
             logging("SSId: $result.Wifi.SSId",99)
         }
     }
@@ -1101,7 +1161,7 @@ void updateNeededSettings() {
     installCommands = deviceConfigMap?.installCommands
     if(installCommands == null || installCommands == '') installCommands = []
     logging("Got to just before runInstallCommands", 1)
-    //runInstallCommands(installCommands)
+    runInstallCommands(installCommands)
 
     //
     // https://tasmota.github.io/docs/#/Commands
@@ -1239,6 +1299,26 @@ void componentRefresh(cd) {
     refresh()
 }
 
+void componentSetSpeed(cd, String fanspeed) {
+    switch(fanspeed) {
+        case "off":
+            getAction(getCommandString("FanSpeed", "0"))
+            break
+        case "on":
+        case "low":
+            getAction(getCommandString("FanSpeed", "1"))
+            break
+        case "medium-low":
+        case "medium":  
+            getAction(getCommandString("FanSpeed", "2"))
+            break
+        case "medium-high":
+        case "high":
+            getAction(getCommandString("FanSpeed", "3"))
+            break
+    }  
+}
+
 /**
  * -----------------------------------------------------------------------------
  * Everything below here are LIBRARY includes and should NOT be edited manually!
@@ -1248,11 +1328,11 @@ void componentRefresh(cd) {
  */
 
 // BEGIN:getDefaultFunctions()
-/* Default functions go here */
-private def getDriverVersion() {
+/* Default Driver Methods go here */
+private String getDriverVersion() {
     //comment = ""
     //if(comment != "") state.comment = comment
-    String version = "v1.0.0210Ta"
+    String version = "v1.0.0212Ta"
     logging("getDriverVersion() = ${version}", 50)
     sendEvent(name: "driver", value: version)
     updateDataValue('driver', version)
@@ -1262,12 +1342,12 @@ private def getDriverVersion() {
 
 
 // BEGIN:getGetChildDriverNameMethod()
-def getChildDriverName() {
-    def deviceDriverName = getDeviceInfoByName('name')
+String getChildDriverName() {
+    String deviceDriverName = getDeviceInfoByName('name')
     if(deviceDriverName.toLowerCase().endsWith(' (parent)')) {
         deviceDriverName = deviceDriverName.substring(0, deviceDriverName.length()-9)
     }
-    def childDriverName = "${deviceDriverName} (Child)"
+    String childDriverName = "${deviceDriverName} (Child)"
     logging("childDriverName = '$childDriverName'", 1)
     return(childDriverName)
 }
@@ -1276,7 +1356,8 @@ def getChildDriverName() {
 
 // BEGIN:getLoggingFunction(specialDebugLevel=True)
 /* Logging function included in all drivers */
-private def logging(message, level) {
+private boolean logging(message, level) {
+    boolean didLogging = false
     if (infoLogging == true) {
         logLevel = 100
     }
@@ -1286,38 +1367,54 @@ private def logging(message, level) {
     if (logLevel != "0"){
         switch (logLevel) {
         case "-1": // Insanely verbose
-            if (level >= 0 && level < 100)
+            if (level >= 0 && level < 100) {
                 log.debug "$message"
-            else if (level == 100)
+                didLogging = true
+            } else if (level == 100) {
                 log.info "$message"
+                didLogging = true
+            }
         break
         case "1": // Very verbose
-            if (level >= 1 && level < 99)
+            if (level >= 1 && level < 99) {
                 log.debug "$message"
-            else if (level == 100)
+                didLogging = true
+            } else if (level == 100) {
                 log.info "$message"
+                didLogging = true
+            }
         break
         case "10": // A little less
-            if (level >= 10 && level < 99)
+            if (level >= 10 && level < 99) {
                 log.debug "$message"
-            else if (level == 100)
+                didLogging = true
+            } else if (level == 100) {
                 log.info "$message"
+                didLogging = true
+            }
         break
         case "50": // Rather chatty
-            if (level >= 50 )
+            if (level >= 50 ) {
                 log.debug "$message"
+                didLogging = true
+            }
         break
         case "99": // Only parsing reports
-            if (level >= 99 )
+            if (level >= 99 ) {
                 log.debug "$message"
+                didLogging = true
+            }
         break
         
         case "100": // Only special debug messages, eg IR and RF codes
-            if (level == 100 )
+            if (level == 100 ) {
                 log.info "$message"
+                didLogging = true
+            }
         break
         }
     }
+    return didLogging
 }
 // END:  getLoggingFunction(specialDebugLevel=True)
 
@@ -2397,7 +2494,7 @@ void runInstallCommands(installCommands) {
         if(backlogs.size() > 0) pauseExecution(1000)
         // REALLY don't use pauseExecution often... NOT good for performance...
     }
-
+    
     [rule1, rule2, rule3].each {
         //logging("rule: $it", 1)
         it.each {rule->
@@ -2665,12 +2762,14 @@ void configureChildDevices(asyncResponse, data) {
     deviceInfo["isAddressable"] = false
     deviceInfo["isRGB"] = false
     deviceInfo["hasCT"] = false
+    deviceInfo["hasFanControl"] = false
     if(statusMap["StatusSTS"] != null) {
         sts = statusMap["StatusSTS"]
         deviceInfo["isDimmer"] = sts.containsKey("Dimmer")
         deviceInfo["isAddressable"] = sts.containsKey("Width")
         if(sts.containsKey("Color")) deviceInfo["isRGB"] = sts["Color"].length() >= 6
         deviceInfo["hasCT"] = sts.containsKey("CT")
+        deviceInfo["hasFanControl"] = sts.containsKey("FanSpeed")
 
         if(sts["POWER"] != null) {
             // This only exist if there is ONLY one switch/bulb
@@ -2694,7 +2793,7 @@ void configureChildDevices(asyncResponse, data) {
         if(deviceInfo["numSwitch"] > 1 && (
             deviceInfo["isDimmer"] == true || deviceInfo["isAddressable"] == true || 
             deviceInfo["isRGB"] == true || deviceInfo["hasCT"] == true)) {
-                log.warn "There's more than one switch and the device is either dimmable, addressable, RGB or has CT capability. This is not fully supported yet, please report which device and settings you're using to the developer."
+                log.warn "There's more than one switch and the device is either dimmable, addressable, RGB or has CT capability. This is not fully supported yet, please report which device and settings you're using to the developer so that a solution can be found."
         }
         if(deviceInfo["hasEnergy"] && (deviceInfo["isAddressable"] == false && deviceInfo["isRGB"] == false && deviceInfo["hasCT"] == false)) {
             if(deviceInfo["isDimmer"]) {
@@ -2704,8 +2803,8 @@ void configureChildDevices(asyncResponse, data) {
                 driverName = ["Tasmota - Universal Switch (Child)", "Generic Component Metering Switch"]
             }
         } else {
-            if(deviceInfo["hasEnergy"]) {
-                log.warn "This device reports Metering Capability AND has RGB, Color Temperature or is Addressable. Metering values will be ignored... This is NOT supported and may result in errors, please report it to the developer."
+            if(deviceInfo["hasEnergy"] == true) {
+                log.warn "This device reports Metering Capability AND has RGB, Color Temperature or is Addressable. Metering values will be ignored... This is NOT supported and may result in errors, please report it to the developer to find a solution."
             }
             if((deviceInfo["isDimmer"] == true || deviceInfo["isAddressable"] == true || 
                 deviceInfo["isRGB"] == true || deviceInfo["hasCT"] == true)) {
@@ -2721,6 +2820,7 @@ void configureChildDevices(asyncResponse, data) {
             }
         }
         
+        
         for(i in 1..deviceInfo["numSwitch"]) {
             namespace = "tasmota"
             def childId = "POWER$i"
@@ -2733,6 +2833,17 @@ void configureChildDevices(asyncResponse, data) {
         }
     }
     
+    // Fan Control
+    if(deviceInfo["hasFanControl"] == true) {
+        logging("hasFanControl", 0)
+        namespace = "tasmota"
+        driverName = ["Tasmota - Universal Fan Control (Child)"]
+        def childId = "FAN"
+        def childName = getChildDeviceNameRoot(keepType=true) + " ${getMinimizedDriverName(driverName[0])} ($childId)"
+        def childLabel = "${getMinimizedDriverName(device.getLabel())} ($childId)"
+        createChildDevice(namespace, driverName, childId, childName, childLabel)
+    }
+
     // Sensors
     logging("Available in sensorMap: ${deviceInfo["sensorMap"]}, size:${deviceInfo["numSensorGroups"]}", 0)
     deviceInfo["sensorMap"].each {
@@ -2919,7 +3030,9 @@ void sync(String ip, Integer port = null) {
 }
 
 Integer dBmToQuality(Integer dBm) {
-    Integer quality = 0
+    // In Tasmota RSSI is actually % already, so just returning the received value here
+    // Keeping this around if this behavior changes
+    /*Integer quality = 0
     if(dBm > 0) dBm = dBm * -1
     if(dBm <= -100) {
         quality = 0
@@ -2928,8 +3041,8 @@ Integer dBmToQuality(Integer dBm) {
     } else {
         quality = 2 * (dBm + 100)
     }
-    logging("DBM: $dBm (${quality}%)", 0)
-    return quality
+    logging("DBM: $dBm (${quality}%)", 0)*/
+    return dBm
 }
 
 /*

@@ -258,7 +258,10 @@ def main():
 
         # Universal drivers
         {'id': 865, 'file': 'tasmota-universal-parent.groovy', 'specialDebugLabel': 'descriptionText' },
-        {'id': 866, 'file': 'tasmota-universal-multisensor-child.groovy', 'specialDebugLabel': 'descriptionText' },
+        {'id': 866, 'file': 'tasmota-universal-multisensor-child.groovy', 
+            'specialDebugLabel': 'descriptionText' },
+        {'id': 993, 'file': 'tasmota-universal-fancontrol-child.groovy', 
+            'specialDebugLabel': 'descriptionText' },
         {'id': 867, 'file': 'tasmota-universal-parent.groovy', 'specialDebugLabel': 'descriptionText',
          'alternate_output_filename': 'tasmota-universal-parent-testing', \
          'alternate_name': 'Tasmota - Universal Parent Testing' },
@@ -307,9 +310,11 @@ def main():
     # As long as we have an id, we can just supply that here instead of the whole config...
     # 651 left over from RF Link Child
     driver_files_testing = [
-        {'id': 865}, {'id': 866},  # Universal Drivers RELEASE
+        {'id': 865}, {'id': 866}, {'id': 993},  # Universal Drivers RELEASE
+        {'id': 993}, # Fan Control Child
         {'id': 962}, # Javascript Injection Driver
-        {'id': 867}, {'id': 868},  # Universal Drivers TESTING
+    #    {'id': 867}, {'id': 868},  # Universal Drivers TESTING
+        
     #    {'id': 801}, {'id': 579},  # Zigbee drivers
     #     {'id':587},  # Wifi Curtain Wall Panel
     #    {'id':590},
@@ -529,7 +534,7 @@ def main():
     else:
         log.info('No new apps where created!')
 
-    log.info('Current version: {}'.format(driverVersion))
+    log.info('Current version: {}'.format(getDriverVersion()))
 
     cb.saveChecksums()
     hhs.save_session()

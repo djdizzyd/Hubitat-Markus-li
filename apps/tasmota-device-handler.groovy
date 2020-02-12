@@ -55,8 +55,10 @@ Map getTimeStringSinceDateWithMaximum(myDate, maxMillis) {
     return [time:getTimeStringSinceMillis(millis), red:millis > maxMillis]
 }
 
+#!include:getDefaultAppMethods()
+
 void makeAppTitle() {
-    section(getElementStyle('title', getMaterialIcon('build', 'icon-large') + "${app.label}" + getCSSStyles())){
+    section(getElementStyle('title', getMaterialIcon('build', 'icon-large') + "${app.label} <span id='version'>${getAppVersion()}</span>" + getCSSStyles())){
         }
 }
 
@@ -234,6 +236,9 @@ String getMaterialIcon(iconName, extraClass='') {
 String getCSSStyles() {
     return '''<style>
 /* General App Styles */
+#version {
+    font-size: 50%;
+}
 .btn {
     font-family: "Roboto","Helvetica","Arial",sans-serif;
 }
@@ -654,7 +659,7 @@ def installCheck() {
 def footer() {
     section() {
         paragraph(getElementStyle('line'))
-        paragraph('<div style="color:#382e2b; text-align:center">' + app.label + ' - Copyright&nbsp;2020&nbsp;Markus&nbsp;Liljergren - <a href="https://github.com/markus-li/Hubitat/tree/release" target="_blank">GitHub repo</a></div>')
+        paragraph('<div style="color:#382e2b; text-align:center">' + app.label + " ${getAppVersion()} " + '- Copyright&nbsp;2020&nbsp;Markus&nbsp;Liljergren - <a href="https://github.com/markus-li/Hubitat/tree/release" target="_blank">GitHub repo</a></div>')
     }
 }
 

@@ -35,7 +35,7 @@ if (descMap["body"] && descMap["body"] != "T04=") body = new String(descMap["bod
 
 if (body && body != "") {
     if(body.startsWith("{") || body.startsWith("[")) {
-        logging("========== Parsing Report ==========",99)
+        boolean log99 = logging("========== Parsing Report ==========", 99)
         def slurper = new JsonSlurper()
         def result = slurper.parseText(body)
         
@@ -88,19 +88,19 @@ if (result.containsKey("StatusSTS")) {
     logging("StatusSTS: $result.StatusSTS",99)
     result << result.StatusSTS
 }
-if (result.containsKey("LoadAvg")) {
+if (log99 == true && result.containsKey("LoadAvg")) {
     logging("LoadAvg: $result.LoadAvg",99)
 }
-if (result.containsKey("Sleep")) {
+if (log99 == true && result.containsKey("Sleep")) {
     logging("Sleep: $result.Sleep",99)
 }
-if (result.containsKey("SleepMode")) {
+if (log99 == true && result.containsKey("SleepMode")) {
     logging("SleepMode: $result.SleepMode",99)
 }
-if (result.containsKey("Vcc")) {
+if (log99 == true && result.containsKey("Vcc")) {
     logging("Vcc: $result.Vcc",99)
 }
-if (result.containsKey("Hostname")) {
+if (log99 == true && result.containsKey("Hostname")) {
     logging("Hostname: $result.Hostname",99)
 }
 if (result.containsKey("IPAddress") && (override == false || override == null)) {
@@ -109,7 +109,7 @@ if (result.containsKey("IPAddress") && (override == false || override == null)) 
     //logging("ipLink: <a target=\\"device\\" href=\\"http://$result.IPAddress\\">$result.IPAddress</a>",10)
     sendEvent(name: "ipLink", value: "<a target=\\"device\\" href=\\"http://$result.IPAddress\\">$result.IPAddress</a>", isStateChange: false)
 }
-if (result.containsKey("WebServerMode")) {
+if (log99 == true && result.containsKey("WebServerMode")) {
     logging("WebServerMode: $result.WebServerMode",99)
 }
 if (result.containsKey("Version")) {
@@ -132,17 +132,17 @@ if (result.containsKey("NAME") && result.containsKey("GPIO") && result.containsK
     logging("Template: $n",50)
     sendEvent(name: "templateData", value: "${n}", isStateChange: false)
 }
-if (result.containsKey("RestartReason")) {
+if (log99 == true && result.containsKey("RestartReason")) {
     logging("RestartReason: $result.RestartReason",99)
 }
 if (result.containsKey("TuyaMCU")) {
     logging("TuyaMCU: $result.TuyaMCU",99)
     sendEvent(name: "tuyaMCU", value: "$result.TuyaMCU", isStateChange: false)
 }
-if (result.containsKey("SetOption81")) {
+if (log99 == true && result.containsKey("SetOption81")) {
     logging("SetOption81: $result.SetOption81",99)
 }
-if (result.containsKey("SetOption113")) {
+if (log99 == true && result.containsKey("SetOption113")) {
     logging("SetOption113 (Hubitat enabled): $result.SetOption113",99)
 }
 if (result.containsKey("Uptime")) {
@@ -159,21 +159,22 @@ def getTasmotaNewParserForWifi():
     return """
 // Standard Wifi Data parsing
 if (result.containsKey("Wifi")) {
-    if (result.Wifi.containsKey("AP")) {
+    if (log99 == true && result.Wifi.containsKey("AP")) {
         logging("AP: $result.Wifi.AP",99)
     }
-    if (result.Wifi.containsKey("BSSId")) {
+    if (log99 == true && result.Wifi.containsKey("BSSId")) {
         logging("BSSId: $result.Wifi.BSSId",99)
     }
-    if (result.Wifi.containsKey("Channel")) {
+    if (log99 == true && result.Wifi.containsKey("Channel")) {
         logging("Channel: $result.Wifi.Channel",99)
     }
     if (result.Wifi.containsKey("RSSI")) {
         logging("RSSI: $result.Wifi.RSSI",99)
-        String quality = "${dBmToQuality(result.Wifi.RSSI)}%"
+        // In Tasmota RSSI is actually the % already, no conversion needed...
+        String quality = "${result.Wifi.RSSI}%"
         if(device.currentValue('wifiSignal') != quality) sendEvent(name: "wifiSignal", value: quality, isStateChange: false)
     }
-    if (result.Wifi.containsKey("SSId")) {
+    if (log99 == true && result.Wifi.containsKey("SSId")) {
         logging("SSId: $result.Wifi.SSId",99)
     }
 }
@@ -195,6 +196,27 @@ if (result.containsKey("POWER") && result.containsKey("POWER1") == false) {
         //events << childSendState("1", result.POWER1.toLowerCase())
         //sendEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER1.toLowerCase() == "on"?1:0) && result.POWER1.toLowerCase() == "on"? "on" : "off"))
     }
+}
+"""
+
+def getTasmotaNewParserForFanMode():
+    return """
+// Fan Mode parsing
+if (result.containsKey("FanSpeed")) {
+    String speed = "off"
+    switch(result.FanSpeed) {
+        case "1":
+            speed = "low"
+            break
+        case "2":
+            speed = "medium"
+            break
+        case "3":
+            speed = "high"
+            break
+    }
+    logging("parser: FanSpeed: $result.FanSpeed, speed = $speed", 1)
+    missingChild = callChildParseByTypeId("FAN", [[name:"speed", value: speed]], missingChild)
 }
 """
 
@@ -332,9 +354,9 @@ if(true) {
         if(childDevice?.currentValue('saturation') != hsbColor[1] ) missingChild = callChildParseByTypeId("POWER1", [[name: "saturation", value: hsbColor[1]]], missingChild)
     }
     if (result.containsKey("Color")) {
-        def color = result.Color
+        String color = result.Color
         logging("Color: ${color}", 1)
-        def mode = "RGB"
+        String mode = "RGB"
         if(color.length() > 6 && color.startsWith("000000")) {
             mode = "CT"
         }
@@ -342,7 +364,7 @@ if(true) {
         if(childDevice?.currentValue('colorMode') != mode ) missingChild = callChildParseByTypeId("POWER1", [[name: "colorMode", value: mode]], missingChild)
     }
     if (result.containsKey("CT")) {
-        def t = Math.round(1000000/result.CT)
+        Integer t = Math.round(1000000/result.CT)
         if(childDevice?.currentValue('colorTemperature') != t ) missingChild = callChildParseByTypeId("POWER1", [[name: "colorTemperature", value: t]], missingChild)
         logging("CT: $result.CT ($t)",99)
     }
@@ -360,9 +382,8 @@ if(true) {
         state.level = dimmer
         if(childDevice?.currentValue('level') != dimmer ) missingChild = callChildParseByTypeId("POWER1", [[name: "level", value: dimmer]], missingChild)
     }
-    if (result.containsKey("Wakeup")) {
-        def wakeup = result.Wakeup
-        logging("Wakeup: ${wakeup}", 1)
+    if (log99 == true && result.containsKey("Wakeup")) {
+        logging("Wakeup: ${result.Wakeup}", 1)
         //sendEvent(name: "wakeup", value: wakeup)
     }
 }

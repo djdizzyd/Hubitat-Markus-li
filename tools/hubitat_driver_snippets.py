@@ -11,7 +11,18 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-driverVersion = "v1.0.0210Ta"
+from datetime import date
+
+driverVersion = "v1.0.MMDDTa"
+
+def getDriverVersion(driverVersionSpecial=None):
+    if(driverVersionSpecial != None):
+        driver_version_current = driverVersionSpecial
+    else:
+        driver_version_current = driverVersion
+    if(driver_version_current.find("MMDD") != -1):
+        driver_version_current = driver_version_current.replace("MMDD", date.today().strftime("%m%d"))
+    return driver_version_current
 
 from hubitat_codebuilder import HubitatCodeBuilderError
 
@@ -276,12 +287,9 @@ def off() {
 """
 
 def getDefaultFunctions(comment="", driverVersionSpecial=None):
-    if(driverVersionSpecial != None):
-        driverVersionActual = driverVersionSpecial
-    else:
-        driverVersionActual = driverVersion
-    return '''/* Default functions go here */
-private def getDriverVersion() {
+    driverVersionActual = getDriverVersion(driverVersionSpecial)
+    return '''/* Default Driver Methods go here */
+private String getDriverVersion() {
     //comment = "''' + comment + '''"
     //if(comment != "") state.comment = comment
     String version = "''' + driverVersionActual + '''"
@@ -292,18 +300,31 @@ private def getDriverVersion() {
 }
 '''
 
+def getDefaultAppMethods(driverVersionSpecial=None):
+    driverVersionActual = getDriverVersion(driverVersionSpecial)
+    return '''/* Default App Methods go here */
+private String getAppVersion() {
+    String version = "''' + driverVersionActual + '''"
+    logging("getAppVersion() = ${version}", 50)
+    return version
+}
+'''
+
 def getLoggingFunction(specialDebugLevel=False):
     extraDebug = ""
     if(specialDebugLevel):
         extraDebug = """
         case "100": // Only special debug messages, eg IR and RF codes
-            if (level == 100 )
+            if (level == 100 ) {
                 log.info "$message"
+                didLogging = true
+            }
         break
         """
 
     return """/* Logging function included in all drivers */
-private def logging(message, level) {
+private boolean logging(message, level) {
+    boolean didLogging = false
     if (infoLogging == true) {
         logLevel = 100
     }
@@ -313,33 +334,47 @@ private def logging(message, level) {
     if (logLevel != "0"){
         switch (logLevel) {
         case "-1": // Insanely verbose
-            if (level >= 0 && level < 100)
+            if (level >= 0 && level < 100) {
                 log.debug "$message"
-            else if (level == 100)
+                didLogging = true
+            } else if (level == 100) {
                 log.info "$message"
+                didLogging = true
+            }
         break
         case "1": // Very verbose
-            if (level >= 1 && level < 99)
+            if (level >= 1 && level < 99) {
                 log.debug "$message"
-            else if (level == 100)
+                didLogging = true
+            } else if (level == 100) {
                 log.info "$message"
+                didLogging = true
+            }
         break
         case "10": // A little less
-            if (level >= 10 && level < 99)
+            if (level >= 10 && level < 99) {
                 log.debug "$message"
-            else if (level == 100)
+                didLogging = true
+            } else if (level == 100) {
                 log.info "$message"
+                didLogging = true
+            }
         break
         case "50": // Rather chatty
-            if (level >= 50 )
+            if (level >= 50 ) {
                 log.debug "$message"
+                didLogging = true
+            }
         break
         case "99": // Only parsing reports
-            if (level >= 99 )
+            if (level >= 99 ) {
                 log.debug "$message"
+                didLogging = true
+            }
         break
         """ + extraDebug + """}
     }
+    return didLogging
 }
 """
 
@@ -367,18 +402,18 @@ def getCreateChildDevicesCommand(childType='component'):
 
 def getGetChildDriverNameMethod(childDriverName='default'):
     if(childDriverName == 'default'):
-        return """def getChildDriverName() {
-    def deviceDriverName = getDeviceInfoByName('name')
+        return """String getChildDriverName() {
+    String deviceDriverName = getDeviceInfoByName('name')
     if(deviceDriverName.toLowerCase().endsWith(' (parent)')) {
         deviceDriverName = deviceDriverName.substring(0, deviceDriverName.length()-9)
     }
-    def childDriverName = "${deviceDriverName} (Child)"
+    String childDriverName = "${deviceDriverName} (Child)"
     logging("childDriverName = '$childDriverName'", 1)
     return(childDriverName)
 }"""
     else:
-        return """def getChildDriverName() {
-    def childDriverName = '""" + childDriverName + """ (Child)'
+        return """String getChildDriverName() {
+    String childDriverName = '""" + childDriverName + """ (Child)'
     logging("childDriverName = '$childDriverName'", 1)
     return(childDriverName)
 }"""
@@ -442,8 +477,8 @@ def generateLearningPreferences() {
     }
 }
 
-def getCurrentActionName() {
-    def actionName
+String getCurrentActionName() {
+    String actionName
     if(!binding.hasVariable('actionCurrentName') || 
       (binding.hasVariable('actionCurrentName') && actionCurrentName == null)) {
         logging("Doesn't have the action name defined... Using ''' + default_type + '''!", 1)

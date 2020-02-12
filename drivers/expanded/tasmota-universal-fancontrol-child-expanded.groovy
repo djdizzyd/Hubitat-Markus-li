@@ -27,21 +27,9 @@ import java.security.MessageDigest
 
 metadata {
     // Do NOT rename the child driver name unless you also change the corresponding code in the Parent!
-    definition (name: "Tasmota - Universal Multisensor (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-multisensor-child-expanded.groovy") {
-        capability "Sensor"
-        capability "TemperatureMeasurement"       // Attributes: temperature - NUMBER
-        capability "RelativeHumidityMeasurement"  // Attributes: humidity - NUMBER
-        capability "PressureMeasurement"          // Attributes: pressure - NUMBER
-        capability "IlluminanceMeasurement"       // Attributes: illuminance - NUMBER
-        capability "MotionSensor"                 // Attributes: motion - ENUM ["inactive", "active"]
-        capability "WaterSensor"                  // Attributes: water - ENUM ["wet", "dry"]
+    definition (name: "Tasmota - Universal Fan Control (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-fancontrol-child-expanded.groovy") {
+        capability "FanControl"
         capability "Refresh"
-
-        // Non-standard sensor attributes
-        attribute  "distance", "string"
-        attribute  "pressureWithUnit", "string"
-
-        //command "clear"
     }
 
     preferences {
@@ -68,7 +56,7 @@ metadata {
 public getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    def deviceInfo = ['name': 'Tasmota - Universal Multisensor (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-multisensor-child-expanded.groovy']
+    def deviceInfo = ['name': 'Tasmota - Universal Fan Control (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-fancontrol-child-expanded.groovy']
     //logging("deviceInfo[${infoName}] = ${deviceInfo[infoName]}", 1)
     return(deviceInfo[infoName])
 }
@@ -78,10 +66,27 @@ public getDeviceInfoByName(infoName) {
 /* These functions are unique to each driver */
 void parse(List<Map> description) {
     description.each {
-        if (it.name in ["temperature", "humidity", "pressure", "pressureWithUnit",
-            "illuminance", "motion", "water", "distance"]) {
+        if (it.name in ["speed"]) {
             logging(it.descriptionText, 100)
             sendEvent(it)
+            /*switch(it.value) {
+                case "off":
+                    setFanSpeedState("0")
+                    // Buzzer 1
+                    break
+                case "low":
+                    setFanSpeedState("33")
+                    // Buzzer 1
+                    break
+                case "medium":
+                    setFanSpeedState("66")
+                    // Buzzer 2
+                    break
+                case "high":
+                    setFanSpeedState("99")
+                    // Buzzer 3
+                    break
+            }*/
         }
     }
 }
@@ -106,6 +111,11 @@ void refresh() {
     metaConfig = setDatasToHide(['metaConfig', 'isComponent', 'preferences', 'label', 'name'], metaConfig=metaConfig)
     // END:  getChildComponentMetaConfigCommands()
     parent?.componentRefresh(this.device)
+}
+
+void setSpeed(String value) {
+    parent?.componentSetSpeed(this.device, value)
+    
 }
 
 /**

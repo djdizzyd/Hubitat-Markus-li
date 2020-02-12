@@ -197,18 +197,19 @@ def parse(description) {
     #!include:getGenericTasmotaNewParseFooter()
 }
 
-def parseResult(result) {
-    def missingChild = false
+boolean parseResult(result) {
+    boolean missingChild = false
     missingChild = parseResult(result, missingChild)
     return missingChild
 }
 
-def parseResult(result, missingChild) {
+boolean parseResult(result, missingChild) {
 
     updatePresence("present")
-    logging("parseResult: $result", 1)
+    boolean log99 = logging("parseResult: $result", 99)
     #!include:getTasmotaNewParserForBasicData()
     #!include:getTasmotaNewParserForParentSwitch()
+    #!include:getTasmotaNewParserForFanMode()
     #!include:getTasmotaNewParserForEnergyMonitor()
     #!include:getTasmotaNewParserForDimmableDevice()
     #!include:getTasmotaNewParserForRGBWDevice()
@@ -240,7 +241,7 @@ void updateNeededSettings() {
     installCommands = deviceConfigMap?.installCommands
     if(installCommands == null || installCommands == '') installCommands = []
     logging("Got to just before runInstallCommands", 1)
-    //runInstallCommands(installCommands)
+    runInstallCommands(installCommands)
 
     //
     // https://tasmota.github.io/docs/#/Commands
@@ -358,6 +359,26 @@ void componentRefresh(cd) {
     actionType = getDeviceActionType(cd.deviceNetworkId)
     logging("componentRefresh(cd=${cd.displayName} (${cd.deviceNetworkId})) actionType=${getDeviceActionType(cd.deviceNetworkId)}", 1)
     refresh()
+}
+
+void componentSetSpeed(cd, String fanspeed) {
+    switch(fanspeed) {
+        case "off":
+            getAction(getCommandString("FanSpeed", "0"))
+            break
+        case "on":
+        case "low":
+            getAction(getCommandString("FanSpeed", "1"))
+            break
+        case "medium-low":
+        case "medium":  
+            getAction(getCommandString("FanSpeed", "2"))
+            break
+        case "medium-high":
+        case "high":
+            getAction(getCommandString("FanSpeed", "3"))
+            break
+    }  
 }
 
 /**

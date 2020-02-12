@@ -153,6 +153,41 @@ TreeMap getDeviceConfigurations() {
          template: '{"NAME":"Sonoff S31","GPIO":[17,145,0,146,0,0,0,0,21,56,0,0,0],"FLAG":0,"BASE":41}',
          installCommands: [["SetOption81", "1"], ["LedPower", "1"], ["LedState", "8"]],
          deviceLink: 'https://templates.blakadder.com/sonoff_S31.html'],
+        
+        [typeId: 'sonoff-ifan02',
+         name: 'Sonoff iFan02',
+         module: 44,
+         //template: '{"NAME":"Sonoff iFan02","GPIO":[17,255,0,255,23,22,18,19,21,56,20,24,0],"FLAG":0,"BASE":44}',
+         installCommands: [['Rule1', '0']],
+         deviceLink: 'https://templates.blakadder.com/sonoff_ifan02.html'],
+
+        [typeId: 'sonoff-ifan03-no_beep-m44',
+         name: 'Sonoff iFan03 (No Beep) M44',
+         template: '{"NAME":"Sonoff iFan03","GPIO":[17,255,0,255,0,0,29,33,23,56,22,24,0],"FLAG":0,"BASE":44}',
+         installCommands: [["SetOption67", "0"], ['Rule1', '0']],
+         deviceLink: 'https://templates.blakadder.com/sonoff_ifan03.html'],
+
+        [typeId: 'sonoff-ifan03-beep-m44',
+         name: 'Sonoff iFan03 (Beep) M44',
+         template: '{"NAME":"Sonoff iFan03","GPIO":[17,255,0,255,0,0,29,33,23,56,22,24,0],"FLAG":0,"BASE":44}',
+         installCommands: [["SetOption67", "0"],
+                           ['Rule1', 'ON Fanspeed#Data>=1 DO Buzzer %value%; ENDON ON Fanspeed#Data==0 DO Buzzer 1; ENDON'],
+                           ['Rule1', '1']],
+         deviceLink: 'https://templates.blakadder.com/sonoff_ifan03.html'],
+
+        [typeId: 'sonoff-ifan03-no_beep-m71',
+         name: 'Sonoff iFan03 (No Beep) M71',
+         module: 71,
+         //template: '{"NAME":"SonoffiFan03","GPIO":[17,148,0,149,0,0,29,161,23,56,22,24,0],"FLAG":0,"BASE":71}',
+         installCommands: [["SetOption67", "0"], ['Rule1', '0']],
+         deviceLink: 'https://templates.blakadder.com/sonoff_ifan03.html'],
+
+        [typeId: 'sonoff-ifan03-beep-m71',
+         name: 'Sonoff iFan03 (Beep) M71',
+         module: 71,
+         //template: '{"NAME":"SonoffiFan03","GPIO":[17,148,0,149,0,0,29,161,23,56,22,24,0],"FLAG":0,"BASE":71}',
+         installCommands: [["SetOption67", "1"], ['Rule1', '0']],
+         deviceLink: 'https://templates.blakadder.com/sonoff_ifan03.html'],
 
         [typeId: 'kmc-4-pm-plug',
          name: 'KMC 4 Power Monitor Plug',
@@ -267,6 +302,12 @@ TreeMap getDeviceConfigurations() {
         template: '{"NAME":"PrimeCCRC13PK","GPIO":[0,0,0,0,57,56,0,0,21,122,0,0,0],"FLAG":0,"BASE":18}',
         installCommands: [],
         deviceLink: 'https://templates.blakadder.com/prime_CCRCWFII113PK.html'],
+
+        [typeId: 'ykyc-wj1y0-10a', 
+        name: 'YKYC-WJ1Y0-10A PM Plug',
+        template: '{"NAME":"YKYC-001PMPlug","GPIO":[0,17,0,57,133,132,0,0,130,56,21,0,0],"FLAG":0,"BASE":18}',
+        installCommands: [],
+        deviceLink: ''],
 
         [typeId: 'tuyamcu-wifi-dimmer', 
         name: 'TuyaMCU Wifi Dimmer',
@@ -437,8 +478,18 @@ Map getTimeStringSinceDateWithMaximum(myDate, maxMillis) {
     return [time:getTimeStringSinceMillis(millis), red:millis > maxMillis]
 }
 
+// BEGIN:getDefaultAppMethods()
+/* Default App Methods go here */
+private String getAppVersion() {
+    String version = "v1.0.0212Ta"
+    logging("getAppVersion() = ${version}", 50)
+    return version
+}
+// END:  getDefaultAppMethods()
+
+
 void makeAppTitle() {
-    section(getElementStyle('title', getMaterialIcon('build', 'icon-large') + "${app.label}" + getCSSStyles())){
+    section(getElementStyle('title', getMaterialIcon('build', 'icon-large') + "${app.label} <span id='version'>${getAppVersion()}</span>" + getCSSStyles())){
         }
 }
 
@@ -616,6 +667,9 @@ String getMaterialIcon(iconName, extraClass='') {
 String getCSSStyles() {
     return '''<style>
 /* General App Styles */
+#version {
+    font-size: 50%;
+}
 .btn {
     font-family: "Roboto","Helvetica","Arial",sans-serif;
 }
@@ -1042,7 +1096,7 @@ def installCheck() {
 def footer() {
     section() {
         paragraph(getElementStyle('line'))
-        paragraph('<div style="color:#382e2b; text-align:center">' + app.label + ' - Copyright&nbsp;2020&nbsp;Markus&nbsp;Liljergren - <a href="https://github.com/markus-li/Hubitat/tree/release" target="_blank">GitHub repo</a></div>')
+        paragraph('<div style="color:#382e2b; text-align:center">' + app.label + " ${getAppVersion()} " + '- Copyright&nbsp;2020&nbsp;Markus&nbsp;Liljergren - <a href="https://github.com/markus-li/Hubitat/tree/release" target="_blank">GitHub repo</a></div>')
     }
 }
 
@@ -1178,7 +1232,8 @@ def initializeAdditional() {
 
 // BEGIN:getLoggingFunction()
 /* Logging function included in all drivers */
-private def logging(message, level) {
+private boolean logging(message, level) {
+    boolean didLogging = false
     if (infoLogging == true) {
         logLevel = 100
     }
@@ -1188,33 +1243,47 @@ private def logging(message, level) {
     if (logLevel != "0"){
         switch (logLevel) {
         case "-1": // Insanely verbose
-            if (level >= 0 && level < 100)
+            if (level >= 0 && level < 100) {
                 log.debug "$message"
-            else if (level == 100)
+                didLogging = true
+            } else if (level == 100) {
                 log.info "$message"
+                didLogging = true
+            }
         break
         case "1": // Very verbose
-            if (level >= 1 && level < 99)
+            if (level >= 1 && level < 99) {
                 log.debug "$message"
-            else if (level == 100)
+                didLogging = true
+            } else if (level == 100) {
                 log.info "$message"
+                didLogging = true
+            }
         break
         case "10": // A little less
-            if (level >= 10 && level < 99)
+            if (level >= 10 && level < 99) {
                 log.debug "$message"
-            else if (level == 100)
+                didLogging = true
+            } else if (level == 100) {
                 log.info "$message"
+                didLogging = true
+            }
         break
         case "50": // Rather chatty
-            if (level >= 50 )
+            if (level >= 50 ) {
                 log.debug "$message"
+                didLogging = true
+            }
         break
         case "99": // Only parsing reports
-            if (level >= 99 )
+            if (level >= 99 ) {
                 log.debug "$message"
+                didLogging = true
+            }
         break
         }
     }
+    return didLogging
 }
 // END:  getLoggingFunction()
 
@@ -1647,7 +1716,7 @@ void runInstallCommands(installCommands) {
         if(backlogs.size() > 0) pauseExecution(1000)
         // REALLY don't use pauseExecution often... NOT good for performance...
     }
-
+    
     [rule1, rule2, rule3].each {
         //logging("rule: $it", 1)
         it.each {rule->
@@ -1915,12 +1984,14 @@ void configureChildDevices(asyncResponse, data) {
     deviceInfo["isAddressable"] = false
     deviceInfo["isRGB"] = false
     deviceInfo["hasCT"] = false
+    deviceInfo["hasFanControl"] = false
     if(statusMap["StatusSTS"] != null) {
         sts = statusMap["StatusSTS"]
         deviceInfo["isDimmer"] = sts.containsKey("Dimmer")
         deviceInfo["isAddressable"] = sts.containsKey("Width")
         if(sts.containsKey("Color")) deviceInfo["isRGB"] = sts["Color"].length() >= 6
         deviceInfo["hasCT"] = sts.containsKey("CT")
+        deviceInfo["hasFanControl"] = sts.containsKey("FanSpeed")
 
         if(sts["POWER"] != null) {
             // This only exist if there is ONLY one switch/bulb
@@ -1944,7 +2015,7 @@ void configureChildDevices(asyncResponse, data) {
         if(deviceInfo["numSwitch"] > 1 && (
             deviceInfo["isDimmer"] == true || deviceInfo["isAddressable"] == true || 
             deviceInfo["isRGB"] == true || deviceInfo["hasCT"] == true)) {
-                log.warn "There's more than one switch and the device is either dimmable, addressable, RGB or has CT capability. This is not fully supported yet, please report which device and settings you're using to the developer."
+                log.warn "There's more than one switch and the device is either dimmable, addressable, RGB or has CT capability. This is not fully supported yet, please report which device and settings you're using to the developer so that a solution can be found."
         }
         if(deviceInfo["hasEnergy"] && (deviceInfo["isAddressable"] == false && deviceInfo["isRGB"] == false && deviceInfo["hasCT"] == false)) {
             if(deviceInfo["isDimmer"]) {
@@ -1954,8 +2025,8 @@ void configureChildDevices(asyncResponse, data) {
                 driverName = ["Tasmota - Universal Switch (Child)", "Generic Component Metering Switch"]
             }
         } else {
-            if(deviceInfo["hasEnergy"]) {
-                log.warn "This device reports Metering Capability AND has RGB, Color Temperature or is Addressable. Metering values will be ignored... This is NOT supported and may result in errors, please report it to the developer."
+            if(deviceInfo["hasEnergy"] == true) {
+                log.warn "This device reports Metering Capability AND has RGB, Color Temperature or is Addressable. Metering values will be ignored... This is NOT supported and may result in errors, please report it to the developer to find a solution."
             }
             if((deviceInfo["isDimmer"] == true || deviceInfo["isAddressable"] == true || 
                 deviceInfo["isRGB"] == true || deviceInfo["hasCT"] == true)) {
@@ -1971,6 +2042,7 @@ void configureChildDevices(asyncResponse, data) {
             }
         }
         
+        
         for(i in 1..deviceInfo["numSwitch"]) {
             namespace = "tasmota"
             def childId = "POWER$i"
@@ -1983,6 +2055,17 @@ void configureChildDevices(asyncResponse, data) {
         }
     }
     
+    // Fan Control
+    if(deviceInfo["hasFanControl"] == true) {
+        logging("hasFanControl", 0)
+        namespace = "tasmota"
+        driverName = ["Tasmota - Universal Fan Control (Child)"]
+        def childId = "FAN"
+        def childName = getChildDeviceNameRoot(keepType=true) + " ${getMinimizedDriverName(driverName[0])} ($childId)"
+        def childLabel = "${getMinimizedDriverName(device.getLabel())} ($childId)"
+        createChildDevice(namespace, driverName, childId, childName, childLabel)
+    }
+
     // Sensors
     logging("Available in sensorMap: ${deviceInfo["sensorMap"]}, size:${deviceInfo["numSensorGroups"]}", 0)
     deviceInfo["sensorMap"].each {
@@ -2169,7 +2252,9 @@ void sync(String ip, Integer port = null) {
 }
 
 Integer dBmToQuality(Integer dBm) {
-    Integer quality = 0
+    // In Tasmota RSSI is actually % already, so just returning the received value here
+    // Keeping this around if this behavior changes
+    /*Integer quality = 0
     if(dBm > 0) dBm = dBm * -1
     if(dBm <= -100) {
         quality = 0
@@ -2178,8 +2263,8 @@ Integer dBmToQuality(Integer dBm) {
     } else {
         quality = 2 * (dBm + 100)
     }
-    logging("DBM: $dBm (${quality}%)", 0)
-    return quality
+    logging("DBM: $dBm (${quality}%)", 0)*/
+    return dBm
 }
 
 /*
