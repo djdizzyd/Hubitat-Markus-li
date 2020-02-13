@@ -105,7 +105,7 @@ TreeMap getDeviceConfigurations() {
          installCommands: [['Rule1', '0']],
          deviceLink: 'https://templates.blakadder.com/sonoff_ifan02.html'],
 
-        [typeId: 'sonoff-ifan03-no_beep-m44',
+        /*[typeId: 'sonoff-ifan03-no_beep-m44',
          name: 'Sonoff iFan03 (No Beep) M44',
          template: '{"NAME":"Sonoff iFan03","GPIO":[17,255,0,255,0,0,29,33,23,56,22,24,0],"FLAG":0,"BASE":44}',
          installCommands: [["SetOption67", "0"], ['Rule1', '0']],
@@ -117,7 +117,7 @@ TreeMap getDeviceConfigurations() {
          installCommands: [["SetOption67", "0"],
                            ['Rule1', 'ON Fanspeed#Data>=1 DO Buzzer %value%; ENDON ON Fanspeed#Data==0 DO Buzzer 1; ENDON'],
                            ['Rule1', '1']],
-         deviceLink: 'https://templates.blakadder.com/sonoff_ifan03.html'],
+         deviceLink: 'https://templates.blakadder.com/sonoff_ifan03.html'],*/
 
         [typeId: 'sonoff-ifan03-no_beep-m71',
          name: 'Sonoff iFan03 (No Beep) M71',
@@ -130,7 +130,9 @@ TreeMap getDeviceConfigurations() {
          name: 'Sonoff iFan03 (Beep) M71',
          module: 71,
          //template: '{"NAME":"SonoffiFan03","GPIO":[17,148,0,149,0,0,29,161,23,56,22,24,0],"FLAG":0,"BASE":71}',
-         installCommands: [["SetOption67", "1"], ['Rule1', '0']],
+         installCommands: [["SetOption67", "1"], 
+                           ['Rule1', 'ON Fanspeed#Data>=1 DO Buzzer %value%; ENDON ON Fanspeed#Data==0 DO Buzzer 1; ENDON'],
+                           ['Rule1', '1']],
          deviceLink: 'https://templates.blakadder.com/sonoff_ifan03.html'],
 
         [typeId: 'kmc-4-pm-plug',

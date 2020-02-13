@@ -258,7 +258,7 @@ if (result.containsKey("ENERGY")) {
     if (result.ENERGY.containsKey("ReactivePower")) {
         logging("reactivePower: $result.ENERGY.ReactivePower VAr",99)
         //sendEvent(name: "reactivePower", value: "$result.ENERGY.ReactivePower VAr")
-        missingChild = callChildParseByTypeId("POWER1", [[name:"reactivePower", value:"$result.ENERGY.reactivePower VAr"]], missingChild)
+        missingChild = callChildParseByTypeId("POWER1", [[name:"reactivePower", value:"$result.ENERGY.ReactivePower VAr"]], missingChild)
     }
     if (result.ENERGY.containsKey("Factor")) {
         logging("powerFactor: $result.ENERGY.Factor",99)

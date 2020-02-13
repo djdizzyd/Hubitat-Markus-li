@@ -25,17 +25,17 @@ capability "Configuration"
 def getDefaultMetadataCapabilitiesForEnergyMonitor():
     return """
 // Default Capabilities for Energy Monitor
-capability "Voltage Measurement"
-capability "Power Meter"
-capability "Energy Meter"
+capability "VoltageMeasurement"
+capability "PowerMeter"
+capability "EnergyMeter"
 """
 
 def getDefaultMetadataCapabilitiesForTHMonitor():
     return """
 // Default Capabilities for TH Monitor
 capability "Sensor"
-capability "Temperature Measurement"
-capability "Relative Humidity Measurement"
+capability "TemperatureMeasurement"
+capability "RelativeHumidityMeasurement"
 capability "PressureMeasurement"
 """
 

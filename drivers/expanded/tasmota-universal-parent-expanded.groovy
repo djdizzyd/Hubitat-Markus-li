@@ -228,7 +228,7 @@ TreeMap getDeviceConfigurations() {
          installCommands: [['Rule1', '0']],
          deviceLink: 'https://templates.blakadder.com/sonoff_ifan02.html'],
 
-        [typeId: 'sonoff-ifan03-no_beep-m44',
+        /*[typeId: 'sonoff-ifan03-no_beep-m44',
          name: 'Sonoff iFan03 (No Beep) M44',
          template: '{"NAME":"Sonoff iFan03","GPIO":[17,255,0,255,0,0,29,33,23,56,22,24,0],"FLAG":0,"BASE":44}',
          installCommands: [["SetOption67", "0"], ['Rule1', '0']],
@@ -240,7 +240,7 @@ TreeMap getDeviceConfigurations() {
          installCommands: [["SetOption67", "0"],
                            ['Rule1', 'ON Fanspeed#Data>=1 DO Buzzer %value%; ENDON ON Fanspeed#Data==0 DO Buzzer 1; ENDON'],
                            ['Rule1', '1']],
-         deviceLink: 'https://templates.blakadder.com/sonoff_ifan03.html'],
+         deviceLink: 'https://templates.blakadder.com/sonoff_ifan03.html'],*/
 
         [typeId: 'sonoff-ifan03-no_beep-m71',
          name: 'Sonoff iFan03 (No Beep) M71',
@@ -253,7 +253,9 @@ TreeMap getDeviceConfigurations() {
          name: 'Sonoff iFan03 (Beep) M71',
          module: 71,
          //template: '{"NAME":"SonoffiFan03","GPIO":[17,148,0,149,0,0,29,161,23,56,22,24,0],"FLAG":0,"BASE":71}',
-         installCommands: [["SetOption67", "1"], ['Rule1', '0']],
+         installCommands: [["SetOption67", "1"], 
+                           ['Rule1', 'ON Fanspeed#Data>=1 DO Buzzer %value%; ENDON ON Fanspeed#Data==0 DO Buzzer 1; ENDON'],
+                           ['Rule1', '1']],
          deviceLink: 'https://templates.blakadder.com/sonoff_ifan03.html'],
 
         [typeId: 'kmc-4-pm-plug',
@@ -903,7 +905,7 @@ boolean parseResult(result, missingChild) {
         if (result.ENERGY.containsKey("ReactivePower")) {
             logging("reactivePower: $result.ENERGY.ReactivePower VAr",99)
             //sendEvent(name: "reactivePower", value: "$result.ENERGY.ReactivePower VAr")
-            missingChild = callChildParseByTypeId("POWER1", [[name:"reactivePower", value:"$result.ENERGY.reactivePower VAr"]], missingChild)
+            missingChild = callChildParseByTypeId("POWER1", [[name:"reactivePower", value:"$result.ENERGY.ReactivePower VAr"]], missingChild)
         }
         if (result.ENERGY.containsKey("Factor")) {
             logging("powerFactor: $result.ENERGY.Factor",99)
@@ -1332,7 +1334,7 @@ void componentSetSpeed(cd, String fanspeed) {
 private String getDriverVersion() {
     //comment = ""
     //if(comment != "") state.comment = comment
-    String version = "v1.0.0212Ta"
+    String version = "v1.0.0213Ta"
     logging("getDriverVersion() = ${version}", 50)
     sendEvent(name: "driver", value: version)
     updateDataValue('driver', version)
@@ -2494,7 +2496,7 @@ void runInstallCommands(installCommands) {
         if(backlogs.size() > 0) pauseExecution(1000)
         // REALLY don't use pauseExecution often... NOT good for performance...
     }
-    
+
     [rule1, rule2, rule3].each {
         //logging("rule: $it", 1)
         it.each {rule->
@@ -2750,6 +2752,8 @@ void configureChildDevices(asyncResponse, data) {
         sns = statusMap["StatusSNS"]
         deviceInfo["hasEnergy"] = sns.containsKey("ENERGY")
         deviceInfo["sensorMap"] = getKeysWithMapAndId(sns)
+        // Energy is the only one that doesn't belong... Just remove it...
+        deviceInfo["sensorMap"].remove("ENERGY")
         deviceInfo["numSensorGroups"] = deviceInfo["sensorMap"].size()
         deviceInfo["numTemperature"] = numOfKeyInSubMap(sns, "Temperature")
         deviceInfo["numHumidity"] = numOfKeyInSubMap(sns, "Humidity")
@@ -2795,12 +2799,14 @@ void configureChildDevices(asyncResponse, data) {
             deviceInfo["isRGB"] == true || deviceInfo["hasCT"] == true)) {
                 log.warn "There's more than one switch and the device is either dimmable, addressable, RGB or has CT capability. This is not fully supported yet, please report which device and settings you're using to the developer so that a solution can be found."
         }
-        if(deviceInfo["hasEnergy"] && (deviceInfo["isAddressable"] == false && deviceInfo["isRGB"] == false && deviceInfo["hasCT"] == false)) {
+        if(deviceInfo["hasEnergy"]  == true && (deviceInfo["isAddressable"] == false && deviceInfo["isRGB"] == false && deviceInfo["hasCT"] == false)) {
             if(deviceInfo["isDimmer"]) {
                 // TODO: Make a Component Dimmer with Metering
                 driverName = ["Tasmota - Universal Dimmer (Child)", "Generic Component Dimmer"]
             } else {
-                driverName = ["Tasmota - Universal Switch (Child)", "Generic Component Metering Switch"]
+                driverName = ["Tasmota - Universal Metering Plug/Outlet (Child)", 
+                              "Tasmota - Universal Metering Bulb/Light (Child)",
+                              "Generic Component Metering Switch"]
             }
         } else {
             if(deviceInfo["hasEnergy"] == true) {

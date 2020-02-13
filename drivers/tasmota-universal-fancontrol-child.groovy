@@ -44,6 +44,8 @@ void parse(List<Map> description) {
                     // Buzzer 3
                     break
             }*/
+        } else {
+            log.warn "Got '$it.name' attribute data, but doesn't know what to do with it! This is probably a bug! Please report it..."
         }
     }
 }
@@ -74,7 +76,7 @@ void setSpeed(String value) {
  * -----------------------------------------------------------------------------
  * Everything below here are LIBRARY includes and should NOT be edited manually!
  * -----------------------------------------------------------------------------
- * --- Nothings to edit here, move along! --------------------------------------
+ * --- Nothing to edit here, move along! ---------------------------------------
  * -----------------------------------------------------------------------------
  */
 

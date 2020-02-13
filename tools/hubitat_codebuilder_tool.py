@@ -169,9 +169,9 @@ def main():
          'alternate_name': 'Tasmota - KMC 4 Power Monitor Plug', \
          'alternate_template': '{"NAME":"KMC 4 Plug","GPIO":[0,56,0,0,133,132,0,0,130,22,23,21,17],"FLAG":0,"BASE":36}',
          'numSwitches': 3, 'deviceLink': 'https://templates.blakadder.com/kmc-4.html'},
-        {'id': 644, 'file': 'tasmota-generic-pm-plug-child.groovy' , \
-         'alternate_output_filename': 'tasmota-kmc-4-pm-plug-child', \
-         'alternate_name': 'Tasmota - KMC 4 Power Monitor Plug (Child)'},
+        #{'id': 644, 'file': 'tasmota-generic-pm-plug-child.groovy' , \
+        # 'alternate_output_filename': 'tasmota-kmc-4-pm-plug-child', \
+        # 'alternate_name': 'Tasmota - KMC 4 Power Monitor Plug (Child)'},
         {'id': 555, 'file': 'tasmota-generic-pm-plug.groovy' , \
          'alternate_output_filename': 'tasmota-awp04l-pm-plug', \
          'alternate_name': 'Tasmota - AWP04L Power Monitor Plug', \
@@ -183,9 +183,9 @@ def main():
          'alternate_template': '{"NAME":"Sonoff 4CH Pro","GPIO":[17,255,255,255,23,22,18,19,21,56,20,24,0],"FLAG":0,"BASE":23}',
          'comment': 'UNTESTED driver', 'numSwitches': 4,
          'deviceLink': 'https://templates.blakadder.com/sonoff_4CH_Pro.html'},
-        {'id': 647, 'file': 'tasmota-generic-pm-plug-child.groovy' , \
-         'alternate_output_filename': 'tasmota-sonoff-4ch-pro-child', \
-         'alternate_name': 'Tasmota - Sonoff 4CH Pro (Child)'},
+        #{'id': 647, 'file': 'tasmota-generic-pm-plug-child.groovy' , \
+        # 'alternate_output_filename': 'tasmota-sonoff-4ch-pro-child', \
+        # 'alternate_name': 'Tasmota - Sonoff 4CH Pro (Child)'},
 
         # Tasmota Drivers WITH their own base-file
         {'id': 548, 'file': 'tasmota-tuyamcu-wifi-touch-switch.groovy' },
@@ -262,6 +262,11 @@ def main():
             'specialDebugLabel': 'descriptionText' },
         {'id': 993, 'file': 'tasmota-universal-fancontrol-child.groovy', 
             'specialDebugLabel': 'descriptionText' },
+        {'id': 644, 'file': 'tasmota-universal-metering-plug-outlet-child.groovy', 
+            'specialDebugLabel': 'descriptionText' },
+        {'id': 647, 'file': 'tasmota-universal-metering-bulb-light-child.groovy', 
+            'specialDebugLabel': 'descriptionText' },
+
         {'id': 867, 'file': 'tasmota-universal-parent.groovy', 'specialDebugLabel': 'descriptionText',
          'alternate_output_filename': 'tasmota-universal-parent-testing', \
          'alternate_name': 'Tasmota - Universal Parent Testing' },
@@ -311,7 +316,10 @@ def main():
     # 651 left over from RF Link Child
     driver_files_testing = [
         {'id': 865}, {'id': 866}, {'id': 993},  # Universal Drivers RELEASE
-        {'id': 993}, # Fan Control Child
+        
+        #{'id': 993}, # Fan Control Child
+        {'id': 644}, {'id': 647}, # Metering Children
+
         {'id': 962}, # Javascript Injection Driver
     #    {'id': 867}, {'id': 868},  # Universal Drivers TESTING
         

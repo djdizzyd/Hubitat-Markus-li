@@ -12,6 +12,7 @@ metadata {
         capability "IlluminanceMeasurement"       // Attributes: illuminance - NUMBER
         capability "MotionSensor"                 // Attributes: motion - ENUM ["inactive", "active"]
         capability "WaterSensor"                  // Attributes: water - ENUM ["wet", "dry"]
+
         capability "Refresh"
 
         // Non-standard sensor attributes
@@ -39,6 +40,8 @@ void parse(List<Map> description) {
             "illuminance", "motion", "water", "distance"]) {
             logging(it.descriptionText, 100)
             sendEvent(it)
+        } else {
+            log.warn "Got '$it.name' attribute data, but doesn't know what to do with it! This is probably a bug! Please report it..."
         }
     }
 }
@@ -64,7 +67,7 @@ void refresh() {
  * -----------------------------------------------------------------------------
  * Everything below here are LIBRARY includes and should NOT be edited manually!
  * -----------------------------------------------------------------------------
- * --- Nothings to edit here, move along! --------------------------------------
+ * --- Nothing to edit here, move along! ---------------------------------------
  * -----------------------------------------------------------------------------
  */
 

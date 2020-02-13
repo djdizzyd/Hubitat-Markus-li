@@ -150,7 +150,7 @@ void runInstallCommands(installCommands) {
         if(backlogs.size() > 0) pauseExecution(1000)
         // REALLY don't use pauseExecution often... NOT good for performance...
     }
-    
+
     [rule1, rule2, rule3].each {
         //logging("rule: $it", 1)
         it.each {rule->
@@ -406,6 +406,8 @@ void configureChildDevices(asyncResponse, data) {
         sns = statusMap["StatusSNS"]
         deviceInfo["hasEnergy"] = sns.containsKey("ENERGY")
         deviceInfo["sensorMap"] = getKeysWithMapAndId(sns)
+        // Energy is the only one that doesn't belong... Just remove it...
+        deviceInfo["sensorMap"].remove("ENERGY")
         deviceInfo["numSensorGroups"] = deviceInfo["sensorMap"].size()
         deviceInfo["numTemperature"] = numOfKeyInSubMap(sns, "Temperature")
         deviceInfo["numHumidity"] = numOfKeyInSubMap(sns, "Humidity")
@@ -451,12 +453,14 @@ void configureChildDevices(asyncResponse, data) {
             deviceInfo["isRGB"] == true || deviceInfo["hasCT"] == true)) {
                 log.warn "There's more than one switch and the device is either dimmable, addressable, RGB or has CT capability. This is not fully supported yet, please report which device and settings you're using to the developer so that a solution can be found."
         }
-        if(deviceInfo["hasEnergy"] && (deviceInfo["isAddressable"] == false && deviceInfo["isRGB"] == false && deviceInfo["hasCT"] == false)) {
+        if(deviceInfo["hasEnergy"]  == true && (deviceInfo["isAddressable"] == false && deviceInfo["isRGB"] == false && deviceInfo["hasCT"] == false)) {
             if(deviceInfo["isDimmer"]) {
                 // TODO: Make a Component Dimmer with Metering
                 driverName = ["Tasmota - Universal Dimmer (Child)", "Generic Component Dimmer"]
             } else {
-                driverName = ["Tasmota - Universal Switch (Child)", "Generic Component Metering Switch"]
+                driverName = ["Tasmota - Universal Metering Plug/Outlet (Child)", 
+                              "Tasmota - Universal Metering Bulb/Light (Child)",
+                              "Generic Component Metering Switch"]
             }
         } else {
             if(deviceInfo["hasEnergy"] == true) {
