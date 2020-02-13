@@ -4,9 +4,12 @@
 
 metadata {
     // Do NOT rename the child driver name unless you also change the corresponding code in the Parent!
-    definition (name: "Tasmota - Universal Fan Control (Child)", namespace: "tasmota", author: "Markus Liljergren") {
-        capability "FanControl"
+    definition (name: "Tasmota - Universal Switch as Motion Sensor (Child)", namespace: "tasmota", author: "Markus Liljergren") {
+        capability "Sensor"
+        capability "MotionSensor"                 // Attributes: motion - ENUM ["inactive", "active"]
+
         capability "Refresh"
+
     }
 
     preferences {
@@ -23,7 +26,9 @@ metadata {
 /* These functions are unique to each driver */
 void parse(List<Map> description) {
     description.each {
-        if (it.name in ["speed"]) {
+        if (it.name in ["switch"]) {
+            it.name = "motion"
+            it.value = (it.value == "on" ? "active" : "inactive")
             logging(it.descriptionText, 100)
             sendEvent(it)
         } else {
@@ -47,11 +52,6 @@ void installed() {
 void refresh() {
     #!include:getChildComponentMetaConfigCommands()
     parent?.componentRefresh(this.device)
-}
-
-void setSpeed(String value) {
-    parent?.componentSetSpeed(this.device, value)
-    
 }
 
 /**

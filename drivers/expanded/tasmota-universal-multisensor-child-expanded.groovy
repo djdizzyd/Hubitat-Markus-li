@@ -84,7 +84,7 @@ void parse(List<Map> description) {
             logging(it.descriptionText, 100)
             sendEvent(it)
         } else {
-            log.warn "Got '$it.name' attribute data, but doesn't know what to do with it! This is probably a bug! Please report it..."
+            log.warn "Got '$it.name' attribute data, but doesn't know what to do with it! Did you choose the right device type?"
         }
     }
 }

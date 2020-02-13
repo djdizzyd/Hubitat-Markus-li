@@ -104,16 +104,7 @@ def main():
          'alternate_template': '{"NAME":"CE WF500D","GPIO":[255,255,255,255,255,255,0,0,255,108,255,107,255],"FLAG":0,"BASE":54}',
          'deviceLink': 'https://templates.blakadder.com/ce_smart_home-WF500D.html',
          'comment': 'WORKING, but need feedback from users'},
-        {'id': 581, 'file': 'tasmota-generic-wifi-switch-plug.groovy' , \
-         'alternate_output_filename': 'tasmota-ce-la-2-w3-wall-outlet', \
-         'alternate_name': 'Tasmota - CE Smart Home LA-2-W3 Wall Outlet', \
-         'alternate_template': '{"NAME":"CE LA-2-W3","GPIO":[255,255,255,255,157,17,0,0,21,255,255,255,255],"FLAG":15,"BASE":18}',
-         'deviceLink': 'https://templates.blakadder.com/ce_smart_home_LA-2-W3.html'},
-        {'id': 582, 'file': 'tasmota-generic-wifi-switch-plug.groovy' , \
-         'alternate_output_filename': 'tasmota-ce-lq-2-w3-wall-outlet', \
-         'alternate_name': 'Tasmota - CE Smart Home LQ-2-W3 Wall Outlet', \
-         'alternate_template': '{"NAME":"CE LQ-2-W3","GPIO":[255,255,255,255,255,17,255,255,21,255,255,255,255],"FLAG":15,"BASE":18}',
-         'deviceLink': 'https://templates.blakadder.com/ce_smart_home_LQ-2-W3.html'},
+        
         {'id': 583, 'file': 'tasmota-generic-wifi-switch-plug.groovy' , \
          'alternate_output_filename': 'tasmota-awp02l-n-plug', \
          'alternate_name': 'Tasmota - AWP02L-N Plug', \
@@ -149,11 +140,11 @@ def main():
          'alternate_name': 'Tasmota - Sonoff SV', \
          'alternate_template': '{"NAME":"Sonoff SV","GPIO":[17,255,0,255,255,255,0,0,21,56,255,0,0],"FLAG":1,"BASE":3}',
          'deviceLink': 'https://templates.blakadder.com/sonoff_SV.html'},
-        {'id': 361, 'file': 'tasmota-generic-thp-device.groovy' , \
-         'alternate_output_filename': 'tasmota-sonoff-th', \
-         'alternate_name': 'Tasmota - Sonoff TH', \
-         'alternate_template': '{"NAME":"Sonoff TH","GPIO":[17,255,0,255,255,0,0,0,21,56,255,0,0],"FLAG":0,"BASE":4}',
-         'deviceLink': 'https://templates.blakadder.com/sonoff_TH.html'},
+        #{'id': 361, 'file': 'tasmota-generic-thp-device.groovy' , \
+        # 'alternate_output_filename': 'tasmota-sonoff-th', \
+        # 'alternate_name': 'Tasmota - Sonoff TH', \
+        # 'alternate_template': '{"NAME":"Sonoff TH","GPIO":[17,255,0,255,255,0,0,0,21,56,255,0,0],"FLAG":0,"BASE":4}',
+        # 'deviceLink': 'https://templates.blakadder.com/sonoff_TH.html'},
         {'id': 547, 'file': 'tasmota-sonoff-powr2.groovy' , \
          'alternate_output_filename': 'tasmota-sonoff-pow', \
          'alternate_name': 'Tasmota - Sonoff POW', \
@@ -172,11 +163,11 @@ def main():
         #{'id': 644, 'file': 'tasmota-generic-pm-plug-child.groovy' , \
         # 'alternate_output_filename': 'tasmota-kmc-4-pm-plug-child', \
         # 'alternate_name': 'Tasmota - KMC 4 Power Monitor Plug (Child)'},
-        {'id': 555, 'file': 'tasmota-generic-pm-plug.groovy' , \
-         'alternate_output_filename': 'tasmota-awp04l-pm-plug', \
-         'alternate_name': 'Tasmota - AWP04L Power Monitor Plug', \
-         'alternate_template': '{"NAME":"AWP04L","GPIO":[57,255,255,131,255,134,0,0,21,17,132,56,255],"FLAG":0,"BASE":18}',
-         'deviceLink': 'https://templates.blakadder.com/awp04l.html'},
+        #{'id': 555, 'file': 'tasmota-generic-pm-plug.groovy' , \
+        # 'alternate_output_filename': 'tasmota-awp04l-pm-plug', \
+        # 'alternate_name': 'Tasmota - AWP04L Power Monitor Plug', \
+        # 'alternate_template': '{"NAME":"AWP04L","GPIO":[57,255,255,131,255,134,0,0,21,17,132,56,255],"FLAG":0,"BASE":18}',
+        # 'deviceLink': 'https://templates.blakadder.com/awp04l.html'},
         {'id': 646, 'file': 'tasmota-sonoff-4ch-parent.groovy' , \
          'alternate_output_filename': 'tasmota-sonoff-4ch-pro-parent', \
          'alternate_name': 'Tasmota - Sonoff 4CH Pro (Parent)', \
@@ -262,10 +253,19 @@ def main():
             'specialDebugLabel': 'descriptionText' },
         {'id': 993, 'file': 'tasmota-universal-fancontrol-child.groovy', 
             'specialDebugLabel': 'descriptionText' },
+        {'id': 361, 'file': 'tasmota-universal-switch-as-motion-sensor-child.groovy', 
+            'specialDebugLabel': 'descriptionText' },
+        {'id': 555, 'file': 'tasmota-universal-switch-as-water-sensor-child.groovy', 
+            'specialDebugLabel': 'descriptionText' },
+        {'id': 581, 'file': 'tasmota-universal-plug-outlet-child.groovy', 
+            'specialDebugLabel': 'descriptionText' },
+        {'id': 582, 'file': 'tasmota-universal-bulb-light-child.groovy', 
+            'specialDebugLabel': 'descriptionText' },
         {'id': 644, 'file': 'tasmota-universal-metering-plug-outlet-child.groovy', 
             'specialDebugLabel': 'descriptionText' },
         {'id': 647, 'file': 'tasmota-universal-metering-bulb-light-child.groovy', 
             'specialDebugLabel': 'descriptionText' },
+        
 
         {'id': 867, 'file': 'tasmota-universal-parent.groovy', 'specialDebugLabel': 'descriptionText',
          'alternate_output_filename': 'tasmota-universal-parent-testing', \
@@ -316,9 +316,11 @@ def main():
     # 651 left over from RF Link Child
     driver_files_testing = [
         {'id': 865}, {'id': 866}, {'id': 993},  # Universal Drivers RELEASE
-        
-        #{'id': 993}, # Fan Control Child
+        {'id': 361}, # Switch as Motion Sensor Child
+        {'id': 555}, # Switch as Water Sensor Child
+        {'id': 993}, # Fan Control Child
         {'id': 644}, {'id': 647}, # Metering Children
+        {'id': 581}, {'id': 582}, # Switch Children
 
         {'id': 962}, # Javascript Injection Driver
     #    {'id': 867}, {'id': 868},  # Universal Drivers TESTING

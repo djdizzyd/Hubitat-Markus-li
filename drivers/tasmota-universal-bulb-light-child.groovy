@@ -4,9 +4,12 @@
 
 metadata {
     // Do NOT rename the child driver name unless you also change the corresponding code in the Parent!
-    definition (name: "Tasmota - Universal Fan Control (Child)", namespace: "tasmota", author: "Markus Liljergren") {
-        capability "FanControl"
+    definition (name: "Tasmota - Universal Bulb/Light (Child)", namespace: "tasmota", author: "Markus Liljergren") {
+        capability "Actuator"
+        capability "Switch"
+        capability "Light"
         capability "Refresh"
+
     }
 
     preferences {
@@ -23,7 +26,7 @@ metadata {
 /* These functions are unique to each driver */
 void parse(List<Map> description) {
     description.each {
-        if (it.name in ["speed"]) {
+        if (it.name in ["switch"]) {
             logging(it.descriptionText, 100)
             sendEvent(it)
         } else {
@@ -49,9 +52,12 @@ void refresh() {
     parent?.componentRefresh(this.device)
 }
 
-void setSpeed(String value) {
-    parent?.componentSetSpeed(this.device, value)
-    
+void on() {
+    parent?.componentOn(this.device)
+}
+
+void off() {
+    parent?.componentOff(this.device)
 }
 
 /**

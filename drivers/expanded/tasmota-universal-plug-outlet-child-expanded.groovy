@@ -27,9 +27,12 @@ import java.security.MessageDigest
 
 metadata {
     // Do NOT rename the child driver name unless you also change the corresponding code in the Parent!
-    definition (name: "Tasmota - Universal Fan Control (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-fancontrol-child-expanded.groovy") {
-        capability "FanControl"
+    definition (name: "Tasmota - Universal Plug/Outlet (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-plug-outlet-child-expanded.groovy") {
+        capability "Actuator"
+        capability "Switch"
+        capability "Outlet"
         capability "Refresh"
+
     }
 
     preferences {
@@ -56,7 +59,7 @@ metadata {
 public getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    def deviceInfo = ['name': 'Tasmota - Universal Fan Control (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-fancontrol-child-expanded.groovy']
+    def deviceInfo = ['name': 'Tasmota - Universal Plug/Outlet (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-plug-outlet-child-expanded.groovy']
     //logging("deviceInfo[${infoName}] = ${deviceInfo[infoName]}", 1)
     return(deviceInfo[infoName])
 }
@@ -66,7 +69,7 @@ public getDeviceInfoByName(infoName) {
 /* These functions are unique to each driver */
 void parse(List<Map> description) {
     description.each {
-        if (it.name in ["speed"]) {
+        if (it.name in ["switch"]) {
             logging(it.descriptionText, 100)
             sendEvent(it)
         } else {
@@ -97,9 +100,12 @@ void refresh() {
     parent?.componentRefresh(this.device)
 }
 
-void setSpeed(String value) {
-    parent?.componentSetSpeed(this.device, value)
-    
+void on() {
+    parent?.componentOn(this.device)
+}
+
+void off() {
+    parent?.componentOff(this.device)
 }
 
 /**
