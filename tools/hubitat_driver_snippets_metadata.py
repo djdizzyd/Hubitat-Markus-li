@@ -107,21 +107,24 @@ command "deleteChildren"
 def getMetadataCommandsForHandlingRGBWDevices():
     return """
 // Commands for handling RGBW Devices
-command "white"
-command "red"
-command "green"
-command "blue"
+command "colorWhite"
+command "colorRed"
+command "colorGreen"
+command "colorBlue"
+command "colorYellow"
+command "colorCyan"
+command "colorPink"
 """
 
 def getMetadataCommandsForHandlingTasmotaRGBWDevices():
     return """
 // Commands for handling Tasmota RGBW Devices
-command "modeNext"
-command "modePrevious"
-command "modeSingleColor"
-command "modeCycleUpColors"
-command "modeCycleDownColors"
-command "modeRandomColors"
+command "modeNext", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
+command "modePrevious", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
+command "modeSingleColor", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
+command "modeCycleUpColors", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
+command "modeCycleDownColors", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
+command "modeRandomColors", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
 """
 
 def getMetadataCommandsForHandlingTasmotaDimmerDevices():

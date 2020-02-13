@@ -293,72 +293,112 @@ String getDeviceActionType(String childDeviceNetworkId) {
 }
 
 /** Calls FROM Child devices */
+void componentRefresh(cd) {
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentRefresh(cd=${cd.displayName} (${cd.deviceNetworkId})) actionType=$actionType", 1)
+    refresh()
+}
+
 void componentOn(cd) {
-    actionType = getDeviceActionType(cd.deviceNetworkId)
-    logging("componentOn(cd=${cd.displayName} (${cd.deviceNetworkId})) actionType=${getDeviceActionType(cd.deviceNetworkId)}", 1)
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentOn(cd=${cd.displayName} (${cd.deviceNetworkId})) actionType=$actionType", 1)
     getAction(getCommandString("$actionType", "1"))
     //childParse(cd, [[name:"switch", value:"on", descriptionText:"${cd.displayName} was turned on"]])
 }
 
 void componentOff(cd) {
-    actionType = getDeviceActionType(cd.deviceNetworkId)
-    logging("componentOff(cd=${cd.displayName} (${cd.deviceNetworkId})) actionType=${getDeviceActionType(cd.deviceNetworkId)}", 1)
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentOff(cd=${cd.displayName} (${cd.deviceNetworkId})) actionType=$actionType", 1)
     getAction(getCommandString("$actionType", "0"))
     //childParse(cd, [[name:"switch", value:"off", descriptionText:"${cd.displayName} was turned off"]])
 }
 
-void componentSetColor(cd, value) {
-    actionType = getDeviceActionType(cd.deviceNetworkId)
-    logging("componentSetColor(cd=${cd.displayName} (${cd.deviceNetworkId}), level=${value}) actionType=${getDeviceActionType(cd.deviceNetworkId)}", 1)
-    setColor(value)
-}
-
-void componentSetHue(cd, h) {
-    actionType = getDeviceActionType(cd.deviceNetworkId)
-    logging("componentSetColor(cd=${cd.displayName} (${cd.deviceNetworkId}), level=${h}) actionType=${getDeviceActionType(cd.deviceNetworkId)}", 1)
-    setHue(h)
-}
-
-void componentSetColorTemperature(cd, value) {
-    actionType = getDeviceActionType(cd.deviceNetworkId)
-    logging("componentSetColorTemperature(cd=${cd.displayName} (${cd.deviceNetworkId}), level=${value}) actionType=${getDeviceActionType(cd.deviceNetworkId)}", 1)
-    setColorTemperature(value)
-}
-
-void componentSetLevel(cd, level) {
-    actionType = getDeviceActionType(cd.deviceNetworkId)
-    logging("componentSetLevel(cd=${cd.displayName} (${cd.deviceNetworkId}), level=${level}) actionType=${getDeviceActionType(cd.deviceNetworkId)}", 1)
+void componentSetLevel(cd, BigDecimal level) {
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentSetLevel(cd=${cd.displayName} (${cd.deviceNetworkId}), level=${level}) actionType=$actionType", 1)
     setLevel(level)
 }
 
-void componentSetLevel(cd, level, ramp) {
-    actionType = getDeviceActionType(cd.deviceNetworkId)
-    logging("componentSetLevel(cd=${cd.displayName} (${cd.deviceNetworkId}), level=${level}, ramp=${ramp}) actionType=${getDeviceActionType(cd.deviceNetworkId)}", 1)
-    setLevel(level, ramp)
+void componentSetLevel(cd, BigDecimal level, BigDecimal duration) {
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentSetLevel(cd=${cd.displayName} (${cd.deviceNetworkId}), level=${level}, duration=${duration}) actionType=$actionType", 1)
+    setLevel(level, duration)
 }
 
-void componentSetSaturation(cd, s) {
-    actionType = getDeviceActionType(cd.deviceNetworkId)
-    logging("componentSetSaturation(cd=${cd.displayName} (${cd.deviceNetworkId}), s=${s}) actionType=${getDeviceActionType(cd.deviceNetworkId)}", 1)
-    setSaturation(s)
-}
-
-void componentStartLevelChange(cd, direction) {
-    actionType = getDeviceActionType(cd.deviceNetworkId)
-    logging("componentStartLevelChange(cd=${cd.displayName} (${cd.deviceNetworkId}), direction=${direction}) actionType=${getDeviceActionType(cd.deviceNetworkId)}", 1)
+void componentStartLevelChange(cd, String direction) {
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentStartLevelChange(cd=${cd.displayName} (${cd.deviceNetworkId}), direction=${direction}) actionType=$actionType", 1)
     startLevelChange(direction)
 }
 
 void componentStopLevelChange(cd) {
-    actionType = getDeviceActionType(cd.deviceNetworkId)
-    logging("componentStopLevelChange(cd=${cd.displayName} (${cd.deviceNetworkId})) actionType=${getDeviceActionType(cd.deviceNetworkId)}", 1)
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentStopLevelChange(cd=${cd.displayName} (${cd.deviceNetworkId})) actionType=$actionType", 1)
     stopLevelChange()
 }
 
-void componentRefresh(cd) {
-    actionType = getDeviceActionType(cd.deviceNetworkId)
-    logging("componentRefresh(cd=${cd.displayName} (${cd.deviceNetworkId})) actionType=${getDeviceActionType(cd.deviceNetworkId)}", 1)
-    refresh()
+void componentSetColor(cd, Map colormap) {
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentSetColor(cd=${cd.displayName} (${cd.deviceNetworkId}), colormap=${colormap}) actionType=$actionType", 1)
+    setColor(colormap)
+}
+
+void componentSetHue(cd, BigDecimal hue) {
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentSetHue(cd=${cd.displayName} (${cd.deviceNetworkId}), hue=${hue}) actionType=$actionType", 1)
+    setHue(hue)
+}
+
+void componentWhite(cd) {
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentWhite(cd=${cd.displayName} (${cd.deviceNetworkId})) actionType=$actionType", 1)
+    white()
+}
+
+void componentSetRGB(cd, r, g, b) {
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentSetRGB(cd=${cd.displayName} (${cd.deviceNetworkId}), r=${r}, g=${g}, b=${b}) actionType=$actionType", 1)
+    setRGB(r, g, b)
+}
+
+void componentSetSaturation(cd, BigDecimal saturation) {
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentSetSaturation(cd=${cd.displayName} (${cd.deviceNetworkId}), saturation=${saturation}) actionType=$actionType", 1)
+    setSaturation(saturation)
+}
+
+void componentSetColorTemperature(cd, BigDecimal colortemperature) {
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentSetColorTemperature(cd=${cd.displayName} (${cd.deviceNetworkId}), colortemperature=${colortemperature}) actionType=$actionType", 1)
+    setColorTemperature(colortemperature)
+}
+
+void componentModeNext(cd, BigDecimal speed) {
+    modeNext(speed)
+}
+
+void componentModePrevious(cd, BigDecimal speed) {
+    modePrevious(speed)
+}
+
+void componentModeSingleColor(cd, BigDecimal speed) {
+    modeSingleColor(speed)
+}
+
+void componentModeCycleUpColors(cd, BigDecimal speed) {
+    modeCycleUpColors(speed)
+}
+
+void componentModeCycleDownColors(cd, BigDecimal speed) {
+    modeCycleDownColors(speed)
+}
+
+void componentModeRandomColors(cd, BigDecimal speed) {
+    modeRandomColors(speed)
+}
+
+void componentModeWakeUp(cd, BigDecimal wakeUpDuration, BigDecimal level) {
+    modeWakeUp(wakeUpDuration, level)
 }
 
 void componentSetSpeed(cd, String fanspeed) {

@@ -150,11 +150,11 @@ def main():
          'alternate_name': 'Tasmota - Sonoff POW', \
          'alternate_template': '{"NAME":"Sonoff Pow","GPIO":[17,0,0,0,0,130,0,0,21,132,133,52,0],"FLAG":0,"BASE":6}',
          'deviceLink': 'https://templates.blakadder.com/sonoff_Pow.html'},
-        {'id': 359, 'file': 'tasmota-sonoff-powr2.groovy' , \
-         'alternate_output_filename': 'tasmota-sonoff-s31', \
-         'alternate_name': 'Tasmota - Sonoff S31', \
-         'alternate_template': '{"NAME":"Sonoff S31","GPIO":[17,145,0,146,0,0,0,0,21,56,0,0,0],"FLAG":0,"BASE":41}',
-         'deviceLink': 'https://templates.blakadder.com/sonoff_S31.html'},
+        #{'id': 359, 'file': 'tasmota-sonoff-powr2.groovy' , \
+        # 'alternate_output_filename': 'tasmota-sonoff-s31', \
+        # 'alternate_name': 'Tasmota - Sonoff S31', \
+        # 'alternate_template': '{"NAME":"Sonoff S31","GPIO":[17,145,0,146,0,0,0,0,21,56,0,0,0],"FLAG":0,"BASE":41}',
+        # 'deviceLink': 'https://templates.blakadder.com/sonoff_S31.html'},
         {'id': 643, 'file': 'tasmota-generic-pm-plug-parent.groovy' , \
          'alternate_output_filename': 'tasmota-kmc-4-pm-plug', \
          'alternate_name': 'Tasmota - KMC 4 Power Monitor Plug', \
@@ -168,12 +168,12 @@ def main():
         # 'alternate_name': 'Tasmota - AWP04L Power Monitor Plug', \
         # 'alternate_template': '{"NAME":"AWP04L","GPIO":[57,255,255,131,255,134,0,0,21,17,132,56,255],"FLAG":0,"BASE":18}',
         # 'deviceLink': 'https://templates.blakadder.com/awp04l.html'},
-        {'id': 646, 'file': 'tasmota-sonoff-4ch-parent.groovy' , \
-         'alternate_output_filename': 'tasmota-sonoff-4ch-pro-parent', \
-         'alternate_name': 'Tasmota - Sonoff 4CH Pro (Parent)', \
-         'alternate_template': '{"NAME":"Sonoff 4CH Pro","GPIO":[17,255,255,255,23,22,18,19,21,56,20,24,0],"FLAG":0,"BASE":23}',
-         'comment': 'UNTESTED driver', 'numSwitches': 4,
-         'deviceLink': 'https://templates.blakadder.com/sonoff_4CH_Pro.html'},
+        #{'id': 646, 'file': 'tasmota-sonoff-4ch-parent.groovy' , \
+        # 'alternate_output_filename': 'tasmota-sonoff-4ch-pro-parent', \
+        # 'alternate_name': 'Tasmota - Sonoff 4CH Pro (Parent)', \
+        # 'alternate_template': '{"NAME":"Sonoff 4CH Pro","GPIO":[17,255,255,255,23,22,18,19,21,56,20,24,0],"FLAG":0,"BASE":23}',
+        # 'comment': 'UNTESTED driver', 'numSwitches': 4,
+        # 'deviceLink': 'https://templates.blakadder.com/sonoff_4CH_Pro.html'},
         #{'id': 647, 'file': 'tasmota-generic-pm-plug-child.groovy' , \
         # 'alternate_output_filename': 'tasmota-sonoff-4ch-pro-child', \
         # 'alternate_name': 'Tasmota - Sonoff 4CH Pro (Child)'},
@@ -188,8 +188,8 @@ def main():
         {'id': 554, 'file': 'tasmota-sonoff-mini.groovy', 'deviceLink': 'https://templates.blakadder.com/sonoff_mini.html'},
         {'id': 560, 'file': 'tasmota-sonoff-basic.groovy', 'deviceLink': 'https://templates.blakadder.com/sonoff_basic.html'},
         {'id': 553, 'file': 'tasmota-s120-plug.groovy' },
-        {'id': 559, 'file': 'tasmota-brilliant-bl20925-pm-plug.groovy', 'deviceLink': 'https://templates.blakadder.com/brilliant_BL20925.html'},
-        {'id': 577, 'file': 'tasmota-prime-ccrcwfii113pk-plug.groovy', 'deviceLink': 'https://templates.blakadder.com/prime_CCRCWFII113PK.html'},
+        #{'id': 559, 'file': 'tasmota-brilliant-bl20925-pm-plug.groovy', 'deviceLink': 'https://templates.blakadder.com/brilliant_BL20925.html'},
+        #{'id': 577, 'file': 'tasmota-prime-ccrcwfii113pk-plug.groovy', 'deviceLink': 'https://templates.blakadder.com/prime_CCRCWFII113PK.html'},
         {'id': 590, 'file': 'tasmota-tuyamcu-wifi-dimmer.groovy', 'comment': 'WORKING, but need feedback from users'},
         {'id': 588, 'file': 'tasmota-unbranded-rgb-controller-with-ir.groovy' },
         {'id': 362, 'file': 'tasmota-sonoff-4ch-parent.groovy' , 
@@ -249,9 +249,12 @@ def main():
 
         # Universal drivers
         {'id': 865, 'file': 'tasmota-universal-parent.groovy', 'specialDebugLabel': 'descriptionText' },
+        
         {'id': 866, 'file': 'tasmota-universal-multisensor-child.groovy', 
             'specialDebugLabel': 'descriptionText' },
         {'id': 993, 'file': 'tasmota-universal-fancontrol-child.groovy', 
+            'specialDebugLabel': 'descriptionText' },
+        {'id': 359, 'file': 'tasmota-universal-switch-as-contact-sensor-child.groovy', 
             'specialDebugLabel': 'descriptionText' },
         {'id': 361, 'file': 'tasmota-universal-switch-as-motion-sensor-child.groovy', 
             'specialDebugLabel': 'descriptionText' },
@@ -260,6 +263,13 @@ def main():
         {'id': 581, 'file': 'tasmota-universal-plug-outlet-child.groovy', 
             'specialDebugLabel': 'descriptionText' },
         {'id': 582, 'file': 'tasmota-universal-bulb-light-child.groovy', 
+            'specialDebugLabel': 'descriptionText' },
+        
+        {'id': 577, 'file': 'tasmota-universal-ct-rgb-cw-ww-child.groovy', 
+            'specialDebugLabel': 'descriptionText' },
+        {'id': 646, 'file': 'tasmota-universal-dimmer-child.groovy', 
+            'specialDebugLabel': 'descriptionText' },
+        {'id': 559, 'file': 'tasmota-universal-metering-dimmer-child.groovy', 
             'specialDebugLabel': 'descriptionText' },
         {'id': 644, 'file': 'tasmota-universal-metering-plug-outlet-child.groovy', 
             'specialDebugLabel': 'descriptionText' },
@@ -315,10 +325,15 @@ def main():
     # As long as we have an id, we can just supply that here instead of the whole config...
     # 651 left over from RF Link Child
     driver_files_testing = [
-        {'id': 865}, {'id': 866}, {'id': 993},  # Universal Drivers RELEASE
+        {'id': 865}, {'id': 866}, # Universal Drivers RELEASE
+        {'id': 359}, # Switch as Contact Sensor Child
         {'id': 361}, # Switch as Motion Sensor Child
         {'id': 555}, # Switch as Water Sensor Child
         {'id': 993}, # Fan Control Child
+        
+        {'id': 577}, # CT/RGB/RGB+CW+WW Child
+        {'id': 646}, # Dimmer Child
+        {'id': 559}, # Metering Dimmer Child
         {'id': 644}, {'id': 647}, # Metering Children
         {'id': 581}, {'id': 582}, # Switch Children
 

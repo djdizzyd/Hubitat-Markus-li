@@ -71,7 +71,7 @@ void setHSB(h, s, b, callWhite) {
     }
 }
 
-void setRGB(r,g,b) {   
+void setRGB(r, g, b) {   
     logging("setRGB('${r}','${g}','${b}')", 10)
     boolean adjusted = False
     if(r == null || r == 'NaN') {
@@ -213,49 +213,58 @@ void whiteForPlatform() {
 }
 
 // Functions to set RGBW Mode
-void modeSet(Integer mode) {
+void modeSet(Integer mode, BigDecimal speed=3) {
     logging("modeSet('${mode}')", 10)
-    getAction(getCommandString("Scheme", "${mode}"))
+    getAction(getMultiCommandString([[command:"Speed", value:"$speed"], [command:"Scheme", value:"${mode}"]]))
 }
 
-void modeNext() {
+void modeNext(BigDecimal speed=3) {
     logging("modeNext()", 10)
     if (state.mode < 4) {
         state.mode = state.mode + 1
     } else {
         state.mode = 0
     }
-    modeSet(state.mode)
+    modeSet(state.mode, speed)
 }
 
-void modePrevious() {
+void modePrevious(BigDecimal speed=3) {
     if (state.mode > 0) {
         state.mode = state.mode - 1
     } else {
         state.mode = 4
     }
-    modeSet(state.mode)
+    modeSet(state.mode, speed)
 }
 
-void modeSingleColor() {
+void modeSingleColor(BigDecimal speed=3) {
     state.mode = 0
-    modeSet(state.mode)
+    modeSet(state.mode, speed)
 }
 
-void modeWakeUp() {
-    logging("modeWakeUp()", 1)
-    state.mode = 1
-    modeSet(state.mode)
+void modeCycleUpColors(BigDecimal speed=3) {
+    state.mode = 2
+    modeSet(state.mode, speed)
 }
 
-void modeWakeUp(Integer wakeUpDuration) {
+void modeCycleDownColors(BigDecimal speed=3) {
+    state.mode = 3
+    modeSet(state.mode, speed)
+}
+
+void modeRandomColors(BigDecimal speed=3) {
+    state.mode = 4
+    modeSet(state.mode, speed)
+}
+
+void modeWakeUp(BigDecimal wakeUpDuration) {
     Integer level = device.currentValue('level')
     Integer nlevel = level > 10 ? level : 10
     logging("modeWakeUp(wakeUpDuration ${wakeUpDuration}, current level: ${nlevel})", 1)
     modeWakeUp(wakeUpDuration, nlevel)
 }
 
-void modeWakeUp(wakeUpDuration, level) {
+void modeWakeUp(BigDecimal wakeUpDuration, BigDecimal level) {
     logging("modeWakeUp(wakeUpDuration ${wakeUpDuration}, level: ${level})", 1)
     state.mode = 1
     wakeUpDuration = wakeUpDuration < 1 ? 1 : wakeUpDuration > 3000 ? 3000 : wakeUpDuration
@@ -263,21 +272,6 @@ void modeWakeUp(wakeUpDuration, level) {
     state.level = level
     getAction(getMultiCommandString([[command: "WakeupDuration", value: "${wakeUpDuration}"],
                                     [command: "Wakeup", value: "${level}"]]))
-}
-
-void modeCycleUpColors() {
-    state.mode = 2
-    modeSet(state.mode)
-}
-
-void modeCycleDownColors() {
-    state.mode = 3
-    modeSet(state.mode)
-}
-
-void modeRandomColors() {
-    state.mode = 4
-    modeSet(state.mode)
 }
 
 /**

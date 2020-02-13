@@ -343,29 +343,41 @@ def getTasmotaNewParserForRGBWDevice():
     return """
 // Standard RGBW Device Data parsing
 if(true) {
+    //[POWER:ON, Dimmer:100, Color:0,0,255,0,0, HSBColor:240,100,100, Channel:[0, 0, 100, 0, 0], CT:167]
+    //[POWER:ON, Dimmer:100, Color:0,0,0,245,10, HSBColor:240,100,0, Channel:[0, 0, 0, 96, 4], CT:167]
     def childDevice = getChildDeviceByActionType("POWER1")
-    if (result.containsKey("HSBColor")) {
-        def hsbColor = result.HSBColor.tokenize(",")
-        hsbColor[0] = Math.round((hsbColor[0] as Integer) / 3.6)
-        hsbColor[1] = hsbColor[1] as Integer
-        hsbColor[2] = hsbColor[2] as Integer
-        logging("hsbColor: ${hsbColor}", 1)
-        if(childDevice?.currentValue('hue') != hsbColor[0] ) missingChild = callChildParseByTypeId("POWER1", [[name: "hue", value: hsbColor[0]]], missingChild)
-        if(childDevice?.currentValue('saturation') != hsbColor[1] ) missingChild = callChildParseByTypeId("POWER1", [[name: "saturation", value: hsbColor[1]]], missingChild)
-    }
+    String mode = "RGB"
     if (result.containsKey("Color")) {
         String color = result.Color
-        logging("Color: ${color}", 1)
-        String mode = "RGB"
-        if(color.length() > 6 && color.startsWith("000000")) {
+        logging("Color: ${color}, size: ${result.Color.tokenize(",").size()}", 1)
+        if((color.length() > 6 && color.startsWith("000000")) ||
+           (result.Color.tokenize(",").size() > 3 && color.startsWith("0,0,0"))) {
             mode = "CT"
         }
         state.colorMode = mode
         if(childDevice?.currentValue('colorMode') != mode ) missingChild = callChildParseByTypeId("POWER1", [[name: "colorMode", value: mode]], missingChild)
     }
-    if (result.containsKey("CT")) {
+    if (mode == "RGB" && result.containsKey("HSBColor")) {
+        def hsbColor = result.HSBColor.tokenize(",")
+        hsbColor[0] = Math.round((hsbColor[0] as Integer) / 3.6) as Integer
+        hsbColor[1] = hsbColor[1] as Integer
+        //hsbColor[2] = hsbColor[2] as Integer
+        logging("hsbColor: ${hsbColor}", 1)
+        if(childDevice?.currentValue('hue') != hsbColor[0] ) missingChild = callChildParseByTypeId("POWER1", [[name: "hue", value: hsbColor[0]]], missingChild)
+        if(childDevice?.currentValue('saturation') != hsbColor[1] ) missingChild = callChildParseByTypeId("POWER1", [[name: "saturation", value: hsbColor[1]]], missingChild)
+        String colorName = getColorNameFromHueSaturation(hsbColor[0], hsbColor[1])
+        if(childDevice?.currentValue('colorName') != colorName ) {
+            missingChild = callChildParseByTypeId("POWER1", [[name: "colorName", value: colorName]], missingChild)
+        }
+    } else if (result.containsKey("CT")) {
         Integer t = Math.round(1000000/result.CT)
-        if(childDevice?.currentValue('colorTemperature') != t ) missingChild = callChildParseByTypeId("POWER1", [[name: "colorTemperature", value: t]], missingChild)
+        if(childDevice?.currentValue('colorTemperature') != t ) {
+            missingChild = callChildParseByTypeId("POWER1", [[name: "colorTemperature", value: t]], missingChild)    
+        }
+        String colorName = getColorNameFromTemperature(t)
+        if(childDevice?.currentValue('colorName') != colorName ) {
+            missingChild = callChildParseByTypeId("POWER1", [[name: "colorName", value: colorName]], missingChild)
+        }
         logging("CT: $result.CT ($t)",99)
     }
 }

@@ -445,7 +445,7 @@ void configureChildDevices(asyncResponse, data) {
     // Create the devices, if needed
 
     // Switches
-    def driverName = ["Tasmota - Universal Switch (Child)", "Generic Component Switch"]
+    def driverName = ["Tasmota - Universal Plug/Outlet (Child)", "Generic Component Switch"]
     def namespace = "tasmota"
     if(deviceInfo["numSwitch"] > 0) {
         if(deviceInfo["numSwitch"] > 1 && (
@@ -456,7 +456,7 @@ void configureChildDevices(asyncResponse, data) {
         if(deviceInfo["hasEnergy"]  == true && (deviceInfo["isAddressable"] == false && deviceInfo["isRGB"] == false && deviceInfo["hasCT"] == false)) {
             if(deviceInfo["isDimmer"]) {
                 // TODO: Make a Component Dimmer with Metering
-                driverName = ["Tasmota - Universal Dimmer (Child)", "Generic Component Dimmer"]
+                driverName = ["Tasmota - Universal Metering Dimmer (Child)", "Generic Component Dimmer"]
             } else {
                 driverName = ["Tasmota - Universal Metering Plug/Outlet (Child)", 
                               "Tasmota - Universal Metering Bulb/Light (Child)",
@@ -489,7 +489,7 @@ void configureChildDevices(asyncResponse, data) {
             logging("createChildDevice: POWER$i", 1)
             createChildDevice(namespace, driverName, childId, childName, childLabel)
             // Once the first switch is created we only support one type... At least for now...
-            driverName = ["Tasmota - Universal Switch (Child)", "Generic Component Switch"]
+            driverName = ["Tasmota - Universal Plug/Outlet (Child)", "Generic Component Switch"]
         }
     }
     
@@ -764,21 +764,21 @@ private postAction(String uri, String data) {
 
 String getCommandString(String command, String value) {
     def uri = "/cm?"
-    if (password) {
-        uri += "user=admin&password=${password}&"
+    if (password != null) {
+        uri += "user=admin&password=${urlEscape(password)}&"
     }
-	if (value) {
-		uri += "cmnd=${command}%20${value}"
+	if (value != null && value != "") {
+		uri += "cmnd=${urlEscape(command)}%20${urlEscape(value)}"
 	}
 	else {
-		uri += "cmnd=${command}"
+		uri += "cmnd=${urlEscape(command)}"
 	}
     return uri
 }
 
 String getMultiCommandString(commands) {
     String uri = "/cm?"
-    if (password) {
+    if (password != null) {
         uri += "user=admin&password=${password}&"
     }
     uri += "cmnd=backlog%20"
@@ -787,16 +787,17 @@ String getMultiCommandString(commands) {
     }
     commands.each {cmd->
         if(cmd.containsKey("value")) {
-          uri += "${cmd['command']}%20${cmd['value']}%3B%20"
+          uri += "${urlEscape(cmd['command'])}%20${urlEscape(cmd['value'])}%3B%20"
         } else {
-          uri += "${cmd['command']}%3B%20"
+          uri += "${urlEscape(cmd['command'])}%3B%20"
         }
     }
     return uri
 }
 
 private String urlEscape(String url) {
-    return(URLEncoder.encode(url).replace("+", "%20"))
+    //logging("urlEscape(url = $url)", 1)
+    return(URLEncoder.encode(url).replace("+", "%20").replace("#", "%23"))
 }
 
 private String convertPortToHex(Integer port) {

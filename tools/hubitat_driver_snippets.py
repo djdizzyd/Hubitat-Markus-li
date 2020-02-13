@@ -137,10 +137,9 @@ if(disableModuleSelection == false && ((deviceTemplateInput != null && deviceTem
     if(usedDeviceTemplate != '') moduleNumberUsed = 0  // This activates the Template when set
     if(usedDeviceTemplate != null && device.currentValue('templateData') != null && device.currentValue('templateData') != usedDeviceTemplate) {
         logging("The template is NOT set to '${usedDeviceTemplate}', it is set to '${device.currentValue('templateData')}'",10)
-        def urlencodedTemplate = URLEncoder.encode(usedDeviceTemplate).replace("+", "%20")
         // The NAME part of th Device Template can't exceed 14 characters! More than that and they will be truncated.
         // TODO: Parse and limit the size of NAME???
-        getAction(getCommandString("Template", "${urlencodedTemplate}"))
+        getAction(getCommandString("Template", usedDeviceTemplate))
     } else if (device.currentValue('module') == null){
         // Update our stored value!
         getAction(getCommandString("Template", null))
@@ -200,7 +199,7 @@ getAction(getCommandString("SetOption113", "1")) // Hubitat Enabled
 getAction(getCommandString("HubitatHost", device.hub.getDataValue("localIP")))
 logging("HubitatPort: ${device.hub.getDataValue("localSrvPortTCP")}", 1)
 getAction(getCommandString("HubitatPort", device.hub.getDataValue("localSrvPortTCP")))
-getAction(getCommandString("FriendlyName1", URLEncoder.encode(device.displayName.take(32)))) // Set to a maximum of 32 characters
+getAction(getCommandString("FriendlyName1", device.displayName.take(32))) // Set to a maximum of 32 characters
 
 if(override == true) {
     sync(ipAddress)

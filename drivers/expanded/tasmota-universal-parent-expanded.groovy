@@ -951,29 +951,41 @@ boolean parseResult(result, missingChild) {
     // BEGIN:getTasmotaNewParserForRGBWDevice()
     // Standard RGBW Device Data parsing
     if(true) {
+        //[POWER:ON, Dimmer:100, Color:0,0,255,0,0, HSBColor:240,100,100, Channel:[0, 0, 100, 0, 0], CT:167]
+        //[POWER:ON, Dimmer:100, Color:0,0,0,245,10, HSBColor:240,100,0, Channel:[0, 0, 0, 96, 4], CT:167]
         def childDevice = getChildDeviceByActionType("POWER1")
-        if (result.containsKey("HSBColor")) {
-            def hsbColor = result.HSBColor.tokenize(",")
-            hsbColor[0] = Math.round((hsbColor[0] as Integer) / 3.6)
-            hsbColor[1] = hsbColor[1] as Integer
-            hsbColor[2] = hsbColor[2] as Integer
-            logging("hsbColor: ${hsbColor}", 1)
-            if(childDevice?.currentValue('hue') != hsbColor[0] ) missingChild = callChildParseByTypeId("POWER1", [[name: "hue", value: hsbColor[0]]], missingChild)
-            if(childDevice?.currentValue('saturation') != hsbColor[1] ) missingChild = callChildParseByTypeId("POWER1", [[name: "saturation", value: hsbColor[1]]], missingChild)
-        }
+        String mode = "RGB"
         if (result.containsKey("Color")) {
             String color = result.Color
-            logging("Color: ${color}", 1)
-            String mode = "RGB"
-            if(color.length() > 6 && color.startsWith("000000")) {
+            logging("Color: ${color}, size: ${result.Color.tokenize(",").size()}", 1)
+            if((color.length() > 6 && color.startsWith("000000")) ||
+               (result.Color.tokenize(",").size() > 3 && color.startsWith("0,0,0"))) {
                 mode = "CT"
             }
             state.colorMode = mode
             if(childDevice?.currentValue('colorMode') != mode ) missingChild = callChildParseByTypeId("POWER1", [[name: "colorMode", value: mode]], missingChild)
         }
-        if (result.containsKey("CT")) {
+        if (mode == "RGB" && result.containsKey("HSBColor")) {
+            def hsbColor = result.HSBColor.tokenize(",")
+            hsbColor[0] = Math.round((hsbColor[0] as Integer) / 3.6) as Integer
+            hsbColor[1] = hsbColor[1] as Integer
+            //hsbColor[2] = hsbColor[2] as Integer
+            logging("hsbColor: ${hsbColor}", 1)
+            if(childDevice?.currentValue('hue') != hsbColor[0] ) missingChild = callChildParseByTypeId("POWER1", [[name: "hue", value: hsbColor[0]]], missingChild)
+            if(childDevice?.currentValue('saturation') != hsbColor[1] ) missingChild = callChildParseByTypeId("POWER1", [[name: "saturation", value: hsbColor[1]]], missingChild)
+            String colorName = getColorNameFromHueSaturation(hsbColor[0], hsbColor[1])
+            if(childDevice?.currentValue('colorName') != colorName ) {
+                missingChild = callChildParseByTypeId("POWER1", [[name: "colorName", value: colorName]], missingChild)
+            }
+        } else if (result.containsKey("CT")) {
             Integer t = Math.round(1000000/result.CT)
-            if(childDevice?.currentValue('colorTemperature') != t ) missingChild = callChildParseByTypeId("POWER1", [[name: "colorTemperature", value: t]], missingChild)
+            if(childDevice?.currentValue('colorTemperature') != t ) {
+                missingChild = callChildParseByTypeId("POWER1", [[name: "colorTemperature", value: t]], missingChild)
+            }
+            String colorName = getColorNameFromTemperature(t)
+            if(childDevice?.currentValue('colorName') != colorName ) {
+                missingChild = callChildParseByTypeId("POWER1", [[name: "colorName", value: colorName]], missingChild)
+            }
             logging("CT: $result.CT ($t)",99)
         }
     }
@@ -1123,10 +1135,9 @@ void updateNeededSettings() {
         if(usedDeviceTemplate != '') moduleNumberUsed = 0  // This activates the Template when set
         if(usedDeviceTemplate != null && device.currentValue('templateData') != null && device.currentValue('templateData') != usedDeviceTemplate) {
             logging("The template is NOT set to '${usedDeviceTemplate}', it is set to '${device.currentValue('templateData')}'",10)
-            def urlencodedTemplate = URLEncoder.encode(usedDeviceTemplate).replace("+", "%20")
             // The NAME part of th Device Template can't exceed 14 characters! More than that and they will be truncated.
             // TODO: Parse and limit the size of NAME???
-            getAction(getCommandString("Template", "${urlencodedTemplate}"))
+            getAction(getCommandString("Template", usedDeviceTemplate))
         } else if (device.currentValue('module') == null){
             // Update our stored value!
             getAction(getCommandString("Template", null))
@@ -1184,7 +1195,7 @@ void updateNeededSettings() {
     getAction(getCommandString("HubitatHost", device.hub.getDataValue("localIP")))
     logging("HubitatPort: ${device.hub.getDataValue("localSrvPortTCP")}", 1)
     getAction(getCommandString("HubitatPort", device.hub.getDataValue("localSrvPortTCP")))
-    getAction(getCommandString("FriendlyName1", URLEncoder.encode(device.displayName.take(32)))) // Set to a maximum of 32 characters
+    getAction(getCommandString("FriendlyName1", device.displayName.take(32))) // Set to a maximum of 32 characters
     
     if(override == true) {
         sync(ipAddress)
@@ -1233,72 +1244,112 @@ String getDeviceActionType(String childDeviceNetworkId) {
 }
 
 /** Calls FROM Child devices */
+void componentRefresh(cd) {
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentRefresh(cd=${cd.displayName} (${cd.deviceNetworkId})) actionType=$actionType", 1)
+    refresh()
+}
+
 void componentOn(cd) {
-    actionType = getDeviceActionType(cd.deviceNetworkId)
-    logging("componentOn(cd=${cd.displayName} (${cd.deviceNetworkId})) actionType=${getDeviceActionType(cd.deviceNetworkId)}", 1)
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentOn(cd=${cd.displayName} (${cd.deviceNetworkId})) actionType=$actionType", 1)
     getAction(getCommandString("$actionType", "1"))
     //childParse(cd, [[name:"switch", value:"on", descriptionText:"${cd.displayName} was turned on"]])
 }
 
 void componentOff(cd) {
-    actionType = getDeviceActionType(cd.deviceNetworkId)
-    logging("componentOff(cd=${cd.displayName} (${cd.deviceNetworkId})) actionType=${getDeviceActionType(cd.deviceNetworkId)}", 1)
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentOff(cd=${cd.displayName} (${cd.deviceNetworkId})) actionType=$actionType", 1)
     getAction(getCommandString("$actionType", "0"))
     //childParse(cd, [[name:"switch", value:"off", descriptionText:"${cd.displayName} was turned off"]])
 }
 
-void componentSetColor(cd, value) {
-    actionType = getDeviceActionType(cd.deviceNetworkId)
-    logging("componentSetColor(cd=${cd.displayName} (${cd.deviceNetworkId}), level=${value}) actionType=${getDeviceActionType(cd.deviceNetworkId)}", 1)
-    setColor(value)
-}
-
-void componentSetHue(cd, h) {
-    actionType = getDeviceActionType(cd.deviceNetworkId)
-    logging("componentSetColor(cd=${cd.displayName} (${cd.deviceNetworkId}), level=${h}) actionType=${getDeviceActionType(cd.deviceNetworkId)}", 1)
-    setHue(h)
-}
-
-void componentSetColorTemperature(cd, value) {
-    actionType = getDeviceActionType(cd.deviceNetworkId)
-    logging("componentSetColorTemperature(cd=${cd.displayName} (${cd.deviceNetworkId}), level=${value}) actionType=${getDeviceActionType(cd.deviceNetworkId)}", 1)
-    setColorTemperature(value)
-}
-
-void componentSetLevel(cd, level) {
-    actionType = getDeviceActionType(cd.deviceNetworkId)
-    logging("componentSetLevel(cd=${cd.displayName} (${cd.deviceNetworkId}), level=${level}) actionType=${getDeviceActionType(cd.deviceNetworkId)}", 1)
+void componentSetLevel(cd, BigDecimal level) {
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentSetLevel(cd=${cd.displayName} (${cd.deviceNetworkId}), level=${level}) actionType=$actionType", 1)
     setLevel(level)
 }
 
-void componentSetLevel(cd, level, ramp) {
-    actionType = getDeviceActionType(cd.deviceNetworkId)
-    logging("componentSetLevel(cd=${cd.displayName} (${cd.deviceNetworkId}), level=${level}, ramp=${ramp}) actionType=${getDeviceActionType(cd.deviceNetworkId)}", 1)
-    setLevel(level, ramp)
+void componentSetLevel(cd, BigDecimal level, BigDecimal duration) {
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentSetLevel(cd=${cd.displayName} (${cd.deviceNetworkId}), level=${level}, duration=${duration}) actionType=$actionType", 1)
+    setLevel(level, duration)
 }
 
-void componentSetSaturation(cd, s) {
-    actionType = getDeviceActionType(cd.deviceNetworkId)
-    logging("componentSetSaturation(cd=${cd.displayName} (${cd.deviceNetworkId}), s=${s}) actionType=${getDeviceActionType(cd.deviceNetworkId)}", 1)
-    setSaturation(s)
-}
-
-void componentStartLevelChange(cd, direction) {
-    actionType = getDeviceActionType(cd.deviceNetworkId)
-    logging("componentStartLevelChange(cd=${cd.displayName} (${cd.deviceNetworkId}), direction=${direction}) actionType=${getDeviceActionType(cd.deviceNetworkId)}", 1)
+void componentStartLevelChange(cd, String direction) {
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentStartLevelChange(cd=${cd.displayName} (${cd.deviceNetworkId}), direction=${direction}) actionType=$actionType", 1)
     startLevelChange(direction)
 }
 
 void componentStopLevelChange(cd) {
-    actionType = getDeviceActionType(cd.deviceNetworkId)
-    logging("componentStopLevelChange(cd=${cd.displayName} (${cd.deviceNetworkId})) actionType=${getDeviceActionType(cd.deviceNetworkId)}", 1)
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentStopLevelChange(cd=${cd.displayName} (${cd.deviceNetworkId})) actionType=$actionType", 1)
     stopLevelChange()
 }
 
-void componentRefresh(cd) {
-    actionType = getDeviceActionType(cd.deviceNetworkId)
-    logging("componentRefresh(cd=${cd.displayName} (${cd.deviceNetworkId})) actionType=${getDeviceActionType(cd.deviceNetworkId)}", 1)
-    refresh()
+void componentSetColor(cd, Map colormap) {
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentSetColor(cd=${cd.displayName} (${cd.deviceNetworkId}), colormap=${colormap}) actionType=$actionType", 1)
+    setColor(colormap)
+}
+
+void componentSetHue(cd, BigDecimal hue) {
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentSetHue(cd=${cd.displayName} (${cd.deviceNetworkId}), hue=${hue}) actionType=$actionType", 1)
+    setHue(hue)
+}
+
+void componentWhite(cd) {
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentWhite(cd=${cd.displayName} (${cd.deviceNetworkId})) actionType=$actionType", 1)
+    white()
+}
+
+void componentSetRGB(cd, r, g, b) {
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentSetRGB(cd=${cd.displayName} (${cd.deviceNetworkId}), r=${r}, g=${g}, b=${b}) actionType=$actionType", 1)
+    setRGB(r, g, b)
+}
+
+void componentSetSaturation(cd, BigDecimal saturation) {
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentSetSaturation(cd=${cd.displayName} (${cd.deviceNetworkId}), saturation=${saturation}) actionType=$actionType", 1)
+    setSaturation(saturation)
+}
+
+void componentSetColorTemperature(cd, BigDecimal colortemperature) {
+    String actionType = getDeviceActionType(cd.deviceNetworkId)
+    logging("componentSetColorTemperature(cd=${cd.displayName} (${cd.deviceNetworkId}), colortemperature=${colortemperature}) actionType=$actionType", 1)
+    setColorTemperature(colortemperature)
+}
+
+void componentModeNext(cd, BigDecimal speed) {
+    modeNext(speed)
+}
+
+void componentModePrevious(cd, BigDecimal speed) {
+    modePrevious(speed)
+}
+
+void componentModeSingleColor(cd, BigDecimal speed) {
+    modeSingleColor(speed)
+}
+
+void componentModeCycleUpColors(cd, BigDecimal speed) {
+    modeCycleUpColors(speed)
+}
+
+void componentModeCycleDownColors(cd, BigDecimal speed) {
+    modeCycleDownColors(speed)
+}
+
+void componentModeRandomColors(cd, BigDecimal speed) {
+    modeRandomColors(speed)
+}
+
+void componentModeWakeUp(cd, BigDecimal wakeUpDuration, BigDecimal level) {
+    modeWakeUp(wakeUpDuration, level)
 }
 
 void componentSetSpeed(cd, String fanspeed) {
@@ -1334,7 +1385,7 @@ void componentSetSpeed(cd, String fanspeed) {
 private String getDriverVersion() {
     //comment = ""
     //if(comment != "") state.comment = comment
-    String version = "v1.0.0213Ta"
+    String version = "v1.0.0214Ta"
     logging("getDriverVersion() = ${version}", 50)
     sendEvent(name: "driver", value: version)
     updateDataValue('driver', version)
@@ -2791,7 +2842,7 @@ void configureChildDevices(asyncResponse, data) {
     // Create the devices, if needed
 
     // Switches
-    def driverName = ["Tasmota - Universal Switch (Child)", "Generic Component Switch"]
+    def driverName = ["Tasmota - Universal Plug/Outlet (Child)", "Generic Component Switch"]
     def namespace = "tasmota"
     if(deviceInfo["numSwitch"] > 0) {
         if(deviceInfo["numSwitch"] > 1 && (
@@ -2802,7 +2853,7 @@ void configureChildDevices(asyncResponse, data) {
         if(deviceInfo["hasEnergy"]  == true && (deviceInfo["isAddressable"] == false && deviceInfo["isRGB"] == false && deviceInfo["hasCT"] == false)) {
             if(deviceInfo["isDimmer"]) {
                 // TODO: Make a Component Dimmer with Metering
-                driverName = ["Tasmota - Universal Dimmer (Child)", "Generic Component Dimmer"]
+                driverName = ["Tasmota - Universal Metering Dimmer (Child)", "Generic Component Dimmer"]
             } else {
                 driverName = ["Tasmota - Universal Metering Plug/Outlet (Child)", 
                               "Tasmota - Universal Metering Bulb/Light (Child)",
@@ -2835,7 +2886,7 @@ void configureChildDevices(asyncResponse, data) {
             logging("createChildDevice: POWER$i", 1)
             createChildDevice(namespace, driverName, childId, childName, childLabel)
             // Once the first switch is created we only support one type... At least for now...
-            driverName = ["Tasmota - Universal Switch (Child)", "Generic Component Switch"]
+            driverName = ["Tasmota - Universal Plug/Outlet (Child)", "Generic Component Switch"]
         }
     }
     
@@ -3110,21 +3161,21 @@ private postAction(String uri, String data) {
 
 String getCommandString(String command, String value) {
     def uri = "/cm?"
-    if (password) {
-        uri += "user=admin&password=${password}&"
+    if (password != null) {
+        uri += "user=admin&password=${urlEscape(password)}&"
     }
-	if (value) {
-		uri += "cmnd=${command}%20${value}"
+	if (value != null && value != "") {
+		uri += "cmnd=${urlEscape(command)}%20${urlEscape(value)}"
 	}
 	else {
-		uri += "cmnd=${command}"
+		uri += "cmnd=${urlEscape(command)}"
 	}
     return uri
 }
 
 String getMultiCommandString(commands) {
     String uri = "/cm?"
-    if (password) {
+    if (password != null) {
         uri += "user=admin&password=${password}&"
     }
     uri += "cmnd=backlog%20"
@@ -3133,16 +3184,17 @@ String getMultiCommandString(commands) {
     }
     commands.each {cmd->
         if(cmd.containsKey("value")) {
-          uri += "${cmd['command']}%20${cmd['value']}%3B%20"
+          uri += "${urlEscape(cmd['command'])}%20${urlEscape(cmd['value'])}%3B%20"
         } else {
-          uri += "${cmd['command']}%3B%20"
+          uri += "${urlEscape(cmd['command'])}%3B%20"
         }
     }
     return uri
 }
 
 private String urlEscape(String url) {
-    return(URLEncoder.encode(url).replace("+", "%20"))
+    //logging("urlEscape(url = $url)", 1)
+    return(URLEncoder.encode(url).replace("+", "%20").replace("#", "%23"))
 }
 
 private String convertPortToHex(Integer port) {
@@ -3219,10 +3271,11 @@ def rgbToHSB(red, green, blue) {
     } else if (max == r) {
         def h1 = (g - b) / delta / 6
         def h2 = h1.asType(Integer)
+        //logging("h1 = $h1, h2 = $h2, (1 + h1 - h2) = ${(1 + h1 - h2)}", 1)
         if (h1 < 0) {
-            hue = (360 * (1 + h1 - h2)).round()
+            hue = Math.round(360 * (1 + h1 - h2))
         } else {
-            hue = (360 * (h1 - h2)).round()
+            hue = Math.round(360 * (h1 - h2))
         }
         logging("rgbToHSB: red max=${max} min=${min} delta=${delta} h1=${h1} h2=${h2} hue=${hue}", 1)
     } else if (max == g) {
@@ -3249,6 +3302,59 @@ def rgbToHSB(red, green, blue) {
         "saturation": saturation.asType(Integer),
         "level": level.asType(Integer),
     ]
+}
+
+String getColorNameFromTemperature(Integer colorTemperature){
+    if (!colorTemperature) return "Undefined"
+    String colorName = "Undefined"
+    if (colorTemperature <= 2000) colorName = "Sodium"
+    else if (colorTemperature <= 2100) colorName = "Starlight"
+    else if (colorTemperature < 2400) colorName = "Sunrise"
+    else if (colorTemperature < 2800) colorName = "Incandescent"
+    else if (colorTemperature < 3300) colorName = "Soft White"
+    else if (colorTemperature < 3500) colorName = "Warm White"
+    else if (colorTemperature < 4150) colorName = "Moonlight"
+    else if (colorTemperature <= 5000) colorName = "Horizon"
+    else if (colorTemperature < 5500) colorName = "Daylight"
+    else if (colorTemperature < 6000) colorName = "Electronic"
+    else if (colorTemperature <= 6500) colorName = "Skylight"
+    else if (colorTemperature < 20000) colorName = "Polar"
+    return colorName
+}
+
+String getColorNameFromHueSaturation(Integer hue, Integer saturation=null){
+    if (!hue) hue = 0
+    String colorName = "Undefined"
+    switch (hue * 3.6 as Integer){
+        case 0..15: colorName = "Red"
+            break
+        case 16..45: colorName = "Orange"
+            break
+        case 46..75: colorName = "Yellow"
+            break
+        case 76..105: colorName = "Chartreuse"
+            break
+        case 106..135: colorName = "Green"
+            break
+        case 136..165: colorName = "Spring"
+            break
+        case 166..195: colorName = "Cyan"
+            break
+        case 196..225: colorName = "Azure"
+            break
+        case 226..255: colorName = "Blue"
+            break
+        case 256..285: colorName = "Violet"
+            break
+        case 286..315: colorName = "Magenta"
+            break
+        case 316..345: colorName = "Rose"
+            break
+        case 346..360: colorName = "Red"
+            break
+    }
+    if (saturation == 0) colorName = "White"
+    return colorName
 }
 
 // Fixed colours
@@ -3278,8 +3384,8 @@ void yellow() {
     setRGB(255, 255, 0)
 }
 
-void lightBlue() {
-    logging("lightBlue()", 10)
+void cyan() {
+    logging("cyan()", 10)
     setRGB(0, 255, 255)
 }
 
@@ -3365,7 +3471,7 @@ void setHSB(h, s, b, callWhite) {
     }
 }
 
-void setRGB(r,g,b) {   
+void setRGB(r, g, b) {   
     logging("setRGB('${r}','${g}','${b}')", 10)
     boolean adjusted = False
     if(r == null || r == 'NaN') {
@@ -3507,49 +3613,58 @@ void whiteForPlatform() {
 }
 
 // Functions to set RGBW Mode
-void modeSet(Integer mode) {
+void modeSet(Integer mode, BigDecimal speed=3) {
     logging("modeSet('${mode}')", 10)
-    getAction(getCommandString("Scheme", "${mode}"))
+    getAction(getMultiCommandString([[command:"Speed", value:"$speed"], [command:"Scheme", value:"${mode}"]]))
 }
 
-void modeNext() {
+void modeNext(BigDecimal speed=3) {
     logging("modeNext()", 10)
     if (state.mode < 4) {
         state.mode = state.mode + 1
     } else {
         state.mode = 0
     }
-    modeSet(state.mode)
+    modeSet(state.mode, speed)
 }
 
-void modePrevious() {
+void modePrevious(BigDecimal speed=3) {
     if (state.mode > 0) {
         state.mode = state.mode - 1
     } else {
         state.mode = 4
     }
-    modeSet(state.mode)
+    modeSet(state.mode, speed)
 }
 
-void modeSingleColor() {
+void modeSingleColor(BigDecimal speed=3) {
     state.mode = 0
-    modeSet(state.mode)
+    modeSet(state.mode, speed)
 }
 
-void modeWakeUp() {
-    logging("modeWakeUp()", 1)
-    state.mode = 1
-    modeSet(state.mode)
+void modeCycleUpColors(BigDecimal speed=3) {
+    state.mode = 2
+    modeSet(state.mode, speed)
 }
 
-void modeWakeUp(Integer wakeUpDuration) {
+void modeCycleDownColors(BigDecimal speed=3) {
+    state.mode = 3
+    modeSet(state.mode, speed)
+}
+
+void modeRandomColors(BigDecimal speed=3) {
+    state.mode = 4
+    modeSet(state.mode, speed)
+}
+
+void modeWakeUp(BigDecimal wakeUpDuration) {
     Integer level = device.currentValue('level')
     Integer nlevel = level > 10 ? level : 10
     logging("modeWakeUp(wakeUpDuration ${wakeUpDuration}, current level: ${nlevel})", 1)
     modeWakeUp(wakeUpDuration, nlevel)
 }
 
-void modeWakeUp(wakeUpDuration, level) {
+void modeWakeUp(BigDecimal wakeUpDuration, BigDecimal level) {
     logging("modeWakeUp(wakeUpDuration ${wakeUpDuration}, level: ${level})", 1)
     state.mode = 1
     wakeUpDuration = wakeUpDuration < 1 ? 1 : wakeUpDuration > 3000 ? 3000 : wakeUpDuration
@@ -3557,21 +3672,6 @@ void modeWakeUp(wakeUpDuration, level) {
     state.level = level
     getAction(getMultiCommandString([[command: "WakeupDuration", value: "${wakeUpDuration}"],
                                     [command: "Wakeup", value: "${level}"]]))
-}
-
-void modeCycleUpColors() {
-    state.mode = 2
-    modeSet(state.mode)
-}
-
-void modeCycleDownColors() {
-    state.mode = 3
-    modeSet(state.mode)
-}
-
-void modeRandomColors() {
-    state.mode = 4
-    modeSet(state.mode)
 }
 
 /**

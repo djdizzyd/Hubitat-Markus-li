@@ -48,10 +48,11 @@ def rgbToHSB(red, green, blue) {
     } else if (max == r) {
         def h1 = (g - b) / delta / 6
         def h2 = h1.asType(Integer)
+        //logging("h1 = $h1, h2 = $h2, (1 + h1 - h2) = ${(1 + h1 - h2)}", 1)
         if (h1 < 0) {
-            hue = (360 * (1 + h1 - h2)).round()
+            hue = Math.round(360 * (1 + h1 - h2))
         } else {
-            hue = (360 * (h1 - h2)).round()
+            hue = Math.round(360 * (h1 - h2))
         }
         logging("rgbToHSB: red max=${max} min=${min} delta=${delta} h1=${h1} h2=${h2} hue=${hue}", 1)
     } else if (max == g) {
@@ -78,6 +79,59 @@ def rgbToHSB(red, green, blue) {
         "saturation": saturation.asType(Integer),
         "level": level.asType(Integer),
     ]
+}
+
+String getColorNameFromTemperature(Integer colorTemperature){
+    if (!colorTemperature) return "Undefined"
+    String colorName = "Undefined"
+    if (colorTemperature <= 2000) colorName = "Sodium"
+    else if (colorTemperature <= 2100) colorName = "Starlight"
+    else if (colorTemperature < 2400) colorName = "Sunrise"
+    else if (colorTemperature < 2800) colorName = "Incandescent"
+    else if (colorTemperature < 3300) colorName = "Soft White"
+    else if (colorTemperature < 3500) colorName = "Warm White"
+    else if (colorTemperature < 4150) colorName = "Moonlight"
+    else if (colorTemperature <= 5000) colorName = "Horizon"
+    else if (colorTemperature < 5500) colorName = "Daylight"
+    else if (colorTemperature < 6000) colorName = "Electronic"
+    else if (colorTemperature <= 6500) colorName = "Skylight"
+    else if (colorTemperature < 20000) colorName = "Polar"
+    return colorName
+}
+
+String getColorNameFromHueSaturation(Integer hue, Integer saturation=null){
+    if (!hue) hue = 0
+    String colorName = "Undefined"
+    switch (hue * 3.6 as Integer){
+        case 0..15: colorName = "Red"
+            break
+        case 16..45: colorName = "Orange"
+            break
+        case 46..75: colorName = "Yellow"
+            break
+        case 76..105: colorName = "Chartreuse"
+            break
+        case 106..135: colorName = "Green"
+            break
+        case 136..165: colorName = "Spring"
+            break
+        case 166..195: colorName = "Cyan"
+            break
+        case 196..225: colorName = "Azure"
+            break
+        case 226..255: colorName = "Blue"
+            break
+        case 256..285: colorName = "Violet"
+            break
+        case 286..315: colorName = "Magenta"
+            break
+        case 316..345: colorName = "Rose"
+            break
+        case 346..360: colorName = "Red"
+            break
+    }
+    if (saturation == 0) colorName = "White"
+    return colorName
 }
 
 // Fixed colours
@@ -107,8 +161,8 @@ void yellow() {
     setRGB(255, 255, 0)
 }
 
-void lightBlue() {
-    logging("lightBlue()", 10)
+void cyan() {
+    logging("cyan()", 10)
     setRGB(0, 255, 255)
 }
 
