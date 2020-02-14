@@ -69,7 +69,9 @@ metadata {
         // Default Preferences
         generate_preferences(configuration_model_debug())
         // END:  getDefaultMetadataPreferences()
-
+        input(name: "hideColorTemperatureCommands", type: "bool", title: addTitleDiv("Hide Color Temperature Commands"), description: addDescriptionDiv("Hides Color Temperature Commands"), defaultValue: false, displayDuringSetup: false, required: false)
+        input(name: "hideModeCommands", type: "bool", title: addTitleDiv("Hide Mode Commands"), description: addDescriptionDiv("Hides Mode Commands"), defaultValue: true, displayDuringSetup: false, required: false)
+        input(name: "hideColorCommands", type: "bool", title: addTitleDiv("Hide Color Commands"), description: addDescriptionDiv("Hides Color Commands"), defaultValue: true, displayDuringSetup: false, required: false)
     }
 
     // The below line needs to exist in ALL drivers for custom CSS to work!
@@ -98,7 +100,7 @@ public getDeviceInfoByName(infoName) {
 /* These functions are unique to each driver */
 void parse(List<Map> description) {
     description.each {
-        // TODO: Make sure the parent sends RGB and color!
+        // TODO: Make sure the parent sends RGB and color! Or do we even need these?
         if (it.name in ["switch", "level", "RGB", "color", "colorName", "hue", "saturation",
                         "colorTemperature", "colorMode"]) {
             logging(it.descriptionText, 100)
@@ -128,6 +130,18 @@ void refresh() {
     def metaConfig = clearThingsToHide()
     metaConfig = setDatasToHide(['metaConfig', 'isComponent', 'preferences', 'label', 'name'], metaConfig=metaConfig)
     // END:  getChildComponentMetaConfigCommands()
+
+    List commandsToHide = []
+    if(hideColorTemperatureCommands == true) {
+        commandsToHide.addAll(["setColorTemperature"])
+    }
+    if(hideModeCommands == null || hideModeCommands == true) {
+        commandsToHide.addAll(["modeNext", "modePrevious", "modeSingleColor", "modeCycleUpColors", "modeCycleDownColors", "modeRandomColors"])
+    }
+    if(hideColorCommands == null || hideColorCommands == true) {
+        commandsToHide.addAll(["colorWhite", "colorRed", "colorGreen", "colorBlue", "colorYellow", "colorCyan", "colorPink"])
+    }
+    if(commandsToHide != []) metaConfig = setCommandsToHide(commandsToHide, metaConfig=metaConfig)
     parent?.componentRefresh(this.device)
 }
 
