@@ -14,6 +14,9 @@
 # Local imports
 from hubitat_driver_snippets import *
 from hubitat_driver_snippets_parser import *
+from hubitat_driver_snippets_new_parser import *
+from hubitat_driver_snippets_zigbee_parser import *
+from hubitat_driver_snippets_metadata import *
 from hubitat_codebuilder import HubitatCodeBuilder, PrintFormatter, PrintRecord
 
 # This class extends HubitatCodeBuilder with functions specific for my 

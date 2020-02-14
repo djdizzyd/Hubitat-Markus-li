@@ -19,14 +19,14 @@ metadata {
         #!include:getDefaultMetadataCommands()
 	}
 
-	simulator {
-	}
-    
-    preferences {
+	preferences {
         #!include:getDefaultMetadataPreferences()
         #!include:getDefaultMetadataPreferencesForParentDevices()
         #!include:getDefaultMetadataPreferencesForTasmota(False) # False = No TelePeriod setting
 	}
+
+    // The below line needs to exist in ALL drivers for custom CSS to work!
+    #!include:getMetadataCustomizationMethods()
 }
 
 #!include:getDeviceInfoFunction()
@@ -36,6 +36,63 @@ def installedAdditional() {
     // This runs from installed()
 	logging("installedAdditional()",50)
     createChildDevices()
+}
+
+def updatedAdditional() {
+    setDisableCSS(disableCSS)
+}
+
+def getDriverCSS() {
+    // Executed on page load, put CSS used by the driver here.
+    
+    // This does NOT execute in the NORMAL scope of the driver!
+
+    r = ""
+    // "Data" is available when this runs
+    
+    //r += getCSSForCommandsToHide(["deleteChildren"])
+    //r += getCSSForCommandsToHide(["overSanta", "on", "off"])
+    //r += getCSSForStateVariablesToHide(["alertMessage", "mac", "dni", "oldLabel"])
+    //r += getCSSForCurrentStatesToHide(["templateData", "tuyaMCU", "needUpdate"])
+    //r += getCSSForDatasToHide(["metaConfig2", "preferences", "appReturn", "namespace"])
+    //r += getCSSToChangeCommandTitle("configure", "Run Configure3")
+    //r += getCSSForPreferencesToHide(["numSwitches", "deviceTemplateInput"])
+    //r += getCSSForPreferenceHiding('<none>', overrideIndex=getPreferenceIndex('<none>', returnMax=true) + 1)
+    //r += getCSSForHidingLastPreference()
+    r += '''
+    form[action*="preference"]::before {
+        color: green;
+        content: "Hi, this is my content"
+    }
+    form[action*="preference"] div[for^=preferences] {
+        color: blue;
+    }
+    h3, h4, .property-label {
+        font-weight: bold;
+    }
+    '''
+    return r
+}
+
+def refreshAdditional() {
+    //logging("this.binding.variables = ${this.binding.variables}", 1)
+    //logging("settings = ${settings}", 1)
+    //logging("getDefinitionData() = ${getDefinitionData()}", 1)
+    //logging("getPreferences() = ${getPreferences()}", 1)
+    //logging("getSupportedCommands() = ${device.getSupportedCommands()}", 1)
+    //logging("Seeing these commands: ${device.getSupportedCommands()}", 1)
+    /*metaConfig = setCommandsToHide(["on", "hiAgain2", "on"])
+    metaConfig = setStateVariablesToHide(["uptime"], metaConfig=metaConfig)
+    metaConfig = setCurrentStatesToHide(["needUpdate"], metaConfig=metaConfig)
+    metaConfig = setDatasToHide(["namespace"], metaConfig=metaConfig)
+    metaConfig = setPreferencesToHide(["port"], metaConfig=metaConfig)*/
+    //metaConfig = clearThingsToHide()
+    //setDisableCSS(false, metaConfig=metaConfig)
+    /*metaConfig = setCommandsToHide([])
+    metaConfig = setStateVariablesToHide([], metaConfig=metaConfig)
+    metaConfig = setCurrentStatesToHide([], metaConfig=metaConfig)
+    metaConfig = setDatasToHide([], metaConfig=metaConfig)
+    metaConfig = setPreferencesToHide([], metaConfig=metaConfig)*/
 }
 
 def on() {
@@ -75,7 +132,7 @@ def parse(description) {
         #!include:getGenericTasmotaParseFooter()
 }
 
-def update_needed_settings()
+def updateNeededSettings()
 {
     #!include:getUpdateNeededSettingsTasmotaHeader()
 
@@ -117,7 +174,7 @@ def update_needed_settings()
     //0 = disable publishing TuyaReceived over MQTT (default)
     //1 = enable publishing TuyaReceived over MQTT
     //cmds << getAction(getCommandString("SetOption66", "1"))
-
+    
     cmds << getAction(getCommandString("SetOption81", "0")) // Set PCF8574 component behavior for all ports as inverted (default=0)
 
     // Make sure we have our child devices

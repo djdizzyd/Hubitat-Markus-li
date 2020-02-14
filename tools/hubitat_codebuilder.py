@@ -218,10 +218,11 @@ class HubitatCodeBuilder:
                 definition_dict[k] = '"x' + definition_dict[k] + 'x"'
             new_definition = (l[:definition_position]) + 'definition (' + yaml.dump(definition_dict, default_flow_style=False, sort_keys=False ).replace('\'"x', '"').replace('x"\'', '"').replace('\n', ', ')[:-2] + ') {\n'
             #print(new_definition)
-            output = 'def getDeviceInfoByName(infoName) { \n' + \
+            output = 'public getDeviceInfoByName(infoName) { \n' + \
                 '    // DO NOT EDIT: This is generated from the metadata!\n' + \
                 '    // TODO: Figure out how to get this from Hubitat instead of generating this?\n' + \
-                '    deviceInfo = ' + ds + '\n' + \
+                '    def deviceInfo = ' + ds + '\n' + \
+                '    //logging("deviceInfo[${infoName}] = ${deviceInfo[infoName]}", 1)\n' + \
                 '    return(deviceInfo[infoName])\n' + \
                 '}'
             #new_definition = l
@@ -359,18 +360,34 @@ class HubitatCodeBuilder:
                         #self.log.debug(self._definition_string)
                         r['name'] = definition_dict_original['name']
                 includePosition = l.find('#!include:')
+                includeNC = False
+                if(includePosition == -1):
+                    includePosition = l.find('#!includeNC:')
+                    includeNC = True
                 if(includePosition != -1):
                     eval_cmd = l[includePosition+10:].strip()
                     output = self._runEvalCmd(eval_cmd)
+                    if(includeNC == False and eval_cmd.startswith("getHelperFunctions") == False and 
+                        eval_cmd.startswith("getHeaderLicense") == False):
+                        extraNewline = "\n"
+                        if(output.endswith("\n")):
+                            extraNewline = ""
+                        output = "// BEGIN:" + eval_cmd + "\n" + output + extraNewline + "// END:  " + eval_cmd + "\n"
                     if(includePosition > 0):
                         i = 0
                         wd.write(l[:includePosition])
+                        previous_line = None
+                        first_line = 1 if includeNC == False else 0
                         for nl in output.splitlines():
-                            if i != 0:
-                                wd.write(' ' * (includePosition) + nl + '\n')
-                            else:
-                                wd.write(nl + '\n')
+                            nl = nl.rstrip()
+                            if(not (nl == "" and previous_line == "") and
+                                not (nl.strip() == "" and i == first_line)):
+                                if i != 0:
+                                    wd.write(' ' * (includePosition) + nl + '\n')
+                                else:
+                                    wd.write(nl + '\n')
                             i += 1
+                            previous_line = nl
                     else:
                         wd.write(output + '\n')
                 else:

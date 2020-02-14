@@ -27,6 +27,7 @@ metadata {
         command "altClose"
         command "altOpen"
         command "clearPosition"
+        command "reverseCurtain"
 
         // Fingerprint for Aqara Smart Curtain Motor (ZNCLDJ11LM)
 		fingerprint endpointId: "01", profileId: "0104", deviceId: "0202", inClusters: "0000, 0003, 0102, 000D, 0013, 0001", outClusters: "0003, 000A", manufacturer: "LUMI", model: "lumi.curtain.hagl04", deviceJoinName: "Xiaomi Curtain B1"
@@ -86,14 +87,14 @@ def reboot() {
 }
 // description:read attr - raw: 05470100000A07003001, dni: 0547, endpoint: 01, cluster: 0000, size: 0A, attrId: 0007, encoding: 30, command: 01, value: 01, parseMap:[raw:05470100000A07003001, dni:0547, endpoint:01, cluster:0000, size:0A, attrId:0007, encoding:30, command:01, value:01, clusterInt:0, attrInt:7]
 // Closed curtain: read attr - raw: 054701000D1055003900000000, dni: 0547, endpoint: 01, cluster: 000D, size: 10, attrId: 0055, encoding: 39, command: 01, value: 00000000
-// PArtially open: msgMap: [raw:054701000D1C5500390000C84200F02300000000, dni:0547, endpoint:01, cluster:000D, size:1C, attrId:0055, encoding:39, command:0A, value:42C80000, clusterInt:13, attrInt:85, additionalAttrs:[[value:00000000, encoding:23, attrId:F000, consumedBytes:7, attrInt:61440]]]
+// Partially open: msgMap: [raw:054701000D1C5500390000C84200F02300000000, dni:0547, endpoint:01, cluster:000D, size:1C, attrId:0055, encoding:39, command:0A, value:42C80000, clusterInt:13, attrInt:85, additionalAttrs:[[value:00000000, encoding:23, attrId:F000, consumedBytes:7, attrInt:61440]]]
 // 0104 000A 01 01 0040 00 0547 00 00 0000 00 00 0000, profileId:0104, clusterId:000A, clusterInt:10, sourceEndpoint:01, destinationEndpoint:01, options:0040, messageType:00, dni:0547, isClusterSpecific:false, isManufacturerSpecific:false, manufacturerId:0000, command:00, direction:00, data:[00, 00]]
 // Fully open: 
 def parse(description) {
     #!include:getGenericZigbeeParseHeader()
     
     if (msgMap["profileId"] == "0104") {
-        logging("Unhandled KNOWN event - description:${description} | parseMap:${msgMap}", 1)
+        logging("Unhandled KNOWN 0104 event - description:${description} | parseMap:${msgMap}", 1)
         logging("RAW: ${msgMap["attrId"]}", 1)
         // catchall: 0104 000A 01 01 0040 00 63A1 00 00 0000 00 00 0000, parseMap:[raw:catchall: 0104 000A 01 01 0040 00 63A1 00 00 0000 00 00 0000, profileId:0104, clusterId:000A, clusterInt:10, sourceEndpoint:01, destinationEndpoint:01, options:0040, messageType:00, dni:63A1, isClusterSpecific:false, isManufacturerSpecific:false, manufacturerId:0000, command:00, direction:00, data:[00, 00]]
     } else if (msgMap["cluster"] == "0000" && msgMap["attrId"] == "0404") {
@@ -111,7 +112,7 @@ def parse(description) {
         long theValue = Long.parseLong(msgMap["value"], 16)
         curtainPosition = theValue.intValue()
         logging("GETTING POSITION from cluster 0102: int => ${curtainPosition}", 1)
-        events << positionEvent(curtainPosition)
+        positionEvent(curtainPosition)
         //read attr - raw: 63A1010102080800204E, dni: 63A1, endpoint: 01, cluster: 0102, size: 08, attrId: 0008, encoding: 20, command: 0A, value: 4E
         //read attr - raw: 63A1010102080800203B, dni: 63A1, endpoint: 01, cluster: 0102, size: 08, attrId: 0008, encoding: 20, command: 0A, value: 3B | parseMap:[raw:63A1010102080800203B, dni:63A1, endpoint:01, cluster:0102, size:08, attrId:0008, encoding:20, command:0A, value:3B, clusterInt:258, attrInt:8]
     } else if (msgMap["cluster"] == "0000" && (msgMap["attrId"] == "FF01" || msgMap["attrId"] == "FF02")) {
@@ -120,17 +121,17 @@ def parse(description) {
         // TODO: Test this, I don't have the battery version...
         // 1C (file separator??) is missing in the beginning of the value after doing this encoding...
         if(getDeviceDataByName('model') != "lumi.curtain") {
-            events << createEvent(parseBattery(msgMap["value"].getBytes().encodeHex().toString().toUpperCase()))
+            sendEvent(parseBattery(msgMap["value"].getBytes().encodeHex().toString().toUpperCase()))
         }
         //read attr - raw: 63A10100004001FF421C03281E05210F00642000082120110727000000000000000009210002, dni: 63A1, endpoint: 01, cluster: 0000, size: 40, attrId: FF01, encoding: 42, command: 0A, value: 1C03281E05210F00642000082120110727000000000000000009210002, parseMap:[raw:63A10100004001FF421C03281E05210F00642000082120110727000000000000000009210002, dni:63A1, endpoint:01, cluster:0000, size:40, attrId:FF01, encoding:42, command:0A, value:(!d ! '	!, clusterInt:0, attrInt:65281]
     } else if (msgMap["cluster"] == "000D" && msgMap["attrId"] == "0055") {
         logging("cluster 000D", 1)
 		if (msgMap["size"] == "16" || msgMap["size"] == "1C" || msgMap["size"] == "10") {
 			long theValue = Long.parseLong(msgMap["value"], 16)
-			float floatValue = Float.intBitsToFloat(theValue.intValue());
-			logging("GETTING POSITION: long => ${theValue}, float => ${floatValue}", 1)
+			BigDecimal floatValue = Float.intBitsToFloat(theValue.intValue());
+			logging("GETTING POSITION: long => ${theValue}, BigDecimal => ${floatValue}", 1)
 			curtainPosition = floatValue.intValue()
-			events << positionEvent(curtainPosition)
+			positionEvent(curtainPosition)
 		} else if (msgMap["size"] == "28" && msgMap["value"] == "00000000") {
 			logging("done…", 1)
 			sendHubCommand(zigbee.readAttribute(CLUSTER_WINDOW_POSITION, POSITION_ATTR_VALUE))                
@@ -140,7 +141,7 @@ def parse(description) {
             def bat = msgMap["value"]
             long value = Long.parseLong(bat, 16)/2
             logging("Battery: ${value}%, ${bat}", 1)
-            events << createEvent(name:"battery", value: value)
+            sendEvent(name:"battery", value: value)
         }
 
 	} else if (msgMap["clusterId"] == "000A") {
@@ -167,11 +168,9 @@ def positionEvent(curtainPosition) {
         logging("Closed", 1)
         windowShadeStatus = "closed"
     }
-	def events = []
-	events << createEvent(name:"windowShade", value: windowShadeStatus)
-	events << createEvent(name:"position", value: curtainPosition)
-	events << createEvent(name:"switch", value: (windowShadeStatus == "closed" ? "off" : "on"))
-	return events
+	sendEvent(name:"windowShade", value: windowShadeStatus)
+	sendEvent(name:"position", value: curtainPosition)
+	sendEvent(name:"switch", value: (windowShadeStatus == "closed" ? "off" : "on"))
 }
 
 // Convert raw 4 digit integer voltage value into percentage based on minVolts/maxVolts range
@@ -198,8 +197,7 @@ private parseBattery(hexString) {
 	]
 }
 
-def updated()
-{
+def updated() {
     logging("updated()", 10)
     def cmds = [] 
     try {
@@ -211,8 +209,7 @@ def updated()
     if (cmds != [] && cmds != null) cmds
 }
 
-def update_needed_settings()
-{
+def updateNeededSettings() {
     
 }
 
@@ -233,10 +230,21 @@ def altOpen() {
     return cmd  
 }
 
+//reverseCurtain
+
+def reverseCurtain() {
+    logging("reverseCurtain()", 1)
+	def cmd = []
+	cmd += zigbee.writeAttribute(CLUSTER_BASIC, 0xFF28, 0x10, 0x01)
+    logging("cmd=${cmd}", 1)
+    return cmd
+}
+
 def altClose() {
     logging("altClose()", 1)
 	def cmd = []
 	cmd += zigbee.command(CLUSTER_WINDOW_COVERING, COMMAND_CLOSE)
+    logging("cmd=${cmd}", 1)
     return cmd  
 }
 
@@ -245,12 +253,10 @@ def on() {
 	open()
 }
 
-
 def off() {
     logging("off()", 1)
 	close()
 }
-
 
 def stop() {
     logging("stop()", 1)
@@ -277,7 +283,7 @@ def clearPosition() {
 
 def setPosition(position) {
     if (position == null) {position = 0}
-    position = position as int
+    position = position as Integer
     logging("setPosition(position: ${position})", 1)
     Integer  currentPosition = device.currentValue("position")
     if (position > currentPosition) {
@@ -308,7 +314,7 @@ def setPosition(position) {
         return cmd
     } else {
         if(mode == true){
-            position = (100 - position) as int
+            position = (100 - position) as Integer
         }
         logging("Set Position: ${position}%", 1)
         //logging("zigbee.writeAttribute(getCLUSTER_WINDOW_POSITION()=${CLUSTER_WINDOW_POSITION}, getPOSITION_ATTR_VALUE()=${POSITION_ATTR_VALUE}, getENCODING_SIZE()=${ENCODING_SIZE}, position=${Float.floatToIntBits(position)})", 1)
@@ -316,9 +322,22 @@ def setPosition(position) {
     }
 }
 
+/*
+    -----------------------------------------------------------------------------
+    Everything below here are LIBRARY includes and should NOT be edited manually!
+    -----------------------------------------------------------------------------
+    --- Nothings to edit here, move along! --------------------------------------
+    -----------------------------------------------------------------------------
+*/
 
 #!include:getDefaultFunctions(driverVersionSpecial="v0.9.0")
 
 #!include:getLoggingFunction()
 
-#!include:getHelperFunctions('default')
+#!include:getHelperFunctions('all-default')
+
+#!include:getHelperFunctions('driver-metadata')
+
+#!include:getHelperFunctions('styling')
+
+#!include:getHelperFunctions('driver-default')

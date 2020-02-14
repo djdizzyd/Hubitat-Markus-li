@@ -49,7 +49,7 @@ def parse(description) {
         #!include:getGenericTasmotaParseFooter()
 }
 
-def update_needed_settings() {
+def updateNeededSettings() {
     #!include:getUpdateNeededSettingsTasmotaHeader()
 
     #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand(0, '{"NAME":"RGB Controller","GPIO":[0,0,0,0,0,38,0,0,39,51,0,37,0],"FLAG":15,"BASE":18}')

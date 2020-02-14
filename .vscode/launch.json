@@ -15,14 +15,28 @@
             "name": "Python: test_light_speed.py",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/tools/test_light_speed.py",
+            "program": "${workspaceFolder}/private/tools/test_light_speed.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: openwrt_sort_dhcp.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/private/tools/openwrt_sort_dhcp.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: json_encoding.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/private/tools/json_encoding.py",
             "console": "integratedTerminal"
         },
         {
             "name": "Python: BitBucketConverterMinimal.py",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/BitBucketConverterMinimal.py",
+            "program": "${workspaceFolder}/private/BitBucketConverterMinimal.py",
             "console": "integratedTerminal"
         }
     ]

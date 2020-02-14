@@ -74,7 +74,7 @@ def parse(description) {
         #!include:getGenericTasmotaParseFooter()
 }
 
-def update_needed_settings()
+def updateNeededSettings()
 {
     #!include:getUpdateNeededSettingsTasmotaHeader()
 

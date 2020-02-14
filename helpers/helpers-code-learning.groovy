@@ -1,4 +1,8 @@
-/* Helper functions for Code Learning */
+/**
+ * CODE LEARNING METHODS (helpers-code-learning)
+ *
+ * Helper functions for Code Learning
+ */
 def actionStartLearning() {
     return(actionStartLearning(true))
 }
@@ -201,3 +205,7 @@ void updated() {
         }
     }
 }
+
+/**
+ * --END-- CODE LEARNING METHODS (helpers-code-learning)
+ */
