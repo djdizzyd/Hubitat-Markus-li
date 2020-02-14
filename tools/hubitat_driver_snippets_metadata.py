@@ -119,12 +119,14 @@ command "colorPink"
 def getMetadataCommandsForHandlingTasmotaRGBWDevices():
     return """
 // Commands for handling Tasmota RGBW Devices
-command "modeNext", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
-command "modePrevious", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
-command "modeSingleColor", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
-command "modeCycleUpColors", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
-command "modeCycleDownColors", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
-command "modeRandomColors", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
+command "setEffectWithSpeed", [[name:"Effect number*", type: "NUMBER", description: "Effect number to enable"],
+    [name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
+command "setNextEffectWithSpeed", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
+command "setPreviousEffectWithSpeed", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
+command "setEffectSingleColor", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
+command "setEffectCycleUpColors", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
+command "setEffectCycleDownColors", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
+command "setEffectRandomColors", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
 """
 
 def getMetadataCommandsForHandlingTasmotaDimmerDevices():

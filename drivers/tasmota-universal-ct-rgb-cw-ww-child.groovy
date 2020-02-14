@@ -14,6 +14,10 @@ metadata {
         capability "ColorTemperature"             // Attributes: colorName - STRING, colorTemperature - NUMBER
         capability "ColorMode"                    // Attributes: colorMode - ENUM ["CT", "RGB"]
         capability "Refresh"
+        capability "LightEffects"                 // Attributes: effectName - STRING, lightEffects - JSON_OBJECT
+
+        //lightEffects = [1: "Effect Name", 2: "Other effect", 3: "etc..."] to JSON...
+        attribute  "effectNumber", "number"
 
         #!include:getMetadataCommandsForHandlingRGBWDevices()
         #!include:getMetadataCommandsForHandlingTasmotaRGBWDevices()
@@ -23,8 +27,9 @@ metadata {
     preferences {
         #!include:getDefaultMetadataPreferences()
         input(name: "hideColorTemperatureCommands", type: "bool", title: addTitleDiv("Hide Color Temperature Commands"), description: addDescriptionDiv("Hides Color Temperature Commands"), defaultValue: false, displayDuringSetup: false, required: false)
-        input(name: "hideModeCommands", type: "bool", title: addTitleDiv("Hide Mode Commands"), description: addDescriptionDiv("Hides Mode Commands"), defaultValue: true, displayDuringSetup: false, required: false)
+        input(name: "hideEffectCommands", type: "bool", title: addTitleDiv("Hide Effect Commands"), description: addDescriptionDiv("Hides Effect Commands"), defaultValue: true, displayDuringSetup: false, required: false)
         input(name: "hideColorCommands", type: "bool", title: addTitleDiv("Hide Color Commands"), description: addDescriptionDiv("Hides Color Commands"), defaultValue: true, displayDuringSetup: false, required: false)
+        input(name: "isAddressable", type: "bool", title: addTitleDiv("Addressable Light"), description: addDescriptionDiv("Treat as an Addressable Light"), defaultValue: false, displayDuringSetup: false, required: false)
     }
 
     // The below line needs to exist in ALL drivers for custom CSS to work!
@@ -40,6 +45,10 @@ void parse(List<Map> description) {
         if (it.name in ["switch", "level", "RGB", "color", "colorName", "hue", "saturation",
                         "colorTemperature", "colorMode"]) {
             logging(it.descriptionText, 100)
+            sendEvent(it)
+        } else if(it.name == "effectNumber") {
+            logging(it.descriptionText, 100)
+            sendEvent(name: "effectName", value: getLightEffectNameByNumber(it.value), isStateChange: false)
             sendEvent(it)
         } else {
             log.warn "Got '$it.name' attribute data, but doesn't know what to do with it! Did you choose the right device type?"
@@ -62,17 +71,31 @@ void installed() {
 void refresh() {
     #!include:getChildComponentMetaConfigCommands()
 
-    List commandsToHide = []
+    metaConfig = setStateVariablesToHide(["mode", "effectnumber"], metaConfig=metaConfig)
+
+    List commandsToHide = ["setEffect", "setNextEffect", "setPreviousEffect"]
     if(hideColorTemperatureCommands == true) {
         commandsToHide.addAll(["setColorTemperature"])
     }
-    if(hideModeCommands == null || hideModeCommands == true) {
-        commandsToHide.addAll(["modeNext", "modePrevious", "modeSingleColor", "modeCycleUpColors", "modeCycleDownColors", "modeRandomColors"])
+    if(hideEffectCommands == null || hideEffectCommands == true) {
+        commandsToHide.addAll(["setEffectWithSpeed", "setNextEffectWithSpeed", "setPreviousEffectWithSpeed", "modeWakeUp", "setEffectSingleColor", "setEffectCycleUpColors", "setEffectCycleDownColors", "setEffectRandomColors"])
     }
     if(hideColorCommands == null || hideColorCommands == true) {
         commandsToHide.addAll(["colorWhite", "colorRed", "colorGreen", "colorBlue", "colorYellow", "colorCyan", "colorPink"])
     }
     if(commandsToHide != []) metaConfig = setCommandsToHide(commandsToHide, metaConfig=metaConfig)
+    
+    Map lightEffects = [:]
+    if(isAddressable == true) {
+        lightEffects = [0: "Single Color", 1: "Wake Up", 2: "Cycle Up Colors", 3: "Cycle Down Colors", 
+                        4: "Random Colors", 5: "Clock Mode", 6: "Candlelight Pattern", 7: "RGB Pattern",
+                        8: "Christmas Pattern", 9: "Hanukkah Pattern", 10: "Kwanzaa Pattern",
+                        11: "Rainbow Pattern", 12: "Fire Pattern"]
+    } else {
+        lightEffects = [0: "Single Color", 1: "Wake Up", 2: "Cycle Up Colors", 3: "Cycle Down Colors", 
+                        4: "Random Colors"]
+    }
+    sendEvent(name: "lightEffects", value: JsonOutput.toJson(lightEffects))
     parent?.componentRefresh(this.device)
 }
 
@@ -144,28 +167,73 @@ void colorPink() {
     parent?.componentSetRGB(this.device, 255, 0, 255)
 }
 
-void modeNext(BigDecimal speed=3) {
-    parent?.componentModeNext(this.device, speed)
+void setEffect(BigDecimal effectnumber) {
+    setEffectWithSpeed(effectnumber, 2)
 }
 
-void modePrevious(BigDecimal speed=3) {
-    parent?.componentModePrevious(this.device, speed)
+Map getLightEffects() {
+    String lightEffectsJSON = device.currentValue('lightEffects')
+    Map lightEffects = [0: "Undefined"]
+    if(lightEffectsJSON != null) {
+        log.debug "lightEffectsJSON = $lightEffectsJSON"
+        JsonSlurper jsonSlurper = new JsonSlurper()
+        lightEffects = jsonSlurper.parseText(lightEffectsJSON)
+    }
+    return lightEffects
 }
 
-void modeSingleColor(BigDecimal speed=3) {
-    parent?.componentModeSingleColor(this.device, speed)
+String getLightEffectNameByNumber(BigDecimal effectnumber) {
+    Map lightEffects = getLightEffects()
+    lightEffects.get(effectnumber.toString(), 'Unknown')
 }
 
-void modeCycleUpColors(BigDecimal speed=3) {
-    parent?.componentModeCycleUpColors(this.device, speed)
+void setNextEffect() {
+    setNextEffectWithSpeed(2)
 }
 
-void modeCycleDownColors(BigDecimal speed=3) {
-    parent?.componentModeCycleDownColors(this.device, speed)
+void setPreviousEffect() {
+    setPreviousEffectWithSpeed(2)
 }
 
-void modeRandomColors(BigDecimal speed=3) {
-    parent?.componentModeRandomColors(this.device, speed)
+void setEffectWithSpeed(BigDecimal effectnumber, BigDecimal speed=3) {
+    state.effectnumber = effectnumber
+    parent?.componentSetEffect(this.device, effectnumber, speed)
+}
+
+void setNextEffectWithSpeed(BigDecimal speed=3) {
+    logging("setNextEffectWithSpeed()", 10)
+    if (state.effectnumber != null && state.effectnumber < getLightEffects().size() - 1) {
+        state.effectnumber = state.effectnumber + 1
+    } else {
+        state.effectnumber = 0
+    }
+    setEffectWithSpeed(state.effectnumber, speed)
+}
+
+void setPreviousEffectWithSpeed(BigDecimal speed=3) {
+    logging("setPreviousEffectWithSpeed()", 10)
+    if (state.effectnumber != null && state.effectnumber > 0) {
+        state.effectnumber = state.effectnumber - 1
+    } else {
+        state.effectnumber = getLightEffects().size() - 1
+    }
+    setEffectWithSpeed(state.effectnumber, speed)
+}
+
+void setEffectSingleColor(BigDecimal speed=3) {
+    setEffectWithSpeed(0, speed)
+}
+
+void setEffectCycleUpColors(BigDecimal speed=3) {
+    setEffectWithSpeed(2, speed)
+}
+
+void setEffectCycleDownColors(BigDecimal speed=3) {
+    setEffectWithSpeed(3, speed)
+}
+
+void setEffectRandomColors(BigDecimal speed=3) {
+    setEffectWithSpeed(4, speed)
 }
 
 void modeWakeUp(BigDecimal wakeUpDuration) {
@@ -175,6 +243,7 @@ void modeWakeUp(BigDecimal wakeUpDuration) {
 }
 
 void modeWakeUp(BigDecimal wakeUpDuration, BigDecimal level) {
+    state.effectnumber = 1
     parent?.componentModeWakeUp(this.device, wakeUpDuration, level)
 }
 

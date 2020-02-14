@@ -373,28 +373,8 @@ void componentSetColorTemperature(cd, BigDecimal colortemperature) {
     setColorTemperature(colortemperature)
 }
 
-void componentModeNext(cd, BigDecimal speed) {
-    modeNext(speed)
-}
-
-void componentModePrevious(cd, BigDecimal speed) {
-    modePrevious(speed)
-}
-
-void componentModeSingleColor(cd, BigDecimal speed) {
-    modeSingleColor(speed)
-}
-
-void componentModeCycleUpColors(cd, BigDecimal speed) {
-    modeCycleUpColors(speed)
-}
-
-void componentModeCycleDownColors(cd, BigDecimal speed) {
-    modeCycleDownColors(speed)
-}
-
-void componentModeRandomColors(cd, BigDecimal speed) {
-    modeRandomColors(speed)
+void componentSetEffect(cd, BigDecimal effectnumber, BigDecimal speed) {
+    modeSet((Integer) effectnumber, speed)
 }
 
 void componentModeWakeUp(cd, BigDecimal wakeUpDuration, BigDecimal level) {

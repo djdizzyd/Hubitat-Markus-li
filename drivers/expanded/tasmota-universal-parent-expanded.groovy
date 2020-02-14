@@ -965,6 +965,9 @@ boolean parseResult(result, missingChild) {
             state.colorMode = mode
             if(childDevice?.currentValue('colorMode') != mode ) missingChild = callChildParseByTypeId("POWER1", [[name: "colorMode", value: mode]], missingChild)
         }
+        if (result.containsKey("Scheme")) {
+            if(childDevice?.currentValue('effectNumber') != result.Scheme ) missingChild = callChildParseByTypeId("POWER1", [[name: "effectNumber", value: result.Scheme]], missingChild)
+        }
         if (mode == "RGB" && result.containsKey("HSBColor")) {
             def hsbColor = result.HSBColor.tokenize(",")
             hsbColor[0] = Math.round((hsbColor[0] as Integer) / 3.6) as Integer
@@ -988,6 +991,7 @@ boolean parseResult(result, missingChild) {
             }
             logging("CT: $result.CT ($t)",99)
         }
+    
     }
     // END:  getTasmotaNewParserForRGBWDevice()
     // BEGIN:getTasmotaNewParserForSensors()
@@ -1324,28 +1328,8 @@ void componentSetColorTemperature(cd, BigDecimal colortemperature) {
     setColorTemperature(colortemperature)
 }
 
-void componentModeNext(cd, BigDecimal speed) {
-    modeNext(speed)
-}
-
-void componentModePrevious(cd, BigDecimal speed) {
-    modePrevious(speed)
-}
-
-void componentModeSingleColor(cd, BigDecimal speed) {
-    modeSingleColor(speed)
-}
-
-void componentModeCycleUpColors(cd, BigDecimal speed) {
-    modeCycleUpColors(speed)
-}
-
-void componentModeCycleDownColors(cd, BigDecimal speed) {
-    modeCycleDownColors(speed)
-}
-
-void componentModeRandomColors(cd, BigDecimal speed) {
-    modeRandomColors(speed)
+void componentSetEffect(cd, BigDecimal effectnumber, BigDecimal speed) {
+    modeSet((Integer) effectnumber, speed)
 }
 
 void componentModeWakeUp(cd, BigDecimal wakeUpDuration, BigDecimal level) {
@@ -2885,6 +2869,7 @@ void configureChildDevices(asyncResponse, data) {
             def childLabel = "${getMinimizedDriverName(device.getLabel())} ($childId)"
             logging("createChildDevice: POWER$i", 1)
             createChildDevice(namespace, driverName, childId, childName, childLabel)
+            
             // Once the first switch is created we only support one type... At least for now...
             driverName = ["Tasmota - Universal Plug/Outlet (Child)", "Generic Component Switch"]
         }
@@ -3509,14 +3494,14 @@ void setRGB(r, g, b) {
 
 void setLevel(l, duration) {
     if (duration == 0) {
-        if (state.colorMode == "RGB") {
+        if (false && state.colorMode == "RGB") {
             setHSB(null, null, l)
         } else {
             state.level = l
             getAction(getCommandString("Dimmer", "${l}"))
         }
     } else if (duration > 0) {
-        if (state.colorMode == "RGB") {
+        if (false && state.colorMode == "RGB") {
             setHSB(null, null, l)
         } else {
             if (duration > 5400) {

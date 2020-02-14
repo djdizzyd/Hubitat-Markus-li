@@ -2056,6 +2056,7 @@ void configureChildDevices(asyncResponse, data) {
             def childLabel = "${getMinimizedDriverName(device.getLabel())} ($childId)"
             logging("createChildDevice: POWER$i", 1)
             createChildDevice(namespace, driverName, childId, childName, childLabel)
+            
             // Once the first switch is created we only support one type... At least for now...
             driverName = ["Tasmota - Universal Plug/Outlet (Child)", "Generic Component Switch"]
         }

@@ -357,6 +357,9 @@ if(true) {
         state.colorMode = mode
         if(childDevice?.currentValue('colorMode') != mode ) missingChild = callChildParseByTypeId("POWER1", [[name: "colorMode", value: mode]], missingChild)
     }
+    if (result.containsKey("Scheme")) {
+        if(childDevice?.currentValue('effectNumber') != result.Scheme ) missingChild = callChildParseByTypeId("POWER1", [[name: "effectNumber", value: result.Scheme]], missingChild)
+    }
     if (mode == "RGB" && result.containsKey("HSBColor")) {
         def hsbColor = result.HSBColor.tokenize(",")
         hsbColor[0] = Math.round((hsbColor[0] as Integer) / 3.6) as Integer
@@ -380,6 +383,7 @@ if(true) {
         }
         logging("CT: $result.CT ($t)",99)
     }
+
 }
 """
 

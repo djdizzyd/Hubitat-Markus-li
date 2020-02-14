@@ -109,14 +109,14 @@ void setRGB(r, g, b) {
 
 void setLevel(l, duration) {
     if (duration == 0) {
-        if (state.colorMode == "RGB") {
+        if (false && state.colorMode == "RGB") {
             setHSB(null, null, l)
         } else {
             state.level = l
             getAction(getCommandString("Dimmer", "${l}"))
         }
     } else if (duration > 0) {
-        if (state.colorMode == "RGB") {
+        if (false && state.colorMode == "RGB") {
             setHSB(null, null, l)
         } else {
             if (duration > 5400) {
