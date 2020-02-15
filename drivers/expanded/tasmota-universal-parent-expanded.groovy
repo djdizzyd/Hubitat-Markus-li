@@ -1369,7 +1369,7 @@ void componentSetSpeed(cd, String fanspeed) {
 private String getDriverVersion() {
     //comment = ""
     //if(comment != "") state.comment = comment
-    String version = "v1.0.0214Ta"
+    String version = "v1.0.0215Ta"
     logging("getDriverVersion() = ${version}", 50)
     sendEvent(name: "driver", value: version)
     updateDataValue('driver', version)
@@ -1469,7 +1469,7 @@ String configuration_model_debug() {
         }
         return '''
 <configuration>
-<Value type="bool" index="debugLogging" label="Enable debug logging" description="" value="true" submitOnChange="true" setting_type="preference" fw="">
+<Value type="bool" index="debugLogging" label="Enable debug logging" description="" value="false" submitOnChange="true" setting_type="preference" fw="">
 <Help></Help>
 </Value>
 <Value type="bool" index="infoLogging" label="Enable descriptionText logging" description="" value="true" submitOnChange="true" setting_type="preference" fw="">
@@ -1486,7 +1486,7 @@ String configuration_model_debug() {
         }
         return '''
 <configuration>
-<Value type="list" index="logLevel" label="Debug Log Level" description="Under normal operations, set this to None. Only needed for debugging. Auto-disabled after 30 minutes." value="-1" submitOnChange="true" setting_type="preference" fw="">
+<Value type="list" index="logLevel" label="Debug Log Level" description="Under normal operations, set this to None. Only needed for debugging. Auto-disabled after 30 minutes." value="100" submitOnChange="true" setting_type="preference" fw="">
 <Help>
 </Help>
     <Item label="None" value="0" />
@@ -3059,7 +3059,7 @@ void sync(String ip, Integer port = null) {
     String existingIp = getDataValue("ip")
     String existingPort = getDataValue("port")
     logging("Running sync()", 1)
-    if (ip != null && ip != existingIp.toInteger()) {
+    if (ip != null && ip != existingIp) {
         updateDataValue("ip", ip)
         sendEvent(name: 'ip', value: ip, isStateChange: false)
         sendEvent(name: "ipLink", value: "<a target=\"device\" href=\"http://$ip\">$ip</a>", isStateChange: false)
@@ -3518,20 +3518,24 @@ void setLevel(l, duration) {
             }
             Integer steps = 13
             Integer increment = Math.round(((levelDistance as Float)  / steps) as Float)
-            if(increment <= 1 && levelDistance < steps) {
-                steps = levelDistance
+            if(increment <= 1 && Math.abs(levelDistance) < steps) {
+                steps = Math.abs(levelDistance)
             }
-            // Each Backlog command has 200ms delay, deduct that delay and add 1 second extra
-            duration = ((duration as Float) - (2 * steps * 0.2) + 1) as Float
-            BigDecimal stepTime = round2((duration / steps) as Float, 1)
-            Integer stepTimeTasmota = Math.round((stepTime as Float) * 10)
-            BigDecimal lastStepTime = round2((stepTime + (duration - (stepTime * steps)) as Float), 1)
-            Integer lastStepTimeTasmota = Math.round((lastStepTime as Float) * 10)
             List fadeCommands = []
-            Integer cmdLevel = cLevel
             fadeCommands.add([command: "Fade", value: "1"])
             fadeCommands.add([command: "Speed", value: "20"])
             if(steps > 0) {
+                // If we have less than 1 step, we shouldn't execute any of the below...
+
+                // Each Backlog command has 200ms delay, deduct that delay and add 1 second extra
+                duration = ((duration as Float) - (2 * steps * 0.2) + 1) as Float
+                BigDecimal stepTime = round2((duration / steps) as Float, 1)
+                Integer stepTimeTasmota = Math.round((stepTime as Float) * 10)
+                BigDecimal lastStepTime = round2((stepTime + (duration - (stepTime * steps)) as Float), 1)
+                Integer lastStepTimeTasmota = Math.round((lastStepTime as Float) * 10)
+                
+                Integer cmdLevel = cLevel
+                
                 (1..steps).each{
                     cmdLevel += (increment * direction)
                     if(direction == 1 && (cmdLevel > l || it == steps)) cmdLevel = l

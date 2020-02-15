@@ -483,7 +483,7 @@ Map getTimeStringSinceDateWithMaximum(myDate, maxMillis) {
 // BEGIN:getDefaultAppMethods()
 /* Default App Methods go here */
 private String getAppVersion() {
-    String version = "v1.0.0214Ta"
+    String version = "v1.0.0215Ta"
     logging("getAppVersion() = ${version}", 50)
     return version
 }
@@ -967,7 +967,7 @@ def deviceDiscovery(){
 			paragraph "NOT FUNCTIONAL: This process will automatically discover your device, this may take a few minutes. Please be patient. Tasmota Device Handler then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your WiFi network."
             /*input "deviceType", "enum", title:"Device Type", description: "", required: true, options: 
                 // BEGIN:makeTasmotaConnectDriverListV1()
-                ["Tasmota - Universal Parent",
+                ["Tasmota - Universal Parent Testing",
                 ]
                 // END:  makeTasmotaConnectDriverListV1()
             input "ipAddress", "text", title:"IP Address", description: "", required: true */
@@ -982,7 +982,7 @@ def manuallyAdd(){
             paragraph "This process will manually create a Tasmota-based Device with the entered IP address. Tasmota Device Handler then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your wifi network."
             input "deviceType", "enum", title:"Device Type", description: "", required: true, submitOnChange: false, options: 
                 // BEGIN:makeTasmotaConnectDriverListV1()
-                ["Tasmota - Universal Parent",
+                ["Tasmota - Universal Parent Testing",
                 ]
                 // END:  makeTasmotaConnectDriverListV1()
             input("ipAddress", "text", title:"IP Address", description: "", required: true, submitOnChange: false)
@@ -1283,6 +1283,13 @@ private boolean logging(message, level) {
                 didLogging = true
             }
         break
+        
+        case "100": // Only special debug messages, eg IR and RF codes
+            if (level == 100 ) {
+                log.info "$message"
+                didLogging = true
+            }
+        break
         }
     }
     return didLogging
@@ -1303,7 +1310,7 @@ String configuration_model_debug() {
         }
         return '''
 <configuration>
-<Value type="bool" index="debugLogging" label="Enable debug logging" description="" value="true" submitOnChange="true" setting_type="preference" fw="">
+<Value type="bool" index="debugLogging" label="Enable debug logging" description="" value="false" submitOnChange="true" setting_type="preference" fw="">
 <Help></Help>
 </Value>
 <Value type="bool" index="infoLogging" label="Enable descriptionText logging" description="" value="true" submitOnChange="true" setting_type="preference" fw="">
@@ -1320,7 +1327,7 @@ String configuration_model_debug() {
         }
         return '''
 <configuration>
-<Value type="list" index="logLevel" label="Debug Log Level" description="Under normal operations, set this to None. Only needed for debugging. Auto-disabled after 30 minutes." value="-1" submitOnChange="true" setting_type="preference" fw="">
+<Value type="list" index="logLevel" label="Debug Log Level" description="Under normal operations, set this to None. Only needed for debugging. Auto-disabled after 30 minutes." value="100" submitOnChange="true" setting_type="preference" fw="">
 <Help>
 </Help>
     <Item label="None" value="0" />
@@ -1330,6 +1337,7 @@ String configuration_model_debug() {
     <Item label="Reports+Status" value="50" />
     <Item label="Reports" value="99" />
     // BEGIN:getSpecialDebugEntry()
+    <Item label="descriptionText" value="100" />
     // END:  getSpecialDebugEntry()
 </Value>
 </configuration>
@@ -2246,7 +2254,7 @@ void sync(String ip, Integer port = null) {
     String existingIp = getDataValue("ip")
     String existingPort = getDataValue("port")
     logging("Running sync()", 1)
-    if (ip != null && ip != existingIp.toInteger()) {
+    if (ip != null && ip != existingIp) {
         updateDataValue("ip", ip)
         sendEvent(name: 'ip', value: ip, isStateChange: false)
         sendEvent(name: "ipLink", value: "<a target=\"device\" href=\"http://$ip\">$ip</a>", isStateChange: false)

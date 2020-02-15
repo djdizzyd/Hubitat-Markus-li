@@ -41,6 +41,16 @@ metadata {
 
         //lightEffects = [1: "Effect Name", 2: "Other effect", 3: "etc..."] to JSON...
         attribute  "effectNumber", "number"
+        
+        // For Addressable LEDs, we need to add settings for
+        // https://tasmota.github.io/docs/#/Commands?id=light
+        // Pixels
+        // Rotation
+        // Led
+        // Width - This one could be complicated to get understandable...
+        
+        command "addressablePixel", [[name:"Color Map 3*", type: "COLOR_MAP", description: "Color map settings [hue*:(0 to 100), saturation*:(0 to 100), level:(0 to 100)]"],
+            [name:"Pixel Number*", type: "NUMBER", description: "Pixel to change the color of"]]
 
         // BEGIN:getMetadataCommandsForHandlingRGBWDevices()
         // Commands for handling RGBW Devices
@@ -79,6 +89,8 @@ metadata {
         input(name: "hideEffectCommands", type: "bool", title: addTitleDiv("Hide Effect Commands"), description: addDescriptionDiv("Hides Effect Commands"), defaultValue: true, displayDuringSetup: false, required: false)
         input(name: "hideColorCommands", type: "bool", title: addTitleDiv("Hide Color Commands"), description: addDescriptionDiv("Hides Color Commands"), defaultValue: true, displayDuringSetup: false, required: false)
         input(name: "isAddressable", type: "bool", title: addTitleDiv("Addressable Light"), description: addDescriptionDiv("Treat as an Addressable Light"), defaultValue: false, displayDuringSetup: false, required: false)
+        input(name: "addressablePixels", type: "number", title: addTitleDiv("Addressable Pixels"), description: addDescriptionDiv("1..512 = set amount of pixels in strip or ring and reset Rotation"), displayDuringSetup: false, required: false, defaultValue: 30)
+        input(name: "addressableRotation", type: "number", title: addTitleDiv("Addressable Rotation"), description: addDescriptionDiv("1..512 = set amount of pixels to rotate (up to Addressable Pixels value)"), displayDuringSetup: false, required: false, defaultValue: 30)
     }
 
     // The below line needs to exist in ALL drivers for custom CSS to work!
@@ -154,7 +166,7 @@ void refresh() {
     if(hideColorCommands == null || hideColorCommands == true) {
         commandsToHide.addAll(["colorWhite", "colorRed", "colorGreen", "colorBlue", "colorYellow", "colorCyan", "colorPink"])
     }
-    if(commandsToHide != []) metaConfig = setCommandsToHide(commandsToHide, metaConfig=metaConfig)
+    
     
     Map lightEffects = [:]
     if(isAddressable == true) {
@@ -163,9 +175,12 @@ void refresh() {
                         8: "Christmas Pattern", 9: "Hanukkah Pattern", 10: "Kwanzaa Pattern",
                         11: "Rainbow Pattern", 12: "Fire Pattern"]
     } else {
+        commandsToHide.addAll(["addressablePixel"])
         lightEffects = [0: "Single Color", 1: "Wake Up", 2: "Cycle Up Colors", 3: "Cycle Down Colors", 
                         4: "Random Colors"]
     }
+    if(commandsToHide != []) metaConfig = setCommandsToHide(commandsToHide, metaConfig=metaConfig)
+
     sendEvent(name: "lightEffects", value: JsonOutput.toJson(lightEffects))
     parent?.componentRefresh(this.device)
 }
@@ -339,7 +354,7 @@ String configuration_model_debug() {
         }
         return '''
 <configuration>
-<Value type="bool" index="debugLogging" label="Enable debug logging" description="" value="true" submitOnChange="true" setting_type="preference" fw="">
+<Value type="bool" index="debugLogging" label="Enable debug logging" description="" value="false" submitOnChange="true" setting_type="preference" fw="">
 <Help></Help>
 </Value>
 <Value type="bool" index="infoLogging" label="Enable descriptionText logging" description="" value="true" submitOnChange="true" setting_type="preference" fw="">
@@ -356,7 +371,7 @@ String configuration_model_debug() {
         }
         return '''
 <configuration>
-<Value type="list" index="logLevel" label="Debug Log Level" description="Under normal operations, set this to None. Only needed for debugging. Auto-disabled after 30 minutes." value="-1" submitOnChange="true" setting_type="preference" fw="">
+<Value type="list" index="logLevel" label="Debug Log Level" description="Under normal operations, set this to None. Only needed for debugging. Auto-disabled after 30 minutes." value="100" submitOnChange="true" setting_type="preference" fw="">
 <Help>
 </Help>
     <Item label="None" value="0" />

@@ -309,7 +309,7 @@ private String getAppVersion() {
 }
 '''
 
-def getLoggingFunction(specialDebugLevel=False):
+def getLoggingFunction(specialDebugLevel=True):
     extraDebug = ""
     if(specialDebugLevel):
         extraDebug = """
@@ -379,7 +379,7 @@ private boolean logging(message, level) {
 
 def getSpecialDebugEntry(label=None):
     if(label==None):
-        return("")
+        return '<Item label="descriptionText" value="100" />'
     else:
         return '<Item label="' + label + '" value="100" />'
 

@@ -133,20 +133,24 @@ void setLevel(l, duration) {
             }
             Integer steps = 13
             Integer increment = Math.round(((levelDistance as Float)  / steps) as Float)
-            if(increment <= 1 && levelDistance < steps) {
-                steps = levelDistance
+            if(increment <= 1 && Math.abs(levelDistance) < steps) {
+                steps = Math.abs(levelDistance)
             }
-            // Each Backlog command has 200ms delay, deduct that delay and add 1 second extra
-            duration = ((duration as Float) - (2 * steps * 0.2) + 1) as Float
-            BigDecimal stepTime = round2((duration / steps) as Float, 1)
-            Integer stepTimeTasmota = Math.round((stepTime as Float) * 10)
-            BigDecimal lastStepTime = round2((stepTime + (duration - (stepTime * steps)) as Float), 1)
-            Integer lastStepTimeTasmota = Math.round((lastStepTime as Float) * 10)
             List fadeCommands = []
-            Integer cmdLevel = cLevel
             fadeCommands.add([command: "Fade", value: "1"])
             fadeCommands.add([command: "Speed", value: "20"])
             if(steps > 0) {
+                // If we have less than 1 step, we shouldn't execute any of the below...
+
+                // Each Backlog command has 200ms delay, deduct that delay and add 1 second extra
+                duration = ((duration as Float) - (2 * steps * 0.2) + 1) as Float
+                BigDecimal stepTime = round2((duration / steps) as Float, 1)
+                Integer stepTimeTasmota = Math.round((stepTime as Float) * 10)
+                BigDecimal lastStepTime = round2((stepTime + (duration - (stepTime * steps)) as Float), 1)
+                Integer lastStepTimeTasmota = Math.round((lastStepTime as Float) * 10)
+                
+                Integer cmdLevel = cLevel
+                
                 (1..steps).each{
                     cmdLevel += (increment * direction)
                     if(direction == 1 && (cmdLevel > l || it == steps)) cmdLevel = l
