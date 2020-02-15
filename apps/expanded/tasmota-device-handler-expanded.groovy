@@ -311,6 +311,12 @@ TreeMap getDeviceConfigurations() {
         installCommands: [],
         deviceLink: ''],
 
+        [typeId: 'ykyc-wj1y0-10a', 
+        name: 'Merkury MI-BW210-999W',
+        template: '{"NAME":"MI-BW210-999W","GPIO":[0,0,0,0,140,37,0,0,142,38,141,0,0],"FLAG":0,"BASE":48}',
+        installCommands: [],
+        deviceLink: ''],
+
         [typeId: 'tuyamcu-wifi-dimmer', 
         name: 'TuyaMCU Wifi Dimmer',
         module: 54,
@@ -387,7 +393,7 @@ TreeMap getDeviceConfigurations() {
         installCommands: [],
         deviceLink: ''],
 
-        [typeId: '01generic-switch-plug',
+        /*[typeId: '01generic-switch-plug',
         comment: 'Works as Plug/Outlet with Alexa' ,
         name: 'Generic Switch/Plug',
         template: '',
@@ -399,7 +405,7 @@ TreeMap getDeviceConfigurations() {
         name: 'Generic Switch/Light',
         template: '',
         installCommands: [],
-        deviceLink: ''],
+        deviceLink: ''],*/
 
         [typeId: '01generic-rgb-rgbw-controller-bulb-dimmer', 
         comment: 'RGB+WW+CW should all work properly',
@@ -414,11 +420,11 @@ TreeMap getDeviceConfigurations() {
         installCommands: [["TempRes", (tempRes == '' || tempRes == null ? "1" : tempRes)]],
         deviceLink: ''],
 
-        [typeId: '01generic-dimmer' ,
+        /*[typeId: '01generic-dimmer' ,
         name: 'Generic Dimmer',
         template: '',
         installCommands: [["WebLog", "2"]],
-        deviceLink: ''],
+        deviceLink: ''],*/
     ]
 
     TreeMap deviceConfigurationsMap = [:] as TreeMap
@@ -967,7 +973,7 @@ def deviceDiscovery(){
 			paragraph "NOT FUNCTIONAL: This process will automatically discover your device, this may take a few minutes. Please be patient. Tasmota Device Handler then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your WiFi network."
             /*input "deviceType", "enum", title:"Device Type", description: "", required: true, options: 
                 // BEGIN:makeTasmotaConnectDriverListV1()
-                ["Tasmota - Universal Parent Testing",
+                ["Tasmota - Universal Parent",
                 ]
                 // END:  makeTasmotaConnectDriverListV1()
             input "ipAddress", "text", title:"IP Address", description: "", required: true */
@@ -982,7 +988,7 @@ def manuallyAdd(){
             paragraph "This process will manually create a Tasmota-based Device with the entered IP address. Tasmota Device Handler then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your wifi network."
             input "deviceType", "enum", title:"Device Type", description: "", required: true, submitOnChange: false, options: 
                 // BEGIN:makeTasmotaConnectDriverListV1()
-                ["Tasmota - Universal Parent Testing",
+                ["Tasmota - Universal Parent",
                 ]
                 // END:  makeTasmotaConnectDriverListV1()
             input("ipAddress", "text", title:"IP Address", description: "", required: true, submitOnChange: false)
@@ -1236,15 +1242,19 @@ def initializeAdditional() {
 /* Logging function included in all drivers */
 private boolean logging(message, level) {
     boolean didLogging = false
-    if (infoLogging == true) {
-        logLevel = 100
+    Integer logLevelLocal = (logLevel != null ? logLevel.toInteger() : 0)
+    if(!isDeveloperHub()) {
+        logLevelLocal = 0
+        if (infoLogging == true) {
+            logLevelLocal = 100
+        }
+        if (debugLogging == true) {
+            logLevelLocal = 1
+        }
     }
-    if (debugLogging == true) {
-        logLevel = 1
-    }
-    if (logLevel != "0"){
-        switch (logLevel) {
-        case "-1": // Insanely verbose
+    if (logLevelLocal != "0"){
+        switch (logLevelLocal) {
+        case -1: // Insanely verbose
             if (level >= 0 && level < 100) {
                 log.debug "$message"
                 didLogging = true
@@ -1253,7 +1263,7 @@ private boolean logging(message, level) {
                 didLogging = true
             }
         break
-        case "1": // Very verbose
+        case 1: // Very verbose
             if (level >= 1 && level < 99) {
                 log.debug "$message"
                 didLogging = true
@@ -1262,7 +1272,7 @@ private boolean logging(message, level) {
                 didLogging = true
             }
         break
-        case "10": // A little less
+        case 10: // A little less
             if (level >= 10 && level < 99) {
                 log.debug "$message"
                 didLogging = true
@@ -1271,20 +1281,20 @@ private boolean logging(message, level) {
                 didLogging = true
             }
         break
-        case "50": // Rather chatty
+        case 50: // Rather chatty
             if (level >= 50 ) {
                 log.debug "$message"
                 didLogging = true
             }
         break
-        case "99": // Only parsing reports
+        case 99: // Only parsing reports
             if (level >= 99 ) {
                 log.debug "$message"
                 didLogging = true
             }
         break
         
-        case "100": // Only special debug messages, eg IR and RF codes
+        case 100: // Only special debug messages, eg IR and RF codes
             if (level == 100 ) {
                 log.info "$message"
                 didLogging = true
@@ -1452,7 +1462,7 @@ void logsOff() {
 }
 
 boolean isDeveloperHub() {
-    return generateMD5(location.hub.zigbeeId as String) == "125fceabd0413141e34bb859cd15e067"
+    return generateMD5(location.hub.zigbeeId as String) == "125fceabd0413141e34bb859cd15e067_disabled"
 }
 
 def getEnvironmentObject() {

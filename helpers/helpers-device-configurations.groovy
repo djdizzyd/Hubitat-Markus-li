@@ -255,6 +255,12 @@ TreeMap getDeviceConfigurations() {
         installCommands: [],
         deviceLink: ''],
 
+        [typeId: 'ykyc-wj1y0-10a', 
+        name: 'Merkury MI-BW210-999W',
+        template: '{"NAME":"MI-BW210-999W","GPIO":[0,0,0,0,140,37,0,0,142,38,141,0,0],"FLAG":0,"BASE":48}',
+        installCommands: [],
+        deviceLink: ''],
+
         [typeId: 'tuyamcu-wifi-dimmer', 
         name: 'TuyaMCU Wifi Dimmer',
         module: 54,
@@ -331,7 +337,7 @@ TreeMap getDeviceConfigurations() {
         installCommands: [],
         deviceLink: ''],
 
-        [typeId: '01generic-switch-plug',
+        /*[typeId: '01generic-switch-plug',
         comment: 'Works as Plug/Outlet with Alexa' ,
         name: 'Generic Switch/Plug',
         template: '',
@@ -343,7 +349,7 @@ TreeMap getDeviceConfigurations() {
         name: 'Generic Switch/Light',
         template: '',
         installCommands: [],
-        deviceLink: ''],
+        deviceLink: ''],*/
 
         [typeId: '01generic-rgb-rgbw-controller-bulb-dimmer', 
         comment: 'RGB+WW+CW should all work properly',
@@ -358,11 +364,11 @@ TreeMap getDeviceConfigurations() {
         installCommands: [["TempRes", (tempRes == '' || tempRes == null ? "1" : tempRes)]],
         deviceLink: ''],
 
-        [typeId: '01generic-dimmer' ,
+        /*[typeId: '01generic-dimmer' ,
         name: 'Generic Dimmer',
         template: '',
         installCommands: [["WebLog", "2"]],
-        deviceLink: ''],
+        deviceLink: ''],*/
     ]
 
     TreeMap deviceConfigurationsMap = [:] as TreeMap

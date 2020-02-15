@@ -51,7 +51,7 @@ def getGenericTasmotaNewParseFooter():
 }
 
 if(missingChild == true) {
-    log.warn "DISABLED: Missing a child device, refreshing..."
+    log.warn "Missing a child device, run the Refresh command from the device page!"
     //refresh()
 }
 if (!device.currentValue("ip") || (device.currentValue("ip") != getDataValue("ip"))) {

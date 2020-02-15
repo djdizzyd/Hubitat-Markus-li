@@ -26,6 +26,7 @@ import java.security.MessageDigest
 // END:  getDefaultParentImports()
 
 
+
 metadata {
 	definition (name: "Tasmota - Universal Parent", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-parent-expanded.groovy") {
         // BEGIN:getDefaultMetadataCapabilities()
@@ -378,6 +379,12 @@ TreeMap getDeviceConfigurations() {
         installCommands: [],
         deviceLink: ''],
 
+        [typeId: 'ykyc-wj1y0-10a', 
+        name: 'Merkury MI-BW210-999W',
+        template: '{"NAME":"MI-BW210-999W","GPIO":[0,0,0,0,140,37,0,0,142,38,141,0,0],"FLAG":0,"BASE":48}',
+        installCommands: [],
+        deviceLink: ''],
+
         [typeId: 'tuyamcu-wifi-dimmer', 
         name: 'TuyaMCU Wifi Dimmer',
         module: 54,
@@ -454,7 +461,7 @@ TreeMap getDeviceConfigurations() {
         installCommands: [],
         deviceLink: ''],
 
-        [typeId: '01generic-switch-plug',
+        /*[typeId: '01generic-switch-plug',
         comment: 'Works as Plug/Outlet with Alexa' ,
         name: 'Generic Switch/Plug',
         template: '',
@@ -466,7 +473,7 @@ TreeMap getDeviceConfigurations() {
         name: 'Generic Switch/Light',
         template: '',
         installCommands: [],
-        deviceLink: ''],
+        deviceLink: ''],*/
 
         [typeId: '01generic-rgb-rgbw-controller-bulb-dimmer', 
         comment: 'RGB+WW+CW should all work properly',
@@ -481,11 +488,11 @@ TreeMap getDeviceConfigurations() {
         installCommands: [["TempRes", (tempRes == '' || tempRes == null ? "1" : tempRes)]],
         deviceLink: ''],
 
-        [typeId: '01generic-dimmer' ,
+        /*[typeId: '01generic-dimmer' ,
         name: 'Generic Dimmer',
         template: '',
         installCommands: [["WebLog", "2"]],
-        deviceLink: ''],
+        deviceLink: ''],*/
     ]
 
     TreeMap deviceConfigurationsMap = [:] as TreeMap
@@ -718,7 +725,7 @@ def parse(description) {
     }
     
     if(missingChild == true) {
-        log.warn "DISABLED: Missing a child device, refreshing..."
+        log.warn "Missing a child device, run the Refresh command from the device page!"
         //refresh()
     }
     if (!device.currentValue("ip") || (device.currentValue("ip") != getDataValue("ip"))) {
@@ -1395,15 +1402,19 @@ String getChildDriverName() {
 /* Logging function included in all drivers */
 private boolean logging(message, level) {
     boolean didLogging = false
-    if (infoLogging == true) {
-        logLevel = 100
+    Integer logLevelLocal = (logLevel != null ? logLevel.toInteger() : 0)
+    if(!isDeveloperHub()) {
+        logLevelLocal = 0
+        if (infoLogging == true) {
+            logLevelLocal = 100
+        }
+        if (debugLogging == true) {
+            logLevelLocal = 1
+        }
     }
-    if (debugLogging == true) {
-        logLevel = 1
-    }
-    if (logLevel != "0"){
-        switch (logLevel) {
-        case "-1": // Insanely verbose
+    if (logLevelLocal != "0"){
+        switch (logLevelLocal) {
+        case -1: // Insanely verbose
             if (level >= 0 && level < 100) {
                 log.debug "$message"
                 didLogging = true
@@ -1412,7 +1423,7 @@ private boolean logging(message, level) {
                 didLogging = true
             }
         break
-        case "1": // Very verbose
+        case 1: // Very verbose
             if (level >= 1 && level < 99) {
                 log.debug "$message"
                 didLogging = true
@@ -1421,7 +1432,7 @@ private boolean logging(message, level) {
                 didLogging = true
             }
         break
-        case "10": // A little less
+        case 10: // A little less
             if (level >= 10 && level < 99) {
                 log.debug "$message"
                 didLogging = true
@@ -1430,20 +1441,20 @@ private boolean logging(message, level) {
                 didLogging = true
             }
         break
-        case "50": // Rather chatty
+        case 50: // Rather chatty
             if (level >= 50 ) {
                 log.debug "$message"
                 didLogging = true
             }
         break
-        case "99": // Only parsing reports
+        case 99: // Only parsing reports
             if (level >= 99 ) {
                 log.debug "$message"
                 didLogging = true
             }
         break
         
-        case "100": // Only special debug messages, eg IR and RF codes
+        case 100: // Only special debug messages, eg IR and RF codes
             if (level == 100 ) {
                 log.info "$message"
                 didLogging = true
@@ -1611,7 +1622,7 @@ void logsOff() {
 }
 
 boolean isDeveloperHub() {
-    return generateMD5(location.hub.zigbeeId as String) == "125fceabd0413141e34bb859cd15e067"
+    return generateMD5(location.hub.zigbeeId as String) == "125fceabd0413141e34bb859cd15e067_disabled"
 }
 
 def getEnvironmentObject() {

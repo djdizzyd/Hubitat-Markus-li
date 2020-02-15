@@ -49,8 +49,8 @@ metadata {
         // Led
         // Width - This one could be complicated to get understandable...
         
-        command "addressablePixel", [[name:"Color Map 3*", type: "COLOR_MAP", description: "Color map settings [hue*:(0 to 100), saturation*:(0 to 100), level:(0 to 100)]"],
-            [name:"Pixel Number*", type: "NUMBER", description: "Pixel to change the color of"]]
+        //command "addressablePixel", [[name:"Color Map 3*", type: "COLOR_MAP", description: "Color map settings [hue*:(0 to 100), saturation*:(0 to 100), level:(0 to 100)]"],
+        //    [name:"Pixel Number*", type: "NUMBER", description: "Pixel to change the color of"]]
 
         // BEGIN:getMetadataCommandsForHandlingRGBWDevices()
         // Commands for handling RGBW Devices
@@ -176,6 +176,7 @@ void refresh() {
                         11: "Rainbow Pattern", 12: "Fire Pattern"]
     } else {
         commandsToHide.addAll(["addressablePixel"])
+        metaConfig = setPreferencesToHide(["addressablePixels", "addressableRotation"], metaConfig=metaConfig)
         lightEffects = [0: "Single Color", 1: "Wake Up", 2: "Cycle Up Colors", 3: "Cycle Down Colors", 
                         4: "Random Colors"]
     }
@@ -496,7 +497,7 @@ void logsOff() {
 }
 
 boolean isDeveloperHub() {
-    return generateMD5(location.hub.zigbeeId as String) == "125fceabd0413141e34bb859cd15e067"
+    return generateMD5(location.hub.zigbeeId as String) == "125fceabd0413141e34bb859cd15e067_disabled"
 }
 
 def getEnvironmentObject() {
@@ -1044,15 +1045,19 @@ String makeTextItalic(s) {
 /* Logging function included in all drivers */
 private boolean logging(message, level) {
     boolean didLogging = false
-    if (infoLogging == true) {
-        logLevel = 100
+    Integer logLevelLocal = (logLevel != null ? logLevel.toInteger() : 0)
+    if(!isDeveloperHub()) {
+        logLevelLocal = 0
+        if (infoLogging == true) {
+            logLevelLocal = 100
+        }
+        if (debugLogging == true) {
+            logLevelLocal = 1
+        }
     }
-    if (debugLogging == true) {
-        logLevel = 1
-    }
-    if (logLevel != "0"){
-        switch (logLevel) {
-        case "-1": // Insanely verbose
+    if (logLevelLocal != "0"){
+        switch (logLevelLocal) {
+        case -1: // Insanely verbose
             if (level >= 0 && level < 100) {
                 log.debug "$message"
                 didLogging = true
@@ -1061,7 +1066,7 @@ private boolean logging(message, level) {
                 didLogging = true
             }
         break
-        case "1": // Very verbose
+        case 1: // Very verbose
             if (level >= 1 && level < 99) {
                 log.debug "$message"
                 didLogging = true
@@ -1070,7 +1075,7 @@ private boolean logging(message, level) {
                 didLogging = true
             }
         break
-        case "10": // A little less
+        case 10: // A little less
             if (level >= 10 && level < 99) {
                 log.debug "$message"
                 didLogging = true
@@ -1079,20 +1084,20 @@ private boolean logging(message, level) {
                 didLogging = true
             }
         break
-        case "50": // Rather chatty
+        case 50: // Rather chatty
             if (level >= 50 ) {
                 log.debug "$message"
                 didLogging = true
             }
         break
-        case "99": // Only parsing reports
+        case 99: // Only parsing reports
             if (level >= 99 ) {
                 log.debug "$message"
                 didLogging = true
             }
         break
         
-        case "100": // Only special debug messages, eg IR and RF codes
+        case 100: // Only special debug messages, eg IR and RF codes
             if (level == 100 ) {
                 log.info "$message"
                 didLogging = true

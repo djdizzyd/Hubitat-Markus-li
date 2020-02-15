@@ -326,6 +326,7 @@ def main():
     # 651 left over from RF Link Child
     driver_files_testing = [
         {'id': 865}, {'id': 866}, # Universal Drivers RELEASE
+        {'id': 866},
         {'id': 359}, # Switch as Contact Sensor Child
         {'id': 361}, # Switch as Motion Sensor Child
         {'id': 555}, # Switch as Water Sensor Child

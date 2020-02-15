@@ -26,8 +26,8 @@ metadata {
         // Led
         // Width - This one could be complicated to get understandable...
         
-        command "addressablePixel", [[name:"Color Map 3*", type: "COLOR_MAP", description: "Color map settings [hue*:(0 to 100), saturation*:(0 to 100), level:(0 to 100)]"],
-            [name:"Pixel Number*", type: "NUMBER", description: "Pixel to change the color of"]]
+        //command "addressablePixel", [[name:"Color Map 3*", type: "COLOR_MAP", description: "Color map settings [hue*:(0 to 100), saturation*:(0 to 100), level:(0 to 100)]"],
+        //    [name:"Pixel Number*", type: "NUMBER", description: "Pixel to change the color of"]]
 
         #!include:getMetadataCommandsForHandlingRGBWDevices()
         #!include:getMetadataCommandsForHandlingTasmotaRGBWDevices()
@@ -105,6 +105,7 @@ void refresh() {
                         11: "Rainbow Pattern", 12: "Fire Pattern"]
     } else {
         commandsToHide.addAll(["addressablePixel"])
+        metaConfig = setPreferencesToHide(["addressablePixels", "addressableRotation"], metaConfig=metaConfig)
         lightEffects = [0: "Single Color", 1: "Wake Up", 2: "Cycle Up Colors", 3: "Cycle Down Colors", 
                         4: "Random Colors"]
     }
