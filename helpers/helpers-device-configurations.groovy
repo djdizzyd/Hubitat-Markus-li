@@ -284,14 +284,12 @@ TreeMap getDeviceConfigurations() {
         comment: 'NOT GENERIC - read the instructions',
         name: 'TuyaMCU ZNSN Wifi Curtain Wall Panel',
         module: 54,
-        // TODO: Add special handling for Rule-commands, DON'T use Backlog!
-        // TODO: Add the special parsing for this
-        installCommands: [["WebLog", "2"],  // A good idea for dimmers
-                        ['Mem1', '100'],  // Updated with the current Curtain location
-                        ['Mem2', '11'],   // Step for each increase
-                        ['Mem3', '1'],    // delay in 10th of a second (1 = 100ms)
-                        ['Mem4', '9'],    // Motor startup steps
-                        ['Mem5', '1'],    // Extra step when opening
+        installCommands: [["WebLog", "2"], // A good idea for dimmers
+                        ['Mem1', '100'],   // Updated with the current Curtain location
+                        ['Mem2', '11'],    // Step for each increase
+                        ['Mem3', '1'],     // delay in 10th of a second (1 = 100ms)
+                        ['Mem4', '9'],     // Motor startup steps
+                        ['Mem5', '1'],     // Extra step when opening
                         ['Delay', '15'],   // Set delay between Backlog commands
                         ['Rule1', 'ON Dimmer#State DO Mem1 %value%; ENDON'],
                         ['Rule1', '+ ON TuyaReceived#Data=55AA00070005650400010277 DO Backlog Var1 %mem1%; Var2 Go; Var5 C; Add1 %mem2%; Sub1 %mem4%; Var4 %mem2%; Event Go; ENDON'],

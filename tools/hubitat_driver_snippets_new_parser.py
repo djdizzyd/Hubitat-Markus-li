@@ -300,34 +300,25 @@ for ( r in result ) {
     }
 }
 for ( r in result ) {
-    if(r.value instanceof Map && (r.value.containsKey("Humidity") || 
-        r.value.containsKey("Temperature") || r.value.containsKey("Pressure") ||
+    if(r.value instanceof Map && (r.value.containsKey("Temperature") || 
+        r.value.containsKey("Humidity") || r.value.containsKey("Pressure") ||
         r.value.containsKey("Distance"))) {
         if (r.value.containsKey("Humidity")) {
             logging("Humidity: RH $r.value.Humidity%", 99)
-            def realHumidity = Math.round((r.value.Humidity as Double) * 100) / 100
-            //sendEvent(name: "humidity", value: "${getAdjustedHumidity(realHumidity)}", unit: "%")
-            missingChild = callChildParseByTypeId(r.key, [[name: "humidity", value: String.format("%.2f", getAdjustedHumidity(realHumidity)), unit: "%"]], missingChild)
+            missingChild = callChildParseByTypeId(r.key, [[name: "humidity", value: r.value.Humidity, unit: "%"]], missingChild)
         }
         if (r.value.containsKey("Temperature")) {
             //Probably need this line below
-            //state.realTemperature = convertTemperatureIfNeeded(r.value.Temperature.toFloat(), result.TempUnit, 1)
-            def realTemperature = r.value.Temperature.toFloat()
-            logging("Temperature: ${getAdjustedTemp(realTemperature? realTemperature:0)}", 99)
-            //sendEvent(name: "temperature", value: "${getAdjustedTemp(realTemperature)}", unit: "&deg;${location.temperatureScale}")
-            c = String.valueOf((char)(Integer.parseInt("00B0", 16)));
-            missingChild = callChildParseByTypeId(r.key, [[name: "temperature", value: String.format("%.2f", getAdjustedTemp(realTemperature)), unit: "$c${location.temperatureScale}"]], missingChild)
+            logging("Temperature: $r.value.Temperature", 99)
+            String c = String.valueOf((char)(Integer.parseInt("00B0", 16)));
+            missingChild = callChildParseByTypeId(r.key, [[name: "temperature", value: r.value.Temperature, unit: "$c${location.temperatureScale}"]], missingChild)
         }
         if (r.value.containsKey("Pressure")) {
             logging("Pressure: $r.value.Pressure", 99)
-            def pressureUnit = "kPa"
-            def realPressure = Math.round((r.value.Pressure as Double) * 100) / 100
-            def adjustedPressure = getAdjustedPressure(realPressure)
-            //sendEvent(name: "pressure", value: "${adjustedPressure}", unit: "${pressureUnit}")
-            missingChild = callChildParseByTypeId(r.key, [[name: "pressure", value: String.format("%.2f", adjustedPressure), unit: pressureUnit]], missingChild)
-            // Since there is no Pressure tile yet, we need an attribute with the unit...
-            //sendEvent(name: "pressureWithUnit", value: "${adjustedPressure} ${pressureUnit}")
-            missingChild = callChildParseByTypeId(r.key, [[name: "pressureWithUnit", value: String.format("%.2f $pressureUnit", adjustedPressure)]], missingChild)
+            String pressureUnit = "mbar"
+            missingChild = callChildParseByTypeId(r.key, [[name: "pressure", value: r.value.Pressure, unit: pressureUnit]], missingChild)
+            // Since there is no Pressure tile yet, we need an attribute with the unit as well... But that is NOT the responsibility of the Parent
+            //missingChild = callChildParseByTypeId(r.key, [[name: "pressureWithUnit", value: "$r.value.Pressure $pressureUnit"]], missingChild)
         }
         if (r.value.containsKey("Distance")) {
             logging("Distance: $r.value.Distance cm", 99)

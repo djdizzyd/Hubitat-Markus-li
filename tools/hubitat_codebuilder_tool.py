@@ -250,7 +250,7 @@ def main():
         # Universal drivers
         {'id': 865, 'file': 'tasmota-universal-parent.groovy', 'specialDebugLabel': 'descriptionText' },
         
-        {'id': 866, 'file': 'tasmota-universal-multisensor-child.groovy', 
+        {'id': 866, 'file': 'tasmota-universal-multi-sensor-child.groovy', 
             'specialDebugLabel': 'descriptionText' },
         {'id': 993, 'file': 'tasmota-universal-fancontrol-child.groovy', 
             'specialDebugLabel': 'descriptionText' },
@@ -280,9 +280,9 @@ def main():
         {'id': 867, 'file': 'tasmota-universal-parent.groovy', 'specialDebugLabel': 'descriptionText',
          'alternate_output_filename': 'tasmota-universal-parent-testing', \
          'alternate_name': 'Tasmota - Universal Parent Testing' },
-        {'id': 868, 'file': 'tasmota-universal-multisensor-child.groovy', 'specialDebugLabel': 'descriptionText',
-         'alternate_output_filename': 'tasmota-universal-multisensor-testing-child', \
-         'alternate_name': 'Tasmota - Universal Multisensor Testing (Child)' },
+        {'id': 868, 'file': 'tasmota-universal-multi-sensor-child.groovy', 'specialDebugLabel': 'descriptionText',
+         'alternate_output_filename': 'tasmota-universal-multi-sensor-testing-child', \
+         'alternate_name': 'Tasmota - Universal Multi Sensor Testing (Child)' },
 
         # Zigbee
         {'id': 579, 'file': 'zigbee-generic-wifi-switch-plug.groovy' },

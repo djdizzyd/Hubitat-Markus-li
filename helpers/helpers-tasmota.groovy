@@ -510,7 +510,7 @@ void configureChildDevices(asyncResponse, data) {
     deviceInfo["sensorMap"].each {
         logging("sensorMap: $it.key", 0)
         namespace = "tasmota"
-        driverName = ["Tasmota - Universal Multisensor (Child)"]
+        driverName = ["Tasmota - Universal Multi Sensor (Child)"]
         def childId = "${it.key}"
         def childName = getChildDeviceNameRoot(keepType=true) + " ${getMinimizedDriverName(driverName[0])} ($childId)"
         def childLabel = "${getMinimizedDriverName(device.getLabel())} ($childId)"

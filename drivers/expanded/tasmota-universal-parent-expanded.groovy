@@ -20,6 +20,7 @@ import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 // Used for MD5 calculations
 import java.security.MessageDigest
+//import java.math.MathContext NOT ALLOWED!!! WHY?
 //import groovy.transform.TypeChecked
 //import groovy.transform.TypeCheckingMode
 /* Default Parent Imports */
@@ -408,14 +409,12 @@ TreeMap getDeviceConfigurations() {
         comment: 'NOT GENERIC - read the instructions',
         name: 'TuyaMCU ZNSN Wifi Curtain Wall Panel',
         module: 54,
-        // TODO: Add special handling for Rule-commands, DON'T use Backlog!
-        // TODO: Add the special parsing for this
-        installCommands: [["WebLog", "2"],  // A good idea for dimmers
-                        ['Mem1', '100'],  // Updated with the current Curtain location
-                        ['Mem2', '11'],   // Step for each increase
-                        ['Mem3', '1'],    // delay in 10th of a second (1 = 100ms)
-                        ['Mem4', '9'],    // Motor startup steps
-                        ['Mem5', '1'],    // Extra step when opening
+        installCommands: [["WebLog", "2"], // A good idea for dimmers
+                        ['Mem1', '100'],   // Updated with the current Curtain location
+                        ['Mem2', '11'],    // Step for each increase
+                        ['Mem3', '1'],     // delay in 10th of a second (1 = 100ms)
+                        ['Mem4', '9'],     // Motor startup steps
+                        ['Mem5', '1'],     // Extra step when opening
                         ['Delay', '15'],   // Set delay between Backlog commands
                         ['Rule1', 'ON Dimmer#State DO Mem1 %value%; ENDON'],
                         ['Rule1', '+ ON TuyaReceived#Data=55AA00070005650400010277 DO Backlog Var1 %mem1%; Var2 Go; Var5 C; Add1 %mem2%; Sub1 %mem4%; Var4 %mem2%; Event Go; ENDON'],
@@ -1014,34 +1013,25 @@ boolean parseResult(result, missingChild) {
         }
     }
     for ( r in result ) {
-        if(r.value instanceof Map && (r.value.containsKey("Humidity") ||
-            r.value.containsKey("Temperature") || r.value.containsKey("Pressure") ||
+        if(r.value instanceof Map && (r.value.containsKey("Temperature") ||
+            r.value.containsKey("Humidity") || r.value.containsKey("Pressure") ||
             r.value.containsKey("Distance"))) {
             if (r.value.containsKey("Humidity")) {
                 logging("Humidity: RH $r.value.Humidity%", 99)
-                def realHumidity = Math.round((r.value.Humidity as Double) * 100) / 100
-                //sendEvent(name: "humidity", value: "${getAdjustedHumidity(realHumidity)}", unit: "%")
-                missingChild = callChildParseByTypeId(r.key, [[name: "humidity", value: String.format("%.2f", getAdjustedHumidity(realHumidity)), unit: "%"]], missingChild)
+                missingChild = callChildParseByTypeId(r.key, [[name: "humidity", value: r.value.Humidity, unit: "%"]], missingChild)
             }
             if (r.value.containsKey("Temperature")) {
                 //Probably need this line below
-                //state.realTemperature = convertTemperatureIfNeeded(r.value.Temperature.toFloat(), result.TempUnit, 1)
-                def realTemperature = r.value.Temperature.toFloat()
-                logging("Temperature: ${getAdjustedTemp(realTemperature? realTemperature:0)}", 99)
-                //sendEvent(name: "temperature", value: "${getAdjustedTemp(realTemperature)}", unit: "&deg;${location.temperatureScale}")
-                c = String.valueOf((char)(Integer.parseInt("00B0", 16)));
-                missingChild = callChildParseByTypeId(r.key, [[name: "temperature", value: String.format("%.2f", getAdjustedTemp(realTemperature)), unit: "$c${location.temperatureScale}"]], missingChild)
+                logging("Temperature: $r.value.Temperature", 99)
+                String c = String.valueOf((char)(Integer.parseInt("00B0", 16)));
+                missingChild = callChildParseByTypeId(r.key, [[name: "temperature", value: r.value.Temperature, unit: "$c${location.temperatureScale}"]], missingChild)
             }
             if (r.value.containsKey("Pressure")) {
                 logging("Pressure: $r.value.Pressure", 99)
-                def pressureUnit = "kPa"
-                def realPressure = Math.round((r.value.Pressure as Double) * 100) / 100
-                def adjustedPressure = getAdjustedPressure(realPressure)
-                //sendEvent(name: "pressure", value: "${adjustedPressure}", unit: "${pressureUnit}")
-                missingChild = callChildParseByTypeId(r.key, [[name: "pressure", value: String.format("%.2f", adjustedPressure), unit: pressureUnit]], missingChild)
-                // Since there is no Pressure tile yet, we need an attribute with the unit...
-                //sendEvent(name: "pressureWithUnit", value: "${adjustedPressure} ${pressureUnit}")
-                missingChild = callChildParseByTypeId(r.key, [[name: "pressureWithUnit", value: String.format("%.2f $pressureUnit", adjustedPressure)]], missingChild)
+                String pressureUnit = "mbar"
+                missingChild = callChildParseByTypeId(r.key, [[name: "pressure", value: r.value.Pressure, unit: pressureUnit]], missingChild)
+                // Since there is no Pressure tile yet, we need an attribute with the unit as well... But that is NOT the responsibility of the Parent
+                //missingChild = callChildParseByTypeId(r.key, [[name: "pressureWithUnit", value: "$r.value.Pressure $pressureUnit"]], missingChild)
             }
             if (r.value.containsKey("Distance")) {
                 logging("Distance: $r.value.Distance cm", 99)
@@ -1376,7 +1366,7 @@ void componentSetSpeed(cd, String fanspeed) {
 private String getDriverVersion() {
     //comment = ""
     //if(comment != "") state.comment = comment
-    String version = "v1.0.0215Ta"
+    String version = "v1.0.0216Ta"
     logging("getDriverVersion() = ${version}", 50)
     sendEvent(name: "driver", value: version)
     updateDataValue('driver', version)
@@ -2347,50 +2337,6 @@ def deleteChildren() {
  */
 
 /**
- * TEMPERATURE HUMIDITY METHODS (helpers-temperature-humidity)
- *
- * Helper functions included in all drivers with Temperature and Humidity
- */
-private getAdjustedTemp(value) {
-    def decimalLimit
-    if(tempRes == null || tempRes == '') {
-        decimalLimit = 10
-    } else {
-        decimalLimit = 10**(tempRes as Integer) // 10 to the power of tempRes
-    }
-    value = Math.round((value as Double) * decimalLimit) / decimalLimit
-	if (tempOffset) {
-	   return value =  value + Math.round(tempOffset * decimalLimit) / decimalLimit
-	} else {
-       return value
-    }
-}
-
-private getAdjustedHumidity(value) {
-    value = Math.round((value as Double) * 100) / 100
-
-	if (humidityOffset) {
-	   return value =  value + Math.round(humidityOffset * 100) / 100
-	} else {
-       return value
-    }
-}
-
-private getAdjustedPressure(value) {
-    value = Math.round((value as Double) * 100) / 100
-
-	if (pressureOffset) {
-	   return value =  value + Math.round(pressureOffset * 100) / 100
-	} else {
-       return value
-    }   
-}
-
-/**
- *   --END-- TEMPERATURE HUMIDITY METHODS (helpers-temperature-humidity)
- */
-
-/**
  * TASMOTA METHODS (helpers-tasmota)
  *
  * Helper functions included in all Tasmota drivers
@@ -2902,7 +2848,7 @@ void configureChildDevices(asyncResponse, data) {
     deviceInfo["sensorMap"].each {
         logging("sensorMap: $it.key", 0)
         namespace = "tasmota"
-        driverName = ["Tasmota - Universal Multisensor (Child)"]
+        driverName = ["Tasmota - Universal Multi Sensor (Child)"]
         def childId = "${it.key}"
         def childName = getChildDeviceNameRoot(keepType=true) + " ${getMinimizedDriverName(driverName[0])} ($childId)"
         def childLabel = "${getMinimizedDriverName(device.getLabel())} ($childId)"

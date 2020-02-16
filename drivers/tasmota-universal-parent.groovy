@@ -426,8 +426,6 @@ void componentSetSpeed(cd, String fanspeed) {
 
 #!include:getHelperFunctions('childDevices')
 
-#!include:getHelperFunctions('temperature-humidity')
-
 #!include:getHelperFunctions('tasmota')
 
 #!include:getHelperFunctions('rgbw')

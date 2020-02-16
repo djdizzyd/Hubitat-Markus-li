@@ -53,6 +53,7 @@ import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 // Used for MD5 calculations
 import java.security.MessageDigest
+//import java.math.MathContext NOT ALLOWED!!! WHY?
 //import groovy.transform.TypeChecked
 //import groovy.transform.TypeCheckingMode
 """

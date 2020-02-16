@@ -205,9 +205,11 @@ def getDefaultMetadataPreferencesForTHMonitor():
     return """
 // Default Preferences for Temperature Humidity Monitor
 input(name: "tempOffset", type: "decimal", title: addTitleDiv("Temperature Offset"), description: addDescriptionDiv("Adjust the temperature by this many degrees (in Celcius)."), displayDuringSetup: true, required: false, range: "*..*")
+input(name: "tempRes", type: "enum", title: addTitleDiv("Temperature Resolution"), description: addDescriptionDiv("Temperature sensor resolution (0..3 = maximum number of decimal places, default: 1)<br/>NOTE: If the 3rd decimal is a 0 (eg. 24.720) it will show without the last decimal (eg. 24.72)."), options: ["0", "1", "2", "3"], defaultValue: "1", displayDuringSetup: true, required: false)
+input(name: "tempUnitConversion", type: "enum", title: addTitleDiv("Temperature Unit Conversion"), description: "", defaultValue: "1", required: true, multiple: false, options:[["1":"none"], ["2":"Celsius to Fahrenheit"], ["3":"Fahrenheit to Celsius"]], displayDuringSetup: false)
 input(name: "humidityOffset", type: "decimal", title: addTitleDiv("Humidity Offset"), description: addDescriptionDiv("Adjust the humidity by this many percent."), displayDuringSetup: true, required: false, range: "*..*")
 input(name: "pressureOffset", type: "decimal", title: addTitleDiv("Pressure Offset"), description: addDescriptionDiv("Adjust the pressure value by this much."), displayDuringSetup: true, required: false, range: "*..*")
-input(name: "tempRes", type: "enum", title: addTitleDiv("Temperature Resolution"), description: addDescriptionDiv("Temperature sensor resolution (0..3 = maximum number of decimal places, default: 1)<br/>NOTE: If the 3rd decimal is a 0 (eg. 24.720) it will show without the last decimal (eg. 24.72)."), options: ["0", "1", "2", "3"], defaultValue: "1", displayDuringSetup: true, required: false)
+input(name: "pressureUnitConversion", type: "enum", title: addTitleDiv("Pressure Unit Conversion"), description: addDescriptionDiv("(default: kPa)"), options: ["mbar", "kPa", "inHg", "mmHg", "atm"], defaultValue: "kPa")
 """
 
 def getDefaultMetadataPreferencesForParentDevices(numSwitches=1):

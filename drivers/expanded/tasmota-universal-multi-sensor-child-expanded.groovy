@@ -20,6 +20,7 @@ import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 // Used for MD5 calculations
 import java.security.MessageDigest
+//import java.math.MathContext NOT ALLOWED!!! WHY?
 //import groovy.transform.TypeChecked
 //import groovy.transform.TypeCheckingMode
 // END:  getDefaultImports()
@@ -27,7 +28,7 @@ import java.security.MessageDigest
 
 metadata {
     // Do NOT rename the child driver name unless you also change the corresponding code in the Parent!
-    definition (name: "Tasmota - Universal Multisensor (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-multisensor-child-expanded.groovy") {
+    definition (name: "Tasmota - Universal Multi Sensor (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-multi-sensor-child-expanded.groovy") {
         capability "Sensor"
         capability "TemperatureMeasurement"       // Attributes: temperature - NUMBER
         capability "RelativeHumidityMeasurement"  // Attributes: humidity - NUMBER
@@ -50,7 +51,17 @@ metadata {
         // Default Preferences
         generate_preferences(configuration_model_debug())
         // END:  getDefaultMetadataPreferences()
-
+        input(name: "hideMeasurementAdjustments", type: "bool", title: addTitleDiv("Hide Measurement Adjustment Preferences"), description: "", defaultValue: false, displayDuringSetup: false, required: false)
+        // BEGIN:getDefaultMetadataPreferencesForTHMonitor()
+        // Default Preferences for Temperature Humidity Monitor
+        input(name: "tempOffset", type: "decimal", title: addTitleDiv("Temperature Offset"), description: addDescriptionDiv("Adjust the temperature by this many degrees (in Celcius)."), displayDuringSetup: true, required: false, range: "*..*")
+        input(name: "tempRes", type: "enum", title: addTitleDiv("Temperature Resolution"), description: addDescriptionDiv("Temperature sensor resolution (0..3 = maximum number of decimal places, default: 1)<br/>NOTE: If the 3rd decimal is a 0 (eg. 24.720) it will show without the last decimal (eg. 24.72)."), options: ["0", "1", "2", "3"], defaultValue: "1", displayDuringSetup: true, required: false)
+        input(name: "tempUnitConversion", type: "enum", title: addTitleDiv("Temperature Unit Conversion"), description: "", defaultValue: "1", required: true, multiple: false, options:[["1":"none"], ["2":"Celsius to Fahrenheit"], ["3":"Fahrenheit to Celsius"]], displayDuringSetup: false)
+        input(name: "humidityOffset", type: "decimal", title: addTitleDiv("Humidity Offset"), description: addDescriptionDiv("Adjust the humidity by this many percent."), displayDuringSetup: true, required: false, range: "*..*")
+        input(name: "pressureOffset", type: "decimal", title: addTitleDiv("Pressure Offset"), description: addDescriptionDiv("Adjust the pressure value by this much."), displayDuringSetup: true, required: false, range: "*..*")
+        input(name: "pressureUnitConversion", type: "enum", title: addTitleDiv("Pressure Unit Conversion"), description: addDescriptionDiv("(default: kPa)"), options: ["mbar", "kPa", "inHg", "mmHg", "atm"], defaultValue: "kPa")
+        // END:  getDefaultMetadataPreferencesForTHMonitor()
+        
     }
 
     // The below line needs to exist in ALL drivers for custom CSS to work!
@@ -69,7 +80,7 @@ metadata {
 public getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    def deviceInfo = ['name': 'Tasmota - Universal Multisensor (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-multisensor-child-expanded.groovy']
+    def deviceInfo = ['name': 'Tasmota - Universal Multi Sensor (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-multi-sensor-child-expanded.groovy']
     //logging("deviceInfo[${infoName}] = ${deviceInfo[infoName]}", 1)
     return(deviceInfo[infoName])
 }
@@ -79,10 +90,36 @@ public getDeviceInfoByName(infoName) {
 /* These functions are unique to each driver */
 void parse(List<Map> description) {
     description.each {
-        if (it.name in ["temperature", "humidity", "pressure", "pressureWithUnit",
-            "illuminance", "motion", "water", "distance"]) {
+        if(it.name in ["illuminance", "motion", "water", "distance"]) {
             logging(it.descriptionText, 100)
             sendEvent(it)
+        } else if(it.name == "temperature") {
+            // Offset the temperature based on preference
+            c = String.valueOf((char)(Integer.parseInt("00B0", 16))); // Creates a degree character
+            if (tempUnitConversion == "2") {
+                it.unit = "${c}F"
+            } else if (tempUnitConversion == "3") {
+                it.unit  = "${c}C"
+            }
+            it.value = getAdjustedTemp(new BigDecimal(it.value))
+            logging(it.descriptionText, 100)
+            sendEvent(it)
+        } else if(it.name == "humidity") {
+            // Offset the humidity based on preference
+            it.value = getAdjustedHumidity(new BigDecimal(it.value))
+            logging(it.descriptionText, 100)
+            sendEvent(it)
+        } else if(it.name == "pressure") {
+            // Offset the pressure based on preference and adjust it to the correct unit
+            it.value = convertPressure(new BigDecimal(it.value))
+            if(pressureUnitConversion != null) {
+                it.unit = pressureUnitConversion
+            } else {
+                it.unit = "kPa"
+            }
+            logging(it.descriptionText, 100)
+            sendEvent(it)
+            sendEvent(name: "pressureWithUnit", value: "$it.value $it.unit", isStateChange: false)
         } else {
             log.warn "Got '$it.name' attribute data, but doesn't know what to do with it! Did you choose the right device type?"
         }
@@ -109,7 +146,12 @@ void refresh() {
     metaConfig = setDatasToHide(['metaConfig', 'isComponent', 'preferences', 'label', 'name'], metaConfig=metaConfig)
     // END:  getChildComponentMetaConfigCommands()
     parent?.componentRefresh(this.device)
+    if(hideMeasurementAdjustments == true) {
+        metaConfig = setPreferencesToHide(["tempOffset", "tempRes", "tempUnitConversion",
+                                           "humidityOffset", "pressureOffset", "pressureUnitConversion"], metaConfig=metaConfig)
+    }
 }
+
 
 /**
  * -----------------------------------------------------------------------------
@@ -816,6 +858,73 @@ String makeTextItalic(s) {
 
 /**
  * --END-- STYLING METHODS (helpers-styling)
+ */
+
+/**
+ * TEMPERATURE HUMIDITY METHODS (helpers-temperature-humidity)
+ *
+ * Helper functions included in all drivers with Temperature and Humidity
+ */
+private BigDecimal getAdjustedTemp(BigDecimal value) {
+    //Double decimalLimit = 10
+    Integer res = 1
+    if(tempRes != null && tempRes != '') {
+        res = Integer.parseInt(tempRes)
+    }
+    if (tempUnitConversion == "2") {
+        value = celsiusToFahrenheit(value)
+    } else if (tempUnitConversion == "3") {
+        value = fahrenheitToCelsius(value)
+    }
+	if (tempOffset) {
+	   return (value + new BigDecimal(tempOffset)).setScale(res, BigDecimal.ROUND_HALF_UP)
+	} else {
+       return value.setScale(res, BigDecimal.ROUND_HALF_UP)
+    }
+}
+
+private BigDecimal getAdjustedHumidity(BigDecimal value) {
+    if (humidityOffset) {
+	   return (value + new BigDecimal(humidityOffset)).setScale(1, BigDecimal.ROUND_HALF_UP)
+	} else {
+       return value.setScale(1, BigDecimal.ROUND_HALF_UP)
+    }
+}
+
+private BigDecimal getAdjustedPressure(BigDecimal value, Integer decimals=2) {
+    if (pressureOffset) {
+	   return (value + new BigDecimal(pressureOffset)).setScale(decimals, BigDecimal.ROUND_HALF_UP)
+	} else {
+       return value.setScale(decimals, BigDecimal.ROUND_HALF_UP)
+    }   
+}
+
+private BigDecimal convertPressure(BigDecimal pressureInkPa) {
+    BigDecimal pressure = pressureInkPa
+    switch(pressureUnitConversion) {
+        case null:
+        case "kPa":
+			pressure = getAdjustedPressure(pressure / 10)
+			break
+		case "inHg":
+			pressure = getAdjustedPressure(pressure * 0.0295299)
+			break
+		case "mmHg":
+            pressure = getAdjustedPressure(pressure * 0.75006157)
+			break
+        case "atm":
+			pressure = getAdjustedPressure(pressure / 1013.25, 5)
+			break
+        default:
+            // Tasmota provides the pressure in mbar by default
+            pressure = getAdjustedPressure(pressure, 1)
+            break
+    }
+    return pressure
+}
+
+/**
+ *   --END-- TEMPERATURE HUMIDITY METHODS (helpers-temperature-humidity)
  */
 
 // BEGIN:getLoggingFunction(specialDebugLevel=True)
