@@ -488,7 +488,7 @@ Map getTimeStringSinceDateWithMaximum(myDate, maxMillis) {
 // BEGIN:getDefaultAppMethods()
 /* Default App Methods go here */
 private String getAppVersion() {
-    String version = "v1.0.0216Ta"
+    String version = "v1.0.0218Ta"
     logging("getAppVersion() = ${version}", 50)
     return version
 }
@@ -1659,7 +1659,7 @@ void refresh() {
         
         metaConfig = setCurrentStatesToHide(['needUpdate'], metaConfig=metaConfig)
         //metaConfig = setDatasToHide(['preferences', 'namespace', 'appReturn', 'metaConfig'], metaConfig=metaConfig)
-        metaConfig = setDatasToHide(['namespace', 'appReturn', 'ip', 'port', 'password'], metaConfig=metaConfig)
+        metaConfig = setDatasToHide(['namespace', 'appReturn', 'password'], metaConfig=metaConfig)
         metaConfig = setPreferencesToHide([], metaConfig=metaConfig)
     }
     try {
@@ -1787,7 +1787,7 @@ def parse(asyncResponse, data) {
     // Parse called by default when using asyncHTTP
     if(asyncResponse != null) {
         try{
-            logging("parse(asyncResponse.getJson() 2= \"${asyncResponse.getJson()}\", data = \"${data}\")", 1)
+            logging("parse(asyncResponse.getJson() 2= \"${asyncResponse.getJson()}\", data = \"${data}\")", 100)
             parseResult(asyncResponse.getJson())
         } catch(MissingMethodException e1) {
             log.error e1
@@ -2216,7 +2216,7 @@ void prepareDNI() {
 
 private void updateDNI() {
     // Called from:
-    // preapreDNI()
+    // prepareDNI()
     // httpGetAction(uri, callback="parse")
     // postAction(uri, data)
     if (state.dni != null && state.dni != "" && device.deviceNetworkId != state.dni) {
@@ -2232,16 +2232,23 @@ Integer getTelePeriodValue() {
 }
 
 private String getHostAddress() {
-    if (port == null) {
-        port = 80
+    Integer port = 80
+    if (getDeviceDataByName("port") != null) {
+        port = getDeviceDataByName("port").toInteger()
     }
     if (override == true && ipAddress != null){
-        return "${ipAddress}:${port}"
-    }
-    else if(getDeviceDataByName("ip") && getDeviceDataByName("port")){
-        return "${getDeviceDataByName("ip")}:${getDeviceDataByName("port")}"
-    }else{
-	    return "${ip}:80"
+        // Preferences
+        return "${ipAddress}:$port"
+    } else if(device.currentValue("ip") != null) {
+        // Current States
+        return "${device.currentValue("ip")}:$port"
+    } else if(getDeviceDataByName("ip") != null) {
+        // Data Section
+        return "${getDeviceDataByName("ip")}:$port"
+    } else {
+        // There really is no fallback here, if we get here, something went WRONG, probably with the DB...
+        log.warn "getHostAddress() failed and ran out of fallbacks! If this happens, contact the developer, this is an \"impossible\" scenario!"
+	    return "127.0.0.1:$port"
     }
 }
 
@@ -2312,7 +2319,7 @@ private void httpGetAction(String uri, callback="parse") {
   updateDNI()
   
   def headers = getHeader()
-  logging("Using httpGetAction for 'http://${getHostAddress()}$uri'...", 0)
+  logging("Using httpGetAction for 'http://${getHostAddress()}$uri'...", 100)
   try {
     /*hubAction = new hubitat.device.HubAction(
         method: "GET",

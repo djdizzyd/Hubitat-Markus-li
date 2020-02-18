@@ -26,8 +26,10 @@ metadata {
         // Led
         // Width - This one could be complicated to get understandable...
         
-        //command "addressablePixel", [[name:"Color Map 3*", type: "COLOR_MAP", description: "Color map settings [hue*:(0 to 100), saturation*:(0 to 100), level:(0 to 100)]"],
-        //    [name:"Pixel Number*", type: "NUMBER", description: "Pixel to change the color of"]]
+        command "setPixelColor", [[name:"RGB*", type: "STRING", description: "RGB in HEX, eg: #FF0000"],
+            [name:"Pixel Number*", type: "NUMBER", description: "Pixel to change the color of (1 to \"Addressable Pixels\")"]]
+        command "setEffectWidth", [[name:"Addressable Effect Width*", type: "ENUM", description: "This width is used by Addressable pixel effects",
+                                    constraints: ["0", "1", "2", "3", "4"]]]
 
         #!include:getMetadataCommandsForHandlingRGBWDevices()
         #!include:getMetadataCommandsForHandlingTasmotaRGBWDevices()
@@ -52,6 +54,7 @@ metadata {
 
 /* These functions are unique to each driver */
 void parse(List<Map> description) {
+    //logging("Child: parse()", 100)
     description.each {
         // TODO: Make sure the parent sends RGB and color! Or do we even need these?
         if (it.name in ["switch", "level", "RGB", "color", "colorName", "hue", "saturation",
@@ -66,17 +69,23 @@ void parse(List<Map> description) {
             log.warn "Got '$it.name' attribute data, but doesn't know what to do with it! Did you choose the right device type?"
         }
     }
-}
-
-void updated() {
-    log.info "updated()"
-    refresh()
+    //logging("Child: END parse()", 100)
 }
 
 void installed() {
     log.info "installed()"
     device.removeSetting("logLevel")
     device.updateSetting("logLevel", "100")
+    sendEvent(name: "colorMode", value: "CT")
+    sendEvent(name: "colorTemp", value: "3000")
+
+    refresh()
+}
+
+void updated() {
+    log.info "updated()"
+    if(addressablePixels != null) setAddressablePixels(addressablePixels.toInteger())
+    if(addressableRotation != null) setAddressableRotation(addressableRotation.toInteger())
     refresh()
 }
 
@@ -96,7 +105,6 @@ void refresh() {
         commandsToHide.addAll(["colorWhite", "colorRed", "colorGreen", "colorBlue", "colorYellow", "colorCyan", "colorPink"])
     }
     
-    
     Map lightEffects = [:]
     if(isAddressable == true) {
         lightEffects = [0: "Single Color", 1: "Wake Up", 2: "Cycle Up Colors", 3: "Cycle Down Colors", 
@@ -104,7 +112,7 @@ void refresh() {
                         8: "Christmas Pattern", 9: "Hanukkah Pattern", 10: "Kwanzaa Pattern",
                         11: "Rainbow Pattern", 12: "Fire Pattern"]
     } else {
-        commandsToHide.addAll(["addressablePixel"])
+        commandsToHide.addAll(["addressablePixel", "setEffectWidth"])
         metaConfig = setPreferencesToHide(["addressablePixels", "addressableRotation"], metaConfig=metaConfig)
         lightEffects = [0: "Single Color", 1: "Wake Up", 2: "Cycle Up Colors", 3: "Cycle Down Colors", 
                         4: "Random Colors"]
@@ -261,6 +269,26 @@ void modeWakeUp(BigDecimal wakeUpDuration) {
 void modeWakeUp(BigDecimal wakeUpDuration, BigDecimal level) {
     state.effectnumber = 1
     parent?.componentModeWakeUp(this.device, wakeUpDuration, level)
+}
+
+void setPixelColor(String colorRGB, BigDecimal pixel) {
+    parent?.componentSetPixelColor(this.device, colorRGB, pixel)
+}
+
+void setAddressablePixels(BigDecimal pixels) {
+    parent?.componentSetAddressablePixels(this.device, pixels)
+}
+
+void setAddressableRotation(BigDecimal pixels) {
+    parent?.componentSetAddressableRotation(this.device, pixels)
+}
+
+void setEffectWidth(String pixels) {
+    setEffectWidth(pixels.toInteger())
+}
+
+void setEffectWidth(BigDecimal pixels) {
+    parent?.componentSetEffectWidth(this.device, pixels)
 }
 
 /**

@@ -201,6 +201,9 @@ getAction(getCommandString("HubitatHost", device.hub.getDataValue("localIP")))
 logging("HubitatPort: ${device.hub.getDataValue("localSrvPortTCP")}", 1)
 getAction(getCommandString("HubitatPort", device.hub.getDataValue("localSrvPortTCP")))
 getAction(getCommandString("FriendlyName1", device.displayName.take(32))) // Set to a maximum of 32 characters
+// We need the Backlog inter-command delay to be 20ms instead of 200...
+getAction(getCommandString("SetOption34", "20"))
+
 
 if(override == true) {
     sync(ipAddress)

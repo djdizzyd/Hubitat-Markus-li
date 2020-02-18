@@ -24,8 +24,8 @@ def body
 
 boolean missingChild = false
 
-if (!state.mac || state.mac != descMap["mac"]) {
-    logging("Mac address of device found ${descMap["mac"]}",1)
+if (state.mac != descMap["mac"]) {
+    logging("Mac address of device found ${descMap["mac"]}", 10)
     state.mac = descMap["mac"]
 }
 
@@ -52,17 +52,28 @@ def getGenericTasmotaNewParseFooter():
 
 if(missingChild == true) {
     log.warn "Missing a child device, run the Refresh command from the device page!"
+    // It is dangerous to do the refresh automatically from here, it could cause an eternal loop
+    // Until a safe and non-resource hungry way can be created to do this automatically, a log message will
+    // have to be enough.
     //refresh()
 }
-if (!device.currentValue("ip") || (device.currentValue("ip") != getDataValue("ip"))) {
+if (device.currentValue("ip") == null) {
     def curIP = getDataValue("ip")
-    logging("Setting IP: $curIP", 1)
+    logging("Setting IP from Data: $curIP", 1)
     sendEvent(name: 'ip', value: curIP, isStateChange: false)
     sendEvent(name: "ipLink", value: "<a target=\\"device\\" href=\\"http://$curIP\\">$curIP</a>", isStateChange: false)
 }
 
-return events
 // parse() Generic footer ENDS here"""
+
+def getTasmotaNewParserForStatusSTS():
+    return """
+// Get some Maps out to where we need them
+if (result.containsKey("StatusSTS")) {
+    logging("StatusSTS: $result.StatusSTS",99)
+    result << result.StatusSTS
+}
+"""
 
 def getTasmotaNewParserForBasicData():
     return """
@@ -83,10 +94,6 @@ if (result.containsKey("StatusPRM")) {
 if (result.containsKey("Status")) {
     logging("Status: $result.Status",99)
     result << result.Status
-}
-if (result.containsKey("StatusSTS")) {
-    logging("StatusSTS: $result.StatusSTS",99)
-    result << result.StatusSTS
 }
 if (log99 == true && result.containsKey("LoadAvg")) {
     logging("LoadAvg: $result.LoadAvg",99)
@@ -183,18 +190,30 @@ if (result.containsKey("Wifi")) {
 def getTasmotaNewParserForParentSwitch():
     return """
 // Standard Switch Data parsing
-if (result.containsKey("POWER") && result.containsKey("POWER1") == false) {
+if (result.containsKey("POWER")  == true && result.containsKey("POWER1") == false) {
     logging("parser: POWER (child): $result.POWER",1)
     //childSendState("1", result.POWER.toLowerCase())
     missingChild = callChildParseByTypeId("POWER1", [[name:"switch", value: result.POWER.toLowerCase()]], missingChild)
-}
-(1..16).each {i->
-    //logging("POWER$i:${result."POWER$i"} '$result' containsKey:${result.containsKey("POWER$i")}", 1)
-    if(result."POWER$i" != null) {
-        logging("parser: POWER$i: ${result."POWER$i"}",1)
-        missingChild = callChildParseByTypeId("POWER$i", [[name:"switch", value: result."POWER$i".toLowerCase()]], missingChild)
-        //events << childSendState("1", result.POWER1.toLowerCase())
-        //sendEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER1.toLowerCase() == "on"?1:0) && result.POWER1.toLowerCase() == "on"? "on" : "off"))
+} else {
+    // each is the fastest itterator to use, evn though we can't escape it
+    String currentPower = ""
+    (1..16).each {i->
+        currentPower = "POWER$i"
+        //logging("POWER$i:${result."$currentPower"} '$result' containsKey:${result.containsKey("POWER$i")}", 1)
+        if(result.containsKey(currentPower) == true) {
+            if(i < 3 && invertPowerNumber == true) {
+                // This is used when Tasmota mixes things up with a dimmer and relay in the same device
+                if(i == 1) { 
+                    currentPower = "POWER2"
+                } else {
+                    currentPower = "POWER1"
+                }
+            }
+            logging("parser: $currentPower (original: POWER$i): ${result."POWER$i"}",1)
+            missingChild = callChildParseByTypeId("$currentPower", [[name:"switch", value: result."POWER$i".toLowerCase()]], missingChild)
+            //events << childSendState("1", result.POWER1.toLowerCase())
+            //sendEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER1.toLowerCase() == "on"?1:0) && result.POWER1.toLowerCase() == "on"? "on" : "off"))
+        }
     }
 }
 """
