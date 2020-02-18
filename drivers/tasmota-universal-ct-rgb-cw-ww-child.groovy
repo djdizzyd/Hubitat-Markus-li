@@ -28,22 +28,32 @@ metadata {
         
         command "setPixelColor", [[name:"RGB*", type: "STRING", description: "RGB in HEX, eg: #FF0000"],
             [name:"Pixel Number*", type: "NUMBER", description: "Pixel to change the color of (1 to \"Addressable Pixels\")"]]
+        command "setAddressableRotation", [[name:"Addressable Rotation*", type: "NUMBER", description: "1..512 = set amount of pixels to rotate (up to Addressable Pixels value)"]]
         command "setEffectWidth", [[name:"Addressable Effect Width*", type: "ENUM", description: "This width is used by Addressable pixel effects",
                                     constraints: ["0", "1", "2", "3", "4"]]]
 
-        #!include:getMetadataCommandsForHandlingRGBWDevices()
+        command "setColorByName", [[name:"Color Name*", type: "ENUM", description: "Choose a color",
+                                    constraints: ["#FF0000":"Red",
+                                                  "#00FF00":"Green",
+                                                  "#0000FF":"Blue",
+                                                  "#FFFF00":"Yellow",
+                                                  "#00FFFF":"Cyan",
+                                                  "#FF00FF":"Pink",
+                                                  "#FFFFFFFFFF":"White"]]]
+
+        //include:getMetadataCommandsForHandlingRGBWDevices()
         #!include:getMetadataCommandsForHandlingTasmotaRGBWDevices()
         #!include:getMetadataCommandsForHandlingTasmotaDimmerDevices()
     }
 
     preferences {
         #!include:getDefaultMetadataPreferences()
-        input(name: "hideColorTemperatureCommands", type: "bool", title: addTitleDiv("Hide Color Temperature Commands"), description: addDescriptionDiv("Hides Color Temperature Commands"), defaultValue: false, displayDuringSetup: false, required: false)
-        input(name: "hideEffectCommands", type: "bool", title: addTitleDiv("Hide Effect Commands"), description: addDescriptionDiv("Hides Effect Commands"), defaultValue: true, displayDuringSetup: false, required: false)
-        input(name: "hideColorCommands", type: "bool", title: addTitleDiv("Hide Color Commands"), description: addDescriptionDiv("Hides Color Commands"), defaultValue: true, displayDuringSetup: false, required: false)
+        input(name: "hideColorTemperatureCommands", type: "bool", title: addTitleDiv("Hide Color Temperature Commands"), defaultValue: false, displayDuringSetup: false, required: false)
+        input(name: "hideEffectCommands", type: "bool", title: addTitleDiv("Hide Effect Commands"), defaultValue: true, displayDuringSetup: false, required: false)
+        input(name: "hideColorCommands", type: "bool", title: addTitleDiv("Hide Color Commands"), defaultValue: false, displayDuringSetup: false, required: false)
         input(name: "isAddressable", type: "bool", title: addTitleDiv("Addressable Light"), description: addDescriptionDiv("Treat as an Addressable Light"), defaultValue: false, displayDuringSetup: false, required: false)
         input(name: "addressablePixels", type: "number", title: addTitleDiv("Addressable Pixels"), description: addDescriptionDiv("1..512 = set amount of pixels in strip or ring and reset Rotation"), displayDuringSetup: false, required: false, defaultValue: 30)
-        input(name: "addressableRotation", type: "number", title: addTitleDiv("Addressable Rotation"), description: addDescriptionDiv("1..512 = set amount of pixels to rotate (up to Addressable Pixels value)"), displayDuringSetup: false, required: false, defaultValue: 30)
+        //input(name: "addressableRotation", type: "number", title: addTitleDiv("Addressable Rotation"), description: addDescriptionDiv("1..512 = set amount of pixels to rotate (up to Addressable Pixels value)"), displayDuringSetup: false, required: false, defaultValue: 30)
     }
 
     // The below line needs to exist in ALL drivers for custom CSS to work!
@@ -84,8 +94,11 @@ void installed() {
 
 void updated() {
     log.info "updated()"
-    if(addressablePixels != null) setAddressablePixels(addressablePixels.toInteger())
-    if(addressableRotation != null) setAddressableRotation(addressableRotation.toInteger())
+    if(addressablePixels != null && addressablePixels != state.addressablePixels) {
+        setAddressablePixels(addressablePixels.toInteger())
+        state.addressablePixels = addressablePixels
+    }
+    //if(addressableRotation != null) setAddressableRotation(addressableRotation.toInteger())
     refresh()
 }
 
@@ -102,7 +115,8 @@ void refresh() {
         commandsToHide.addAll(["setEffectWithSpeed", "setNextEffectWithSpeed", "setPreviousEffectWithSpeed", "modeWakeUp", "setEffectSingleColor", "setEffectCycleUpColors", "setEffectCycleDownColors", "setEffectRandomColors"])
     }
     if(hideColorCommands == null || hideColorCommands == true) {
-        commandsToHide.addAll(["colorWhite", "colorRed", "colorGreen", "colorBlue", "colorYellow", "colorCyan", "colorPink"])
+        //"colorWhite", "colorRed", "colorGreen", "colorBlue", "colorYellow", "colorCyan", "colorPink"
+        commandsToHide.addAll(["setColor", "setColorByName", "setHue", "setSaturation"])
     }
     
     Map lightEffects = [:]
@@ -112,8 +126,9 @@ void refresh() {
                         8: "Christmas Pattern", 9: "Hanukkah Pattern", 10: "Kwanzaa Pattern",
                         11: "Rainbow Pattern", 12: "Fire Pattern"]
     } else {
-        commandsToHide.addAll(["addressablePixel", "setEffectWidth"])
-        metaConfig = setPreferencesToHide(["addressablePixels", "addressableRotation"], metaConfig=metaConfig)
+        metaConfig = setStateVariablesToHide(["addressablePixels"], metaConfig=metaConfig)
+        commandsToHide.addAll(["addressablePixel", "setEffectWidth", "setPixelColor", "setAddressableRotation"])
+        metaConfig = setPreferencesToHide(["addressablePixels"], metaConfig=metaConfig)
         lightEffects = [0: "Single Color", 1: "Wake Up", 2: "Cycle Up Colors", 3: "Cycle Down Colors", 
                         4: "Random Colors"]
     }
@@ -189,6 +204,39 @@ void colorCyan() {
 
 void colorPink() {
     parent?.componentSetRGB(this.device, 255, 0, 255)
+}
+
+void setColorByName(String colorName) {
+    logging("setColorByName(colorName ${colorName})", 1)
+    String colorRGB = ""
+    switch(colorName) {
+        case "Red":
+            colorRGB = "#FF0000"
+            break
+        case "Green":
+            colorRGB = "#00FF00"
+            break
+        case "Blue":
+            colorRGB = "#0000FF"
+            break
+        case "Yellow":
+            colorRGB = "#FFFF00"
+            break
+        case "Cyan":
+            colorRGB = "#00FFFF"
+            break
+        case "Pink":
+            colorRGB = "#FF00FF"
+            break
+        default:
+            colorRGB = "#FFFFFFFFFF"
+    }
+    setColorByRGBString(colorRGB)
+}
+
+void setColorByRGBString(String colorRGB) {
+    logging("setColorByRGBString(colorRGB ${colorRGB})", 1)
+    parent?.componentSetColorByRGBString(this.device, colorRGB)
 }
 
 void setEffect(BigDecimal effectnumber) {
@@ -290,6 +338,28 @@ void setEffectWidth(String pixels) {
 void setEffectWidth(BigDecimal pixels) {
     parent?.componentSetEffectWidth(this.device, pixels)
 }
+
+/*
+Fade between colours:
+rule3 on Rules#Timer=1 do backlog color1 #ff0000; ruletimer2 10; endon on Rules#Timer=2 do backlog color1 #0000ff; ruletimer3 10; endon on Rules#Timer=3 do backlog color1 #00ff00; ruletimer1 10; endon
+backlog rule3 1; color1 #ff0000; fade 1; speed 18; color1 #0000ff; ruletimer3 10;
+
+Fade up to color:
+backlog fade 0; dimmer 0; color2 #ff0000; fade 1; speed 20; dimmer 100;
+
+Fade down from color:
+backlog fade 0; dimmer 100; color2 #ff0000; fade 1; speed 20; dimmer 0;
+
+Fade up and down:
+
+rule3 on Rules#Timer=1 do backlog color2 #ff0000; dimmer 100; ruletimer2 10; endon on Rules#Timer=2 do backlog dimmer 0; ruletimer3 10; endon  on Rules#Timer=3 do backlog color2 #00ff00; dimmer 100; ruletimer4 10; endon on Rules#Timer=4 do backlog dimmer 0; ruletimer1 10; endon 
+backlog rule3 1; fade 0; dimmer 0; color2 #ff0000; fade 1; speed 20; dimmer 100; ruletimer2 10;
+
+To disable a running effect:
+rule3 0
+backlog
+
+*/
 
 /**
  * -----------------------------------------------------------------------------

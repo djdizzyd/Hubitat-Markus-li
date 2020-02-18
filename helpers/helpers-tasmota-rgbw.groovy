@@ -279,6 +279,11 @@ void modeWakeUp(BigDecimal wakeUpDuration, BigDecimal level) {
                                     [command: "Wakeup", value: "${level}"]]))
 }
 
+void setColorByRGBString(String colorRGB) {
+    logging("setColorByRGBString(colorRGB ${colorRGB})", 100)
+    getAction(getCommandStringWithModeReset("Color1", colorRGB.take(11)))
+}
+
 void setPixelColor(String colorRGB, BigDecimal pixel) {
     logging("setPixelColor(colorRGB ${colorRGB}, pixel: ${pixel})", 1)
     if(pixel < 1) pixel = 1

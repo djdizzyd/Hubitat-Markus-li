@@ -206,23 +206,23 @@ boolean parseResult(result) {
 }
 
 boolean parseResult(result, missingChild) {
-    logging("Entered parseResult 1", 100)
+    //logging("Entered parseResult 1", 100)
     boolean log99 = logging("parseResult: $result", 99)
     #!include:getTasmotaNewParserForStatusSTS()
-    logging("Entered parseResult 1a", 100)
+    //logging("Entered parseResult 1a", 100)
     #!include:getTasmotaNewParserForParentSwitch()
-    logging("Entered parseResult 1b", 100)
+    //logging("Entered parseResult 1b", 100)
     #!include:getTasmotaNewParserForDimmableDevice()
-    logging("Entered parseResult 1c", 100)
+    //logging("Entered parseResult 1c", 100)
     #!include:getTasmotaNewParserForRGBWDevice()
-    logging("Entered parseResult 1d", 100)
+    //logging("Entered parseResult 1d", 100)
     #!include:getTasmotaNewParserForFanMode()
-    logging("Entered parseResult 2", 100)
+    //logging("Entered parseResult 2", 100)
     #!include:getTasmotaNewParserForBasicData()    
     #!include:getTasmotaNewParserForEnergyMonitor()
     #!include:getTasmotaNewParserForSensors()
     #!include:getTasmotaNewParserForWifi()
-    logging("Entered parseResult 3", 100)
+    //logging("Entered parseResult 3", 100)
     updatePresence("present")
     return missingChild
 }
@@ -429,6 +429,10 @@ void componentSetSpeed(cd, String fanspeed) {
             getAction(getCommandString("FanSpeed", "3"))
             break
     }  
+}
+
+void componentSetColorByRGBString(cd, String colorRGB) {
+    setColorByRGBString(colorRGB)
 }
 
 void componentSetPixelColor(cd, String colorRGB, BigDecimal pixel) {

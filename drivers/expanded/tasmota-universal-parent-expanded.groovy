@@ -749,7 +749,7 @@ boolean parseResult(result) {
 }
 
 boolean parseResult(result, missingChild) {
-    logging("Entered parseResult 1", 100)
+    //logging("Entered parseResult 1", 100)
     boolean log99 = logging("parseResult: $result", 99)
     // BEGIN:getTasmotaNewParserForStatusSTS()
     // Get some Maps out to where we need them
@@ -758,7 +758,7 @@ boolean parseResult(result, missingChild) {
         result << result.StatusSTS
     }
     // END:  getTasmotaNewParserForStatusSTS()
-    logging("Entered parseResult 1a", 100)
+    //logging("Entered parseResult 1a", 100)
     // BEGIN:getTasmotaNewParserForParentSwitch()
     // Standard Switch Data parsing
     if (result.containsKey("POWER")  == true && result.containsKey("POWER1") == false) {
@@ -788,7 +788,7 @@ boolean parseResult(result, missingChild) {
         }
     }
     // END:  getTasmotaNewParserForParentSwitch()
-    logging("Entered parseResult 1b", 100)
+    //logging("Entered parseResult 1b", 100)
     // BEGIN:getTasmotaNewParserForDimmableDevice()
     // Standard Dimmable Device Data parsing
     if(true) {
@@ -805,7 +805,7 @@ boolean parseResult(result, missingChild) {
         }
     }
     // END:  getTasmotaNewParserForDimmableDevice()
-    logging("Entered parseResult 1c", 100)
+    //logging("Entered parseResult 1c", 100)
     // BEGIN:getTasmotaNewParserForRGBWDevice()
     // Standard RGBW Device Data parsing
     if(true) {
@@ -852,7 +852,7 @@ boolean parseResult(result, missingChild) {
     
     }
     // END:  getTasmotaNewParserForRGBWDevice()
-    logging("Entered parseResult 1d", 100)
+    //logging("Entered parseResult 1d", 100)
     // BEGIN:getTasmotaNewParserForFanMode()
     // Fan Mode parsing
     if (result.containsKey("FanSpeed")) {
@@ -872,7 +872,7 @@ boolean parseResult(result, missingChild) {
         missingChild = callChildParseByTypeId("FAN", [[name:"speed", value: speed]], missingChild)
     }
     // END:  getTasmotaNewParserForFanMode()
-    logging("Entered parseResult 2", 100)
+    //logging("Entered parseResult 2", 100)
     // BEGIN:getTasmotaNewParserForBasicData()
     // Standard Basic Data parsing
     
@@ -1087,7 +1087,7 @@ boolean parseResult(result, missingChild) {
         }
     }
     // END:  getTasmotaNewParserForWifi()
-    logging("Entered parseResult 3", 100)
+    //logging("Entered parseResult 3", 100)
     updatePresence("present")
     return missingChild
 }
@@ -1398,6 +1398,10 @@ void componentSetSpeed(cd, String fanspeed) {
             getAction(getCommandString("FanSpeed", "3"))
             break
     }  
+}
+
+void componentSetColorByRGBString(cd, String colorRGB) {
+    setColorByRGBString(colorRGB)
 }
 
 void componentSetPixelColor(cd, String colorRGB, BigDecimal pixel) {
@@ -3689,6 +3693,11 @@ void modeWakeUp(BigDecimal wakeUpDuration, BigDecimal level) {
     state.level = level
     getAction(getMultiCommandString([[command: "WakeupDuration", value: "${wakeUpDuration}"],
                                     [command: "Wakeup", value: "${level}"]]))
+}
+
+void setColorByRGBString(String colorRGB) {
+    logging("setColorByRGBString(colorRGB ${colorRGB})", 100)
+    getAction(getCommandStringWithModeReset("Color1", colorRGB.take(11)))
 }
 
 void setPixelColor(String colorRGB, BigDecimal pixel) {
