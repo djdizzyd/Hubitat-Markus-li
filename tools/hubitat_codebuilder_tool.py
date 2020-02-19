@@ -21,6 +21,7 @@
 # External modules
 from pathlib import Path
 import logging
+import io
 from colorama import init, Fore, Style
 import sys
 init()
@@ -45,21 +46,34 @@ from hubitat_driver_snippets_metadata import *
 
 # Setup the logger
 log = logging.getLogger(__name__)
+errors = io.StringIO()
 log.setLevel(logging.DEBUG)
 log_cb = logging.getLogger(HubitatCodeBuilder.__module__)
 log_cb.setLevel(logging.DEBUG)
 log_hs = logging.getLogger(HubitatHubSpider.__module__)
 log_hs.setLevel(logging.DEBUG)
+
 h = logging.StreamHandler()
 h.setLevel(logging.DEBUG)
 h.setFormatter(HubitatCodeBuilderLogFormatter(error_beep=True))
+ha = logging.StreamHandler(errors)
+ha.setLevel(logging.WARN)
+ha.setFormatter(HubitatCodeBuilderLogFormatter(error_beep=False))
+
 hhs = logging.StreamHandler()
 hhs.setLevel(logging.DEBUG)
 hhs.setFormatter(HubitatCodeBuilderLogFormatter(error_beep=True, debug_color=Fore.CYAN, default_color=Fore.MAGENTA))
-log.addHandler(h)
-log_cb.addHandler(h)
-log_hs.addHandler(hhs)
 
+hhsa = logging.StreamHandler(errors)
+hhsa.setLevel(logging.WARN)
+hhsa.setFormatter(HubitatCodeBuilderLogFormatter(error_beep=False))
+
+log.addHandler(h)
+log.addHandler(ha)
+log_cb.addHandler(h)
+log_cb.addHandler(ha)
+log_hs.addHandler(hhs)
+log_hs.addHandler(hhsa)
 
 try:
     from config.driver_list_2nd_hub import driver_files_2nd
@@ -74,7 +88,7 @@ except SyntaxError as e:
 def main():
     base_repo_url = 'https://github.com/markus-li/Hubitat/blob/development/drivers/expanded/'
     base_raw_repo_url = 'https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/'
-
+    
     # Get us a Code Builder...
     
     log.debug('Getting started...')
@@ -561,6 +575,14 @@ def main():
         log.info('No new apps where created!')
 
     log.info('Current version: {}'.format(getDriverVersion()))
+    
+    contents=errors.getvalue()
+    if(len(contents) > 0):
+        print('ERRORS and/or WARNINGS occured during this run:')
+        print(contents)
+    else:
+        log.info('No ERRORS or WARNINGS occured during this run :)')
+    errors.close()
 
     cb.saveChecksums()
     hhs.save_session()
