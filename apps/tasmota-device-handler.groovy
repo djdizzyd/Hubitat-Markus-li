@@ -56,14 +56,14 @@ Map getTimeStringSinceDateWithMaximum(myDate, maxMillis) {
 }
 
 #!include:getDefaultAppMethods()
-
+ 
 void makeAppTitle() {
     section(getElementStyle('title', getMaterialIcon('build', 'icon-large') + "${app.label} <span id='version'>${getAppVersion()}</span>" + getCSSStyles())){
         }
 }
 
 Map mainPage() {
-	return dynamicPage(name: "mainPage", nextPage: null, uninstall: true, install: true) {
+    return dynamicPage(name: "mainPage", nextPage: null, uninstall: true, install: true) {
         makeAppTitle() // Also contains the CSS
         logging("Building mainPage", 1)
         // Hubitat green: #81BC00
@@ -204,7 +204,7 @@ Map resultPage(name, title, result, nextPage = "mainPage"){
     }
 }
 
-def getElementStyle(style, content=""){
+String getElementStyle(style, String content=""){
     switch (style) {
         case 'header':
             //return '<div style="font-weight: bold; color:#fff;">' + content + '</div>'
@@ -224,7 +224,7 @@ def getElementStyle(style, content=""){
     }
 }
 
-String getMaterialIcon(iconName, extraClass='') {
+String getMaterialIcon(String iconName, String extraClass='') {
     // Browse icons here
     // https://material.io/resources/icons/?style=baseline
     // known HE icons (set as class): he-bulb_1, he-settings1, he-file1, he-default_dashboard_icon, he-calendar1
@@ -412,16 +412,16 @@ Map btnParagraph(buttons, extra="") {
     return paragraph(content) 
 }
 
-def getDeviceTableCell(deviceInfoEntry, link=true) {
-    it = deviceInfoEntry
-    def content = '<td class="device-config_td ' + "${it['td_class']}" + '">'
+String getDeviceTableCell(deviceInfoEntry, link=true) {
+    def it = deviceInfoEntry
+    String content = '<td class="device-config_td ' + "${it['td_class']}" + '">'
         
     if(link == true) {
         content += '<a class="device-config_btn ' + "${it['class']}" + '" href="' + "${it['href']}" + '" target="' +"${it['target']}" + '">'
     }
     
     //content += '<button type="button" class="btn btn-default hrefElem btn-lg mdl-button--raised mdl-shadow--2dp btn-sub">'
-    extraTitle = ""
+    String extraTitle = ""
     if(it['title'] != null && it['title'].indexOf('material-icons') == -1) {
         extraTitle = "title=\"${it['title']}\""
     }
@@ -442,9 +442,9 @@ def getDeviceTableCell(deviceInfoEntry, link=true) {
     return content
 }
 
-def getDeviceTable(deviceInfo, extra="") {
+String getDeviceTable(deviceInfo, String extra="") {
     //getDeviceConfigLink(it.id)
-    def content = '<table class="device-config_table"><tr>'
+    String content = '<table class="device-config_table"><tr>'
     content += '<th style="width: 40px;"><div>Config</div></th>'
     content += '<th style="width: 100px;"><div>Tasmota&nbsp;Config</div></th>'
     content += '<th style="width: 80px;"><div>Uptime</div></th>'
@@ -506,7 +506,7 @@ def configureTasmotaDevice(params) {
             state.currentDisplayName = getTasmotaDevice(params.params.did)?.label
         }
     }
-    device = getTasmotaDevice(state.currentDeviceId)
+    def device = getTasmotaDevice(state.currentDeviceId)
     state.currentDisplayName = device.label
     logging("state.currentDeviceId: ${state.currentDeviceId}, label: ${device.label}", 1)
     //if (device != null) device.configure()
@@ -613,7 +613,7 @@ def deleteDevice(){
 
 def getDeviceDriverName(device) {
     //getTasmotaDevice device.deviceNetworkId
-    driverName = 'Unknown'
+    String driverName = 'Unknown'
     try {
         driverName = runDeviceCommand(device, 'getDeviceInfoByName', args=['name'])
     } catch(e) {
@@ -685,7 +685,7 @@ def updatedAdditional() {
     logging("updatedAdditional()", 1)
 	unsubscribe()
     unschedule()
-    devices = getAllTasmotaDevices()
+    def devices = getAllTasmotaDevices()
     
     //app.removeSetting("devicesAvailable")
     //app.updateSetting("devicesAvailable", devices)
@@ -717,10 +717,10 @@ def runDeviceCommand(device, cmd, args=[]) {
 
 // 
 def getAllTasmotaDevices() {
-    toRemove = []
-    devicesFiltered = []
+    def toRemove = []
+    def devicesFiltered = []
     devicesSelected.eachWithIndex { it, i ->
-        namespace = 'unknown'
+        def namespace = 'unknown'
         try {
             //runDeviceCommand(it, 'setDeviceInfoAsData', ['namespace'])
             //namespace = runDeviceCommand(it, 'getDeviceInfoByName', ['namespace'])
@@ -739,10 +739,10 @@ def getAllTasmotaDevices() {
             devicesFiltered << it
         }
     }
-    childDevices = getChildDevices()
+    def childDevices = getChildDevices()
     logging("getChildDevices: ${getChildDevices()}", 1)
     childDevices.eachWithIndex { it, i ->
-        namespace = 'unknown'
+        def namespace = 'unknown'
         try {
             //runDeviceCommand(it, 'setDeviceInfoAsData', ['namespace'])
             namespace = runDeviceCommand(it, 'getDeviceInfoByName', ['namespace'])
@@ -766,7 +766,7 @@ def getAllTasmotaDevices() {
 }
 
 def getTasmotaDevice(deviceNetworkId) {
-    r = getChildDevice(deviceNetworkId)
+    def r = getChildDevice(deviceNetworkId)
     if(r == null) {
         devicesSelected.each {
             //logging("'" + it.deviceNetworkId + "' =? '" + deviceNetworkId + "'", 1)
