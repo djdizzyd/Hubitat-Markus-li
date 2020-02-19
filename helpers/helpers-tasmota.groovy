@@ -129,13 +129,13 @@ void runInstallCommands(installCommands) {
     List rule3 = []
     installCommands.each {cmd->
         if(cmd[0].toLowerCase() == "rule1") {
-            rule1.add([command: cmd[0], value:urlEscape(cmd[1])])
+            rule1.add([command: cmd[0], value:cmd[1]])
         } else if(cmd[0].toLowerCase() == "rule2") {
-            rule2.add([command: cmd[0], value:urlEscape(cmd[1])])
+            rule2.add([command: cmd[0], value:cmd[1]])
         } else if(cmd[0].toLowerCase() == "rule3") {
-            rule3.add([command: cmd[0], value:urlEscape(cmd[1])])
+            rule3.add([command: cmd[0], value:cmd[1]])
         } else {
-            backlogs.add([command: cmd[0], value:urlEscape(cmd[1])])
+            backlogs.add([command: cmd[0], value:cmd[1]])
         }
     }
 
