@@ -88,7 +88,7 @@ except SyntaxError as e:
 def main():
     base_repo_url = 'https://github.com/markus-li/Hubitat/blob/development/drivers/expanded/'
     base_raw_repo_url = 'https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/'
-    
+
     # Get us a Code Builder...
     
     log.debug('Getting started...')

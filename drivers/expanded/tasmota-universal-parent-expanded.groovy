@@ -436,6 +436,21 @@ TreeMap getDeviceConfigurations() {
         stop: ["TuyaSend4", "101,1"],
         close: ["TuyaSend4", "101,2"],],
         
+        [typeId: 'mj-sd02-dimmer-switch',
+        comment: 'ONLY works with this model',
+        name: 'Martin Jerry MJ-SD02 Dimmer Switch',
+        template: '{"NAME":"MJ-SD02","GPIO":[19,17,0,33,34,32,255,255,31,37,30,127,29],"FLAG":15,"BASE":18}',
+        installCommands: [["WebLog", "2"], // A good idea for dimmers
+                        ['SerialLog', '0'],
+                        ['setoption3', '1'], // enable MQTT - REQUIRED for these rules to work!
+                        ['setoption1', '1'], // restrict to single, double and hold actions (i.e., disable inadvertent reset due to long press)
+                        ['setoption32', '8'],     // Number of 0.1 seconds to hold button before sending HOLD action message.
+                        ['Rule1', 'on Button3#state=2 do dimmer + endon on Button1#state=2 do dimmer - endon '],
+                        ['Rule1', '+ on Button1#state=3 do dimmer 20 endon on Button3#state=3 do dimmer 100 endon '],
+                        ['Rule1', '+ on Button2#state=2 do power1 2 endon on Button2#state=3 do power1 0 endon'],
+                        ['Rule1', '1']],
+        deviceLink: ''],
+
         // https://tasmota.github.io/docs/#/devices/Sonoff-RF-Bridge-433pi 
         [typeId: 'sonoff-rf-bridge-parent' , 
         notForUniversal: true,
@@ -1433,7 +1448,7 @@ void componentSetEffectWidth(cd, BigDecimal pixels) {
 private String getDriverVersion() {
     //comment = ""
     //if(comment != "") state.comment = comment
-    String version = "v1.0.0218Ta"
+    String version = "v1.0.0219Ta"
     logging("getDriverVersion() = ${version}", 50)
     sendEvent(name: "driver", value: version)
     updateDataValue('driver', version)
