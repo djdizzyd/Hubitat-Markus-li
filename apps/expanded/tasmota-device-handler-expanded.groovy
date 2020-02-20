@@ -368,7 +368,7 @@ TreeMap getDeviceConfigurations() {
         close: ["TuyaSend4", "101,2"],],
         
         [typeId: 'mj-sd02-dimmer-switch',
-        comment: 'NO power status LED active by design',
+        comment: 'WITHOUT power status LED active by design',
         name: 'Martin Jerry MJ-SD02 Dimmer Switch',
         template: '{"NAME":"MJ-SD02","GPIO":[19,18,0,33,34,32,255,255,31,37,30,126,29],"FLAG":15,"BASE":18}',
         // Possible alternative: {"NAME":"MJ-SD02","GPIO":[19,18,0,35,36,34,255,255,33,37,32,126,29],"FLAG":15,"BASE":18}
@@ -378,6 +378,25 @@ TreeMap getDeviceConfigurations() {
                         ['setoption1', '1'], // restrict to single, double and hold actions (i.e., disable inadvertent reset due to long press)
                         ['setoption32', '8'],     // Number of 0.1 seconds to hold button before sending HOLD action message.
                         ['buttontopic', '0'],   // This enables the below Rule triggers
+                        ['Rule1', 'on Button3#state=2 do dimmer + endon on Button2#state=2 do dimmer - endon '],
+                        ['Rule1', '+ on Button2#state=3 do dimmer 20 endon on Button3#state=3 do dimmer 100 endon '],
+                        ['Rule1', '+ on Button1#state=2 do power1 2 endon on Button1#state=3 do power1 0 endon'],
+                        ['Rule1', '1']],
+        deviceLink: ''],
+
+        [typeId: 'mj-sd02-dimmer-switch-led',
+        comment: 'WITH power status LED active by design',
+        name: 'Martin Jerry MJ-SD02 Dimmer Switch',
+        template: '{"NAME":"MJ-SD02-LED","GPIO":[19,18,0,33,56,32,255,255,31,37,30,126,29],"FLAG":15,"BASE":18}',
+        // Possible alternative: {"NAME":"MJ-SD02","GPIO":[19,18,0,35,36,34,255,255,33,37,32,126,29],"FLAG":15,"BASE":18}
+        installCommands: [["WebLog", "2"], // A good idea for dimmers
+                        ['SerialLog', '0'],
+                        ['setoption3', '1'], // enable MQTT - REQUIRED for these rules to work!
+                        ['setoption1', '1'], // restrict to single, double and hold actions (i.e., disable inadvertent reset due to long press)
+                        ['setoption32', '8'],     // Number of 0.1 seconds to hold button before sending HOLD action message.
+                        ['buttontopic', '0'],   // This enables the below Rule triggers
+                        ['LedPower', '1'],
+                        ['SetOption31', '0'],
                         ['Rule1', 'on Button3#state=2 do dimmer + endon on Button2#state=2 do dimmer - endon '],
                         ['Rule1', '+ on Button2#state=3 do dimmer 20 endon on Button3#state=3 do dimmer 100 endon '],
                         ['Rule1', '+ on Button1#state=2 do power1 2 endon on Button1#state=3 do power1 0 endon'],
