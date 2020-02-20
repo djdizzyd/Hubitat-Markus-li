@@ -437,7 +437,7 @@ TreeMap getDeviceConfigurations() {
         close: ["TuyaSend4", "101,2"],],
         
         [typeId: 'mj-sd02-dimmer-switch',
-        comment: 'ONLY works with this model',
+        comment: 'NO power status LED active by design',
         name: 'Martin Jerry MJ-SD02 Dimmer Switch',
         template: '{"NAME":"MJ-SD02","GPIO":[19,18,0,33,34,32,255,255,31,37,30,126,29],"FLAG":15,"BASE":18}',
         // Possible alternative: {"NAME":"MJ-SD02","GPIO":[19,18,0,35,36,34,255,255,33,37,32,126,29],"FLAG":15,"BASE":18}
