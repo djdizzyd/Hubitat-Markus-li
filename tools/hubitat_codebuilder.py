@@ -218,10 +218,10 @@ class HubitatCodeBuilder:
                 definition_dict[k] = '"x' + definition_dict[k] + 'x"'
             new_definition = (l[:definition_position]) + 'definition (' + yaml.dump(definition_dict, default_flow_style=False, sort_keys=False ).replace('\'"x', '"').replace('x"\'', '"').replace('\n', ', ')[:-2] + ') {\n'
             #print(new_definition)
-            output = 'public getDeviceInfoByName(infoName) { \n' + \
+            output = 'String getDeviceInfoByName(infoName) { \n' + \
                 '    // DO NOT EDIT: This is generated from the metadata!\n' + \
                 '    // TODO: Figure out how to get this from Hubitat instead of generating this?\n' + \
-                '    def deviceInfo = ' + ds + '\n' + \
+                '    Map deviceInfo = ' + ds + '\n' + \
                 '    //logging("deviceInfo[${infoName}] = ${deviceInfo[infoName]}", 1)\n' + \
                 '    return(deviceInfo[infoName])\n' + \
                 '}'

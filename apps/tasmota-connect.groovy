@@ -377,7 +377,7 @@ def addDevices() {
 		}
         }
 }
-    }
+}
 
 def uninstalled() {
     unsubscribe()

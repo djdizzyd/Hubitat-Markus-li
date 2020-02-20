@@ -13,6 +13,9 @@ String getCSSStyles() {
 .btn {
     font-family: "Roboto","Helvetica","Arial",sans-serif;
 }
+#formApp h3:first-child {
+    display: none;
+}
 .mdl-card, .mdl-switch__label, .mdl-textfield  {
     font-size: 14px;
     font-family: "Roboto","Helvetica","Arial",sans-serif;

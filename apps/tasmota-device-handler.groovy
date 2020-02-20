@@ -17,15 +17,21 @@ definition(
 }
 
 preferences {
-     page(name: "mainPage", title: "", install: true, uninstall: true)
+     page(name: "mainPage", title: "Tasmota Device Handler", install: true, uninstall: true)
      page(name: "deleteDevice")
      page(name: "refreshDevices")
      page(name: "resultPage")
      page(name: "configureTasmotaDevice")
      page(name: "addDevices", title: "Add Tasmota-based Device", content: "addDevices")
-     page(name: "deviceDiscovery")
      page(name: "manuallyAdd")
      page(name: "manuallyAddConfirm")
+     page(name: "changeName")
+
+     page(name: "discoveryPage", title: "Device Discovery", content: "discoveryPage", refreshTimeout:10)
+     page(name: "deviceDiscovery")
+     page(name: "deviceDiscoveryReset")
+     page(name: "discoveredAddConfirm")
+     
 }
 
 // https://docs.smartthings.com/en/latest/smartapp-developers-guide/preferences-and-settings.html#preferences-and-settings
@@ -352,14 +358,14 @@ def configureTasmotaDevice(params) {
     state.currentDisplayName = device.label
     logging("state.currentDeviceId: ${state.currentDeviceId}, label: ${device.label}", 1)
     //if (device != null) device.configure()
-    dynamicPage(name: "configureTasmotaDevice", title: "Configure Tasmota-based Devices created with this app", nextPage: null) {
+    dynamicPage(name: "configureTasmotaDevice", title: "Configure Tasmota-based Devices created with this app", nextPage: "mainPage") {
             section {
                 app.updateSetting("${state.currentDeviceId}_label", device.label)
-                input "${state.currentDeviceId}_label", "text", title:"Device Name", description: "", required: false
+                input "${state.currentDeviceId}_label", "text", title:"Device Name" + getCSSStyles(), description: "", required: false
                 href "changeName", title:"Change Device Name", description: "Edit the name above and click here to change it"
             }
             section {
-                href "deleteDevice", title:"Delete $state.label", description: ""
+                href "deleteDevice", title:"Delete \"$device.label\"", description: ""
             }
     }
     // device = getChildDevice(did)
@@ -370,8 +376,8 @@ def configureTasmotaDevice(params) {
 }
 
 //
-def deviceDiscovery(){
-   dynamicPage(name: "deviceDiscovery", title: "Discover Tasmota-based Devices", nextPage: "mainPage") {
+def deviceDiscoveryTEMP(){
+   dynamicPage(name: "deviceDiscoveryTEMP", title: "Discover Tasmota-based Devices", nextPage: "mainPage") {
 		section {
 			paragraph "NOT FUNCTIONAL: This process will automatically discover your device, this may take a few minutes. Please be patient. Tasmota Device Handler then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your WiFi network."
             /*input "deviceType", "enum", title:"Device Type", description: "", required: true, options: 
@@ -463,6 +469,17 @@ def deleteDevice(){
             } 
         }
     
+    }
+}
+
+def changeName(){
+    def thisDevice = getChildDevice(state.currentDeviceId)
+    thisDevice.label = settings["${state.currentDeviceId}_label"]
+
+    dynamicPage(name: "changeName", title: "Change Name Summary", nextPage: "mainPage") {
+	    section {
+            paragraph "The device has been renamed to \"$thisDevice.label\". Press \"Next\" to continue"
+        }
     }
 }
 
@@ -617,7 +634,18 @@ def getAllTasmotaDevices() {
         }
     }
     //devicesFiltered << childDevices
-    return devicesFiltered
+    return devicesFiltered.sort({ a, b -> a.label <=> b.label })
+}
+
+def getAllTasmotaDeviceIPs() {
+    def deviceIPs = []
+    getAllTasmotaDevices().each { rawDev ->
+        def cDev = getTasmotaDevice(rawDev.deviceNetworkId)
+        if(cDev != null) {
+            deviceIPs << rawDev['data']['ip']
+        }
+    }
+    return deviceIPs
 }
 
 def getTasmotaDevice(deviceNetworkId) {
@@ -643,9 +671,8 @@ def getTasmotaDevice(deviceNetworkId) {
 */
 def initializeAdditional() {
     logging("initializeAdditional()", 1)
-    //getAllTasmotaDevices()
-    //ssdpSubscribe()
-    //runEvery5Minutes("ssdpDiscover")
+    // Do NOT start SSDP discovery here! That should ONLY be done when searching for devices
+    deviceDiscoveryCancel()
 }
 
 #!include:getLoggingFunction()
@@ -653,6 +680,8 @@ def initializeAdditional() {
 #!include:getHelperFunctions('app-default')
 
 #!include:getHelperFunctions('app-css')
+
+#!include:getHelperFunctions('app-tasmota-device-discovery')
 
 #!include:getHelperFunctions('tasmota')
 

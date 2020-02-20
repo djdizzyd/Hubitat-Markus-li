@@ -1,0 +1,262 @@
+/**
+ * APP TASMOTA DEVICE DISCOVERY METHODS (helpers-app-tasmota-device-discovery)
+ *
+ * Methods used in all APPS
+ */
+def discoveryPage() {
+   return deviceDiscovery()
+}
+
+def deviceDiscoveryCancel() {
+    logging("deviceDiscoveryCancel()", 100)
+    unsubscribe()
+    unschedule()
+    state.deviceRefreshCount = 0
+    state.devices = state.devicesCached ?: [:]
+    state.devices.each {
+        it.value["installed"] = null
+    }
+    state.devicesCached.each {
+        it.value["installed"] = null
+    }
+}
+
+def deviceDiscovery(params=[:]) {
+    Integer deviceRefreshCount = !state.deviceRefreshCount ? 0 : state.deviceRefreshCount as Integer
+    state.deviceRefreshCount = deviceRefreshCount + 1
+
+    if(deviceRefreshCount == 0) {
+	    ssdpSubscribe()
+        runEvery1Minute("ssdpDiscover")
+        // This is our failsafe, we don't want this to be left on...
+        runIn(1800, "deviceDiscoveryCancel")
+        verifyDevices()
+    }
+
+	def devices = devicesDiscovered()
+    
+	def refreshInterval = 20
+    
+	def options = devices ?: []
+	def numFound = options.size() ?: 0
+
+	//if ((numFound == 0 && state.deviceRefreshCount > 25) || params.reset == "true") {
+    //	log.trace "Cleaning old device memory"
+    //	state.devices = [:]
+    //    state.deviceRefreshCount = 0
+    //    app.updateSetting("selectedDevice", "")
+    //}
+
+    
+
+	//Tasmota-based Device discovery request every 15 //25 seconds
+	//if((deviceRefreshCount % 5) == 0) {
+	//	discoverDevices()
+	//}
+
+	//setup.xml request every 3 seconds except on discoveries
+	if(((deviceRefreshCount % 3) == 0) && ((deviceRefreshCount % 5) != 0)) {
+		verifyDevices()
+	}
+
+	return dynamicPage(name:"deviceDiscovery", title:"Discovery Started!", nextPage:"discoveredAddConfirm", refreshInterval:refreshInterval) {
+		section("Please wait while we discover your Tasmota-based Devices. Discovery can take five minutes or more, so sit back and relax! Select your device below once discovered.") {
+			
+            input("deviceType", "enum", title:"Device Type", description: "", required: true, submitOnChange: false, options: 
+                #!include:makeTasmotaConnectDriverListV1()
+            )
+            input(name: "deviceConfig", type: "enum", title: "Device Configuration", 
+                description: "Select a Device Configuration (default: Generic Device)<br/>'Generic Device' doesn't configure device Template and/or Module on Tasmota. Child devices and types are auto-detected as well as auto-created and does NOT depend on this setting.", 
+                options: getDeviceConfigurationsAsListOption(), defaultValue: "01generic-device", required: false)
+            input("selectedDiscoveredDevice", "enum", required:false, title:"Select Tasmota-based Device (${numFound} found)", multiple:false, options:options, submitOnChange: true)
+            //input("ipAddress", "text", title:"IP Address", description: "", required: true, submitOnChange: false)
+            input("deviceLabel", "text", title:"Device Label", description: "", required: true, defaultValue: (deviceType ? deviceType : "Tasmota - Universal Parent") + " (%device_ip%)")
+            paragraph("'%device_ip%' = insert device IP here")
+            input("passwordDevice", "password", title:"Tasmota Device Password", description: "Only needed if set in Tasmota.", defaultValue: passwordDefault, submitOnChange: true, displayDuringSetup: true)            
+            paragraph("Only needed if set in Tasmota.")
+		}
+        section("Options") {
+            href("deviceDiscoveryReset", title:"Reset list of discovered devices", description:"")
+			//href "deviceDiscovery", title:"Reset list of discovered devices", description:"", params: ["reset": "true"]
+		}
+	}
+}
+
+def discoveredAddConfirm() {
+    def devices = getDevices()
+    def selectedDevice = devices.find { it.value.mac == selectedDiscoveredDevice }
+    def ipAddress = convertHexToIP(selectedDevice?.value?.networkAddress)
+    //log.debug("Discovered IP: $ipAddress")
+    if ( ipAddress != null && ipAddress =~ /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/) {
+        logging("Creating Tasmota-based Wifi Device with dni: ${convertIPtoHex(ipAddress)}", 1)
+        if(passwordDevice == null || passwordDevice == "") {
+           passwordDevice = "[installed]"
+        }
+        def child = addChildDevice("tasmota", deviceType ? deviceType : "Tasmota - Universal Parent", "${convertIPtoHex(ipAddress)}", location.hubs[0].id, [
+           "label": (deviceLabel ? deviceLabel : "Tasmota - Universal Parent (%device_ip%)").replace("%device_ip%", "${ipAddress}"),
+           "data": [
+                "ip": ipAddress,
+                "port": "80",
+                "password": encrypt(passwordDevice),
+                "deviceConfig": deviceConfig
+           ]
+        ])
+
+        // We do this to get everything setup correctly
+        //child.updateSetting("deviceConfig", [type: "enum", value:deviceConfig])
+        // After adding preferences, Configure() needs to run to apply them, but we have to wait a little bit.
+        child.configureDelayed()
+        // This will refresh and detect child devices based on the above config
+        child.refresh()
+
+        // Restore for next time
+        app.updateSetting("ipAddress", [type: "string", value:getFirstTwoIPBytes(ipAddress)])
+        app.updateSetting("deviceLabel", "")
+        app.updateSetting("passwordDevice", "")
+        //app.updateSetting("deviceConfig", [type: "enum", value:"01generic-device"])
+        
+        dynamicPage(name: "discoveredAddConfirm", title: "Discovered Tasmota-based Device", nextPage: "mainPage") {
+            section {
+                paragraph "The device has been added. Press next to return to the main page. It may take up to a minute or so before all child devices have been created if many are needed. Be patient. If all child devices are not created as expected, press Configure and Refresh in the Universal Parent and wait again. Don't click multiple times, it takes time for the device to reconfigure itself."
+            }
+        }
+    } else {
+        dynamicPage(name: "discoveredAddConfirm", title: "Discovered Tasmota-based Device", nextPage: "mainPage") {
+		    section {
+			    paragraph "No device was selected."
+		    }
+        }
+    }
+}
+
+Map deviceDiscoveryReset() {
+    logging("deviceDiscoveryReset()", 1)
+    resetDeviceDiscovery()
+    return resultPage("deviceDiscoveryReset", "Device Recovery Reset", "Device Recovery Reset Done!", nextPage="deviceDiscovery")
+}
+
+void resetDeviceDiscovery(){
+    logging("Cleaning old device memory", 100)
+    state.devices = state.devicesCached ?: [:]    
+    state.deviceRefreshCount = 0
+    verifyDevices()
+    app.updateSetting("selectedDevice", "")
+}
+
+Map devicesDiscovered() {
+	def vdevices = getVerifiedDevices()
+	def map = [:]
+	vdevices.each {
+		def value = "${it.value.name}"
+		def key = "${it.value.mac}"
+		map["${key}"] = value
+	}
+	return map
+}
+
+def getVerifiedDevices() {
+    //return getDevices()
+	return getDevices().findAll{ it?.value?.verified == true && it?.value?.installed == false }
+}
+
+void ssdpSubscribe() {
+    subscribe(location, "ssdpTerm.urn:schemas-upnp-org:device:Basic:1", ssdpHandler)
+}
+
+void ssdpDiscover() {
+    sendHubCommand(new hubitat.device.HubAction("lan discovery urn:schemas-upnp-org:device:Basic:1", hubitat.device.Protocol.LAN))
+}
+
+def ssdpHandler(evt) {
+    def description = evt.description
+    def hub = evt?.hubId
+    def parsedEvent = parseLanMessage(description)
+    
+    parsedEvent << ["hub":hub]
+    //log.debug("ssdpHandler parsedEvent: $parsedEvent")
+
+    def devices = getDevices()
+    def devicesCache = getDevicesCache()
+    
+    String ssdpUSN = parsedEvent.ssdpUSN.toString()
+    
+    if (devices."${ssdpUSN}" == null) {
+        devices << ["${ssdpUSN}": parsedEvent]
+    }
+    if (devicesCache."${ssdpUSN}" == null) {
+        devicesCache << ["${ssdpUSN}": parsedEvent]
+    }
+}
+
+void verifyDevices() {
+    // First check if the devices actually are Tasmota devices
+    def devices = getDevices().findAll { it?.value?.verified != true }
+    devices.each {
+        try{
+            def ip = convertHexToIP(it.value.networkAddress)
+            def port = convertHexToInt(it.value.deviceAddress)
+            String host = "${ip}:${port}"
+            sendHubCommand(new hubitat.device.HubAction("""GET ${it.value.ssdpPath} HTTP/1.1\r\nHOST: $host\r\n\r\n""", hubitat.device.Protocol.LAN, host, [callback: deviceDescriptionHandler]))
+        } catch(e) {
+            // Do nothing
+            //log.debug("Device incorrect=$it")
+        }
+    }
+    // Then check if we have already installed them
+    devices = getDevices().findAll { it?.value?.verified == true && it?.value?.installed == null }
+    //log.trace "devices = $devices"
+    if(devices != [:]) {
+        def installedDeviceIPs = getAllTasmotaDeviceIPs()
+        //log.trace "installedDeviceIPs = $installedDeviceIPs"
+        devices.each {
+            def ip = convertHexToIP(it.value.networkAddress)
+            if(ip in installedDeviceIPs) {
+                //log.warn "Already installed: $ip"
+                it.value << [installed:true]
+            } else {
+                //log.warn "NOT installed: $ip"
+                it.value << [installed:false]
+            }
+        }
+    }
+}
+
+def getDevices() {
+    return state.devices = state.devices ?: [:]
+}
+
+def getDevicesCache() {
+    return state.devicesCached = state.devicesCached ?: [:]
+}
+
+void deviceDescriptionHandler(hubitat.device.HubResponse hubResponse) {
+	//log.trace "description.xml response (application/xml)"
+	def body = hubResponse.xml
+    //log.debug body?.device?.manufacturer?.text()
+	if (body?.device?.manufacturer?.text().startsWith("iTead")) {
+		def devices = getDevices()
+		def device = devices.find {it?.key?.contains(body?.device?.UDN?.text())}
+		if (device) {
+			device.value << [name:body?.device?.friendlyName?.text() + " (" + convertHexToIP(hubResponse.ip) + ")", serialNumber:body?.device?.serialNumber?.text(), verified: true]
+            //log.debug("deviceDescriptionHandler: $device.value")
+		} else {
+			log.error "/description.xml returned a device that didn't exist"
+		}
+	}
+}
+
+private String convertHexToIP(hex) {
+    if(hex != null) {
+	    return [convertHexToInt(hex[0..1]),convertHexToInt(hex[2..3]),convertHexToInt(hex[4..5]),convertHexToInt(hex[6..7])].join(".")
+    } else {
+        return null
+    }
+}
+
+private Integer convertHexToInt(hex) {
+	Integer.parseInt(hex,16)
+}
+
+ /**
+ * --END-- APP TASMOTA DEVICE DISCOVERY METHODS (helpers-app-tasmota-device-discovery)
+ */

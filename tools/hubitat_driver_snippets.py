@@ -196,7 +196,7 @@ getAction(getCommandString("TelePeriod", "${getTelePeriodValue()}"))
 // updateNeededSettings() Generic footer BEGINS here
 getAction(getCommandString("SetOption113", "1")) // Hubitat Enabled
 // Disabling Emulation so that we don't flood the logs with upnp traffic
-//getAction(getCommandString("Emulation", "0")) // Emulation Disabled
+getAction(getCommandString("Emulation", "2")) // Hue Emulation Enabled, REQUIRED for device discovery
 getAction(getCommandString("HubitatHost", device.hub.getDataValue("localIP")))
 logging("HubitatPort: ${device.hub.getDataValue("localSrvPortTCP")}", 1)
 getAction(getCommandString("HubitatPort", device.hub.getDataValue("localSrvPortTCP")))

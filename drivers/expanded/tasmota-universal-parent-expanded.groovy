@@ -114,10 +114,10 @@ metadata {
 }
 
 // BEGIN:getDeviceInfoFunction()
-public getDeviceInfoByName(infoName) { 
+String getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    def deviceInfo = ['name': 'Tasmota - Universal Parent', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-parent-expanded.groovy']
+    Map deviceInfo = ['name': 'Tasmota - Universal Parent', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'vid': 'generic-switch', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-parent-expanded.groovy']
     //logging("deviceInfo[${infoName}] = ${deviceInfo[infoName]}", 1)
     return(deviceInfo[infoName])
 }
@@ -1253,7 +1253,7 @@ void updateNeededSettings() {
     // updateNeededSettings() Generic footer BEGINS here
     getAction(getCommandString("SetOption113", "1")) // Hubitat Enabled
     // Disabling Emulation so that we don't flood the logs with upnp traffic
-    //getAction(getCommandString("Emulation", "0")) // Emulation Disabled
+    getAction(getCommandString("Emulation", "2")) // Hue Emulation Enabled, REQUIRED for device discovery
     getAction(getCommandString("HubitatHost", device.hub.getDataValue("localIP")))
     logging("HubitatPort: ${device.hub.getDataValue("localSrvPortTCP")}", 1)
     getAction(getCommandString("HubitatPort", device.hub.getDataValue("localSrvPortTCP")))
@@ -1471,7 +1471,7 @@ void componentSetEffectWidth(cd, BigDecimal pixels) {
 private String getDriverVersion() {
     //comment = ""
     //if(comment != "") state.comment = comment
-    String version = "v1.0.0220Ta"
+    String version = "v1.0.0221Ta"
     logging("getDriverVersion() = ${version}", 50)
     sendEvent(name: "driver", value: version)
     updateDataValue('driver', version)
