@@ -453,6 +453,8 @@ TreeMap getDeviceConfigurations() {
                         ['Rule1', '1']],
         deviceLink: ''],
 
+        //https://templates.blakadder.com/oil_diffuser_550ml.html
+
         // https://tasmota.github.io/docs/#/devices/Sonoff-RF-Bridge-433pi 
         [typeId: 'sonoff-rf-bridge-parent' , 
         notForUniversal: true,
@@ -1450,7 +1452,7 @@ void componentSetEffectWidth(cd, BigDecimal pixels) {
 private String getDriverVersion() {
     //comment = ""
     //if(comment != "") state.comment = comment
-    String version = "v1.0.0219Ta"
+    String version = "v1.0.0220Ta"
     logging("getDriverVersion() = ${version}", 50)
     sendEvent(name: "driver", value: version)
     updateDataValue('driver', version)
@@ -2289,6 +2291,11 @@ void configure() {
     }
 }
 
+void configureDelayed() {
+    runIn(10, configure)
+    runIn(30, refresh)
+}
+
 /**
  * --END-- DRIVER DEFAULT METHODS (helpers-driver-default)
  */
@@ -2438,7 +2445,7 @@ void installedPreConfigure() {
         if(pass != null && pass != "" && pass != "[installed]") {
             device.updateSetting("password", [value: pass, type: "password"])
         }
-        
+        device.updateSetting("deviceConfig", [type: "enum", value:getDataValue('deviceConfig')])
     }
 }
 
@@ -3093,7 +3100,7 @@ private String convertIPtoHex(ipAddress) {
     String hex = null
     if(ipAddress != null) {
         hex = ipAddress.tokenize( '.' ).collect {  String.format( '%02X', it.toInteger() ) }.join()
-        logging("Get this IP in hex: ${hex}", 0)
+        logging("Got this IP in hex: ${hex}", 0)
     } else {
         hex = null
         if (useIPAsID) {
@@ -3101,6 +3108,17 @@ private String convertIPtoHex(ipAddress) {
         }
     }
     return hex
+}
+
+private String getFirstTwoIPBytes(ipAddress) {
+    String ipStart = null
+    if(ipAddress != null) {
+        ipStart = ipAddress.tokenize( '.' ).take(2).join('.') + '.'
+        logging("Got these IP bytes: ${ipStart}", 0)
+    } else {
+        ipStart = ''
+    }
+    return ipStart
 }
 
 void sync(String ip, Integer port = null) {

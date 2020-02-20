@@ -47,6 +47,11 @@ void configure() {
     }
 }
 
+void configureDelayed() {
+    runIn(10, configure)
+    runIn(30, refresh)
+}
+
 /**
  * --END-- DRIVER DEFAULT METHODS (helpers-driver-default)
  */

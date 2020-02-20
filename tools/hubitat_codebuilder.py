@@ -276,6 +276,7 @@ class HubitatCodeBuilder:
         # 4. If all fails, throw an exception!
         if(found == False):
             try:
+                self.log.debug("eval_cmd: " + eval_cmd)
                 output = eval(eval_cmd)
             except NameError:
                 try:

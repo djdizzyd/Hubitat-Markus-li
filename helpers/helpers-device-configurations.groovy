@@ -327,6 +327,8 @@ TreeMap getDeviceConfigurations() {
                         ['Rule1', '1']],
         deviceLink: ''],
 
+        //https://templates.blakadder.com/oil_diffuser_550ml.html
+
         // https://tasmota.github.io/docs/#/devices/Sonoff-RF-Bridge-433pi 
         [typeId: 'sonoff-rf-bridge-parent' , 
         notForUniversal: true,

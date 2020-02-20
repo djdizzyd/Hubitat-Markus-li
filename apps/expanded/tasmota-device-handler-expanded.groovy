@@ -384,6 +384,8 @@ TreeMap getDeviceConfigurations() {
                         ['Rule1', '1']],
         deviceLink: ''],
 
+        //https://templates.blakadder.com/oil_diffuser_550ml.html
+
         // https://tasmota.github.io/docs/#/devices/Sonoff-RF-Bridge-433pi 
         [typeId: 'sonoff-rf-bridge-parent' , 
         notForUniversal: true,
@@ -505,7 +507,7 @@ Map getTimeStringSinceDateWithMaximum(myDate, maxMillis) {
 // BEGIN:getDefaultAppMethods()
 /* Default App Methods go here */
 private String getAppVersion() {
-    String version = "v1.0.0219Ta"
+    String version = "v1.0.0220Ta"
     logging("getAppVersion() = ${version}", 50)
     return version
 }
@@ -549,8 +551,9 @@ Map mainPage() {
                 //input(name: "refreshDevices", type: "bool", defaultValue: "false", submitOnChange: true, title: "Refresh Devices", description: "Refresh Devices Desc")
                 href("resultPage", title:getMaterialIcon('autorenew') + "Result Page", description: "")
                 href("refreshDevices", title:getMaterialIcon('autorenew') + "Refresh Devices", description: "")
-
-                state.devices.each { rawDev ->
+                
+                getAllTasmotaDevices().each { rawDev ->
+                //state.devices.each { rawDev ->
                     def cDev = getTasmotaDevice(rawDev.deviceNetworkId)
                     //getLastActivity()
                     if(cDev != null) {
@@ -685,165 +688,6 @@ String getMaterialIcon(String iconName, String extraClass='') {
     // known HE icons (set as class): he-bulb_1, he-settings1, he-file1, he-default_dashboard_icon, he-calendar1
     // he-discovery_1, he-add_2, he-door_closed
     return '<i class="material-icons icon-position ' + extraClass + '">' + iconName + '</i>'
-}
-
-//#.form div.mdl-cell h4.pre {
-String getCSSStyles() {
-    return '''<style>
-/* General App Styles */
-#version {
-    font-size: 50%;
-}
-.btn {
-    font-family: "Roboto","Helvetica","Arial",sans-serif;
-}
-.mdl-card, .mdl-switch__label, .mdl-textfield  {
-    font-size: 14px;
-    font-family: "Roboto","Helvetica","Arial",sans-serif;
-}
-.btn-sub {
-    padding: 2px 30px 2px 2px;
-}
-div.mdl-button--raised {
-    font-weight: bold; 
-    color:#fff; 
-    background-color:#81bc00; 
-    border: 1px solid;
-}
-div.mdl-button--raised:hover, div.mdl-button--raised:focus {
-    color: #212121;
-    background-color:#91d844; 
-}
-.btn-sub.hrefElem:before {
-    top: calc(50% - 0.75625rem);
-}
-div.mdl-button--raised h4.pre {
-    font-weight: bold; 
-    color: #fff;
-    vertical-align: middle;
-}
-
-/* Icon Styles */
-.icon-position {
-    margin-right: 12px;
-    vertical-align: middle;
-}
-.icon-tiny {
-    margin-right: 8px;
-    font-size: 14px;
-}
-.icon-small {
-    margin-right: 8px;
-    font-size: 18px;
-}
-.icon-large {
-    margin-right: 12px;
-    font-size: 32px;
-}
-
-/* Configure Devices List Styles */
-#collapse4 .hrefElem::before {
-    filter: invert(100%);
-}
-#collapse4 .hrefElem:hover::before, #collapse4 .hrefElem:focus::before {
-    filter: invert(0%);
-}
-#collapse4 table .hrefElem::before {
-    filter: invert(0%);
-}
-#collapse4 .btn-block {
-    color: #f5f5f5;
-    background-color: #382e2b;
-    
-    font-size: 14px;
-    /*font-size: calc(100% + 0.08vw);*/
-    max-width: inherit;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-#collapse4 .btn-block span {
-    white-space: nowrap !important;
-    max-width: inherit;
-}
-#collapse4 .btn-block:hover, #collapse4 .btn-block:focus {
-    color: #212121;
-    background-color: #e0e0e0;
-}
-#collapse4 div.mdl-textfield {
-    margin: 0px;
-}
-.device-config_table {
-    border-spacing: 2px 0px;
-    table-layout:fixed;
-    width: 100%
-}
-.device-config_td {
-    text-align: center;
-    vertical-align: middle;
-}
-.device-config_btn {
-    width: 100%;
-}
-.device-config_table th, .device-config_table td {
-    font-family: "Roboto","Helvetica","Arial",sans-serif;
-    font-size: 13px;
-    vertical-align: middle;
-    width: 100%;
-}
-.device-config_table th div, .device-config_td div, .device-config_table td a {
-    text-align: center;
-    white-space: nowrap !important;
-    max-width: inherit;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 100%;
-    display: block;
-}
-.device-config_btn_icon {
-    text-align: center;
-    width: 100%;
-}
-
-/* Action Buttons */
-#collapse4 [name*="refreshDevices"] {
-    float: right !important;
-}
-#collapse4 [name*="resultPage"] {
-    float: left !important;
-}
-#collapse4 [name*="refreshDevices"], #collapse4 [name*="resultPage"] {
-    color: #000;
-    width: 170px !important;
-    min-width: 170px;
-    background: rgba(158,158,158,.2);
-    border: none;
-    margin-left: 0px;
-    text-align: center !important;
-    vertical-align: middle;
-    line-height: 36px;
-    padding-right: unset;
-    padding: 0px 16px;
-    display:inline;
-}
-#collapse4 .mdl-cell--12-col:nth-of-type(2), #collapse4 .mdl-cell--12-col:nth-of-type(3) {
-    width: 50% !important;
-    display:inline !important;
-}
-#collapse4 [name*="refreshDevices"] span, #collapse4 [name*="resultPage"] span {
-    font-weight: 500;
-    text-align: center !important;
-    white-space: nowrap !important;
-}
-#collapse4 [name*="refreshDevices"]::before, #collapse4 [name*="resultPage"]::before {
-    content: "";
-}
-
-@media (min-width: 840px)
-.mdl-cell--8-col, .mdl-cell--8-col-desktop.mdl-cell--8-col-desktop {
-    width: calc(76.6666666667% - 16px);
-}
-</style>'''
 }
 
 Map btnParagraph(buttons, extra="") {
@@ -999,19 +843,25 @@ def deviceDiscovery(){
 
 
 def manuallyAdd(){
-   dynamicPage(name: "manuallyAdd", title: "Manually add a Tasmota-based Device", nextPage: "manuallyAddConfirm") {
+   dynamicPage(name: "manuallyAdd", title: "Manually add a Tasmota-based Device", nextPage: "manuallyAddConfirm", previousPage: "mainPage") {
 		section {
-            paragraph "This process will manually create a Tasmota-based Device with the entered IP address. Tasmota Device Handler then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your wifi network."
-            input "deviceType", "enum", title:"Device Type", description: "", required: true, submitOnChange: false, options: 
+            paragraph("This process will manually create a Tasmota-based Device with the entered IP address. Tasmota Device Handler then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your wifi network." + getCSSStyles())
+            input("deviceType", "enum", title:"Device Type", description: "", required: true, submitOnChange: false, options: 
                 // BEGIN:makeTasmotaConnectDriverListV1()
                 ["Tasmota - Universal Parent",
                 ]
                 // END:  makeTasmotaConnectDriverListV1()
+            )
+            input(name: "deviceConfig", type: "enum", title: "Device Configuration", 
+                description: "Select a Device Configuration (default: Generic Device)<br/>'Generic Device' doesn't configure device Template and/or Module on Tasmota. Child devices and types are auto-detected as well as auto-created and does NOT depend on this setting.", 
+                options: getDeviceConfigurationsAsListOption(), defaultValue: "01generic-device", required: false)
             input("ipAddress", "text", title:"IP Address", description: "", required: true, submitOnChange: false)
             input("deviceLabel", "text", title:"Device Label", description: "", required: true, defaultValue: (deviceType ? deviceType : "Tasmota - Universal Parent") + " (%device_ip%)")
             paragraph("'%device_ip%' = insert device IP here")
-            input("passwordDevice", "password", title:"Tasmota Device Password", description: "Only needed if set in Tasmota.", defaultValue: passwordDefault, submitOnChange: true, displayDuringSetup: true)
+            input("passwordDevice", "password", title:"Tasmota Device Password", description: "Only needed if set in Tasmota.", defaultValue: passwordDefault, submitOnChange: true, displayDuringSetup: true)            
             paragraph("Only needed if set in Tasmota.")
+            // Have to find a way to leave this page without filling in the required fields...
+            //href("mainPage", title:getMaterialIcon('cancel') + "Cancel", description: "")
 		}
     }
 }
@@ -1025,22 +875,29 @@ def manuallyAddConfirm(){
         def child = addChildDevice("tasmota", deviceType ? deviceType : "Tasmota - Universal Parent", "${convertIPtoHex(ipAddress)}", location.hubs[0].id, [
            "label": (deviceLabel ? deviceLabel : "Tasmota - Universal Parent (%device_ip%)").replace("%device_ip%", "${ipAddress}"),
            "data": [
-           "ip": ipAddress,
-           "port": "80",
-           "password": encrypt(passwordDevice)
+                "ip": ipAddress,
+                "port": "80",
+                "password": encrypt(passwordDevice),
+                "deviceConfig": deviceConfig
            ]
         ])
 
         // We do this to get everything setup correctly
+        //child.updateSetting("deviceConfig", [type: "enum", value:deviceConfig])
+        // After adding preferences, Configure() needs to run to apply them, but we have to wait a little bit.
+        child.configureDelayed()
+        // This will refresh and detect child devices based on the above config
         child.refresh()
 
-        app.updateSetting("ipAddress", "")
+        // Restore for next time
+        app.updateSetting("ipAddress", [type: "string", value:getFirstTwoIPBytes(ipAddress)])
         app.updateSetting("deviceLabel", "")
         app.updateSetting("passwordDevice", "")
-            
+        //app.updateSetting("deviceConfig", [type: "enum", value:"01generic-device"])
+        
         dynamicPage(name: "manuallyAddConfirm", title: "Manually add a Tasmota-based Device", nextPage: "mainPage") {
             section {
-                paragraph "The device has been added. Press next to return to the main page."
+                paragraph "The device has been added. Press next to return to the main page. It may take up to a minute or so before all child devices have been created if many are needed. Be patient. If all child devices are not created as expected, press Configure and Refresh in the Universal Parent and wait again. Don't click multiple times, it takes time for the device to reconfigure itself."
             }
         }
     } else {
@@ -1601,6 +1458,175 @@ def installed() {
  */
 
 /**
+ * APP CSS METHODS (helpers-app-css)
+ *
+ * Helper functions for App CSS
+ */
+
+String getCSSStyles() {
+    return '''<style>
+/* General App Styles */
+#version {
+    font-size: 50%;
+}
+.btn {
+    font-family: "Roboto","Helvetica","Arial",sans-serif;
+}
+.mdl-card, .mdl-switch__label, .mdl-textfield  {
+    font-size: 14px;
+    font-family: "Roboto","Helvetica","Arial",sans-serif;
+}
+.btn-sub {
+    padding: 2px 30px 2px 2px;
+}
+div.mdl-button--raised {
+    font-weight: bold; 
+    color:#fff; 
+    background-color:#81bc00; 
+    border: 1px solid;
+}
+div.mdl-button--raised:hover, div.mdl-button--raised:focus {
+    color: #212121;
+    background-color:#91d844; 
+}
+.btn-sub.hrefElem:before {
+    top: calc(50% - 0.75625rem);
+}
+div.mdl-button--raised h4.pre {
+    font-weight: bold; 
+    color: #fff;
+    vertical-align: middle;
+}
+
+/* Icon Styles */
+.icon-position {
+    margin-right: 12px;
+    vertical-align: middle;
+}
+.icon-tiny {
+    margin-right: 8px;
+    font-size: 14px;
+}
+.icon-small {
+    margin-right: 8px;
+    font-size: 18px;
+}
+.icon-large {
+    margin-right: 12px;
+    font-size: 32px;
+}
+
+/* Configure Devices List Styles */
+#collapse4 .hrefElem::before {
+    filter: invert(100%);
+}
+#collapse4 .hrefElem:hover::before, #collapse4 .hrefElem:focus::before {
+    filter: invert(0%);
+}
+#collapse4 table .hrefElem::before {
+    filter: invert(0%);
+}
+#collapse4 .btn-block {
+    color: #f5f5f5;
+    background-color: #382e2b;
+    
+    font-size: 14px;
+    /*font-size: calc(100% + 0.08vw);*/
+    max-width: inherit;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#collapse4 .btn-block span {
+    white-space: nowrap !important;
+    max-width: inherit;
+}
+#collapse4 .btn-block:hover, #collapse4 .btn-block:focus {
+    color: #212121;
+    background-color: #e0e0e0;
+}
+#collapse4 div.mdl-textfield {
+    margin: 0px;
+}
+.device-config_table {
+    border-spacing: 2px 0px;
+    table-layout:fixed;
+    width: 100%
+}
+.device-config_td {
+    text-align: center;
+    vertical-align: middle;
+}
+.device-config_btn {
+    width: 100%;
+}
+.device-config_table th, .device-config_table td {
+    font-family: "Roboto","Helvetica","Arial",sans-serif;
+    font-size: 13px;
+    vertical-align: middle;
+    width: 100%;
+}
+.device-config_table th div, .device-config_td div, .device-config_table td a {
+    text-align: center;
+    white-space: nowrap !important;
+    max-width: inherit;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    display: block;
+}
+.device-config_btn_icon {
+    text-align: center;
+    width: 100%;
+}
+
+/* Action Buttons */
+#collapse4 [name*="refreshDevices"] {
+    float: right !important;
+}
+#collapse4 [name*="resultPage"] {
+    float: left !important;
+    visibility: hidden;
+}
+#collapse4 [name*="refreshDevices"], #collapse4 [name*="resultPage"] {
+    color: #000;
+    width: 170px !important;
+    min-width: 170px;
+    background: rgba(158,158,158,.2);
+    border: none;
+    margin-left: 0px;
+    text-align: center !important;
+    vertical-align: middle;
+    line-height: 36px;
+    padding-right: unset;
+    padding: 0px 16px;
+    display:inline;
+}
+#collapse4 .mdl-cell--12-col:nth-of-type(2), #collapse4 .mdl-cell--12-col:nth-of-type(3) {
+    width: 50% !important;
+    display:inline !important;
+}
+#collapse4 [name*="refreshDevices"] span, #collapse4 [name*="resultPage"] span {
+    font-weight: 500;
+    text-align: center !important;
+    white-space: nowrap !important;
+}
+#collapse4 [name*="refreshDevices"]::before, #collapse4 [name*="resultPage"]::before {
+    content: "";
+}
+
+@media (min-width: 840px)
+.mdl-cell--8-col, .mdl-cell--8-col-desktop.mdl-cell--8-col-desktop {
+    width: calc(76.6666666667% - 16px);
+}
+</style>'''
+}
+
+ /**
+ * --END-- APP CSS METHODS (helpers-app-css)
+ */
+
+/**
  * TASMOTA METHODS (helpers-tasmota)
  *
  * Helper functions included in all Tasmota drivers
@@ -1618,7 +1644,7 @@ void installedPreConfigure() {
         if(pass != null && pass != "" && pass != "[installed]") {
             device.updateSetting("password", [value: pass, type: "password"])
         }
-        
+        device.updateSetting("deviceConfig", [type: "enum", value:getDataValue('deviceConfig')])
     }
 }
 
@@ -2273,7 +2299,7 @@ private String convertIPtoHex(ipAddress) {
     String hex = null
     if(ipAddress != null) {
         hex = ipAddress.tokenize( '.' ).collect {  String.format( '%02X', it.toInteger() ) }.join()
-        logging("Get this IP in hex: ${hex}", 0)
+        logging("Got this IP in hex: ${hex}", 0)
     } else {
         hex = null
         if (useIPAsID) {
@@ -2281,6 +2307,17 @@ private String convertIPtoHex(ipAddress) {
         }
     }
     return hex
+}
+
+private String getFirstTwoIPBytes(ipAddress) {
+    String ipStart = null
+    if(ipAddress != null) {
+        ipStart = ipAddress.tokenize( '.' ).take(2).join('.') + '.'
+        logging("Got these IP bytes: ${ipStart}", 0)
+    } else {
+        ipStart = ''
+    }
+    return ipStart
 }
 
 void sync(String ip, Integer port = null) {

@@ -16,7 +16,7 @@ void installedPreConfigure() {
         if(pass != null && pass != "" && pass != "[installed]") {
             device.updateSetting("password", [value: pass, type: "password"])
         }
-        
+        device.updateSetting("deviceConfig", [type: "enum", value:getDataValue('deviceConfig')])
     }
 }
 
@@ -671,7 +671,7 @@ private String convertIPtoHex(ipAddress) {
     String hex = null
     if(ipAddress != null) {
         hex = ipAddress.tokenize( '.' ).collect {  String.format( '%02X', it.toInteger() ) }.join()
-        logging("Get this IP in hex: ${hex}", 0)
+        logging("Got this IP in hex: ${hex}", 0)
     } else {
         hex = null
         if (useIPAsID) {
@@ -679,6 +679,17 @@ private String convertIPtoHex(ipAddress) {
         }
     }
     return hex
+}
+
+private String getFirstTwoIPBytes(ipAddress) {
+    String ipStart = null
+    if(ipAddress != null) {
+        ipStart = ipAddress.tokenize( '.' ).take(2).join('.') + '.'
+        logging("Got these IP bytes: ${ipStart}", 0)
+    } else {
+        ipStart = ''
+    }
+    return ipStart
 }
 
 void sync(String ip, Integer port = null) {
