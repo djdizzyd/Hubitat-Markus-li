@@ -69,7 +69,7 @@ void makeAppTitle() {
 }
 
 Map mainPage() {
-    return dynamicPage(name: "mainPage", nextPage: null, uninstall: true, install: true) {
+    return dynamicPage(name: "mainPage", title: "", nextPage: null, uninstall: true, install: true) {
         makeAppTitle() // Also contains the CSS
         logging("Building mainPage", 1)
         // Hubitat green: #81BC00
@@ -87,15 +87,15 @@ Map mainPage() {
             //href "deviceDiscoveryCancel", title:"Cancel Discover Device", description:""
             }
             section(getElementStyle('header', getMaterialIcon('library_add') + "Install New Devices"), hideable: true, hidden: false){
-                href("deviceDiscovery", title:getMaterialIcon('', 'he-discovery_1') + "Discover Devices", description:"")
-                href("manuallyAdd", title:getMaterialIcon('', 'he-add_1') + "Manually Add Device", description:"")
+                href("deviceDiscovery", title:getMaterialIcon('', 'he-discovery_1') + "Discover Devices (using SSDP)", description:"")
+                href("manuallyAdd", title:getMaterialIcon('', 'he-add_1') + "Manually Install Device", description:"")
             }
             section(getElementStyle('header', getMaterialIcon('playlist_add') + 'Grant Access to Additional Devices'), hideable: true, hidden: true){
                 paragraph("Select the devices to grant access to, if the device doesn't use a compatible driver it will be ignored, so selecting too many or the wrong ones, doesn't matter. Easiest is probably to just select all devices. Only Parent devices are shown.")
                 input(name:	"devicesSelected", type: "capability.refresh", title: "Available Devices", multiple: true, required: false, submitOnChange: true)
             }
             section(getElementStyle('header', getMaterialIcon('', 'he-settings1') + "Configure Devices"), hideable: true, hidden: false){ 
-                paragraph('<div style="margin: 8px;">All devices below use a compatible driver, if any device is missing, add them above in "Grant Access to Additional Devices". Newly selected devices will not be shown until after you\'ve pressed Done.</div>')
+                paragraph('<div style="margin: 8px;">All devices below use a compatible driver, if any device is missing, add them above in "Grant Access to Additional Devices". Newly selected devices will not be shown until after you\'ve pressed Done. \"Refresh Devices\" runs the \"Refresh\" command on all devices in the list, this can take a bit of time if you have many devices...</div>')
                 
                 //input(name: "refreshDevices", type: "bool", defaultValue: "false", submitOnChange: true, title: "Refresh Devices", description: "Refresh Devices Desc")
                 href("resultPage", title:getMaterialIcon('autorenew') + "Result Page", description: "")
@@ -376,7 +376,7 @@ def configureTasmotaDevice(params) {
 }
 
 //
-def deviceDiscoveryTEMP(){
+def deviceDiscoveryTEMP() {
    dynamicPage(name: "deviceDiscoveryTEMP", title: "Discover Tasmota-based Devices", nextPage: "mainPage") {
 		section {
 			paragraph "NOT FUNCTIONAL: This process will automatically discover your device, this may take a few minutes. Please be patient. Tasmota Device Handler then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your WiFi network."
@@ -388,21 +388,24 @@ def deviceDiscoveryTEMP(){
 }
 
 
-def manuallyAdd(){
-   dynamicPage(name: "manuallyAdd", title: "Manually add a Tasmota-based Device", nextPage: "manuallyAddConfirm", previousPage: "mainPage") {
-		section {
-            paragraph("This process will manually create a Tasmota-based Device with the entered IP address. Tasmota Device Handler then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your wifi network." + getCSSStyles())
+def manuallyAdd() {
+    dynamicPage(name: "manuallyAdd", title: "", nextPage: "manuallyAddConfirm", previousPage: "mainPage") {
+        makeAppTitle() // Also contains the CSS
+		section(getElementStyle('header', getMaterialIcon('', 'he-add_1') + "Manually Install a Tasmota-based Device"), hideable: true, hidden: false) {
+            paragraph("This process will install a Tasmota-based Device with the entered IP address. Tasmota Device Handler then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your wifi network.")
+            
             input("deviceType", "enum", title:"Device Type", description: "", required: true, submitOnChange: false, options: 
                 #!include:makeTasmotaConnectDriverListV1()
             )
             input(name: "deviceConfig", type: "enum", title: "Device Configuration", 
                 description: "Select a Device Configuration (default: Generic Device)<br/>'Generic Device' doesn't configure device Template and/or Module on Tasmota. Child devices and types are auto-detected as well as auto-created and does NOT depend on this setting.", 
                 options: getDeviceConfigurationsAsListOption(), defaultValue: "01generic-device", required: false)
-            input("ipAddress", "text", title:"IP Address", description: "", required: true, submitOnChange: false)
+            input("ipAddress", "text", title:"IP Address", description: "", required: false, submitOnChange: false)
             input("deviceLabel", "text", title:"Device Label", description: "", required: true, defaultValue: (deviceType ? deviceType : "Tasmota - Universal Parent") + " (%device_ip%)")
             paragraph("'%device_ip%' = insert device IP here")
             input("passwordDevice", "password", title:"Tasmota Device Password", description: "Only needed if set in Tasmota.", defaultValue: passwordDefault, submitOnChange: true, displayDuringSetup: true)            
             paragraph("Only needed if set in Tasmota.")
+            paragraph("To exit without installing a device, complete the required fields but DON'T enter a correct IP, then click \"Next\".")
             // Have to find a way to leave this page without filling in the required fields...
             //href("mainPage", title:getMaterialIcon('cancel') + "Cancel", description: "")
 		}
@@ -431,24 +434,20 @@ def manuallyAddConfirm(){
         child.configureDelayed()
         // This will refresh and detect child devices based on the above config
         child.refresh()
-
+        def tmpIpAddress = ipAddress
         // Restore for next time
         app.updateSetting("ipAddress", [type: "string", value:getFirstTwoIPBytes(ipAddress)])
         app.updateSetting("deviceLabel", "")
         app.updateSetting("passwordDevice", "")
         //app.updateSetting("deviceConfig", [type: "enum", value:"01generic-device"])
         
-        dynamicPage(name: "manuallyAddConfirm", title: "Manually add a Tasmota-based Device", nextPage: "mainPage") {
-            section {
-                paragraph "The device has been added. Press next to return to the main page. It may take up to a minute or so before all child devices have been created if many are needed. Be patient. If all child devices are not created as expected, press Configure and Refresh in the Universal Parent and wait again. Don't click multiple times, it takes time for the device to reconfigure itself."
-            }
-        }
+        resultPage("manuallyAddConfirm", "Manual Installation Summary", 
+                   "The device with IP \"$tmpIpAddress\" has been installed. It may take up to a minute or so before all child devices have been created if many are needed. Be patient. If all child devices are not created as expected, press Configure and Refresh in the Universal Parent and wait again. Don't click multiple times, it takes time for the device to reconfigure itself. Press \"Next\" to Continue.", 
+                   nextPage="mainPage")
     } else {
-        dynamicPage(name: "manuallyAddConfirm", title: "Manually add a Tasmota-based Device", nextPage: "mainPage") {
-		    section {
-			    paragraph "The entered ip address is not valid. Please try again."
-		    }
-        }
+        resultPage("manuallyAddConfirm", "Manual Installation Summary", 
+                   "The entered ip address ($ipAddress) is not valid. Please try again. Press \"Next\" to Continue.", 
+                   nextPage="mainPage")
     }
 }
 
@@ -456,19 +455,13 @@ def deleteDevice(){
     try {
         unsubscribe()
         deleteChildDevice(state.currentDeviceId)
-        dynamicPage(name: "deleteDevice", title: "Deletion Summary", nextPage: "mainPage") {
-            section {
-                paragraph "The device has been deleted. Press next to continue"
-            } 
-        }
-    
+        resultPage("deleteDevice", "Deletion Summary", 
+                   "The device with DNI $state.currentDeviceId has been deleted. Press \"Next\" to Continue.", 
+                   nextPage="mainPage")
 	} catch (e) {
-        dynamicPage(name: "deleteDevice", title: "Deletion Summary", nextPage: "mainPage") {
-            section {
-                paragraph "Error: ${(e as String).split(":")[1]}."
-            } 
-        }
-    
+        resultPage("deleteDevice", "Deletion Summary", 
+                   "Error: ${(e as String).split(":")[1]}.", 
+                   nextPage="mainPage")    
     }
 }
 
@@ -476,11 +469,9 @@ def changeName(){
     def thisDevice = getChildDevice(state.currentDeviceId)
     thisDevice.label = settings["${state.currentDeviceId}_label"]
 
-    dynamicPage(name: "changeName", title: "Change Name Summary", nextPage: "mainPage") {
-	    section {
-            paragraph "The device has been renamed to \"$thisDevice.label\". Press \"Next\" to continue"
-        }
-    }
+    resultPage("changeName", "Change Name Summary", 
+                   "The device has been renamed to \"$thisDevice.label\". Press \"Next\" to Continue.", 
+                   nextPage="mainPage")
 }
 
 def getDeviceDriverName(device) {
