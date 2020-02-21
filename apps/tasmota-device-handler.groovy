@@ -29,6 +29,7 @@ preferences {
 
      page(name: "discoveryPage", title: "Device Discovery", content: "discoveryPage", refreshTimeout:10)
      page(name: "deviceDiscovery")
+     page(name: "deviceDiscoveryPage2")
      page(name: "deviceDiscoveryReset")
      page(name: "discoveredAddConfirm")
      
@@ -155,11 +156,11 @@ Map mainPage() {
 
                 }
             }
-            section(getElementStyle('header', "More things"), hideable: true, hidden: true){
+            /*section(getElementStyle('header', "More things"), hideable: true, hidden: true){
                 paragraph("Select the devices to configure, if the device doesn't use a compatible driver it will be ignored, so selecting too many or the wrong ones, doesn't matter. Easiest is probably to just select all devices. Only Parent devices are shown.")
                 
                 input(name:	"devicesAvailable", type: "enum", title: "Available Devices", multiple: true, required: false, submitOnChange: true, options: state.devicesSelectable)
-            }
+            }*/
         } else {
             section(getElementStyle('subtitle', "Configure")){
                 generate_preferences(configuration_model_debug())

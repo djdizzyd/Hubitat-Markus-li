@@ -54,6 +54,7 @@ preferences {
 
      page(name: "discoveryPage", title: "Device Discovery", content: "discoveryPage", refreshTimeout:10)
      page(name: "deviceDiscovery")
+     page(name: "deviceDiscoveryPage2")
      page(name: "deviceDiscoveryReset")
      page(name: "discoveredAddConfirm")
      
@@ -631,11 +632,11 @@ Map mainPage() {
 
                 }
             }
-            section(getElementStyle('header', "More things"), hideable: true, hidden: true){
+            /*section(getElementStyle('header', "More things"), hideable: true, hidden: true){
                 paragraph("Select the devices to configure, if the device doesn't use a compatible driver it will be ignored, so selecting too many or the wrong ones, doesn't matter. Easiest is probably to just select all devices. Only Parent devices are shown.")
                 
                 input(name:	"devicesAvailable", type: "enum", title: "Available Devices", multiple: true, required: false, submitOnChange: true, options: state.devicesSelectable)
-            }
+            }*/
         } else {
             section(getElementStyle('subtitle', "Configure")){
                 generate_preferences(configuration_model_debug())
@@ -1702,13 +1703,13 @@ def deviceDiscovery(params=[:]) {
         state.deviceRefreshStart = now()
     }
 
-	def devices = devicesDiscovered()
+	//def devices = devicesDiscovered()
     
-	def refreshInterval = 20
+	def refreshInterval = 10
     
-	def options = devices ?: []
-	def numFound = options.size() ?: 0
-
+	//def options = devices ?: [:]
+	//def numFound = options.size() ?: 0
+    
 	//if ((numFound == 0 && state.deviceRefreshCount > 25) || params.reset == "true") {
     //	log.trace "Cleaning old device memory"
     //	state.devices = [:]
@@ -1726,14 +1727,92 @@ def deviceDiscovery(params=[:]) {
 		verifyDevices()
 	}
     
-	return dynamicPage(name:"deviceDiscovery", title:"", nextPage:"discoveredAddConfirm", refreshInterval:refreshInterval) {
+	return dynamicPage(name:"deviceDiscovery", title:"", nextPage:"deviceDiscoveryPage2", refreshInterval:refreshInterval) {
+    //return dynamicPage(name:"deviceDiscovery", title:"", nextPage:"deviceDiscoveryPage2") {
         makeAppTitle() // Also contains the CSS
 		section(getElementStyle('header', getMaterialIcon('', 'he-discovery_1') + "Discover a Tasmota Device"), hideable: true, hidden: false) {
-            paragraph("Please wait while we discover your Tasmota-based Devices using SSDP. Discovery can take five minutes or more, so sit back and relax! Select your device below once discovered.")
+            paragraph("Please wait while we discover your Tasmota-based Devices using SSDP. Discovery can take five minutes or more, so sit back and relax!")
             
-			paragraph("Please note that Hue Bridge Emulation (Configuration->Configure Other->Emulation) must be turned on in Tasmota for discovery to work (this is the default with the Hubitat version of Tasmota).")
+			paragraph("<span style=\"font-weight: 500\">Time elapsed since starting SSDP Discovery:</ span> ${new BigDecimal((now() - Long.valueOf(state.deviceRefreshStart))/1000).setScale(0, BigDecimal.ROUND_HALF_UP)} seconds")
             
-            paragraph("Time elapsed since starting SSDP Discovery: ${new BigDecimal((now() - Long.valueOf(state.deviceRefreshStart))/1000).setScale(0, BigDecimal.ROUND_HALF_UP)} seconds")
+            paragraph("Please note that Hue Bridge Emulation (Configuration->Configure Other->Emulation) must be turned on in Tasmota for discovery to work (this is the default with the Hubitat version of Tasmota).")
+
+            paragraph("Installed devices are not displayed (if Tasmota Device Handler has access to them). Previously discovered devices will show quickly, devices never seen by Tasmota Device Handler before may take time to discover.")
+            getAvailableDevicesList()
+            paragraph("Once the device you want to install is available in the above list, click \"Next\" to go to the Installation Page.")
+            paragraph("If the device you expect to find is not found within 10 minutes, use the Manual Install method instead.")
+		}
+        section(getElementStyle('header', getMaterialIcon('dns') + "Actions"), hideable: true, hidden: false){ 
+            href("deviceDiscoveryReset", title:"Reset list of Discovered Devices", description:"")
+            href("mainPage", title:"Return to the Main Page", description:"")
+			//href "deviceDiscovery", title:"Reset list of discovered devices", description:"", params: ["reset": "true"]
+            
+		}
+	}
+}
+
+String getAvailableDevicesList() {
+    
+    
+    def vdevices = getVerifiedDevices()
+	def options = [:]
+	vdevices.each {
+        //log.debug("Device: $it.value")
+		def value = "${it.value.name}"
+		def key = "${it.value.networkAddress}"
+		options["${key}"] = value
+	}
+    String title = "Available Devices (${options.size() ?: 0} found)"
+    //List optionsList = []
+    //options.each{optionsList << [key: it.key, value: it.value]}
+    String deviceList = ""
+    options.sort({ a, b -> a.key <=> b.key }).each{
+        deviceList += it.value + "<br>"
+    }
+
+    String header = """<style>
+        div.btn-listing,
+        div.btn-listing:hover,
+        div.btn-listing:active,
+        div.btn-listing:focus,
+        div.btn-listing:focus:not(:active),
+        div.btn-listing:active:focus,
+        div.btn-listing:active:hover {
+            background: rgba(158,158,158,.2);
+            background-color: rgba(158,158,158,.2);
+            border-color: rgb(227, 227, 227);
+            cursor: unset;
+            touch-action: none;
+            border-left: none;
+            text-align:left;
+            color:#212121;
+            border-left-color: rgb(227, 227, 227);
+            font-weight: 400;
+            box-sizing: border-box;
+            user-select: none;
+            border-left-style: outset;
+            border-left-width: 2px;
+        }
+        </style><div class="btn-listing btn btn-default btn-lg btn-block device-btn-filled  btn-device  mdl-shadow--2dp">
+            <span style="">""" + title + """</span><br>
+            <span id="devicesSelecteddevlist" class="device-text" style="text-align: left;">"""
+    String footer = "</span></div>"
+    log.debug("devices2: ${devices} , options: ${options}")
+    return paragraph(header + deviceList + footer, submitOnChange: false)
+}
+
+def deviceDiscoveryPage2() {
+    Integer deviceRefreshCount = !state.deviceRefreshCount ? 0 : state.deviceRefreshCount as Integer
+
+    def devices = devicesDiscovered()
+    
+	def options = devices ?: [:]
+	def numFound = options.size() ?: 0
+    
+	//return dynamicPage(name:"deviceDiscovery", title:"", nextPage:"discoveredAddConfirm", refreshInterval:refreshInterval) {
+    return dynamicPage(name:"deviceDiscoveryPage2", title:"", nextPage:"discoveredAddConfirm") {
+        makeAppTitle() // Also contains the CSS
+		section(getElementStyle('header', getMaterialIcon('', 'he-discovery_1') + "Discover a Tasmota Device"), hideable: true, hidden: false) {
             paragraph("Installed devices are not displayed (if Tasmota Device Handler has access to them). Previously discovered devices will show quickly, devices never seen by Tasmota Device Handler before may take time to discover.")
             input("deviceType", "enum", title:"Device Type", description: "", required: true, submitOnChange: true, options: 
                 // BEGIN:makeTasmotaConnectDriverListV1()
@@ -1751,11 +1830,7 @@ def deviceDiscovery(params=[:]) {
             paragraph("Suffixes \" (Parent)\" and \" Parent\" at the end of the Device Label will be removed from the Child Device Label.")
             input("passwordDevice", "password", title:"Tasmota Device Password", description: "Only needed if set in Tasmota.", defaultValue: passwordDefault, submitOnChange: true, displayDuringSetup: true)            
             paragraph("Only needed if set in Tasmota.")
-		}
-        section(getElementStyle('header', getMaterialIcon('', 'he-settings1') + "Options"), hideable: true, hidden: false){ 
-            href("deviceDiscoveryReset", title:"Reset list of Discovered Devices", description:"")
-			//href "deviceDiscovery", title:"Reset list of discovered devices", description:"", params: ["reset": "true"]
-            paragraph("To exit without installing a device, complete the required fields and DON'T select a device, then click \"Next\".")
+            paragraph("<br/>To exit without installing a device, complete the required fields and DON'T select a device, then click \"Next\".")
 		}
 	}
 }
