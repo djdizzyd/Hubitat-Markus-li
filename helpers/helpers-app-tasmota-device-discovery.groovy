@@ -35,7 +35,7 @@ def deviceDiscovery(params=[:]) {
 
 	def devices = devicesDiscovered()
     
-	def refreshInterval = 10
+	def refreshInterval = 20
     
 	def options = devices ?: []
 	def numFound = options.size() ?: 0
