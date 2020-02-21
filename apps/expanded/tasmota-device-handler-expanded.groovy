@@ -1699,6 +1699,7 @@ def deviceDiscovery(params=[:]) {
         // This is our failsafe since we REALLY don't want this to be left on...
         runIn(1800, "deviceDiscoveryCancel")
         verifyDevices()
+        state.deviceRefreshStart = now()
     }
 
 	def devices = devicesDiscovered()
@@ -1715,8 +1716,6 @@ def deviceDiscovery(params=[:]) {
     //    app.updateSetting("selectedDevice", "")
     //}
 
-    
-
 	//Tasmota-based Device discovery request every 15 //25 seconds
 	//if((deviceRefreshCount % 5) == 0) {
 	//	discoverDevices()
@@ -1726,7 +1725,6 @@ def deviceDiscovery(params=[:]) {
 	if((deviceRefreshCount % 3) == 0) {
 		verifyDevices()
 	}
-
     
 	return dynamicPage(name:"deviceDiscovery", title:"", nextPage:"discoveredAddConfirm", refreshInterval:refreshInterval) {
         makeAppTitle() // Also contains the CSS
@@ -1734,9 +1732,10 @@ def deviceDiscovery(params=[:]) {
             paragraph("Please wait while we discover your Tasmota-based Devices using SSDP. Discovery can take five minutes or more, so sit back and relax! Select your device below once discovered.")
             
 			paragraph("Please note that Hue Bridge Emulation (Configuration->Configure Other->Emulation) must be turned on in Tasmota for discovery to work (this is the default with the Hubitat version of Tasmota).")
-            paragraph("Time elapsed since starting SSDP Discovery: ${deviceRefreshCount * refreshInterval} seconds")
+            
+            paragraph("Time elapsed since starting SSDP Discovery: ${new BigDecimal((now() - Long.valueOf(state.deviceRefreshStart))/1000).setScale(0, BigDecimal.ROUND_HALF_UP)} seconds")
             paragraph("Installed devices are not displayed (if Tasmota Device Handler has access to them). Previously discovered devices will show quickly, devices never seen by Tasmota Device Handler before may take time to discover.")
-            input("deviceType", "enum", title:"Device Type", description: "", required: true, submitOnChange: false, options: 
+            input("deviceType", "enum", title:"Device Type", description: "", required: true, submitOnChange: true, options: 
                 // BEGIN:makeTasmotaConnectDriverListV1()
                 ["Tasmota - Universal Parent",
                 ]
@@ -1744,11 +1743,12 @@ def deviceDiscovery(params=[:]) {
             )
             input(name: "deviceConfig", type: "enum", title: "Device Configuration", 
                 description: "Select a Device Configuration (default: Generic Device)<br/>'Generic Device' doesn't configure device Template and/or Module on Tasmota. Child devices and types are auto-detected as well as auto-created and does NOT depend on this setting.", 
-                options: getDeviceConfigurationsAsListOption(), defaultValue: "01generic-device", required: false)
+                options: getDeviceConfigurationsAsListOption(), defaultValue: "01generic-device", required: false, submitOnChange: true)
             input("selectedDiscoveredDevice", "enum", required:false, title:"Select a Tasmota Device (${numFound} found)", multiple:false, options:options, submitOnChange: true)
             //input("ipAddress", "text", title:"IP Address", description: "", required: true, submitOnChange: false)
-            input("deviceLabel", "text", title:"Device Label", description: "", required: true, defaultValue: (deviceType ? deviceType : "Tasmota - Universal Parent") + " (%device_ip%)")
+            input("deviceLabel", "text", title:"Device Label", description: "", required: true, defaultValue: (deviceType ? deviceType : "Tasmota - Universal Parent") + " (%device_ip%)", submitOnChange: true)
             paragraph("'%device_ip%' = insert device IP here")
+            paragraph("Suffixes \" (Parent)\" and \" Parent\" at the end of the Device Label will be removed from the Child Device Label.")
             input("passwordDevice", "password", title:"Tasmota Device Password", description: "Only needed if set in Tasmota.", defaultValue: passwordDefault, submitOnChange: true, displayDuringSetup: true)            
             paragraph("Only needed if set in Tasmota.")
 		}
@@ -1789,12 +1789,12 @@ def discoveredAddConfirm() {
 
         // Restore for next time
         app.updateSetting("ipAddress", [type: "string", value:getFirstTwoIPBytes(ipAddress)])
-        app.updateSetting("deviceLabel", "")
+        //app.updateSetting("deviceLabel", "")
         app.updateSetting("passwordDevice", "")
         //app.updateSetting("deviceConfig", [type: "enum", value:"01generic-device"])
         
         resultPage("discoveredAddConfirm", "Discovered Tasmota-based Device", 
-                   "The device has been added. Press next to return to the Main page.<br/>It may take up to a minute or so before all child devices have been created if many are needed. Be patient. If all child devices are not created as expected, press Configure and Refresh in the Universal Parent and wait again. Don't click multiple times, it takes time for the device to reconfigure itself.", 
+                   "The device has been added. Press next to return to the Main Page.<br/>It may take up to a minute or so before all child devices have been created if many are needed. Be patient. If all child devices are not created as expected, press Configure and Refresh in the Universal Parent and wait again. Don't click multiple times, it takes time for the device to reconfigure itself.", 
                    nextPage="mainPage")
     } else {
         resultPage("discoveredAddConfirm", "Discovered Tasmota-based Device", "No device was selected. Press next to return to the Main page.", nextPage="mainPage")
@@ -2428,7 +2428,7 @@ void configureChildDevices(asyncResponse, data) {
             namespace = "tasmota"
             def childId = "POWER$i"
             def childName = getChildDeviceNameRoot(keepType=true) + " ${getMinimizedDriverName(driverName[0])} ($childId)"
-            def childLabel = "${getMinimizedDriverName(device.getLabel())} ($childId)"
+            def childLabel = "${getMinimizedDriverName(device.getLabel())} ($i)"
             logging("createChildDevice: POWER$i", 1)
             createChildDevice(namespace, driverName, childId, childName, childLabel)
             

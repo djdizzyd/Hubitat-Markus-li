@@ -2933,7 +2933,7 @@ void configureChildDevices(asyncResponse, data) {
             namespace = "tasmota"
             def childId = "POWER$i"
             def childName = getChildDeviceNameRoot(keepType=true) + " ${getMinimizedDriverName(driverName[0])} ($childId)"
-            def childLabel = "${getMinimizedDriverName(device.getLabel())} ($childId)"
+            def childLabel = "${getMinimizedDriverName(device.getLabel())} ($i)"
             logging("createChildDevice: POWER$i", 1)
             createChildDevice(namespace, driverName, childId, childName, childLabel)
             
