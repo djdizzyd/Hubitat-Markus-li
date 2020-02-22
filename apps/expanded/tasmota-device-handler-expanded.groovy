@@ -339,7 +339,13 @@ TreeMap getDeviceConfigurations() {
         name: 'Sonoff 4CH',
         template: '{"NAME":"Sonoff 4CH","GPIO":[17,255,255,255,23,22,18,19,21,56,20,24,0],"FLAG":0,"BASE":7}',
         installCommands: [],
-       deviceLink: 'https://templates.blakadder.com/sonoff_4CH.html'],
+        deviceLink: 'https://templates.blakadder.com/sonoff_4CH.html'],
+
+        [typeId: 'sonoff-4ch-pro-r2',
+        name: 'Sonoff 4CH Pro (R2)',
+        template: '{"NAME":"Sonoff 4CH Pro","GPIO":[17,255,255,255,23,22,18,19,21,56,20,24,0],"FLAG":0,"BASE":23}',
+        installCommands: [],
+        deviceLink: 'https://templates.blakadder.com/sonoff_4CH_Pro.html'],
 
         [typeId: 'tuyamcu-znsn-wifi-curtain-wall-panel',
         comment: 'NOT GENERIC - read the instructions',
