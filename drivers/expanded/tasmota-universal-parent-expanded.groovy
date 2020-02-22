@@ -264,6 +264,12 @@ TreeMap getDeviceConfigurations() {
          installCommands: [],
          deviceLink: 'https://templates.blakadder.com/kmc-4.html'],
 
+        [typeId: 'teckin-sp10-plug',
+         name: 'Teckin SP10 Plug',
+         template: '{"NAME":"Teckin SP10","GPIO":[255,255,56,255,255,255,0,0,255,17,255,21,255],"FLAG":0,"BASE":18}',
+         installCommands: [],
+         deviceLink: 'https://templates.blakadder.com/teckin_SP10.html'],
+
         [typeId: 'awp04l-pm-plug',
          name: 'AWP04L Power Monitor Plug',
          template: '{"NAME":"AWP04L","GPIO":[57,255,255,131,255,134,0,0,21,17,132,56,255],"FLAG":0,"BASE":18}',
