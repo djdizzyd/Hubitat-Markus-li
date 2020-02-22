@@ -2,11 +2,11 @@
 
 #!include:getDefaultParentImports()
 
-
 metadata {
 	definition (name: "Tasmota - Universal Parent", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
         #!include:getDefaultMetadataCapabilities()
         capability "PresenceSensor"
+        capability "Initialize"         // This makes initialize() run on hub start, only needed in the Parent
         
         #!include:getDefaultParentMetadataAttributes()
         #!include:getDefaultMetadataAttributes()
