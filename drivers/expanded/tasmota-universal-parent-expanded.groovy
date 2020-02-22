@@ -1471,7 +1471,7 @@ void componentSetEffectWidth(cd, BigDecimal pixels) {
 private String getDriverVersion() {
     //comment = ""
     //if(comment != "") state.comment = comment
-    String version = "v1.0.0221Ta"
+    String version = "v1.0.0222Ta"
     logging("getDriverVersion() = ${version}", 50)
     sendEvent(name: "driver", value: version)
     updateDataValue('driver', version)

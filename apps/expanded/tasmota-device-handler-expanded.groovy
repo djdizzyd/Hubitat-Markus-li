@@ -533,7 +533,7 @@ Map getTimeStringSinceDateWithMaximum(myDate, maxMillis) {
 // BEGIN:getDefaultAppMethods()
 /* Default App Methods go here */
 private String getAppVersion() {
-    String version = "v1.0.0221Ta"
+    String version = "v1.0.0222Ta"
     logging("getAppVersion() = ${version}", 50)
     return version
 }
@@ -1797,7 +1797,7 @@ String getAvailableDevicesList() {
             <span style="">""" + title + """</span><br>
             <span id="devicesSelecteddevlist" class="device-text" style="text-align: left;">"""
     String footer = "</span></div>"
-    log.debug("devices2: ${devices} , options: ${options}")
+    //log.debug("devices2: ${devices} , options: ${options}")
     return paragraph(header + deviceList + footer, submitOnChange: false)
 }
 

@@ -128,7 +128,7 @@ String getAvailableDevicesList() {
             <span style="">""" + title + """</span><br>
             <span id="devicesSelecteddevlist" class="device-text" style="text-align: left;">"""
     String footer = "</span></div>"
-    log.debug("devices2: ${devices} , options: ${options}")
+    //log.debug("devices2: ${devices} , options: ${options}")
     return paragraph(header + deviceList + footer, submitOnChange: false)
 }
 
