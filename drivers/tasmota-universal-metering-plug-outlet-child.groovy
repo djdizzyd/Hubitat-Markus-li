@@ -14,6 +14,8 @@ metadata {
         #!include:getDefaultMetadataCapabilitiesForEnergyMonitor()
 
         #!include:getDefaultMetadataAttributesForEnergyMonitor()
+
+        #!include:getMinimumChildAttributes()
     }
 
     preferences {
@@ -43,6 +45,7 @@ void parse(List<Map> description) {
 
 void updated() {
     log.info "updated()"
+    #!include:getChildComponentDefaultUpdatedContent()
     refresh()
 }
 
@@ -75,6 +78,8 @@ void off() {
  * --- Nothing to edit here, move along! ---------------------------------------
  * -----------------------------------------------------------------------------
  */
+
+#!include:getDefaultFunctions()
 
 #!include:getHelperFunctions('all-default')
 

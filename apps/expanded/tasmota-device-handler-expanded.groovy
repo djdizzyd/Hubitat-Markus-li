@@ -20,9 +20,6 @@ import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 // Used for MD5 calculations
 import java.security.MessageDigest
-//import java.math.MathContext NOT ALLOWED!!! WHY?
-//import groovy.transform.TypeChecked
-//import groovy.transform.TypeCheckingMode
 /* Default Parent Imports */
 // END:  getDefaultParentImports()
 
@@ -533,7 +530,7 @@ Map getTimeStringSinceDateWithMaximum(myDate, maxMillis) {
 // BEGIN:getDefaultAppMethods()
 /* Default App Methods go here */
 private String getAppVersion() {
-    String version = "v1.0.0222Ta"
+    String version = "v1.0.0222Tb"
     logging("getAppVersion() = ${version}", 50)
     return version
 }

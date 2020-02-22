@@ -16,6 +16,8 @@ metadata {
         capability "Refresh"
         capability "LightEffects"                 // Attributes: effectName - STRING, lightEffects - JSON_OBJECT
 
+        #!include:getMinimumChildAttributes()
+
         //lightEffects = [1: "Effect Name", 2: "Other effect", 3: "etc..."] to JSON...
         attribute  "effectNumber", "number"
         
@@ -98,6 +100,7 @@ void updated() {
         setAddressablePixels(addressablePixels.toInteger())
         state.addressablePixels = addressablePixels
     }
+    #!include:getChildComponentDefaultUpdatedContent()
     //if(addressableRotation != null) setAddressableRotation(addressableRotation.toInteger())
     refresh()
 }
@@ -368,6 +371,8 @@ backlog
  * --- Nothing to edit here, move along! ---------------------------------------
  * -----------------------------------------------------------------------------
  */
+
+#!include:getDefaultFunctions()
 
 #!include:getHelperFunctions('all-default')
 

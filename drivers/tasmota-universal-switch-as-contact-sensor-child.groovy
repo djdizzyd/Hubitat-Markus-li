@@ -7,9 +7,9 @@ metadata {
     definition (name: "Tasmota - Universal Switch as Contact Sensor (Child)", namespace: "tasmota", author: "Markus Liljergren") {
         capability "Sensor"
         capability "ContactSensor"                // Attributes: contact - ENUM ["closed", "open"]
-
         capability "Refresh"
 
+        #!include:getMinimumChildAttributes()
     }
 
     preferences {
@@ -39,6 +39,7 @@ void parse(List<Map> description) {
 
 void updated() {
     log.info "updated()"
+    #!include:getChildComponentDefaultUpdatedContent()
     refresh()
 }
 
@@ -61,6 +62,8 @@ void refresh() {
  * --- Nothing to edit here, move along! ---------------------------------------
  * -----------------------------------------------------------------------------
  */
+
+#!include:getDefaultFunctions()
 
 #!include:getHelperFunctions('all-default')
 

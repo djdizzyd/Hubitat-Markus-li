@@ -89,6 +89,12 @@ attribute   "actionSeen", "number"
 attribute   "actionData", "json_object"
 """
 
+def getMinimumChildAttributes():
+    return """
+// Attributes used by all Child Drivers
+attribute   "driver", "string"
+"""
+
 def getDefaultMetadataCommands():
     return """
 // Default Commands

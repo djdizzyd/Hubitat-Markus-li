@@ -20,9 +20,6 @@ import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 // Used for MD5 calculations
 import java.security.MessageDigest
-//import java.math.MathContext NOT ALLOWED!!! WHY?
-//import groovy.transform.TypeChecked
-//import groovy.transform.TypeCheckingMode
 // END:  getDefaultImports()
 
 
@@ -39,6 +36,11 @@ metadata {
         capability "ColorMode"                    // Attributes: colorMode - ENUM ["CT", "RGB"]
         capability "Refresh"
         capability "LightEffects"                 // Attributes: effectName - STRING, lightEffects - JSON_OBJECT
+
+        // BEGIN:getMinimumChildAttributes()
+        // Attributes used by all Child Drivers
+        attribute   "driver", "string"
+        // END:  getMinimumChildAttributes()
 
         //lightEffects = [1: "Effect Name", 2: "Other effect", 3: "etc..."] to JSON...
         attribute  "effectNumber", "number"
@@ -156,6 +158,10 @@ void updated() {
         setAddressablePixels(addressablePixels.toInteger())
         state.addressablePixels = addressablePixels
     }
+    // BEGIN:getChildComponentDefaultUpdatedContent()
+    // This is code needed to run in updated() in ALL Child drivers
+    getDriverVersion()
+    // END:  getChildComponentDefaultUpdatedContent()
     //if(addressableRotation != null) setAddressableRotation(addressableRotation.toInteger())
     refresh()
 }
@@ -431,6 +437,20 @@ backlog
  * --- Nothing to edit here, move along! ---------------------------------------
  * -----------------------------------------------------------------------------
  */
+
+// BEGIN:getDefaultFunctions()
+/* Default Driver Methods go here */
+private String getDriverVersion() {
+    //comment = ""
+    //if(comment != "") state.comment = comment
+    String version = "v1.0.0222Tb"
+    logging("getDriverVersion() = ${version}", 100)
+    sendEvent(name: "driver", value: version)
+    updateDataValue('driver', version)
+    return version
+}
+// END:  getDefaultFunctions()
+
 
 /**
  * ALL DEBUG METHODS (helpers-all-debug)

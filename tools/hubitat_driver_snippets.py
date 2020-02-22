@@ -13,7 +13,7 @@
 
 from datetime import date
 
-driverVersion = "v1.0.MMDDTa"
+driverVersion = "v1.0.MMDDTb"
 
 def getDriverVersion(driverVersionSpecial=None):
     if(driverVersionSpecial != None):
@@ -53,9 +53,15 @@ import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 // Used for MD5 calculations
 import java.security.MessageDigest
-//import java.math.MathContext NOT ALLOWED!!! WHY?
-//import groovy.transform.TypeChecked
-//import groovy.transform.TypeCheckingMode
+"""
+#import java.math.MathContext NOT ALLOWED!!! WHY?
+#import groovy.transform.TypeChecked
+#import groovy.transform.TypeCheckingMode
+
+def getChildComponentDefaultUpdatedContent():
+    return """
+// This is code needed to run in updated() in ALL Child drivers
+getDriverVersion()
 """
 
 def getDefaultParentImports():
@@ -296,7 +302,7 @@ private String getDriverVersion() {
     //comment = "''' + comment + '''"
     //if(comment != "") state.comment = comment
     String version = "''' + driverVersionActual + '''"
-    logging("getDriverVersion() = ${version}", 50)
+    logging("getDriverVersion() = ${version}", 100)
     sendEvent(name: "driver", value: version)
     updateDataValue('driver', version)
     return version

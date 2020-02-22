@@ -15,6 +15,8 @@ metadata {
 
         capability "Refresh"
 
+        #!include:getMinimumChildAttributes()
+
         // Non-standard sensor attributes
         attribute  "distance", "string"
         attribute  "pressureWithUnit", "string"
@@ -76,6 +78,7 @@ void parse(List<Map> description) {
 
 void updated() {
     log.info "updated()"
+    #!include:getChildComponentDefaultUpdatedContent()
     refresh()
 }
 
@@ -103,6 +106,8 @@ void refresh() {
  * --- Nothing to edit here, move along! ---------------------------------------
  * -----------------------------------------------------------------------------
  */
+
+#!include:getDefaultFunctions()
 
 #!include:getHelperFunctions('all-default')
 

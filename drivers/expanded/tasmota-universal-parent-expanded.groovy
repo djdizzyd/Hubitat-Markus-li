@@ -20,9 +20,6 @@ import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 // Used for MD5 calculations
 import java.security.MessageDigest
-//import java.math.MathContext NOT ALLOWED!!! WHY?
-//import groovy.transform.TypeChecked
-//import groovy.transform.TypeCheckingMode
 /* Default Parent Imports */
 // END:  getDefaultParentImports()
 
@@ -1471,8 +1468,8 @@ void componentSetEffectWidth(cd, BigDecimal pixels) {
 private String getDriverVersion() {
     //comment = ""
     //if(comment != "") state.comment = comment
-    String version = "v1.0.0222Ta"
-    logging("getDriverVersion() = ${version}", 50)
+    String version = "v1.0.0222Tb"
+    logging("getDriverVersion() = ${version}", 100)
     sendEvent(name: "driver", value: version)
     updateDataValue('driver', version)
     return version
