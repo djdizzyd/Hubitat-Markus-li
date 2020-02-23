@@ -793,7 +793,9 @@ void sendCommand(String command) {
 }
 
 void sendCommand(String command, String argument) {
-    sendEvent(name: "commandSent", value: command, descriptionText: "${command}${argument != null ? " " + argument : ""}", isStateChange: true)
+    String descriptionText = "${command}${argument != null ? " " + argument : ""}"
+    logging("sendCommand: $descriptionText", 100)
+    sendEvent(name: "commandSent", value: command, descriptionText: descriptionText, isStateChange: true)
     getAction(getCommandString(command, argument), callback="sendCommandParse")
 }
 
