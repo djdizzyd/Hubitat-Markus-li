@@ -583,8 +583,9 @@ private void createChildDevice(String namespace, List driverName, String childId
     if (childDevice) {
         // The device exists, just update it
         childDevice.setName(childName)
-        childDevice.updateDataValue('isComponent', false)
-        logging(childDevice.getData(), 10)
+        //Setting isComponent to false doesn't change how the device is treated...
+        //childDevice.updateDataValue('isComponent', "false")
+        logging("childDevice.getData(): ${childDevice.getData()}", 1)
     } else {
         logging("The child device doesn't exist, create it...", 0)
         Integer s = childName.size()
