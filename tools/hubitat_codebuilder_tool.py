@@ -144,11 +144,6 @@ def main():
         # 'alternate_name': 'Tasmota - Aoycocr X10S Power Monitor Plug', \
         # 'alternate_template': '{"NAME":"Aoycocr X10S","GPIO":[56,0,57,0,21,134,0,0,131,17,132,0,0],"FLAG":0,"BASE":45}',
         # 'deviceLink': 'https://templates.blakadder.com/aoycocr_X10S.html'},
-        {'id': 589, 'file': 'tasmota-generic-rgb-rgbw-controller-bulb-dimmer.groovy',
-         'alternate_output_filename': 'tasmota-brilliant-20699-rgbw-bulb', \
-         'alternate_name': 'Tasmota - Brilliant 20699 800lm RGBW Bulb', \
-         'alternate_template': '{"NAME":"Brilliant20699","GPIO":[0,0,0,0,141,140,0,0,37,142,0,0,0],"FLAG":0,"BASE":18}',
-         'deviceLink': 'https://templates.blakadder.com/brilliant_20699.html'},
         {'id': 592, 'file': 'tasmota-generic-wifi-switch-plug.groovy' , \
          'alternate_output_filename': 'tasmota-sonoff-sv', \
          'alternate_name': 'Tasmota - Sonoff SV', \
@@ -268,6 +263,8 @@ def main():
             'specialDebugLabel': 'descriptionText' },
         {'id': 993, 'file': 'tasmota-universal-fancontrol-child.groovy', 
             'specialDebugLabel': 'descriptionText' },
+        {'id': 589, 'file': 'tasmota-universal-curtain-child.groovy', 
+            'specialDebugLabel': 'descriptionText' },
         {'id': 359, 'file': 'tasmota-universal-switch-as-contact-sensor-child.groovy', 
             'specialDebugLabel': 'descriptionText' },
         {'id': 361, 'file': 'tasmota-universal-switch-as-motion-sensor-child.groovy', 
@@ -348,6 +345,7 @@ def main():
         {'id': 577}, # CT/RGB/RGB+CW+WW Child
         {'id': 646}, # Dimmer Child
         {'id': 559}, # Metering Dimmer Child
+        {'id': 589}, # Curtain Child
         {'id': 644}, {'id': 647}, # Metering Children
         {'id': 581}, {'id': 582}, # Switch Children
 

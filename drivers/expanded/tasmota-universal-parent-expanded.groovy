@@ -46,6 +46,8 @@ metadata {
         // Default Attributes
         attribute   "driver", "string"
         // END:  getDefaultMetadataAttributes()
+        attribute "commandSent", "string"
+        attribute "commandResult", "string"
 
         // BEGIN:getMetadataCommandsForHandlingChildDevices()
         // Commands for handling Child Devices
@@ -58,6 +60,8 @@ metadata {
         // Default Commands
         command "reboot"
         // END:  getDefaultMetadataCommands()
+        command "sendCommand", [[name:"Command*", type: "STRING", description: "Tasmota Command"],
+            [name:"Argument", type: "STRING", description: "Argument (optional)"]]
 	}
 
 	preferences {
@@ -420,6 +424,10 @@ TreeMap getDeviceConfigurations() {
         name: 'TuyaMCU ZNSN Wifi Curtain Wall Panel',
         module: 54,
         installCommands: [["WebLog", "2"], // A good idea for dimmers
+                        //SetOption66 - Set publishing TuyaReceived to MQTT  »6.7.0
+                        //0 = disable publishing TuyaReceived over MQTT (default)
+                        //1 = enable publishing TuyaReceived over MQTT
+                        ['SetOption66', "1"], // This is REQUIRED to get the Tuya Data
                         ['Mem1', '100'],   // Updated with the current Curtain location
                         ['Mem2', '11'],    // Step for each increase
                         ['Mem3', '1'],     // delay in 10th of a second (1 = 100ms)
@@ -671,6 +679,9 @@ def getDriverCSS() {
         /*position: absolute;*/
         display: list-item;
     }
+    .property-value {
+        overflow-wrap: break-word;
+    }
     '''
     return r
 }
@@ -693,7 +704,9 @@ def refreshAdditional(metaConfig) {
         metaConfig = setPreferencesToHide(['disableModuleSelection', 'moduleNumber', 'deviceTemplateInput', , 'port', 'disableCSS'], metaConfig=metaConfig)
     }
     if(hideDangerousCommands == null || hideDangerousCommands == true) {
-        metaConfig = setCommandsToHide(['deleteChildren'], metaConfig=metaConfig)
+        metaConfig = setCommandsToHide(['deleteChildren', 'initialize'], metaConfig=metaConfig)
+    } else {
+        metaConfig = setCommandsToHide(['initialize'], metaConfig=metaConfig)
     }
     if(deviceConfig == null) deviceConfig = "01generic-device"
     deviceConfigMap = getDeviceConfiguration(deviceConfig)
@@ -840,14 +853,22 @@ boolean parseResult(result, missingChild) {
     // Standard Dimmable Device Data parsing
     if(true) {
         def childDevice = getChildDeviceByActionType("POWER1")
-        if (result.containsKey("Dimmer")) {
+        if(result.containsKey("Dimmer")) {
             def dimmer = result.Dimmer
             logging("Dimmer: ${dimmer}", 1)
             state.level = dimmer
             if(childDevice?.currentValue('level') != dimmer ) missingChild = callChildParseByTypeId("POWER1", [[name: "level", value: dimmer]], missingChild)
         }
-        if (log99 == true && result.containsKey("Wakeup")) {
-            logging("Wakeup: ${result.Wakeup}", 1)
+        // When handling Tuya Data directly, the dimmer is often used
+        if(result.containsKey("TuyaReceived") && result.TuyaReceived.containsKey("Data")) {
+            // If this is the "heartbeat", ignore it...
+            if(result.TuyaReceived.Data != "55AA000000010101") {
+                missingChild = callChildParseByTypeId("POWER1", [[name: "tuyaData", value: result.TuyaReceived.Data]], missingChild)
+            }
+        }
+        // Just if we need to log it
+        if(log99 == true && result.containsKey("Wakeup")) {
+            logging("Wakeup: ${result.Wakeup}", 99)
             //sendEvent(name: "wakeup", value: wakeup)
         }
     }
@@ -1447,6 +1468,23 @@ void componentSetSpeed(cd, String fanspeed) {
     }  
 }
 
+void componentOpen(cd) {
+    //TODO: Get this command from the device config!
+    getAction(getCommandString("TuyaSend4", "101,0"))
+}
+
+void componentClose(cd) {
+    getAction(getCommandString("TuyaSend4", "101,2"))
+}
+
+void componentStop(cd) {
+    getAction(getCommandString("TuyaSend4", "101,1"))
+}
+
+void componentSetPosition(cd, BigDecimal position) {
+    // This is run in the child for now...
+}
+
 void componentSetColorByRGBString(cd, String colorRGB) {
     setColorByRGBString(colorRGB)
 }
@@ -1480,7 +1518,7 @@ void componentSetEffectWidth(cd, BigDecimal pixels) {
 private String getDriverVersion() {
     //comment = ""
     //if(comment != "") state.comment = comment
-    String version = "v1.0.0222Tb"
+    String version = "v1.0.0223Tb"
     logging("getDriverVersion() = ${version}", 100)
     sendEvent(name: "driver", value: version)
     updateDataValue('driver', version)
@@ -2662,7 +2700,7 @@ def parse(asyncResponse, data) {
     // Parse called by default when using asyncHTTP
     if(asyncResponse != null) {
         try{
-            logging("parse(asyncResponse.getJson() 2= \"${asyncResponse.getJson()}\", data = \"${data}\")", 100)
+            logging("parse(asyncResponse.getJson() = \"${asyncResponse.getJson()}\")", 100)
             parseResult(asyncResponse.getJson())
         } catch(MissingMethodException e1) {
             log.error e1
@@ -2755,19 +2793,23 @@ void configureChildDevices(asyncResponse, data) {
 
     // The built-in Generic Components are:
     //
-    // Acceleration Sensor - ID: 189
-    // Contact Sensor      - ID: 192
-    // Contact/Switch      - ID: 199
-    // CT                  - ID: 198
-    // Dimmer              - ID: 187
-    // Metering Switch     - ID: 188
-    // Motion Sensor       - ID: 197
-    // RGB                 - ID: 195
-    // RGBW                - ID: 191
-    // Smoke Detector      - ID: 196
-    // Switch              - ID: 190
-    // Temperature Sensor  - ID: 200
-    // Water Sensor        - ID: 194
+    // Acceleration Sensor  - ID: 189
+    // Button Controller    - ID: 1029
+    // Central Scene Dimmer - ID: 912
+    // Central Scene Switch - ID: 913
+    // Contact Sensor       - ID: 192
+    // Contact/Switch       - ID: 199
+    // CT                   - ID: 198
+    // Dimmer               - ID: 187
+    // Metering Switch      - ID: 188
+    // Motion Sensor        - ID: 197
+    // RGB                  - ID: 195
+    // RGBW                 - ID: 191
+    // Smoke Detector       - ID: 196
+    // Switch               - ID: 190
+    // Temperature Sensor   - ID: 200
+    // Water Sensor         - ID: 194
+    
 
     // {"StatusSTS":{"Time":"2020-01-26T01:13:27","Uptime":"15T02:59:27","UptimeSec":1306767,
     // "Heap":26,"SleepMode":"Dynamic","Sleep":50,"LoadAvg":19,"MqttCount":0,"POWER1":"OFF",
@@ -3039,6 +3081,7 @@ private void createChildDevice(String namespace, List driverName, String childId
     if (childDevice) {
         // The device exists, just update it
         childDevice.setName(childName)
+        childDevice.updateDataValue('isComponent', false)
         logging(childDevice.getData(), 10)
     } else {
         logging("The child device doesn't exist, create it...", 0)
@@ -3241,6 +3284,37 @@ private postAction(String uri, String data) {
     log.error "Error in postAction(uri, data): $e ('$uri', '$data')"
   }
   return hubAction    
+}
+
+void sendCommand(String command) {
+    sendCommand(command, null)
+}
+
+void sendCommand(String command, String argument) {
+    sendEvent(name: "commandSent", value: command, descriptionText: "${command}${argument != null ? " " + argument : ""}", isStateChange: true)
+    getAction(getCommandString(command, argument), callback="sendCommandParse")
+}
+
+def sendCommandParse(asyncResponse, data) {
+    // Parse called using sendCommand
+    if(asyncResponse != null) {
+        try{
+            def r = asyncResponse.getJson()
+            logging("sendCommandParse(asyncResponse.getJson() = \"${r}\")", 100)
+            sendEvent(name: "commandResult", value: asyncResponse.getData(), isStateChange: true)
+            parseResult(r)
+        } catch(MissingMethodException e1) {
+            log.error e1
+        } catch(e1) {
+            try{
+                logging("parse(asyncResponse.data = \"${asyncResponse.data}\", data = \"${data}\") e1=$e1", 1)
+            } catch(e2) {
+                logging("parse(asyncResponse.data = null, data = \"${data}\") Is the device online? e2=$e2", 1)
+            }
+        }
+    } else {
+        logging("parse(asyncResponse.data = null, data = \"${data}\")", 1)
+    }
 }
 
 String getCommandString(String command, String value) {

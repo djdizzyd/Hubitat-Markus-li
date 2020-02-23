@@ -402,14 +402,22 @@ def getTasmotaNewParserForDimmableDevice():
 // Standard Dimmable Device Data parsing
 if(true) {
     def childDevice = getChildDeviceByActionType("POWER1")
-    if (result.containsKey("Dimmer")) {
+    if(result.containsKey("Dimmer")) {
         def dimmer = result.Dimmer
         logging("Dimmer: ${dimmer}", 1)
         state.level = dimmer
         if(childDevice?.currentValue('level') != dimmer ) missingChild = callChildParseByTypeId("POWER1", [[name: "level", value: dimmer]], missingChild)
     }
-    if (log99 == true && result.containsKey("Wakeup")) {
-        logging("Wakeup: ${result.Wakeup}", 1)
+    // When handling Tuya Data directly, the dimmer is often used
+    if(result.containsKey("TuyaReceived") && result.TuyaReceived.containsKey("Data")) {
+        // If this is the "heartbeat", ignore it...
+        if(result.TuyaReceived.Data != "55AA000000010101") {
+            missingChild = callChildParseByTypeId("POWER1", [[name: "tuyaData", value: result.TuyaReceived.Data]], missingChild)
+        }
+    }
+    // Just if we need to log it
+    if(log99 == true && result.containsKey("Wakeup")) {
+        logging("Wakeup: ${result.Wakeup}", 99)
         //sendEvent(name: "wakeup", value: wakeup)
     }
 }

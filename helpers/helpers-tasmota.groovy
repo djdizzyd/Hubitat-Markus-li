@@ -202,7 +202,7 @@ def parse(asyncResponse, data) {
     // Parse called by default when using asyncHTTP
     if(asyncResponse != null) {
         try{
-            logging("parse(asyncResponse.getJson() 2= \"${asyncResponse.getJson()}\", data = \"${data}\")", 100)
+            logging("parse(asyncResponse.getJson() = \"${asyncResponse.getJson()}\")", 100)
             parseResult(asyncResponse.getJson())
         } catch(MissingMethodException e1) {
             log.error e1
@@ -295,19 +295,23 @@ void configureChildDevices(asyncResponse, data) {
 
     // The built-in Generic Components are:
     //
-    // Acceleration Sensor - ID: 189
-    // Contact Sensor      - ID: 192
-    // Contact/Switch      - ID: 199
-    // CT                  - ID: 198
-    // Dimmer              - ID: 187
-    // Metering Switch     - ID: 188
-    // Motion Sensor       - ID: 197
-    // RGB                 - ID: 195
-    // RGBW                - ID: 191
-    // Smoke Detector      - ID: 196
-    // Switch              - ID: 190
-    // Temperature Sensor  - ID: 200
-    // Water Sensor        - ID: 194
+    // Acceleration Sensor  - ID: 189
+    // Button Controller    - ID: 1029
+    // Central Scene Dimmer - ID: 912
+    // Central Scene Switch - ID: 913
+    // Contact Sensor       - ID: 192
+    // Contact/Switch       - ID: 199
+    // CT                   - ID: 198
+    // Dimmer               - ID: 187
+    // Metering Switch      - ID: 188
+    // Motion Sensor        - ID: 197
+    // RGB                  - ID: 195
+    // RGBW                 - ID: 191
+    // Smoke Detector       - ID: 196
+    // Switch               - ID: 190
+    // Temperature Sensor   - ID: 200
+    // Water Sensor         - ID: 194
+    
 
     // {"StatusSTS":{"Time":"2020-01-26T01:13:27","Uptime":"15T02:59:27","UptimeSec":1306767,
     // "Heap":26,"SleepMode":"Dynamic","Sleep":50,"LoadAvg":19,"MqttCount":0,"POWER1":"OFF",
@@ -579,6 +583,7 @@ private void createChildDevice(String namespace, List driverName, String childId
     if (childDevice) {
         // The device exists, just update it
         childDevice.setName(childName)
+        childDevice.updateDataValue('isComponent', false)
         logging(childDevice.getData(), 10)
     } else {
         logging("The child device doesn't exist, create it...", 0)
@@ -781,6 +786,37 @@ private postAction(String uri, String data) {
     log.error "Error in postAction(uri, data): $e ('$uri', '$data')"
   }
   return hubAction    
+}
+
+void sendCommand(String command) {
+    sendCommand(command, null)
+}
+
+void sendCommand(String command, String argument) {
+    sendEvent(name: "commandSent", value: command, descriptionText: "${command}${argument != null ? " " + argument : ""}", isStateChange: true)
+    getAction(getCommandString(command, argument), callback="sendCommandParse")
+}
+
+def sendCommandParse(asyncResponse, data) {
+    // Parse called using sendCommand
+    if(asyncResponse != null) {
+        try{
+            def r = asyncResponse.getJson()
+            logging("sendCommandParse(asyncResponse.getJson() = \"${r}\")", 100)
+            sendEvent(name: "commandResult", value: asyncResponse.getData(), isStateChange: true)
+            parseResult(r)
+        } catch(MissingMethodException e1) {
+            log.error e1
+        } catch(e1) {
+            try{
+                logging("parse(asyncResponse.data = \"${asyncResponse.data}\", data = \"${data}\") e1=$e1", 1)
+            } catch(e2) {
+                logging("parse(asyncResponse.data = null, data = \"${data}\") Is the device online? e2=$e2", 1)
+            }
+        }
+    } else {
+        logging("parse(asyncResponse.data = null, data = \"${data}\")", 1)
+    }
 }
 
 String getCommandString(String command, String value) {

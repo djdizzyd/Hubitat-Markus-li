@@ -10,9 +10,13 @@ metadata {
         
         #!include:getDefaultParentMetadataAttributes()
         #!include:getDefaultMetadataAttributes()
+        attribute "commandSent", "string"
+        attribute "commandResult", "string"
 
         #!include:getMetadataCommandsForHandlingChildDevices()
         #!include:getDefaultMetadataCommands()
+        command "sendCommand", [[name:"Command*", type: "STRING", description: "Tasmota Command"],
+            [name:"Argument", type: "STRING", description: "Argument (optional)"]]
 	}
 
 	preferences {
@@ -130,6 +134,9 @@ def getDriverCSS() {
         /*position: absolute;*/
         display: list-item;
     }
+    .property-value {
+        overflow-wrap: break-word;
+    }
     '''
     return r
 }
@@ -152,7 +159,9 @@ def refreshAdditional(metaConfig) {
         metaConfig = setPreferencesToHide(['disableModuleSelection', 'moduleNumber', 'deviceTemplateInput', , 'port', 'disableCSS'], metaConfig=metaConfig)
     }
     if(hideDangerousCommands == null || hideDangerousCommands == true) {
-        metaConfig = setCommandsToHide(['deleteChildren'], metaConfig=metaConfig)
+        metaConfig = setCommandsToHide(['deleteChildren', 'initialize'], metaConfig=metaConfig)
+    } else {
+        metaConfig = setCommandsToHide(['initialize'], metaConfig=metaConfig)
     }
     if(deviceConfig == null) deviceConfig = "01generic-device"
     deviceConfigMap = getDeviceConfiguration(deviceConfig)
@@ -429,6 +438,23 @@ void componentSetSpeed(cd, String fanspeed) {
             getAction(getCommandString("FanSpeed", "3"))
             break
     }  
+}
+
+void componentOpen(cd) {
+    //TODO: Get this command from the device config!
+    getAction(getCommandString("TuyaSend4", "101,0"))
+}
+
+void componentClose(cd) {
+    getAction(getCommandString("TuyaSend4", "101,2"))
+}
+
+void componentStop(cd) {
+    getAction(getCommandString("TuyaSend4", "101,1"))
+}
+
+void componentSetPosition(cd, BigDecimal position) {
+    // This is run in the child for now...
 }
 
 void componentSetColorByRGBString(cd, String colorRGB) {

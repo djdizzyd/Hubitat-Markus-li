@@ -297,6 +297,10 @@ TreeMap getDeviceConfigurations() {
         name: 'TuyaMCU ZNSN Wifi Curtain Wall Panel',
         module: 54,
         installCommands: [["WebLog", "2"], // A good idea for dimmers
+                        //SetOption66 - Set publishing TuyaReceived to MQTT  »6.7.0
+                        //0 = disable publishing TuyaReceived over MQTT (default)
+                        //1 = enable publishing TuyaReceived over MQTT
+                        ['SetOption66', "1"], // This is REQUIRED to get the Tuya Data
                         ['Mem1', '100'],   // Updated with the current Curtain location
                         ['Mem2', '11'],    // Step for each increase
                         ['Mem3', '1'],     // delay in 10th of a second (1 = 100ms)
