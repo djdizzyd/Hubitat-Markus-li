@@ -93,7 +93,7 @@ Map mainPage() {
             }
             section(getElementStyle('header', getMaterialIcon('playlist_add') + 'Grant Access to Additional Devices'), hideable: true, hidden: true){
                 paragraph("Select the devices to grant access to, if the device doesn't use a compatible driver it will be ignored, so selecting too many or the wrong ones, doesn't matter. Easiest is probably to just select all devices. Only Parent devices are shown.")
-                input(name:	"devicesSelected", type: "capability.refresh", title: "Available Devices", multiple: true, required: false, submitOnChange: true)
+                input(name:	"devicesSelected", type: "capability.initialize", title: "Available Devices", multiple: true, required: false, submitOnChange: true)
             }
             section(getElementStyle('header', getMaterialIcon('', 'he-settings1') + "Configure Devices"), hideable: true, hidden: false){ 
                 paragraph('<div style="margin: 8px;">All devices below use a compatible driver, if any device is missing, add them above in "Grant Access to Additional Devices". Newly selected devices will not be shown until after you\'ve pressed Done. \"Refresh Devices\" runs the \"Refresh\" command on all devices in the list, this can take a bit of time if you have many devices...</div>')
