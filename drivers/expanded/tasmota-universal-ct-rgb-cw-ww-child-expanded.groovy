@@ -148,7 +148,10 @@ void installed() {
     device.updateSetting("logLevel", "100")
     sendEvent(name: "colorMode", value: "CT")
     sendEvent(name: "colorTemp", value: "3000")
-
+    sendEvent(name: "hue", value: "0")
+    sendEvent(name: "saturation", value: "0")
+    sendEvent(name: "level", value: "100")
+    sendEvent(name: "colorName", value: "Daylight")
     refresh()
 }
 
@@ -443,7 +446,7 @@ backlog
 private String getDriverVersion() {
     //comment = ""
     //if(comment != "") state.comment = comment
-    String version = "v1.0.0223Tb"
+    String version = "v1.0.0224Tb"
     logging("getDriverVersion() = ${version}", 100)
     sendEvent(name: "driver", value: version)
     updateDataValue('driver', version)
