@@ -156,8 +156,8 @@ def refreshAdditional(metaConfig) {
         metaConfig = setPreferencesToHide(['hideAdvanced', 'ipAddress', 'override', 'useIPAsID', 'telePeriod', 'invertPowerNumber'], metaConfig=metaConfig)
     }
     if(hideExtended == null || hideExtended == true || hideAdvanced == null || hideAdvanced == true) {
-        // 'moduleNumber', 'deviceTemplateInput',
-        metaConfig = setPreferencesToHide(['disableModuleSelection', 'port', 'disableCSS'], metaConfig=metaConfig)
+        //  'deviceTemplateInput',
+        metaConfig = setPreferencesToHide(['disableModuleSelection', 'port', 'disableCSS', 'moduleNumber'], metaConfig=metaConfig)
     }
     if(hideDangerousCommands == null || hideDangerousCommands == true) {
         metaConfig = setCommandsToHide(['deleteChildren', 'initialize'], metaConfig=metaConfig)

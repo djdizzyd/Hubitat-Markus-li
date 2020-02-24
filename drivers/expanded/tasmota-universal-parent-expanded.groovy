@@ -91,7 +91,7 @@ metadata {
         input(name: "telePeriod", type: "string", title: addTitleDiv("Update Frequency"), description: addDescriptionDiv("Tasmota sensor value update interval, set this to any value between 10 and 3600 seconds. See the Tasmota docs concerning telePeriod for details. This is NOT a poll frequency. Button/switch changes are immediate and are NOT affected by this. This ONLY affects SENSORS and reporting of data such as UPTIME. (default = 300)"), displayDuringSetup: true, required: false)
         input(name: "disableModuleSelection", type: "bool", title: addTitleDiv("Disable Automatically Setting Module and Template"), description: "ADVANCED: " + addDescriptionDiv("Disable automatically setting the Module Type and Template in Tasmota. Enable for using custom Module or Template settings directly on the device. With this disabled, you need to set these settings manually on the device."), displayDuringSetup: true, required: false)
         input(name: "moduleNumber", type: "number", title: addTitleDiv("Module Number"), description: "ADVANCED: " + addDescriptionDiv("Module Number used in Tasmota. If Device Template is set, this value is IGNORED. (default: -1 (use the default for the driver))"), displayDuringSetup: true, required: false, defaultValue: -1)
-        input(name: "deviceTemplateInput", type: "string", title: addTitleDiv("Device Template"), description: "ADVANCED: " + addDescriptionDiv("Set this to a Device Template for Tasmota, leave it EMPTY to use the driver default. Set it to 0 to NOT use a Template. NAME can be maximum 14 characters! (Example: {\"NAME\":\"S120\",\"GPIO\":[0,0,0,0,0,21,0,0,0,52,90,0,0],\"FLAG\":0,\"BASE\":18})"), displayDuringSetup: true, required: false)
+        input(name: "deviceTemplateInput", type: "string", title: addTitleDiv("Device Template"), description: "ADVANCED: " + addDescriptionDiv("Set this to a Device Template for Tasmota, leave it EMPTY to use the Device Configuration Default. Set it to 0 to NOT use a Template. NAME can be maximum 14 characters! (Example: {\"NAME\":\"S120\",\"GPIO\":[0,0,0,0,0,21,0,0,0,52,90,0,0],\"FLAG\":0,\"BASE\":18})"), displayDuringSetup: true, required: false)
         
         // END:  getDefaultMetadataPreferencesForTasmota(True) # False = No TelePeriod setting
         input(name: "invertPowerNumber", type: "bool", title: addTitleDiv("Send POWER1 events to POWER2, and vice versa"), description: addDescriptionDiv("Use this if you have a dimmer AND a switch in the same device and on/off is not sent/received correctly. Normally this is NOT needed."), defaultValue: false, displayDuringSetup: false, required: false)
@@ -707,8 +707,8 @@ def refreshAdditional(metaConfig) {
         metaConfig = setPreferencesToHide(['hideAdvanced', 'ipAddress', 'override', 'useIPAsID', 'telePeriod', 'invertPowerNumber'], metaConfig=metaConfig)
     }
     if(hideExtended == null || hideExtended == true || hideAdvanced == null || hideAdvanced == true) {
-        // 'moduleNumber', 'deviceTemplateInput',
-        metaConfig = setPreferencesToHide(['disableModuleSelection', 'port', 'disableCSS'], metaConfig=metaConfig)
+        //  'deviceTemplateInput',
+        metaConfig = setPreferencesToHide(['disableModuleSelection', 'port', 'disableCSS', 'moduleNumber'], metaConfig=metaConfig)
     }
     if(hideDangerousCommands == null || hideDangerousCommands == true) {
         metaConfig = setCommandsToHide(['deleteChildren', 'initialize'], metaConfig=metaConfig)
