@@ -553,6 +553,10 @@ String getMinimizedDriverName(String driverName) {
     } else if(driverName.toLowerCase().endsWith(' parent')) {
         driverName = driverName.substring(0, driverName.length()-7)
     }
+    // Just replace all Occurrances of Parent
+    driverName = driverName.replaceAll("(?i) \\(parent\\)", "").replaceAll("(?i) parent", "").replaceAll("(?i)parent", "")
+    log.debug("driverName: $driverName")
+
     if(driverName.toLowerCase().startsWith('tasmota - ')) {
         driverName = driverName.substring(10, driverName.length())
     }

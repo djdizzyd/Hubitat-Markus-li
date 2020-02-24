@@ -99,6 +99,12 @@ TreeMap getDeviceConfigurations() {
          installCommands: [],
          deviceLink: 'https://templates.blakadder.com/ce_smart_home_LQ-2-W3.html'],
 
+        [typeId: 'ce-la-wf7-pm-plug',
+         name: 'CE Smart Home LA-WF7 Power Monitor Plug',
+         template: '{"NAME":"CESmartHLA-WF7","GPIO":[0,56,0,17,134,132,0,0,131,57,21,0,0],"FLAG":0,"BASE":18}',
+         installCommands: [],
+         deviceLink: 'https://templates.blakadder.com/ce_smart_home_LA-WF7.html'],
+         
         [typeId: 'awp02l-n-plug',
          name: 'AWP02L-N Plug',
          template: '{"NAME":"AWP02L-N","GPIO":[57,0,56,0,0,0,0,0,0,17,0,21,0],"FLAG":1,"BASE":18}',
@@ -134,12 +140,6 @@ TreeMap getDeviceConfigurations() {
          template: '{"NAME":"Brilliant20699","GPIO":[0,0,0,0,141,140,0,0,37,142,0,0,0],"FLAG":0,"BASE":18}',
          installCommands: [["WebLog", "2"]],
          deviceLink: 'https://templates.blakadder.com/brilliant_20699.html'],
-
-        [typeId: 'litesun-la-wf7-pm-plug',
-         name: 'LITESUN (CE Smart Home) LA-WF7 Power Monitor Plug',
-         template: '{"NAME":"LITESUN LA-WF7","GPIO":[0,56,0,17,134,132,0,0,131,57,21,0,0],"FLAG":0,"BASE":18}',
-         installCommands: [],
-         deviceLink: 'https://templates.blakadder.com/ce_smart_home_LA-WF7.html'],
 
         [typeId: 'sonoff-sv',
          name: 'Sonoff SV',
@@ -2593,6 +2593,10 @@ String getMinimizedDriverName(String driverName) {
     } else if(driverName.toLowerCase().endsWith(' parent')) {
         driverName = driverName.substring(0, driverName.length()-7)
     }
+    // Just replace all Occurrances of Parent
+    driverName = driverName.replaceAll("(?i) \\(parent\\)", "").replaceAll("(?i) parent", "").replaceAll("(?i)parent", "")
+    log.debug("driverName: $driverName")
+
     if(driverName.toLowerCase().startsWith('tasmota - ')) {
         driverName = driverName.substring(10, driverName.length())
     }
