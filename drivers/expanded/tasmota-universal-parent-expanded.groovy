@@ -201,6 +201,12 @@ TreeMap getDeviceConfigurations() {
          installCommands: [["WebLog", "2"]],
          deviceLink: 'https://templates.blakadder.com/brilliant_20699.html'],
 
+        [typeId: 'litesun-la-wf7-pm-plug',
+         name: 'LITESUN (CE Smart Home) LA-WF7 Power Monitor Plug',
+         template: '{"NAME":"LITESUN LA-WF7","GPIO":[0,56,0,17,134,132,0,0,131,57,21,0,0],"FLAG":0,"BASE":18}',
+         installCommands: [],
+         deviceLink: 'https://templates.blakadder.com/ce_smart_home_LA-WF7.html'],
+
         [typeId: 'sonoff-sv',
          name: 'Sonoff SV',
          template: '{"NAME":"Sonoff SV","GPIO":[17,255,0,255,255,255,0,0,21,56,255,0,0],"FLAG":1,"BASE":3}',
@@ -1518,7 +1524,7 @@ void componentSetEffectWidth(cd, BigDecimal pixels) {
 private String getDriverVersion() {
     //comment = ""
     //if(comment != "") state.comment = comment
-    String version = "v1.0.0223Tb"
+    String version = "v1.0.0224Tb"
     logging("getDriverVersion() = ${version}", 100)
     sendEvent(name: "driver", value: version)
     updateDataValue('driver', version)
