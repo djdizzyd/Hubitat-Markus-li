@@ -1,4 +1,4 @@
-#!include:getHeaderLicense()
+#!include:getHeaderLicense(driverVersionSpecial="v0.9.0")
 
 /* Inspired by a driver from shin4299 which can be found here:
    https://github.com/shin4299/XiaomiSJ/blob/master/devicetypes/shinjjang/xiaomi-curtain-b1.src/xiaomi-curtain-b1.groovy

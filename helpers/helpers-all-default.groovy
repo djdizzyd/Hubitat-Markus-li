@@ -39,7 +39,7 @@ void deviceCommand(cmd) {
 // Call order: installed() -> configure() -> updated() -> initialize()
 def initialize() {
     logging("initialize()", 100)
-	unschedule()
+	unschedule("updatePresence")
     // disable debug logs after 30 min, unless override is in place
 	if (logLevel != "0" && logLevel != "100") {
         if(runReset != "DEBUG") {
@@ -101,7 +101,7 @@ void logsOff() {
         }
     } else {
         log.warn "OVERRIDE: Disabling Debug logging will not execute with 'DEBUG' set..."
-        if (logLevel != "0" && logLevel != "100") runIn(1800, logsOff)
+        if (logLevel != "0" && logLevel != "100") runIn(1800, "logsOff")
     }
 }
 

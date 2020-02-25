@@ -48,8 +48,8 @@ void configure() {
 }
 
 void configureDelayed() {
-    runIn(10, configure)
-    runIn(30, refresh)
+    runIn(10, "configure")
+    runIn(30, "refresh")
 }
 
 /**

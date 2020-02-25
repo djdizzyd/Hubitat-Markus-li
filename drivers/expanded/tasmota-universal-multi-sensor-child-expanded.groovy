@@ -1,6 +1,8 @@
 /**
  *  Copyright 2020 Markus Liljergren
  *
+ *  Code Version: v1.0.0225Tb
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at:
@@ -172,7 +174,7 @@ void refresh() {
 private String getDriverVersion() {
     //comment = ""
     //if(comment != "") state.comment = comment
-    String version = "v1.0.0223Tb"
+    String version = "v1.0.0225Tb"
     logging("getDriverVersion() = ${version}", 100)
     sendEvent(name: "driver", value: version)
     updateDataValue('driver', version)
@@ -272,7 +274,7 @@ void deviceCommand(cmd) {
 // Call order: installed() -> configure() -> updated() -> initialize()
 def initialize() {
     logging("initialize()", 100)
-	unschedule()
+	unschedule("updatePresence")
     // disable debug logs after 30 min, unless override is in place
 	if (logLevel != "0" && logLevel != "100") {
         if(runReset != "DEBUG") {
@@ -334,7 +336,7 @@ void logsOff() {
         }
     } else {
         log.warn "OVERRIDE: Disabling Debug logging will not execute with 'DEBUG' set..."
-        if (logLevel != "0" && logLevel != "100") runIn(1800, logsOff)
+        if (logLevel != "0" && logLevel != "100") runIn(1800, "logsOff")
     }
 }
 

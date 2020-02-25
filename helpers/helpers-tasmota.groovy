@@ -39,6 +39,19 @@ void updated() {
     }
 }
 
+void refreshChildren() {
+    logging("refreshChildren()", 1)
+    log.warn("refreshChildren()")
+    getAction(getCommandString("Status", "0"), callback="parseConfigureChildDevices")
+}
+
+void refreshChildrenAgain() {
+    logging("refreshChildrenAgain()", 1)
+    log.warn("refreshChildrenAgain()")
+    // Used for scheduling twice...
+    refreshChildren()
+}
+
 // Call order: installed() -> configure() -> updated() -> initialize() -> refresh()
 void refresh() {
 	logging("refresh()", 100)
@@ -140,7 +153,7 @@ void runInstallCommands(installCommands) {
     }
 
     // Backlog inter-command delay in milliseconds
-    getAction(getCommandString("SetOption34", "20"))
+    //getAction(getCommandString("SetOption34", "20"))
     pauseExecution(100)
     // Maximum 30 commands per backlog call
     while(backlogs.size() > 0) {
@@ -161,7 +174,7 @@ void runInstallCommands(installCommands) {
             // REALLY don't use pauseExecution often... NOT good for performance...
         }
     }
-    getAction(getCommandString("SetOption34", "200"))
+    //getAction(getCommandString("SetOption34", "200"))
 }
 
 void updatePresence(String presence) {

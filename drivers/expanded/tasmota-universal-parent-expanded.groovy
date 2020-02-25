@@ -760,7 +760,7 @@ void parse(description) {
     //logging("Parsing: ${description}", 0)
     def descMap = parseDescriptionAsMap(description)
     def body
-    //logging("descMap: ${descMap}", 0)
+    logging("descMap: ${descMap}", 0)
     
     boolean missingChild = false
     
@@ -1525,7 +1525,7 @@ void componentSetEffectWidth(cd, BigDecimal pixels) {
 private String getDriverVersion() {
     //comment = ""
     //if(comment != "") state.comment = comment
-    String version = "v1.0.0224Tb"
+    String version = "v1.0.0225Tb"
     logging("getDriverVersion() = ${version}", 100)
     sendEvent(name: "driver", value: version)
     updateDataValue('driver', version)

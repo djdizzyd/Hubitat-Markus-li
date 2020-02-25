@@ -1,6 +1,8 @@
 /**
  *  Copyright 2020 Markus Liljergren
  *
+ *  Code Version: v1.0.0225Tb
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at:
@@ -552,7 +554,7 @@ Map getTimeStringSinceDateWithMaximum(myDate, maxMillis) {
 // BEGIN:getDefaultAppMethods()
 /* Default App Methods go here */
 private String getAppVersion() {
-    String version = "v1.0.0224Tb"
+    String version = "v1.0.0225Tb"
     logging("getAppVersion() = ${version}", 50)
     return version
 }
@@ -878,7 +880,7 @@ def deviceDiscoveryTEMP() {
 			paragraph "NOT FUNCTIONAL: This process will automatically discover your device, this may take a few minutes. Please be patient. Tasmota Device Handler then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your WiFi network."
             /*input "deviceType", "enum", title:"Device Type", description: "", required: true, options: 
                 // BEGIN:makeTasmotaConnectDriverListV1()
-                ["Tasmota - Universal Parent",
+                ["Tasmota - Universal Parent Testing",
                 ]
                 // END:  makeTasmotaConnectDriverListV1()
             input "ipAddress", "text", title:"IP Address", description: "", required: true */
@@ -895,7 +897,7 @@ def manuallyAdd() {
             
             input("deviceType", "enum", title:"Device Type", description: "", required: true, submitOnChange: false, options: 
                 // BEGIN:makeTasmotaConnectDriverListV1()
-                ["Tasmota - Universal Parent",
+                ["Tasmota - Universal Parent Testing",
                 ]
                 // END:  makeTasmotaConnectDriverListV1()
             )
@@ -1328,7 +1330,7 @@ void deviceCommand(cmd) {
 // Call order: installed() -> configure() -> updated() -> initialize()
 def initialize() {
     logging("initialize()", 100)
-	unschedule()
+	unschedule("updatePresence")
     // disable debug logs after 30 min, unless override is in place
 	if (logLevel != "0" && logLevel != "100") {
         if(runReset != "DEBUG") {
@@ -1390,7 +1392,7 @@ void logsOff() {
         }
     } else {
         log.warn "OVERRIDE: Disabling Debug logging will not execute with 'DEBUG' set..."
-        if (logLevel != "0" && logLevel != "100") runIn(1800, logsOff)
+        if (logLevel != "0" && logLevel != "100") runIn(1800, "logsOff")
     }
 }
 
@@ -1838,7 +1840,7 @@ def deviceDiscoveryPage2() {
             paragraph("Installed devices are not displayed (if Tasmota Device Handler has access to them). Previously discovered devices will show quickly, devices never seen by Tasmota Device Handler before may take time to discover.")
             input("deviceType", "enum", title:"Device Type", description: "", required: true, submitOnChange: true, options: 
                 // BEGIN:makeTasmotaConnectDriverListV1()
-                ["Tasmota - Universal Parent",
+                ["Tasmota - Universal Parent Testing",
                 ]
                 // END:  makeTasmotaConnectDriverListV1()
             )
@@ -2079,6 +2081,19 @@ void updated() {
     }
 }
 
+void refreshChildren() {
+    logging("refreshChildren()", 1)
+    log.warn("refreshChildren()")
+    getAction(getCommandString("Status", "0"), callback="parseConfigureChildDevices")
+}
+
+void refreshChildrenAgain() {
+    logging("refreshChildrenAgain()", 1)
+    log.warn("refreshChildrenAgain()")
+    // Used for scheduling twice...
+    refreshChildren()
+}
+
 // Call order: installed() -> configure() -> updated() -> initialize() -> refresh()
 void refresh() {
 	logging("refresh()", 100)
@@ -2180,7 +2195,7 @@ void runInstallCommands(installCommands) {
     }
 
     // Backlog inter-command delay in milliseconds
-    getAction(getCommandString("SetOption34", "20"))
+    //getAction(getCommandString("SetOption34", "20"))
     pauseExecution(100)
     // Maximum 30 commands per backlog call
     while(backlogs.size() > 0) {
@@ -2201,7 +2216,7 @@ void runInstallCommands(installCommands) {
             // REALLY don't use pauseExecution often... NOT good for performance...
         }
     }
-    getAction(getCommandString("SetOption34", "200"))
+    //getAction(getCommandString("SetOption34", "200"))
 }
 
 void updatePresence(String presence) {

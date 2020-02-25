@@ -154,11 +154,11 @@ def main():
         # 'alternate_name': 'Tasmota - Sonoff TH', \
         # 'alternate_template': '{"NAME":"Sonoff TH","GPIO":[17,255,0,255,255,0,0,0,21,56,255,0,0],"FLAG":0,"BASE":4}',
         # 'deviceLink': 'https://templates.blakadder.com/sonoff_TH.html'},
-        {'id': 547, 'file': 'tasmota-sonoff-powr2.groovy' , \
-         'alternate_output_filename': 'tasmota-sonoff-pow', \
-         'alternate_name': 'Tasmota - Sonoff POW', \
-         'alternate_template': '{"NAME":"Sonoff Pow","GPIO":[17,0,0,0,0,130,0,0,21,132,133,52,0],"FLAG":0,"BASE":6}',
-         'deviceLink': 'https://templates.blakadder.com/sonoff_Pow.html'},
+        #{'id': 547, 'file': 'tasmota-sonoff-powr2.groovy' , \
+        # 'alternate_output_filename': 'tasmota-sonoff-pow', \
+        # 'alternate_name': 'Tasmota - Sonoff POW', \
+        # 'alternate_template': '{"NAME":"Sonoff Pow","GPIO":[17,0,0,0,0,130,0,0,21,132,133,52,0],"FLAG":0,"BASE":6}',
+        # 'deviceLink': 'https://templates.blakadder.com/sonoff_Pow.html'},
         #{'id': 359, 'file': 'tasmota-sonoff-powr2.groovy' , \
         # 'alternate_output_filename': 'tasmota-sonoff-s31', \
         # 'alternate_name': 'Tasmota - Sonoff S31', \
@@ -295,6 +295,8 @@ def main():
          'alternate_output_filename': 'tasmota-universal-multi-sensor-testing-child', \
          'alternate_name': 'Tasmota - Universal Multi Sensor Testing (Child)' },
 
+        {'id': 547, 'file': 'testing-bare-minimum-driver.groovy' },
+
         # Zigbee
         {'id': 579, 'file': 'zigbee-generic-wifi-switch-plug.groovy' },
         {'id': 801, 'file': 'zigbee-aqara-smart-curtain-motor.groovy' },
@@ -348,10 +350,11 @@ def main():
         {'id': 589}, # Curtain Child
         {'id': 644}, {'id': 647}, # Metering Children
         {'id': 581}, {'id': 582}, # Switch Children
+        {'id': 547},
 
         {'id': 962}, # Javascript Injection Driver
-        #{'id': 867}, {'id': 868},  # Universal Drivers TESTING
-        {'id': 865}, {'id': 866}, # Universal Drivers RELEASE
+        {'id': 867}, {'id': 868},  # Universal Drivers TESTING
+        #{'id': 865}, {'id': 866}, # Universal Drivers RELEASE
         
     #    {'id': 801}, {'id': 579},  # Zigbee drivers
     #     {'id':587},  # Wifi Curtain Wall Panel

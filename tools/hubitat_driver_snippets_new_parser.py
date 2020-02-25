@@ -20,7 +20,7 @@ def getGenericTasmotaNewParseHeader():
 //logging("Parsing: ${description}", 0)
 def descMap = parseDescriptionAsMap(description)
 def body
-//logging("descMap: ${descMap}", 0)
+logging("descMap: ${descMap}", 0)
 
 boolean missingChild = false
 
@@ -91,7 +91,9 @@ if (result.containsKey("StatusPRM")) {
     logging("StatusPRM: $result.StatusPRM",99)
     result << result.StatusPRM
 }
-if (result.containsKey("Status")) {
+if (false && result.containsKey("Status")) {
+    // We shouldn't do this, we don't need this data to be moved out
+    // It will only cause issues with the "Module" setting.
     logging("Status: $result.Status",99)
     result << result.Status
 }

@@ -30,9 +30,12 @@ from hubitat_codebuilder import HubitatCodeBuilderError
   Snippets used by hubitat-driver-helper-tool
 """
 
-def getHeaderLicense():
+def getHeaderLicense(driverVersionSpecial=None):
+    driverVersionActual = getDriverVersion(driverVersionSpecial)
     return """/**
  *  Copyright 2020 Markus Liljergren
+ *
+ *  Code Version: """ + driverVersionActual + """
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -210,6 +213,11 @@ getAction(getCommandString("FriendlyName1", device.displayName.take(32))) // Set
 // We need the Backlog inter-command delay to be 20ms instead of 200...
 getAction(getCommandString("SetOption34", "20"))
 
+// Just make sure we update the child devices
+logging("Scheduling refreshChildren...", 1)
+runIn(30, "refreshChildren")
+runIn(60, "refreshChildrenAgain")
+logging("Done scheduling refreshChildren...", 1)
 
 if(override == true) {
     sync(ipAddress)
