@@ -90,6 +90,10 @@ class HubitatCodeBuilderTasmota(HubitatCodeBuilder):
             self.log.debug("Executing makeTasmotaConnectDriverListV2()...")
             output = self._makeTasmotaConnectDriverListV2()
             return(True, output)
+        elif(eval_cmd == 'getAppRawRepoURL()'):
+            self.log.debug("Executing appRawRepoURL()...")
+            output = "// IMPORT URL: {}{}".format(self.app_raw_repo_url, str(self._output_groovy_file))
+            return(True, output)
         elif('numSwitches' in self._config_dict and eval_cmd.startswith('getDefaultMetadataPreferencesForParentDevices(')):
             self.log.debug("Executing getDefaultMetadataPreferencesForParentDevices(numSwitches={})...".format(self._config_dict['numSwitches']))
             output = self.calling_namespace.getDefaultMetadataPreferencesForParentDevices(self._config_dict['numSwitches'])

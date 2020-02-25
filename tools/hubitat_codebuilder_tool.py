@@ -88,6 +88,7 @@ except SyntaxError as e:
 def main():
     base_repo_url = 'https://github.com/markus-li/Hubitat/blob/development/drivers/expanded/'
     base_raw_repo_url = 'https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/'
+    app_raw_repo_url = 'https://raw.githubusercontent.com/markus-li/Hubitat/development/apps/expanded/'
 
     # Get us a Code Builder...
     
@@ -99,7 +100,8 @@ def main():
 
     # By including our namespace, anything we import in this file is available
     # to call by the include tags in the .groovy files when we process them
-    cb = HubitatCodeBuilderTasmota(hhs, calling_namespace=sys.modules[__name__], driver_raw_repo_url=base_raw_repo_url)
+    cb = HubitatCodeBuilderTasmota(hhs, calling_namespace=sys.modules[__name__], driver_raw_repo_url=base_raw_repo_url,
+                app_raw_repo_url=app_raw_repo_url)
     #cb = HubitatCodeBuilderTasmota()
     
     driver_files = [

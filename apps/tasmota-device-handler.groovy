@@ -1,5 +1,6 @@
-// IMPORT URL: https://raw.githubusercontent.com/markus-li/Hubitat/development/apps/expanded/tasmota-device-handler-expanded.groovy
-#!include:getHeaderLicense()
+#!includeNC:getAppRawRepoURL()
+
+#!includeNC:getHeaderLicense()
 
 #!include:getDefaultParentImports()
 
