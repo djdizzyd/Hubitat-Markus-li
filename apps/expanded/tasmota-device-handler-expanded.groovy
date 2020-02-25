@@ -880,7 +880,7 @@ def deviceDiscoveryTEMP() {
 			paragraph "NOT FUNCTIONAL: This process will automatically discover your device, this may take a few minutes. Please be patient. Tasmota Device Handler then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your WiFi network."
             /*input "deviceType", "enum", title:"Device Type", description: "", required: true, options: 
                 // BEGIN:makeTasmotaConnectDriverListV1()
-                ["Tasmota - Universal Parent Testing",
+                ["Tasmota - Universal Parent",
                 ]
                 // END:  makeTasmotaConnectDriverListV1()
             input "ipAddress", "text", title:"IP Address", description: "", required: true */
@@ -897,7 +897,7 @@ def manuallyAdd() {
             
             input("deviceType", "enum", title:"Device Type", description: "", required: true, submitOnChange: false, options: 
                 // BEGIN:makeTasmotaConnectDriverListV1()
-                ["Tasmota - Universal Parent Testing",
+                ["Tasmota - Universal Parent",
                 ]
                 // END:  makeTasmotaConnectDriverListV1()
             )
@@ -1840,7 +1840,7 @@ def deviceDiscoveryPage2() {
             paragraph("Installed devices are not displayed (if Tasmota Device Handler has access to them). Previously discovered devices will show quickly, devices never seen by Tasmota Device Handler before may take time to discover.")
             input("deviceType", "enum", title:"Device Type", description: "", required: true, submitOnChange: true, options: 
                 // BEGIN:makeTasmotaConnectDriverListV1()
-                ["Tasmota - Universal Parent Testing",
+                ["Tasmota - Universal Parent",
                 ]
                 // END:  makeTasmotaConnectDriverListV1()
             )
@@ -2083,14 +2083,11 @@ void updated() {
 
 void refreshChildren() {
     logging("refreshChildren()", 1)
-    log.warn("refreshChildren()")
     getAction(getCommandString("Status", "0"), callback="parseConfigureChildDevices")
 }
 
 void refreshChildrenAgain() {
     logging("refreshChildrenAgain()", 1)
-    log.warn("refreshChildrenAgain()")
-    // Used for scheduling twice...
     refreshChildren()
 }
 

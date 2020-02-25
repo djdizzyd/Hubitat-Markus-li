@@ -41,14 +41,11 @@ void updated() {
 
 void refreshChildren() {
     logging("refreshChildren()", 1)
-    log.warn("refreshChildren()")
     getAction(getCommandString("Status", "0"), callback="parseConfigureChildDevices")
 }
 
 void refreshChildrenAgain() {
     logging("refreshChildrenAgain()", 1)
-    log.warn("refreshChildrenAgain()")
-    // Used for scheduling twice...
     refreshChildren()
 }
 

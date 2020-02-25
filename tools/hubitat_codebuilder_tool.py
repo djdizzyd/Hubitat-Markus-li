@@ -353,8 +353,8 @@ def main():
         {'id': 547},
 
         {'id': 962}, # Javascript Injection Driver
-        {'id': 867}, {'id': 868},  # Universal Drivers TESTING
-        #{'id': 865}, {'id': 866}, # Universal Drivers RELEASE
+        #{'id': 867}, {'id': 868},  # Universal Drivers TESTING
+        {'id': 865}, {'id': 866}, # Universal Drivers RELEASE
         
     #    {'id': 801}, {'id': 579},  # Zigbee drivers
     #     {'id':587},  # Wifi Curtain Wall Panel

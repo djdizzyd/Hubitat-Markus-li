@@ -1,6 +1,8 @@
 /**
  *  Copyright 2020 Markus Liljergren
  *
+ *  Code Version: v1.0.0225Tb
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at:
@@ -963,7 +965,9 @@ boolean parseResult(result, missingChild) {
         logging("StatusPRM: $result.StatusPRM",99)
         result << result.StatusPRM
     }
-    if (result.containsKey("Status")) {
+    if (false && result.containsKey("Status")) {
+        // We shouldn't do this, we don't need this data to be moved out
+        // It will only cause issues with the "Module" setting.
         logging("Status: $result.Status",99)
         result << result.Status
     }
@@ -1297,6 +1301,12 @@ void updateNeededSettings() {
     getAction(getCommandString("FriendlyName1", device.displayName.take(32))) // Set to a maximum of 32 characters
     // We need the Backlog inter-command delay to be 20ms instead of 200...
     getAction(getCommandString("SetOption34", "20"))
+    
+    // Just make sure we update the child devices
+    logging("Scheduling refreshChildren...", 1)
+    runIn(30, "refreshChildren")
+    runIn(60, "refreshChildrenAgain")
+    logging("Done scheduling refreshChildren...", 1)
     
     if(override == true) {
         sync(ipAddress)
@@ -1707,7 +1717,7 @@ void deviceCommand(cmd) {
 // Call order: installed() -> configure() -> updated() -> initialize()
 def initialize() {
     logging("initialize()", 100)
-	unschedule()
+	unschedule("updatePresence")
     // disable debug logs after 30 min, unless override is in place
 	if (logLevel != "0" && logLevel != "100") {
         if(runReset != "DEBUG") {
@@ -1769,7 +1779,7 @@ void logsOff() {
         }
     } else {
         log.warn "OVERRIDE: Disabling Debug logging will not execute with 'DEBUG' set..."
-        if (logLevel != "0" && logLevel != "100") runIn(1800, logsOff)
+        if (logLevel != "0" && logLevel != "100") runIn(1800, "logsOff")
     }
 }
 
@@ -2368,8 +2378,8 @@ void configure() {
 }
 
 void configureDelayed() {
-    runIn(10, configure)
-    runIn(30, refresh)
+    runIn(10, "configure")
+    runIn(30, "refresh")
 }
 
 /**
@@ -2544,6 +2554,16 @@ void updated() {
     }
 }
 
+void refreshChildren() {
+    logging("refreshChildren()", 1)
+    getAction(getCommandString("Status", "0"), callback="parseConfigureChildDevices")
+}
+
+void refreshChildrenAgain() {
+    logging("refreshChildrenAgain()", 1)
+    refreshChildren()
+}
+
 // Call order: installed() -> configure() -> updated() -> initialize() -> refresh()
 void refresh() {
 	logging("refresh()", 100)
@@ -2645,7 +2665,7 @@ void runInstallCommands(installCommands) {
     }
 
     // Backlog inter-command delay in milliseconds
-    getAction(getCommandString("SetOption34", "20"))
+    //getAction(getCommandString("SetOption34", "20"))
     pauseExecution(100)
     // Maximum 30 commands per backlog call
     while(backlogs.size() > 0) {
@@ -2666,7 +2686,7 @@ void runInstallCommands(installCommands) {
             // REALLY don't use pauseExecution often... NOT good for performance...
         }
     }
-    getAction(getCommandString("SetOption34", "200"))
+    //getAction(getCommandString("SetOption34", "200"))
 }
 
 void updatePresence(String presence) {
