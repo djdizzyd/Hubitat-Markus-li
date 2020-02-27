@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Markus Liljergren
  *
- *  Code Version: v1.0.0225Tb
+ *  Code Version: v1.0.0227Tb
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -172,7 +172,7 @@ TreeMap getDeviceConfigurations() {
          template: '{"NAME":"CESmartHLA-WF7","GPIO":[0,56,0,17,134,132,0,0,131,57,21,0,0],"FLAG":0,"BASE":18}',
          installCommands: [],
          deviceLink: 'https://templates.blakadder.com/ce_smart_home_LA-WF7.html'],
-         
+
         [typeId: 'awp02l-n-plug',
          name: 'AWP02L-N Plug',
          template: '{"NAME":"AWP02L-N","GPIO":[57,0,56,0,0,0,0,0,0,17,0,21,0],"FLAG":1,"BASE":18}',
@@ -255,14 +255,14 @@ TreeMap getDeviceConfigurations() {
          deviceLink: 'https://templates.blakadder.com/sonoff_ifan03.html'],*/
 
         [typeId: 'sonoff-ifan03-no_beep-m71',
-         name: 'Sonoff iFan03 (No Beep) M71',
+         name: 'Sonoff iFan03 (No Beep)',
          module: 71,
          //template: '{"NAME":"SonoffiFan03","GPIO":[17,148,0,149,0,0,29,161,23,56,22,24,0],"FLAG":0,"BASE":71}',
          installCommands: [["SetOption67", "0"], ['Rule1', '0']],
          deviceLink: 'https://templates.blakadder.com/sonoff_ifan03.html'],
 
         [typeId: 'sonoff-ifan03-beep-m71',
-         name: 'Sonoff iFan03 (Beep) M71',
+         name: 'Sonoff iFan03 (Beep)',
          module: 71,
          //template: '{"NAME":"SonoffiFan03","GPIO":[17,148,0,149,0,0,29,161,23,56,22,24,0],"FLAG":0,"BASE":71}',
          installCommands: [["SetOption67", "1"], 
@@ -971,8 +971,9 @@ boolean parseResult(result, missingChild) {
         logging("Status: $result.Status",99)
         result << result.Status
     }
-    if (log99 == true && result.containsKey("LoadAvg")) {
+    if (result.containsKey("LoadAvg")) {
         logging("LoadAvg: $result.LoadAvg",99)
+        if(result.LoadAvg.toInteger() > 60) log.warn "Load average of the Device is unusually high: $result.LoadAvg"
     }
     if (log99 == true && result.containsKey("Sleep")) {
         logging("Sleep: $result.Sleep",99)
@@ -1535,7 +1536,7 @@ void componentSetEffectWidth(cd, BigDecimal pixels) {
 private String getDriverVersion() {
     //comment = ""
     //if(comment != "") state.comment = comment
-    String version = "v1.0.0225Tb"
+    String version = "v1.0.0227Tb"
     logging("getDriverVersion() = ${version}", 100)
     sendEvent(name: "driver", value: version)
     updateDataValue('driver', version)

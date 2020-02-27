@@ -97,8 +97,9 @@ if (false && result.containsKey("Status")) {
     logging("Status: $result.Status",99)
     result << result.Status
 }
-if (log99 == true && result.containsKey("LoadAvg")) {
+if (result.containsKey("LoadAvg")) {
     logging("LoadAvg: $result.LoadAvg",99)
+    if(result.LoadAvg.toInteger() > 60) log.warn "Load average of the Device is unusually high: $result.LoadAvg"
 }
 if (log99 == true && result.containsKey("Sleep")) {
     logging("Sleep: $result.Sleep",99)
