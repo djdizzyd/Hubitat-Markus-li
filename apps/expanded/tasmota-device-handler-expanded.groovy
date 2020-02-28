@@ -3,7 +3,7 @@
 /**
  *  Copyright 2020 Markus Liljergren
  *
- *  Code Version: v1.0.0227Tb
+ *  Code Version: v1.0.0228Tb
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -320,6 +320,12 @@ TreeMap getDeviceConfigurations() {
         installCommands: [],
         deviceLink: 'https://templates.blakadder.com/brilliant_BL20925.html'],
 
+        [typeId: 'deta-6930ha-plug', 
+        name: 'Deta 6930HA Plug',
+        template: '{"NAME":"Deta6930HAPlug","GPIO":[0,17,0,0,0,0,0,0,0,56,21,0,0],"FLAG":0,"BASE":18}',
+        installCommands: [],
+        deviceLink: 'https://templates.blakadder.com/deta_6930HA.html'],
+
         [typeId: 'prime-ccrcwfii113pk-plug', 
         name: 'Prime CCRCWFII113PK Plug',
         template: '{"NAME":"PrimeCCRC13PK","GPIO":[0,0,0,0,57,56,0,0,21,122,0,0,0],"FLAG":0,"BASE":18}',
@@ -556,7 +562,7 @@ Map getTimeStringSinceDateWithMaximum(myDate, maxMillis) {
 // BEGIN:getDefaultAppMethods()
 /* Default App Methods go here */
 private String getAppVersion() {
-    String version = "v1.0.0227Tb"
+    String version = "v1.0.0228Tb"
     logging("getAppVersion() = ${version}", 50)
     return version
 }
@@ -1490,7 +1496,11 @@ BigDecimal round2(BigDecimal number, Integer scale) {
 }
 
 String generateMD5(String s) {
-    return MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
+    if(s != null) {
+        return MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
+    } else {
+        return "null"
+    }
 }
 
 Integer extractInt(String input) {

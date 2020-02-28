@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Markus Liljergren
  *
- *  Code Version: v1.0.0225Tb
+ *  Code Version: v1.0.0228Tb
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -202,7 +202,7 @@ void setLevel(BigDecimal level, BigDecimal duration) {
 private String getDriverVersion() {
     //comment = ""
     //if(comment != "") state.comment = comment
-    String version = "v1.0.0225Tb"
+    String version = "v1.0.0228Tb"
     logging("getDriverVersion() = ${version}", 100)
     sendEvent(name: "driver", value: version)
     updateDataValue('driver', version)
@@ -460,7 +460,11 @@ BigDecimal round2(BigDecimal number, Integer scale) {
 }
 
 String generateMD5(String s) {
-    return MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
+    if(s != null) {
+        return MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
+    } else {
+        return "null"
+    }
 }
 
 Integer extractInt(String input) {

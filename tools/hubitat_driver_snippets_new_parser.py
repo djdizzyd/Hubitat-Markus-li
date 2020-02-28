@@ -99,7 +99,7 @@ if (false && result.containsKey("Status")) {
 }
 if (result.containsKey("LoadAvg")) {
     logging("LoadAvg: $result.LoadAvg",99)
-    if(result.LoadAvg.toInteger() > 60) log.warn "Load average of the Device is unusually high: $result.LoadAvg"
+    //if(result.LoadAvg.toInteger() > 60) log.warn "Load average of the Device is unusually high: $result.LoadAvg"
 }
 if (log99 == true && result.containsKey("Sleep")) {
     logging("Sleep: $result.Sleep",99)

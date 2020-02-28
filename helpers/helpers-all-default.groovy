@@ -197,7 +197,11 @@ BigDecimal round2(BigDecimal number, Integer scale) {
 }
 
 String generateMD5(String s) {
-    return MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
+    if(s != null) {
+        return MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
+    } else {
+        return "null"
+    }
 }
 
 Integer extractInt(String input) {

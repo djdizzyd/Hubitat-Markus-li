@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Markus Liljergren
  *
- *  Code Version: v1.0.0227Tb
+ *  Code Version: v1.0.0228Tb
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -383,6 +383,12 @@ TreeMap getDeviceConfigurations() {
         template: '{"NAME":"BL20925","GPIO":[0,0,0,17,133,132,0,0,131,158,21,0,0],"FLAG":0,"BASE":52}',
         installCommands: [],
         deviceLink: 'https://templates.blakadder.com/brilliant_BL20925.html'],
+
+        [typeId: 'deta-6930ha-plug', 
+        name: 'Deta 6930HA Plug',
+        template: '{"NAME":"Deta6930HAPlug","GPIO":[0,17,0,0,0,0,0,0,0,56,21,0,0],"FLAG":0,"BASE":18}',
+        installCommands: [],
+        deviceLink: 'https://templates.blakadder.com/deta_6930HA.html'],
 
         [typeId: 'prime-ccrcwfii113pk-plug', 
         name: 'Prime CCRCWFII113PK Plug',
@@ -973,7 +979,7 @@ boolean parseResult(result, missingChild) {
     }
     if (result.containsKey("LoadAvg")) {
         logging("LoadAvg: $result.LoadAvg",99)
-        if(result.LoadAvg.toInteger() > 60) log.warn "Load average of the Device is unusually high: $result.LoadAvg"
+        //if(result.LoadAvg.toInteger() > 60) log.warn "Load average of the Device is unusually high: $result.LoadAvg"
     }
     if (log99 == true && result.containsKey("Sleep")) {
         logging("Sleep: $result.Sleep",99)
@@ -1536,7 +1542,7 @@ void componentSetEffectWidth(cd, BigDecimal pixels) {
 private String getDriverVersion() {
     //comment = ""
     //if(comment != "") state.comment = comment
-    String version = "v1.0.0227Tb"
+    String version = "v1.0.0228Tb"
     logging("getDriverVersion() = ${version}", 100)
     sendEvent(name: "driver", value: version)
     updateDataValue('driver', version)
@@ -1876,7 +1882,11 @@ BigDecimal round2(BigDecimal number, Integer scale) {
 }
 
 String generateMD5(String s) {
-    return MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
+    if(s != null) {
+        return MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
+    } else {
+        return "null"
+    }
 }
 
 Integer extractInt(String input) {

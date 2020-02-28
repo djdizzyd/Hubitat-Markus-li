@@ -255,6 +255,12 @@ TreeMap getDeviceConfigurations() {
         installCommands: [],
         deviceLink: 'https://templates.blakadder.com/brilliant_BL20925.html'],
 
+        [typeId: 'deta-6930ha-plug', 
+        name: 'Deta 6930HA Plug',
+        template: '{"NAME":"Deta6930HAPlug","GPIO":[0,17,0,0,0,0,0,0,0,56,21,0,0],"FLAG":0,"BASE":18}',
+        installCommands: [],
+        deviceLink: 'https://templates.blakadder.com/deta_6930HA.html'],
+
         [typeId: 'prime-ccrcwfii113pk-plug', 
         name: 'Prime CCRCWFII113PK Plug',
         template: '{"NAME":"PrimeCCRC13PK","GPIO":[0,0,0,0,57,56,0,0,21,122,0,0,0],"FLAG":0,"BASE":18}',
