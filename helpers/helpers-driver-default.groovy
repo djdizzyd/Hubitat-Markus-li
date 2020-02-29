@@ -32,11 +32,12 @@ void installed() {
     }
 }
 
-// Call order: installed() -> configure()
+// Call order: installed() -> configure() -> updated() -> initialize() -> refresh()
 void configure() {
     logging("configure()", 100)
     if(isDriver()) {
-        updateNeededSettings()
+        // Do NOT call updateNeededSettings() here!
+        updated()
         try {
             // Run the getDriverVersion() command
             def newCmds = getDriverVersion()

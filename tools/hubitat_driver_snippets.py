@@ -142,11 +142,12 @@ if(disableModuleSelection == false && ((deviceTemplateInput != null && deviceTem
     if(useDefaultTemplate == false && deviceTemplateInput != null && deviceTemplateInput != "") {
         usedDeviceTemplate = deviceTemplateInput
     }
-    logging("Setting the Template soon...", 10)
+    logging("Setting the Template (${usedDeviceTemplate}) soon...", 100)
     logging("templateData = ${device.currentValue('templateData')}", 10)
     if(usedDeviceTemplate != '') moduleNumberUsed = 0  // This activates the Template when set
-    if(usedDeviceTemplate != null && device.currentValue('templateData') != null && device.currentValue('templateData') != usedDeviceTemplate) {
-        logging("The template is NOT set to '${usedDeviceTemplate}', it is set to '${device.currentValue('templateData')}'",10)
+    // Checking this makes installs fail: device.currentValue('templateData') != null 
+    if(usedDeviceTemplate != null && device.currentValue('templateData') != usedDeviceTemplate) {
+        logging("The template is currently NOT set to '${usedDeviceTemplate}', it is set to '${device.currentValue('templateData')}'", 100)
         // The NAME part of th Device Template can't exceed 14 characters! More than that and they will be truncated.
         // TODO: Parse and limit the size of NAME???
         getAction(getCommandString("Template", usedDeviceTemplate))
@@ -154,7 +155,7 @@ if(disableModuleSelection == false && ((deviceTemplateInput != null && deviceTem
         // Update our stored value!
         getAction(getCommandString("Template", null))
     }else if (usedDeviceTemplate != null) {
-        logging("The template is set to '${usedDeviceTemplate}' already!",10)
+        logging("The template is set to '${usedDeviceTemplate}' already!", 100)
     }
 } else {
     logging("Can't set the Template...", 10)
@@ -163,10 +164,11 @@ if(disableModuleSelection == false && ((deviceTemplateInput != null && deviceTem
     //logging("disableModuleSelection: '${disableModuleSelection}'", 10)
 }
 if(disableModuleSelection == false && moduleNumberUsed != null && moduleNumberUsed >= 0) {
-    logging("Setting the Module soon...", 10)
+    logging("Setting the Module (${moduleNumberUsed}) soon...", 100)
     logging("device.currentValue('module'): '${device.currentValue('module')}'", 10)
-    if(moduleNumberUsed != null && device.currentValue('module') != null && !(device.currentValue('module').startsWith("[${moduleNumberUsed}:") || device.currentValue('module') == '0')) {
-        logging("This DOESN'T start with [${moduleNumberUsed} ${device.currentValue('module')}",10)
+    // Don't filter in this case: device.currentValue('module') != null 
+    if(moduleNumberUsed != null && (device.currentValue('module') == null || !(device.currentValue('module').startsWith("[${moduleNumberUsed}:") || device.currentValue('module') == '0'))) {
+        logging("Currently not using module ${moduleNumberUsed}, using ${device.currentValue('module')}", 100)
         getAction(getCommandString("Module", "${moduleNumberUsed}"))
     } else if (moduleNumberUsed != null && device.currentValue('module') != null){
         logging("This starts with [${moduleNumberUsed} ${device.currentValue('module')}",10)

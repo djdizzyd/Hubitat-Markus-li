@@ -250,7 +250,9 @@ void updateNeededSettings() {
     if(deviceTemplateInput == "") deviceTemplateInput = null
     if(moduleNumber == "") moduleNumber = null
 
-    logging("updateNeededSettings: deviceConfigMap=$deviceConfigMap, deviceTemplateInput=$deviceTemplateInput, moduleNumber=$moduleNumber", 0)
+    if(deviceTemplateInput != null && moduleNumber == null) moduleNumber = 0
+
+    logging("updateNeededSettings: deviceConfigMap=$deviceConfigMap, deviceTemplateInput=$deviceTemplateInput, moduleNumber=$moduleNumber", 1)
 
     #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand()
     logging("After getUpdateNeededSettingsTasmotaDynamicModuleCommand", 1)
