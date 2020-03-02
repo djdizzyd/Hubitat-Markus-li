@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Markus Liljergren
  *
- *  Code Version: v1.0.0229Tb
+ *  Code Version: v1.0.0302Tb
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -372,6 +372,12 @@ TreeMap getDeviceConfigurations() {
         installCommands: [["SetOption81", "1"]],
         deviceLink: 'https://templates.blakadder.com/brilliantsmart_20676.html'],
 
+        [typeId: 'globe-34207-bulb' ,
+        name: 'Globe 34207 800lm RGBCCT Bulb',
+        template: '{"NAME":"GlobeRGBWW","GPIO":[0,0,0,0,37,40,0,0,38,41,39,0,0],"FLAG":0,"BASE":18}',
+        installCommands: [],
+        deviceLink: 'https://templates.blakadder.com/globe-34207.html'],
+
         [typeId: 'brilliantsmart-20676-plug' ,
         name: 'BrilliantSmart 20676 USB Charger Plug',
         template: '{"NAME":"Brilliant20676","GPIO":[0,0,0,0,0,21,0,0,0,52,90,0,0],"FLAG":0,"BASE":18}',
@@ -526,7 +532,6 @@ TreeMap getDeviceConfigurations() {
         [typeId: '01generic-device',
         comment: 'Works with most devices' ,
         name: 'Generic Device',
-        template: '',
         installCommands: [],
         deviceLink: ''],
 
@@ -1546,7 +1551,7 @@ void componentSetEffectWidth(cd, BigDecimal pixels) {
 private String getDriverVersion() {
     //comment = ""
     //if(comment != "") state.comment = comment
-    String version = "v1.0.0229Tb"
+    String version = "v1.0.0302Tb"
     logging("getDriverVersion() = ${version}", 100)
     sendEvent(name: "driver", value: version)
     updateDataValue('driver', version)

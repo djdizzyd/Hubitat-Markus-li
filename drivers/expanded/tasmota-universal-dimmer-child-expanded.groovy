@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Markus Liljergren
  *
- *  Code Version: v1.0.0228Tb
+ *  Code Version: v1.0.0302Tb
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -97,6 +97,7 @@ void installed() {
     log.info "installed()"
     device.removeSetting("logLevel")
     device.updateSetting("logLevel", "100")
+    sendEvent(name: "level", value: "100")
     refresh()
 }
 
@@ -147,7 +148,7 @@ void stopLevelChange() {
 private String getDriverVersion() {
     //comment = ""
     //if(comment != "") state.comment = comment
-    String version = "v1.0.0228Tb"
+    String version = "v1.0.0302Tb"
     logging("getDriverVersion() = ${version}", 100)
     sendEvent(name: "driver", value: version)
     updateDataValue('driver', version)

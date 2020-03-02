@@ -48,6 +48,7 @@ void installed() {
     log.info "installed()"
     device.removeSetting("logLevel")
     device.updateSetting("logLevel", "100")
+    sendEvent(name: "level", value: "100")
     refresh()
 }
 
