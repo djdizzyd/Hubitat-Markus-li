@@ -1,6 +1,8 @@
 /**
  *  Copyright 2020 Markus Liljergren
  *
+ *  Code Version: v1.0.0228Tb
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at:
@@ -20,17 +22,32 @@ import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 // Used for MD5 calculations
 import java.security.MessageDigest
-//import groovy.transform.TypeChecked
-//import groovy.transform.TypeCheckingMode
 // END:  getDefaultImports()
 
 
 metadata {
     // Do NOT rename the child driver name unless you also change the corresponding code in the Parent!
-    definition (name: "Tasmota - Universal Switch as Motion (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-switch-as-motion-child-expanded.groovy") {
-        capability "MotionSensor"
+    definition (name: "Tasmota - Universal Multi Sensor (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-multi-sensor-child-expanded.groovy") {
+        capability "Sensor"
+        capability "TemperatureMeasurement"       // Attributes: temperature - NUMBER
+        capability "RelativeHumidityMeasurement"  // Attributes: humidity - NUMBER
+        capability "PressureMeasurement"          // Attributes: pressure - NUMBER
+        capability "IlluminanceMeasurement"       // Attributes: illuminance - NUMBER
+        capability "MotionSensor"                 // Attributes: motion - ENUM ["inactive", "active"]
+        capability "WaterSensor"                  // Attributes: water - ENUM ["wet", "dry"]
+
         capability "Refresh"
 
+        // BEGIN:getMinimumChildAttributes()
+        // Attributes used by all Child Drivers
+        attribute   "driver", "string"
+        // END:  getMinimumChildAttributes()
+
+        // Non-standard sensor attributes
+        attribute  "distance", "string"
+        attribute  "pressureWithUnit", "string"
+
+        //command "clear"
     }
 
     preferences {
@@ -38,7 +55,17 @@ metadata {
         // Default Preferences
         generate_preferences(configuration_model_debug())
         // END:  getDefaultMetadataPreferences()
-
+        input(name: "hideMeasurementAdjustments", type: "bool", title: addTitleDiv("Hide Measurement Adjustment Preferences"), description: "", defaultValue: false, displayDuringSetup: false, required: false)
+        // BEGIN:getDefaultMetadataPreferencesForTHMonitor()
+        // Default Preferences for Temperature Humidity Monitor
+        input(name: "tempOffset", type: "decimal", title: addTitleDiv("Temperature Offset"), description: addDescriptionDiv("Adjust the temperature by this many degrees (in Celcius)."), displayDuringSetup: true, required: false, range: "*..*")
+        input(name: "tempRes", type: "enum", title: addTitleDiv("Temperature Resolution"), description: addDescriptionDiv("Temperature sensor resolution (0..3 = maximum number of decimal places, default: 1)<br/>NOTE: If the 3rd decimal is a 0 (eg. 24.720) it will show without the last decimal (eg. 24.72)."), options: ["0", "1", "2", "3"], defaultValue: "1", displayDuringSetup: true, required: false)
+        input(name: "tempUnitConversion", type: "enum", title: addTitleDiv("Temperature Unit Conversion"), description: "", defaultValue: "1", required: true, multiple: false, options:[["1":"none"], ["2":"Celsius to Fahrenheit"], ["3":"Fahrenheit to Celsius"]], displayDuringSetup: false)
+        input(name: "humidityOffset", type: "decimal", title: addTitleDiv("Humidity Offset"), description: addDescriptionDiv("Adjust the humidity by this many percent."), displayDuringSetup: true, required: false, range: "*..*")
+        input(name: "pressureOffset", type: "decimal", title: addTitleDiv("Pressure Offset"), description: addDescriptionDiv("Adjust the pressure value by this much."), displayDuringSetup: true, required: false, range: "*..*")
+        input(name: "pressureUnitConversion", type: "enum", title: addTitleDiv("Pressure Unit Conversion"), description: addDescriptionDiv("(default: kPa)"), options: ["mbar", "kPa", "inHg", "mmHg", "atm"], defaultValue: "kPa")
+        // END:  getDefaultMetadataPreferencesForTHMonitor()
+        
     }
 
     // The below line needs to exist in ALL drivers for custom CSS to work!
@@ -54,10 +81,10 @@ metadata {
 }
 
 // BEGIN:getDeviceInfoFunction()
-public getDeviceInfoByName(infoName) { 
+String getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    def deviceInfo = ['name': 'Tasmota - Universal Switch as Motion (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-switch-as-motion-child-expanded.groovy']
+    Map deviceInfo = ['name': 'Tasmota - Universal Multi Sensor (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-multi-sensor-child-expanded.groovy']
     //logging("deviceInfo[${infoName}] = ${deviceInfo[infoName]}", 1)
     return(deviceInfo[infoName])
 }
@@ -67,11 +94,36 @@ public getDeviceInfoByName(infoName) {
 /* These functions are unique to each driver */
 void parse(List<Map> description) {
     description.each {
-        if (it.name in ["switch"]) {
-            it.name = "motion"
-            it.value = (it.value == "on" ? "active" : "inactive")
+        if(it.name in ["illuminance", "motion", "water", "distance"]) {
             logging(it.descriptionText, 100)
             sendEvent(it)
+        } else if(it.name == "temperature") {
+            // Offset the temperature based on preference
+            c = String.valueOf((char)(Integer.parseInt("00B0", 16))); // Creates a degree character
+            if (tempUnitConversion == "2") {
+                it.unit = "${c}F"
+            } else if (tempUnitConversion == "3") {
+                it.unit  = "${c}C"
+            }
+            it.value = getAdjustedTemp(new BigDecimal(it.value))
+            logging(it.descriptionText, 100)
+            sendEvent(it)
+        } else if(it.name == "humidity") {
+            // Offset the humidity based on preference
+            it.value = getAdjustedHumidity(new BigDecimal(it.value))
+            logging(it.descriptionText, 100)
+            sendEvent(it)
+        } else if(it.name == "pressure") {
+            // Offset the pressure based on preference and adjust it to the correct unit
+            it.value = convertPressure(new BigDecimal(it.value))
+            if(pressureUnitConversion != null) {
+                it.unit = pressureUnitConversion
+            } else {
+                it.unit = "kPa"
+            }
+            logging(it.descriptionText, 100)
+            sendEvent(it)
+            sendEvent(name: "pressureWithUnit", value: "$it.value $it.unit", isStateChange: false)
         } else {
             log.warn "Got '$it.name' attribute data, but doesn't know what to do with it! Did you choose the right device type?"
         }
@@ -80,6 +132,10 @@ void parse(List<Map> description) {
 
 void updated() {
     log.info "updated()"
+    // BEGIN:getChildComponentDefaultUpdatedContent()
+    // This is code needed to run in updated() in ALL Child drivers
+    getDriverVersion()
+    // END:  getChildComponentDefaultUpdatedContent()
     refresh()
 }
 
@@ -98,7 +154,12 @@ void refresh() {
     metaConfig = setDatasToHide(['metaConfig', 'isComponent', 'preferences', 'label', 'name'], metaConfig=metaConfig)
     // END:  getChildComponentMetaConfigCommands()
     parent?.componentRefresh(this.device)
+    if(hideMeasurementAdjustments == true) {
+        metaConfig = setPreferencesToHide(["tempOffset", "tempRes", "tempUnitConversion",
+                                           "humidityOffset", "pressureOffset", "pressureUnitConversion"], metaConfig=metaConfig)
+    }
 }
+
 
 /**
  * -----------------------------------------------------------------------------
@@ -107,6 +168,20 @@ void refresh() {
  * --- Nothing to edit here, move along! ---------------------------------------
  * -----------------------------------------------------------------------------
  */
+
+// BEGIN:getDefaultFunctions()
+/* Default Driver Methods go here */
+private String getDriverVersion() {
+    //comment = ""
+    //if(comment != "") state.comment = comment
+    String version = "v1.0.0228Tb"
+    logging("getDriverVersion() = ${version}", 100)
+    sendEvent(name: "driver", value: version)
+    updateDataValue('driver', version)
+    return version
+}
+// END:  getDefaultFunctions()
+
 
 /**
  * ALL DEBUG METHODS (helpers-all-debug)
@@ -121,7 +196,7 @@ String configuration_model_debug() {
         }
         return '''
 <configuration>
-<Value type="bool" index="debugLogging" label="Enable debug logging" description="" value="true" submitOnChange="true" setting_type="preference" fw="">
+<Value type="bool" index="debugLogging" label="Enable debug logging" description="" value="false" submitOnChange="true" setting_type="preference" fw="">
 <Help></Help>
 </Value>
 <Value type="bool" index="infoLogging" label="Enable descriptionText logging" description="" value="true" submitOnChange="true" setting_type="preference" fw="">
@@ -138,7 +213,7 @@ String configuration_model_debug() {
         }
         return '''
 <configuration>
-<Value type="list" index="logLevel" label="Debug Log Level" description="Under normal operations, set this to None. Only needed for debugging. Auto-disabled after 30 minutes." value="-1" submitOnChange="true" setting_type="preference" fw="">
+<Value type="list" index="logLevel" label="Debug Log Level" description="Under normal operations, set this to None. Only needed for debugging. Auto-disabled after 30 minutes." value="100" submitOnChange="true" setting_type="preference" fw="">
 <Help>
 </Help>
     <Item label="None" value="0" />
@@ -192,11 +267,14 @@ void deviceCommand(cmd) {
 
 	Purpose: initialize the driver/app
 	Note: also called from updated()
+    This is called when the hub starts, DON'T declare it with return as void,
+    that seems like it makes it to not run? Since testing require hub reboots
+    and this works, this is not conclusive...
 */
 // Call order: installed() -> configure() -> updated() -> initialize()
-void initialize() {
+def initialize() {
     logging("initialize()", 100)
-	unschedule()
+	unschedule("updatePresence")
     // disable debug logs after 30 min, unless override is in place
 	if (logLevel != "0" && logLevel != "100") {
         if(runReset != "DEBUG") {
@@ -258,12 +336,12 @@ void logsOff() {
         }
     } else {
         log.warn "OVERRIDE: Disabling Debug logging will not execute with 'DEBUG' set..."
-        if (logLevel != "0" && logLevel != "100") runIn(1800, logsOff)
+        if (logLevel != "0" && logLevel != "100") runIn(1800, "logsOff")
     }
 }
 
 boolean isDeveloperHub() {
-    return generateMD5(location.hub.zigbeeId as String) == "125fceabd0413141e34bb859cd15e067"
+    return generateMD5(location.hub.zigbeeId as String) == "125fceabd0413141e34bb859cd15e067_disabled"
 }
 
 def getEnvironmentObject() {
@@ -354,7 +432,11 @@ BigDecimal round2(BigDecimal number, Integer scale) {
 }
 
 String generateMD5(String s) {
-    return MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
+    if(s != null) {
+        return MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
+    } else {
+        return "null"
+    }
 }
 
 Integer extractInt(String input) {
@@ -807,19 +889,90 @@ String makeTextItalic(s) {
  * --END-- STYLING METHODS (helpers-styling)
  */
 
+/**
+ * TEMPERATURE HUMIDITY METHODS (helpers-temperature-humidity)
+ *
+ * Helper functions included in all drivers with Temperature and Humidity
+ */
+private BigDecimal getAdjustedTemp(BigDecimal value) {
+    //Double decimalLimit = 10
+    Integer res = 1
+    if(tempRes != null && tempRes != '') {
+        res = Integer.parseInt(tempRes)
+    }
+    if (tempUnitConversion == "2") {
+        value = celsiusToFahrenheit(value)
+    } else if (tempUnitConversion == "3") {
+        value = fahrenheitToCelsius(value)
+    }
+	if (tempOffset) {
+	   return (value + new BigDecimal(tempOffset)).setScale(res, BigDecimal.ROUND_HALF_UP)
+	} else {
+       return value.setScale(res, BigDecimal.ROUND_HALF_UP)
+    }
+}
+
+private BigDecimal getAdjustedHumidity(BigDecimal value) {
+    if (humidityOffset) {
+	   return (value + new BigDecimal(humidityOffset)).setScale(1, BigDecimal.ROUND_HALF_UP)
+	} else {
+       return value.setScale(1, BigDecimal.ROUND_HALF_UP)
+    }
+}
+
+private BigDecimal getAdjustedPressure(BigDecimal value, Integer decimals=2) {
+    if (pressureOffset) {
+	   return (value + new BigDecimal(pressureOffset)).setScale(decimals, BigDecimal.ROUND_HALF_UP)
+	} else {
+       return value.setScale(decimals, BigDecimal.ROUND_HALF_UP)
+    }   
+}
+
+private BigDecimal convertPressure(BigDecimal pressureInkPa) {
+    BigDecimal pressure = pressureInkPa
+    switch(pressureUnitConversion) {
+        case null:
+        case "kPa":
+			pressure = getAdjustedPressure(pressure / 10)
+			break
+		case "inHg":
+			pressure = getAdjustedPressure(pressure * 0.0295299)
+			break
+		case "mmHg":
+            pressure = getAdjustedPressure(pressure * 0.75006157)
+			break
+        case "atm":
+			pressure = getAdjustedPressure(pressure / 1013.25, 5)
+			break
+        default:
+            // Tasmota provides the pressure in mbar by default
+            pressure = getAdjustedPressure(pressure, 1)
+            break
+    }
+    return pressure
+}
+
+/**
+ *   --END-- TEMPERATURE HUMIDITY METHODS (helpers-temperature-humidity)
+ */
+
 // BEGIN:getLoggingFunction(specialDebugLevel=True)
 /* Logging function included in all drivers */
 private boolean logging(message, level) {
     boolean didLogging = false
-    if (infoLogging == true) {
-        logLevel = 100
+    Integer logLevelLocal = (logLevel != null ? logLevel.toInteger() : 0)
+    if(!isDeveloperHub()) {
+        logLevelLocal = 0
+        if (infoLogging == true) {
+            logLevelLocal = 100
+        }
+        if (debugLogging == true) {
+            logLevelLocal = 1
+        }
     }
-    if (debugLogging == true) {
-        logLevel = 1
-    }
-    if (logLevel != "0"){
-        switch (logLevel) {
-        case "-1": // Insanely verbose
+    if (logLevelLocal != "0"){
+        switch (logLevelLocal) {
+        case -1: // Insanely verbose
             if (level >= 0 && level < 100) {
                 log.debug "$message"
                 didLogging = true
@@ -828,7 +981,7 @@ private boolean logging(message, level) {
                 didLogging = true
             }
         break
-        case "1": // Very verbose
+        case 1: // Very verbose
             if (level >= 1 && level < 99) {
                 log.debug "$message"
                 didLogging = true
@@ -837,7 +990,7 @@ private boolean logging(message, level) {
                 didLogging = true
             }
         break
-        case "10": // A little less
+        case 10: // A little less
             if (level >= 10 && level < 99) {
                 log.debug "$message"
                 didLogging = true
@@ -846,20 +999,20 @@ private boolean logging(message, level) {
                 didLogging = true
             }
         break
-        case "50": // Rather chatty
+        case 50: // Rather chatty
             if (level >= 50 ) {
                 log.debug "$message"
                 didLogging = true
             }
         break
-        case "99": // Only parsing reports
+        case 99: // Only parsing reports
             if (level >= 99 ) {
                 log.debug "$message"
                 didLogging = true
             }
         break
         
-        case "100": // Only special debug messages, eg IR and RF codes
+        case 100: // Only special debug messages, eg IR and RF codes
             if (level == 100 ) {
                 log.info "$message"
                 didLogging = true

@@ -24,7 +24,7 @@ void setColorTemperature(value) {
     state.colorMode = "CT"
     //if(device.currentValue("colorMode") != "CT" ) sendEvent(name: "colorMode", value: "CT")
     logging("setColorTemperature('${t}') ADJUSTED to Mired", 10)
-    getAction(getCommandString("CT", "${t}"))
+    getAction(getCommandStringWithModeReset("CT", "${t}"))
 }
 
 void setHSB(h, s, b) {
@@ -67,7 +67,7 @@ void setHSB(h, s, b, callWhite) {
         //getAction(getCommandString("hsbcolor", hsbcmd))
     } else {
         //if(device.currentValue("colorMode") != "RGB" ) sendEvent(name: "colorMode", value: "RGB")
-        getAction(getCommandString("HsbColor", hsbcmd))
+        getAction(getCommandStringWithModeReset("HsbColor", hsbcmd))
     }
 }
 
@@ -103,20 +103,19 @@ void setRGB(r, g, b) {
     state.hue = hsbColor['hue']
     state.saturation = hsbColor['saturation']
     state.level = hsbColor['level']
-    
-    getAction(getCommandString("Color1", rgbcmd))
+    getAction(getCommandStringWithModeReset("Color1", rgbcmd))
 }
 
 void setLevel(l, duration) {
     if (duration == 0) {
-        if (state.colorMode == "RGB") {
+        if (false && state.colorMode == "RGB") {
             setHSB(null, null, l)
         } else {
             state.level = l
             getAction(getCommandString("Dimmer", "${l}"))
         }
     } else if (duration > 0) {
-        if (state.colorMode == "RGB") {
+        if (false && state.colorMode == "RGB") {
             setHSB(null, null, l)
         } else {
             if (duration > 5400) {
@@ -133,20 +132,24 @@ void setLevel(l, duration) {
             }
             Integer steps = 13
             Integer increment = Math.round(((levelDistance as Float)  / steps) as Float)
-            if(increment <= 1 && levelDistance < steps) {
-                steps = levelDistance
+            if(increment <= 1 && Math.abs(levelDistance) < steps) {
+                steps = Math.abs(levelDistance)
             }
-            // Each Backlog command has 200ms delay, deduct that delay and add 1 second extra
-            duration = ((duration as Float) - (2 * steps * 0.2) + 1) as Float
-            BigDecimal stepTime = round2((duration / steps) as Float, 1)
-            Integer stepTimeTasmota = Math.round((stepTime as Float) * 10)
-            BigDecimal lastStepTime = round2((stepTime + (duration - (stepTime * steps)) as Float), 1)
-            Integer lastStepTimeTasmota = Math.round((lastStepTime as Float) * 10)
             List fadeCommands = []
-            Integer cmdLevel = cLevel
             fadeCommands.add([command: "Fade", value: "1"])
             fadeCommands.add([command: "Speed", value: "20"])
             if(steps > 0) {
+                // If we have less than 1 step, we shouldn't execute any of the below...
+
+                // Each Backlog command has 200ms delay, deduct that delay and add 1 second extra
+                duration = ((duration as Float) - (2 * steps * 0.2) + 1) as Float
+                BigDecimal stepTime = round2((duration / steps) as Float, 1)
+                Integer stepTimeTasmota = Math.round((stepTime as Float) * 10)
+                BigDecimal lastStepTime = round2((stepTime + (duration - (stepTime * steps)) as Float), 1)
+                Integer lastStepTimeTasmota = Math.round((lastStepTime as Float) * 10)
+                
+                Integer cmdLevel = cLevel
+                
                 (1..steps).each{
                     cmdLevel += (increment * direction)
                     if(direction == 1 && (cmdLevel > l || it == steps)) cmdLevel = l
@@ -174,11 +177,13 @@ void stopLevelChange() {
     // so that is what we do...
     getAction(getCommandString("Fade", "0"))
     getAction(getCommandString("Backlog", null))
+    modeSingleColor(1)
 }
 
 void startLevelChange(String direction) {
     Integer cLevel = state.level
     Integer delay = 30
+    modeSingleColor(1)
     if(direction == "up") {
         if(cLevel != null) {
             delay = Math.round(((delay / 100) * (100-cLevel)) as Float)
@@ -209,7 +214,7 @@ void whiteForPlatform() {
     state.blue = l
     state.colorMode = "CT"
     //if(device.currentValue("colorMode") != "CT" ) sendEvent(name: "colorMode", value: "CT")
-    getAction(getCommandString("Color1", hexCmd))
+    getAction(getCommandStringWithModeReset("Color1", hexCmd))
 }
 
 // Functions to set RGBW Mode
@@ -272,6 +277,44 @@ void modeWakeUp(BigDecimal wakeUpDuration, BigDecimal level) {
     state.level = level
     getAction(getMultiCommandString([[command: "WakeupDuration", value: "${wakeUpDuration}"],
                                     [command: "Wakeup", value: "${level}"]]))
+}
+
+void setColorByRGBString(String colorRGB) {
+    logging("setColorByRGBString(colorRGB ${colorRGB})", 100)
+    getAction(getCommandStringWithModeReset("Color1", colorRGB.take(11)))
+}
+
+void setPixelColor(String colorRGB, BigDecimal pixel) {
+    logging("setPixelColor(colorRGB ${colorRGB}, pixel: ${pixel})", 1)
+    if(pixel < 1) pixel = 1
+    if(pixel > 512) pixel = 512
+    getAction(getCommandStringWithModeReset("Led$pixel", colorRGB.take(7)))
+}
+
+void setAddressablePixels(BigDecimal pixels) {
+    logging("setAddressablePixels(pixels: ${pixels})", 100)
+    if(pixels < 1) pixels = 1
+    if(pixels > 512) pixels = 512
+    getAction(getCommandString("Pixels", "$pixels"))
+}
+
+void setAddressableRotation(BigDecimal pixels) {
+    logging("setAddressableRotation(pixels: ${pixels})", 100)
+    if(pixels < 1) pixels = 1
+    if(pixels > 512) pixels = 512
+    getAction(getCommandString("Rotation", "$pixels"))
+}
+
+void setEffectWidth(BigDecimal pixels) {
+    logging("setEffectWidth(pixels: ${pixels})", 100)
+    if(pixels < 0) pixels = 0
+    if(pixels > 4) pixels = 4
+    getAction(getCommandString("Width1", "$pixels"))
+}
+
+String getCommandStringWithModeReset(String command, String value) {
+    return getMultiCommandString([[command: "Scheme", value: "0"], [command: "Fade", value: "0"], 
+                                  [command: command, value: value]])
 }
 
 /**

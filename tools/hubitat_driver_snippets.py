@@ -13,7 +13,7 @@
 
 from datetime import date
 
-driverVersion = "v1.0.MMDDTa"
+driverVersion = "v1.0.MMDDTb"
 
 def getDriverVersion(driverVersionSpecial=None):
     if(driverVersionSpecial != None):
@@ -30,9 +30,12 @@ from hubitat_codebuilder import HubitatCodeBuilderError
   Snippets used by hubitat-driver-helper-tool
 """
 
-def getHeaderLicense():
+def getHeaderLicense(driverVersionSpecial=None):
+    driverVersionActual = getDriverVersion(driverVersionSpecial)
     return """/**
  *  Copyright 2020 Markus Liljergren
+ *
+ *  Code Version: """ + driverVersionActual + """
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -53,8 +56,15 @@ import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 // Used for MD5 calculations
 import java.security.MessageDigest
-//import groovy.transform.TypeChecked
-//import groovy.transform.TypeCheckingMode
+"""
+#import java.math.MathContext NOT ALLOWED!!! WHY?
+#import groovy.transform.TypeChecked
+#import groovy.transform.TypeCheckingMode
+
+def getChildComponentDefaultUpdatedContent():
+    return """
+// This is code needed to run in updated() in ALL Child drivers
+getDriverVersion()
 """
 
 def getDefaultParentImports():
@@ -132,11 +142,12 @@ if(disableModuleSelection == false && ((deviceTemplateInput != null && deviceTem
     if(useDefaultTemplate == false && deviceTemplateInput != null && deviceTemplateInput != "") {
         usedDeviceTemplate = deviceTemplateInput
     }
-    logging("Setting the Template soon...", 10)
+    logging("Setting the Template (${usedDeviceTemplate}) soon...", 100)
     logging("templateData = ${device.currentValue('templateData')}", 10)
     if(usedDeviceTemplate != '') moduleNumberUsed = 0  // This activates the Template when set
-    if(usedDeviceTemplate != null && device.currentValue('templateData') != null && device.currentValue('templateData') != usedDeviceTemplate) {
-        logging("The template is NOT set to '${usedDeviceTemplate}', it is set to '${device.currentValue('templateData')}'",10)
+    // Checking this makes installs fail: device.currentValue('templateData') != null 
+    if(usedDeviceTemplate != null && device.currentValue('templateData') != usedDeviceTemplate) {
+        logging("The template is currently NOT set to '${usedDeviceTemplate}', it is set to '${device.currentValue('templateData')}'", 100)
         // The NAME part of th Device Template can't exceed 14 characters! More than that and they will be truncated.
         // TODO: Parse and limit the size of NAME???
         getAction(getCommandString("Template", usedDeviceTemplate))
@@ -144,7 +155,7 @@ if(disableModuleSelection == false && ((deviceTemplateInput != null && deviceTem
         // Update our stored value!
         getAction(getCommandString("Template", null))
     }else if (usedDeviceTemplate != null) {
-        logging("The template is set to '${usedDeviceTemplate}' already!",10)
+        logging("The template is set to '${usedDeviceTemplate}' already!", 100)
     }
 } else {
     logging("Can't set the Template...", 10)
@@ -153,10 +164,11 @@ if(disableModuleSelection == false && ((deviceTemplateInput != null && deviceTem
     //logging("disableModuleSelection: '${disableModuleSelection}'", 10)
 }
 if(disableModuleSelection == false && moduleNumberUsed != null && moduleNumberUsed >= 0) {
-    logging("Setting the Module soon...", 10)
+    logging("Setting the Module (${moduleNumberUsed}) soon...", 100)
     logging("device.currentValue('module'): '${device.currentValue('module')}'", 10)
-    if(moduleNumberUsed != null && device.currentValue('module') != null && !(device.currentValue('module').startsWith("[${moduleNumberUsed}:") || device.currentValue('module') == '0')) {
-        logging("This DOESN'T start with [${moduleNumberUsed} ${device.currentValue('module')}",10)
+    // Don't filter in this case: device.currentValue('module') != null 
+    if(moduleNumberUsed != null && (device.currentValue('module') == null || !(device.currentValue('module').startsWith("[${moduleNumberUsed}:") || device.currentValue('module') == '0'))) {
+        logging("Currently not using module ${moduleNumberUsed}, using ${device.currentValue('module')}", 100)
         getAction(getCommandString("Module", "${moduleNumberUsed}"))
     } else if (moduleNumberUsed != null && device.currentValue('module') != null){
         logging("This starts with [${moduleNumberUsed} ${device.currentValue('module')}",10)
@@ -195,11 +207,19 @@ getAction(getCommandString("TelePeriod", "${getTelePeriodValue()}"))
 // updateNeededSettings() Generic footer BEGINS here
 getAction(getCommandString("SetOption113", "1")) // Hubitat Enabled
 // Disabling Emulation so that we don't flood the logs with upnp traffic
-//getAction(getCommandString("Emulation", "0")) // Emulation Disabled
+getAction(getCommandString("Emulation", "2")) // Hue Emulation Enabled, REQUIRED for device discovery
 getAction(getCommandString("HubitatHost", device.hub.getDataValue("localIP")))
 logging("HubitatPort: ${device.hub.getDataValue("localSrvPortTCP")}", 1)
 getAction(getCommandString("HubitatPort", device.hub.getDataValue("localSrvPortTCP")))
 getAction(getCommandString("FriendlyName1", device.displayName.take(32))) // Set to a maximum of 32 characters
+// We need the Backlog inter-command delay to be 20ms instead of 200...
+getAction(getCommandString("SetOption34", "20"))
+
+// Just make sure we update the child devices
+logging("Scheduling refreshChildren...", 1)
+runIn(30, "refreshChildren")
+runIn(60, "refreshChildrenAgain")
+logging("Done scheduling refreshChildren...", 1)
 
 if(override == true) {
     sync(ipAddress)
@@ -292,7 +312,7 @@ private String getDriverVersion() {
     //comment = "''' + comment + '''"
     //if(comment != "") state.comment = comment
     String version = "''' + driverVersionActual + '''"
-    logging("getDriverVersion() = ${version}", 50)
+    logging("getDriverVersion() = ${version}", 100)
     sendEvent(name: "driver", value: version)
     updateDataValue('driver', version)
     return version
@@ -309,11 +329,11 @@ private String getAppVersion() {
 }
 '''
 
-def getLoggingFunction(specialDebugLevel=False):
+def getLoggingFunction(specialDebugLevel=True):
     extraDebug = ""
     if(specialDebugLevel):
         extraDebug = """
-        case "100": // Only special debug messages, eg IR and RF codes
+        case 100: // Only special debug messages, eg IR and RF codes
             if (level == 100 ) {
                 log.info "$message"
                 didLogging = true
@@ -324,15 +344,19 @@ def getLoggingFunction(specialDebugLevel=False):
     return """/* Logging function included in all drivers */
 private boolean logging(message, level) {
     boolean didLogging = false
-    if (infoLogging == true) {
-        logLevel = 100
+    Integer logLevelLocal = (logLevel != null ? logLevel.toInteger() : 0)
+    if(!isDeveloperHub()) {
+        logLevelLocal = 0
+        if (infoLogging == true) {
+            logLevelLocal = 100
+        }
+        if (debugLogging == true) {
+            logLevelLocal = 1
+        }
     }
-    if (debugLogging == true) {
-        logLevel = 1
-    }
-    if (logLevel != "0"){
-        switch (logLevel) {
-        case "-1": // Insanely verbose
+    if (logLevelLocal != "0"){
+        switch (logLevelLocal) {
+        case -1: // Insanely verbose
             if (level >= 0 && level < 100) {
                 log.debug "$message"
                 didLogging = true
@@ -341,7 +365,7 @@ private boolean logging(message, level) {
                 didLogging = true
             }
         break
-        case "1": // Very verbose
+        case 1: // Very verbose
             if (level >= 1 && level < 99) {
                 log.debug "$message"
                 didLogging = true
@@ -350,7 +374,7 @@ private boolean logging(message, level) {
                 didLogging = true
             }
         break
-        case "10": // A little less
+        case 10: // A little less
             if (level >= 10 && level < 99) {
                 log.debug "$message"
                 didLogging = true
@@ -359,13 +383,13 @@ private boolean logging(message, level) {
                 didLogging = true
             }
         break
-        case "50": // Rather chatty
+        case 50: // Rather chatty
             if (level >= 50 ) {
                 log.debug "$message"
                 didLogging = true
             }
         break
-        case "99": // Only parsing reports
+        case 99: // Only parsing reports
             if (level >= 99 ) {
                 log.debug "$message"
                 didLogging = true
@@ -379,7 +403,7 @@ private boolean logging(message, level) {
 
 def getSpecialDebugEntry(label=None):
     if(label==None):
-        return("")
+        return '<Item label="descriptionText" value="100" />'
     else:
         return '<Item label="' + label + '" value="100" />'
 

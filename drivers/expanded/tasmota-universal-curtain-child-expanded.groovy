@@ -1,6 +1,8 @@
 /**
  *  Copyright 2020 Markus Liljergren
  *
+ *  Code Version: v1.0.0228Tb
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at:
@@ -20,29 +22,23 @@ import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 // Used for MD5 calculations
 import java.security.MessageDigest
-//import groovy.transform.TypeChecked
-//import groovy.transform.TypeCheckingMode
 // END:  getDefaultImports()
 
 
 metadata {
     // Do NOT rename the child driver name unless you also change the corresponding code in the Parent!
-    definition (name: "Tasmota - Universal Multisensor (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-multisensor-child-expanded.groovy") {
-        capability "Sensor"
-        capability "TemperatureMeasurement"       // Attributes: temperature - NUMBER
-        capability "RelativeHumidityMeasurement"  // Attributes: humidity - NUMBER
-        capability "PressureMeasurement"          // Attributes: pressure - NUMBER
-        capability "IlluminanceMeasurement"       // Attributes: illuminance - NUMBER
-        capability "MotionSensor"                 // Attributes: motion - ENUM ["inactive", "active"]
-        capability "WaterSensor"                  // Attributes: water - ENUM ["wet", "dry"]
-
+    definition (name: "Tasmota - Universal Curtain (Child)", namespace: "tasmota", author: "Markus Liljergren", importURL: "https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-curtain-child-expanded.groovy") {
+        capability "WindowShade"
         capability "Refresh"
 
-        // Non-standard sensor attributes
-        attribute  "distance", "string"
-        attribute  "pressureWithUnit", "string"
+        attribute   "level", "number"
+        attribute   "target", "number"
 
-        //command "clear"
+        // BEGIN:getMinimumChildAttributes()
+        // Attributes used by all Child Drivers
+        attribute   "driver", "string"
+        // END:  getMinimumChildAttributes()
+        command "stop"
     }
 
     preferences {
@@ -66,10 +62,10 @@ metadata {
 }
 
 // BEGIN:getDeviceInfoFunction()
-public getDeviceInfoByName(infoName) { 
+String getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    def deviceInfo = ['name': 'Tasmota - Universal Multisensor (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-multisensor-child-expanded.groovy']
+    Map deviceInfo = ['name': 'Tasmota - Universal Curtain (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-curtain-child-expanded.groovy']
     //logging("deviceInfo[${infoName}] = ${deviceInfo[infoName]}", 1)
     return(deviceInfo[infoName])
 }
@@ -79,10 +75,52 @@ public getDeviceInfoByName(infoName) {
 /* These functions are unique to each driver */
 void parse(List<Map> description) {
     description.each {
-        if (it.name in ["temperature", "humidity", "pressure", "pressureWithUnit",
-            "illuminance", "motion", "water", "distance"]) {
+        if(it.name in ["position", "windowShade"]) {
             logging(it.descriptionText, 100)
             sendEvent(it)
+        } else if(it.name == "level") {
+            target = device.currentValue("target")
+            if(target != null && target != -1) {
+                logging("target: ${target}", 1)
+                String cState = device.currentValue("windowShade", true)
+                if((cState == 'opening' && it.value < target + 5) ||
+                    (cState == 'closing' && it.value > target - 5)) {
+                    stop()
+                }
+            }
+            sendEvent(it)
+        } else if(it.name == "tuyaData") {
+            // This parsing is for the ZNSN Curtain Wall Panel
+            String tdata = it.value
+            logging("Got Tuya Data: $tdata", 1)
+            if(tdata == '55AA00070005020400010214') {
+                // Stop Event occured
+                BigDecimal position = device.currentValue("level", true)
+                sendEvent(name: "target", value: -1, isStateChange: true)
+                Integer margin = 11
+                if(position > margin && position < 100 - margin) {
+                    logging('Curtain status: partially open', 100)
+                    sendEvent(name: "windowShade", value: "partially open", isStateChange: true)
+                } else if(position <= margin) {
+                    logging('Curtain status: open', 100)
+                    setLevel(0)
+                    sendEvent(name: "windowShade", value: "open", isStateChange: true)
+                } else if(position >= 100 - margin) {
+                    logging('Curtain status: closed', 100)
+                    setLevel(100)
+                    sendEvent(name: "windowShade", value: "closed", isStateChange: true)
+                }
+            } else if(tdata == '55AA00070005020400010012') {
+                // Open Event occured
+                logging('Curtain status: opening', 100)
+                sendEvent(name: "windowShade", value: "opening", isStateChange: true)
+            } else if(tdata == '55AA00070005020400010113') {
+                // Close Event occured
+                logging('Curtain status: closing', 100)
+                sendEvent(name: "windowShade", value: "closing", isStateChange: true)
+            }
+        } else if(it.name in ["switch"]) {
+            logging("Ignored: " + it.descriptionText, 1)
         } else {
             log.warn "Got '$it.name' attribute data, but doesn't know what to do with it! Did you choose the right device type?"
         }
@@ -91,6 +129,10 @@ void parse(List<Map> description) {
 
 void updated() {
     log.info "updated()"
+    // BEGIN:getChildComponentDefaultUpdatedContent()
+    // This is code needed to run in updated() in ALL Child drivers
+    getDriverVersion()
+    // END:  getChildComponentDefaultUpdatedContent()
     refresh()
 }
 
@@ -111,6 +153,42 @@ void refresh() {
     parent?.componentRefresh(this.device)
 }
 
+void open() {
+    parent?.componentOpen(this.device)    
+}
+
+void close() {
+    parent?.componentClose(this.device)    
+}
+
+void stop() {
+    parent?.componentStop(this.device)    
+}
+
+void setPosition(BigDecimal targetPosition) {
+    // This command we implement here in the Child
+    BigDecimal position = device.currentValue("level", true)
+    logging("setPosition(targetPosition=${targetPosition}) current: ${position}", 1)
+    if(targetPosition > position + 10) {
+        sendEvent(name: "target", value: targetPosition, isStateChange: true)
+        close()
+    } else if(targetPosition < position - 10) {
+        sendEvent(name: "target", value: targetPosition, isStateChange: true)
+        open()
+    }
+    // If the parent wants to do something, it can do so now...
+    parent?.componentSetPosition(this.device, position)
+    
+}
+
+void setLevel(BigDecimal level) {
+    parent?.componentSetLevel(this.device, level)
+}
+
+void setLevel(BigDecimal level, BigDecimal duration) {
+    parent?.componentSetLevel(this.device, level, duration)
+}
+
 /**
  * -----------------------------------------------------------------------------
  * Everything below here are LIBRARY includes and should NOT be edited manually!
@@ -118,6 +196,20 @@ void refresh() {
  * --- Nothing to edit here, move along! ---------------------------------------
  * -----------------------------------------------------------------------------
  */
+
+// BEGIN:getDefaultFunctions()
+/* Default Driver Methods go here */
+private String getDriverVersion() {
+    //comment = ""
+    //if(comment != "") state.comment = comment
+    String version = "v1.0.0228Tb"
+    logging("getDriverVersion() = ${version}", 100)
+    sendEvent(name: "driver", value: version)
+    updateDataValue('driver', version)
+    return version
+}
+// END:  getDefaultFunctions()
+
 
 /**
  * ALL DEBUG METHODS (helpers-all-debug)
@@ -132,7 +224,7 @@ String configuration_model_debug() {
         }
         return '''
 <configuration>
-<Value type="bool" index="debugLogging" label="Enable debug logging" description="" value="true" submitOnChange="true" setting_type="preference" fw="">
+<Value type="bool" index="debugLogging" label="Enable debug logging" description="" value="false" submitOnChange="true" setting_type="preference" fw="">
 <Help></Help>
 </Value>
 <Value type="bool" index="infoLogging" label="Enable descriptionText logging" description="" value="true" submitOnChange="true" setting_type="preference" fw="">
@@ -149,7 +241,7 @@ String configuration_model_debug() {
         }
         return '''
 <configuration>
-<Value type="list" index="logLevel" label="Debug Log Level" description="Under normal operations, set this to None. Only needed for debugging. Auto-disabled after 30 minutes." value="-1" submitOnChange="true" setting_type="preference" fw="">
+<Value type="list" index="logLevel" label="Debug Log Level" description="Under normal operations, set this to None. Only needed for debugging. Auto-disabled after 30 minutes." value="100" submitOnChange="true" setting_type="preference" fw="">
 <Help>
 </Help>
     <Item label="None" value="0" />
@@ -203,11 +295,14 @@ void deviceCommand(cmd) {
 
 	Purpose: initialize the driver/app
 	Note: also called from updated()
+    This is called when the hub starts, DON'T declare it with return as void,
+    that seems like it makes it to not run? Since testing require hub reboots
+    and this works, this is not conclusive...
 */
 // Call order: installed() -> configure() -> updated() -> initialize()
-void initialize() {
+def initialize() {
     logging("initialize()", 100)
-	unschedule()
+	unschedule("updatePresence")
     // disable debug logs after 30 min, unless override is in place
 	if (logLevel != "0" && logLevel != "100") {
         if(runReset != "DEBUG") {
@@ -269,12 +364,12 @@ void logsOff() {
         }
     } else {
         log.warn "OVERRIDE: Disabling Debug logging will not execute with 'DEBUG' set..."
-        if (logLevel != "0" && logLevel != "100") runIn(1800, logsOff)
+        if (logLevel != "0" && logLevel != "100") runIn(1800, "logsOff")
     }
 }
 
 boolean isDeveloperHub() {
-    return generateMD5(location.hub.zigbeeId as String) == "125fceabd0413141e34bb859cd15e067"
+    return generateMD5(location.hub.zigbeeId as String) == "125fceabd0413141e34bb859cd15e067_disabled"
 }
 
 def getEnvironmentObject() {
@@ -365,7 +460,11 @@ BigDecimal round2(BigDecimal number, Integer scale) {
 }
 
 String generateMD5(String s) {
-    return MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
+    if(s != null) {
+        return MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
+    } else {
+        return "null"
+    }
 }
 
 Integer extractInt(String input) {
@@ -822,15 +921,19 @@ String makeTextItalic(s) {
 /* Logging function included in all drivers */
 private boolean logging(message, level) {
     boolean didLogging = false
-    if (infoLogging == true) {
-        logLevel = 100
+    Integer logLevelLocal = (logLevel != null ? logLevel.toInteger() : 0)
+    if(!isDeveloperHub()) {
+        logLevelLocal = 0
+        if (infoLogging == true) {
+            logLevelLocal = 100
+        }
+        if (debugLogging == true) {
+            logLevelLocal = 1
+        }
     }
-    if (debugLogging == true) {
-        logLevel = 1
-    }
-    if (logLevel != "0"){
-        switch (logLevel) {
-        case "-1": // Insanely verbose
+    if (logLevelLocal != "0"){
+        switch (logLevelLocal) {
+        case -1: // Insanely verbose
             if (level >= 0 && level < 100) {
                 log.debug "$message"
                 didLogging = true
@@ -839,7 +942,7 @@ private boolean logging(message, level) {
                 didLogging = true
             }
         break
-        case "1": // Very verbose
+        case 1: // Very verbose
             if (level >= 1 && level < 99) {
                 log.debug "$message"
                 didLogging = true
@@ -848,7 +951,7 @@ private boolean logging(message, level) {
                 didLogging = true
             }
         break
-        case "10": // A little less
+        case 10: // A little less
             if (level >= 10 && level < 99) {
                 log.debug "$message"
                 didLogging = true
@@ -857,20 +960,20 @@ private boolean logging(message, level) {
                 didLogging = true
             }
         break
-        case "50": // Rather chatty
+        case 50: // Rather chatty
             if (level >= 50 ) {
                 log.debug "$message"
                 didLogging = true
             }
         break
-        case "99": // Only parsing reports
+        case 99: // Only parsing reports
             if (level >= 99 ) {
                 log.debug "$message"
                 didLogging = true
             }
         break
         
-        case "100": // Only special debug messages, eg IR and RF codes
+        case 100: // Only special debug messages, eg IR and RF codes
             if (level == 100 ) {
                 log.info "$message"
                 didLogging = true

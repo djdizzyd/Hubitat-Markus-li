@@ -20,12 +20,12 @@ def getGenericTasmotaNewParseHeader():
 //logging("Parsing: ${description}", 0)
 def descMap = parseDescriptionAsMap(description)
 def body
-//logging("descMap: ${descMap}", 0)
+logging("descMap: ${descMap}", 0)
 
 boolean missingChild = false
 
-if (!state.mac || state.mac != descMap["mac"]) {
-    logging("Mac address of device found ${descMap["mac"]}",1)
+if (state.mac != descMap["mac"]) {
+    logging("Mac address of device found ${descMap["mac"]}", 10)
     state.mac = descMap["mac"]
 }
 
@@ -51,18 +51,29 @@ def getGenericTasmotaNewParseFooter():
 }
 
 if(missingChild == true) {
-    log.warn "DISABLED: Missing a child device, refreshing..."
+    log.warn "Missing a child device, run the Refresh command from the device page!"
+    // It is dangerous to do the refresh automatically from here, it could cause an eternal loop
+    // Until a safe and non-resource hungry way can be created to do this automatically, a log message will
+    // have to be enough.
     //refresh()
 }
-if (!device.currentValue("ip") || (device.currentValue("ip") != getDataValue("ip"))) {
+if (device.currentValue("ip") == null) {
     def curIP = getDataValue("ip")
-    logging("Setting IP: $curIP", 1)
+    logging("Setting IP from Data: $curIP", 1)
     sendEvent(name: 'ip', value: curIP, isStateChange: false)
     sendEvent(name: "ipLink", value: "<a target=\\"device\\" href=\\"http://$curIP\\">$curIP</a>", isStateChange: false)
 }
 
-return events
 // parse() Generic footer ENDS here"""
+
+def getTasmotaNewParserForStatusSTS():
+    return """
+// Get some Maps out to where we need them
+if (result.containsKey("StatusSTS")) {
+    logging("StatusSTS: $result.StatusSTS",99)
+    result << result.StatusSTS
+}
+"""
 
 def getTasmotaNewParserForBasicData():
     return """
@@ -80,16 +91,15 @@ if (result.containsKey("StatusPRM")) {
     logging("StatusPRM: $result.StatusPRM",99)
     result << result.StatusPRM
 }
-if (result.containsKey("Status")) {
+if (false && result.containsKey("Status")) {
+    // We shouldn't do this, we don't need this data to be moved out
+    // It will only cause issues with the "Module" setting.
     logging("Status: $result.Status",99)
     result << result.Status
 }
-if (result.containsKey("StatusSTS")) {
-    logging("StatusSTS: $result.StatusSTS",99)
-    result << result.StatusSTS
-}
-if (log99 == true && result.containsKey("LoadAvg")) {
+if (result.containsKey("LoadAvg")) {
     logging("LoadAvg: $result.LoadAvg",99)
+    //if(result.LoadAvg.toInteger() > 60) log.warn "Load average of the Device is unusually high: $result.LoadAvg"
 }
 if (log99 == true && result.containsKey("Sleep")) {
     logging("Sleep: $result.Sleep",99)
@@ -183,18 +193,30 @@ if (result.containsKey("Wifi")) {
 def getTasmotaNewParserForParentSwitch():
     return """
 // Standard Switch Data parsing
-if (result.containsKey("POWER") && result.containsKey("POWER1") == false) {
+if (result.containsKey("POWER")  == true && result.containsKey("POWER1") == false) {
     logging("parser: POWER (child): $result.POWER",1)
     //childSendState("1", result.POWER.toLowerCase())
     missingChild = callChildParseByTypeId("POWER1", [[name:"switch", value: result.POWER.toLowerCase()]], missingChild)
-}
-(1..16).each {i->
-    //logging("POWER$i:${result."POWER$i"} '$result' containsKey:${result.containsKey("POWER$i")}", 1)
-    if(result."POWER$i" != null) {
-        logging("parser: POWER$i: ${result."POWER$i"}",1)
-        missingChild = callChildParseByTypeId("POWER$i", [[name:"switch", value: result."POWER$i".toLowerCase()]], missingChild)
-        //events << childSendState("1", result.POWER1.toLowerCase())
-        //sendEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER1.toLowerCase() == "on"?1:0) && result.POWER1.toLowerCase() == "on"? "on" : "off"))
+} else {
+    // each is the fastest itterator to use, evn though we can't escape it
+    String currentPower = ""
+    (1..16).each {i->
+        currentPower = "POWER$i"
+        //logging("POWER$i:${result."$currentPower"} '$result' containsKey:${result.containsKey("POWER$i")}", 1)
+        if(result.containsKey(currentPower) == true) {
+            if(i < 3 && invertPowerNumber == true) {
+                // This is used when Tasmota mixes things up with a dimmer and relay in the same device
+                if(i == 1) { 
+                    currentPower = "POWER2"
+                } else {
+                    currentPower = "POWER1"
+                }
+            }
+            logging("parser: $currentPower (original: POWER$i): ${result."POWER$i"}",1)
+            missingChild = callChildParseByTypeId("$currentPower", [[name:"switch", value: result."POWER$i".toLowerCase()]], missingChild)
+            //events << childSendState("1", result.POWER1.toLowerCase())
+            //sendEvent(name: "switch", value: (areAllChildrenSwitchedOn(result.POWER1.toLowerCase() == "on"?1:0) && result.POWER1.toLowerCase() == "on"? "on" : "off"))
+        }
     }
 }
 """
@@ -300,34 +322,25 @@ for ( r in result ) {
     }
 }
 for ( r in result ) {
-    if(r.value instanceof Map && (r.value.containsKey("Humidity") || 
-        r.value.containsKey("Temperature") || r.value.containsKey("Pressure") ||
+    if(r.value instanceof Map && (r.value.containsKey("Temperature") || 
+        r.value.containsKey("Humidity") || r.value.containsKey("Pressure") ||
         r.value.containsKey("Distance"))) {
         if (r.value.containsKey("Humidity")) {
             logging("Humidity: RH $r.value.Humidity%", 99)
-            def realHumidity = Math.round((r.value.Humidity as Double) * 100) / 100
-            //sendEvent(name: "humidity", value: "${getAdjustedHumidity(realHumidity)}", unit: "%")
-            missingChild = callChildParseByTypeId(r.key, [[name: "humidity", value: String.format("%.2f", getAdjustedHumidity(realHumidity)), unit: "%"]], missingChild)
+            missingChild = callChildParseByTypeId(r.key, [[name: "humidity", value: r.value.Humidity, unit: "%"]], missingChild)
         }
         if (r.value.containsKey("Temperature")) {
             //Probably need this line below
-            //state.realTemperature = convertTemperatureIfNeeded(r.value.Temperature.toFloat(), result.TempUnit, 1)
-            def realTemperature = r.value.Temperature.toFloat()
-            logging("Temperature: ${getAdjustedTemp(realTemperature? realTemperature:0)}", 99)
-            //sendEvent(name: "temperature", value: "${getAdjustedTemp(realTemperature)}", unit: "&deg;${location.temperatureScale}")
-            c = String.valueOf((char)(Integer.parseInt("00B0", 16)));
-            missingChild = callChildParseByTypeId(r.key, [[name: "temperature", value: String.format("%.2f", getAdjustedTemp(realTemperature)), unit: "$c${location.temperatureScale}"]], missingChild)
+            logging("Temperature: $r.value.Temperature", 99)
+            String c = String.valueOf((char)(Integer.parseInt("00B0", 16)));
+            missingChild = callChildParseByTypeId(r.key, [[name: "temperature", value: r.value.Temperature, unit: "$c${location.temperatureScale}"]], missingChild)
         }
         if (r.value.containsKey("Pressure")) {
             logging("Pressure: $r.value.Pressure", 99)
-            def pressureUnit = "kPa"
-            def realPressure = Math.round((r.value.Pressure as Double) * 100) / 100
-            def adjustedPressure = getAdjustedPressure(realPressure)
-            //sendEvent(name: "pressure", value: "${adjustedPressure}", unit: "${pressureUnit}")
-            missingChild = callChildParseByTypeId(r.key, [[name: "pressure", value: String.format("%.2f", adjustedPressure), unit: pressureUnit]], missingChild)
-            // Since there is no Pressure tile yet, we need an attribute with the unit...
-            //sendEvent(name: "pressureWithUnit", value: "${adjustedPressure} ${pressureUnit}")
-            missingChild = callChildParseByTypeId(r.key, [[name: "pressureWithUnit", value: String.format("%.2f $pressureUnit", adjustedPressure)]], missingChild)
+            String pressureUnit = "mbar"
+            missingChild = callChildParseByTypeId(r.key, [[name: "pressure", value: r.value.Pressure, unit: pressureUnit]], missingChild)
+            // Since there is no Pressure tile yet, we need an attribute with the unit as well... But that is NOT the responsibility of the Parent
+            //missingChild = callChildParseByTypeId(r.key, [[name: "pressureWithUnit", value: "$r.value.Pressure $pressureUnit"]], missingChild)
         }
         if (r.value.containsKey("Distance")) {
             logging("Distance: $r.value.Distance cm", 99)
@@ -357,6 +370,9 @@ if(true) {
         state.colorMode = mode
         if(childDevice?.currentValue('colorMode') != mode ) missingChild = callChildParseByTypeId("POWER1", [[name: "colorMode", value: mode]], missingChild)
     }
+    if (result.containsKey("Scheme")) {
+        if(childDevice?.currentValue('effectNumber') != result.Scheme ) missingChild = callChildParseByTypeId("POWER1", [[name: "effectNumber", value: result.Scheme]], missingChild)
+    }
     if (mode == "RGB" && result.containsKey("HSBColor")) {
         def hsbColor = result.HSBColor.tokenize(",")
         hsbColor[0] = Math.round((hsbColor[0] as Integer) / 3.6) as Integer
@@ -380,6 +396,7 @@ if(true) {
         }
         logging("CT: $result.CT ($t)",99)
     }
+
 }
 """
 
@@ -388,14 +405,22 @@ def getTasmotaNewParserForDimmableDevice():
 // Standard Dimmable Device Data parsing
 if(true) {
     def childDevice = getChildDeviceByActionType("POWER1")
-    if (result.containsKey("Dimmer")) {
+    if(result.containsKey("Dimmer")) {
         def dimmer = result.Dimmer
         logging("Dimmer: ${dimmer}", 1)
         state.level = dimmer
         if(childDevice?.currentValue('level') != dimmer ) missingChild = callChildParseByTypeId("POWER1", [[name: "level", value: dimmer]], missingChild)
     }
-    if (log99 == true && result.containsKey("Wakeup")) {
-        logging("Wakeup: ${result.Wakeup}", 1)
+    // When handling Tuya Data directly, the dimmer is often used
+    if(result.containsKey("TuyaReceived") && result.TuyaReceived.containsKey("Data")) {
+        // If this is the "heartbeat", ignore it...
+        if(result.TuyaReceived.Data != "55AA000000010101") {
+            missingChild = callChildParseByTypeId("POWER1", [[name: "tuyaData", value: result.TuyaReceived.Data]], missingChild)
+        }
+    }
+    // Just if we need to log it
+    if(log99 == true && result.containsKey("Wakeup")) {
+        logging("Wakeup: ${result.Wakeup}", 99)
         //sendEvent(name: "wakeup", value: wakeup)
     }
 }

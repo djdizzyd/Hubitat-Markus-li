@@ -14,7 +14,7 @@ metadata {
         //attribute "javascriptLength", "number"
     }
     preferences {
-      input(name: "useDegreeC", type: "bool", title: "Use degrees C&deg;? (Off for Degrees F&deg;)", description: "Degrees C&deg;", defaultValue: false, displayDuringSetup: false, required: false)
+      input(name: "useDegreeC", type: "bool", title: "Use &deg;C? (Off for &deg;F)", description: "", defaultValue: true, displayDuringSetup: false, required: false)
     }
 }
 

@@ -16,7 +16,7 @@ void installedPreConfigure() {
         if(pass != null && pass != "" && pass != "[installed]") {
             device.updateSetting("password", [value: pass, type: "password"])
         }
-        
+        device.updateSetting("deviceConfig", [type: "enum", value:getDataValue('deviceConfig')])
     }
 }
 
@@ -37,6 +37,16 @@ void updated() {
     } catch (MissingMethodException e) {
         // ignore
     }
+}
+
+void refreshChildren() {
+    logging("refreshChildren()", 1)
+    getAction(getCommandString("Status", "0"), callback="parseConfigureChildDevices")
+}
+
+void refreshChildrenAgain() {
+    logging("refreshChildrenAgain()", 1)
+    refreshChildren()
 }
 
 // Call order: installed() -> configure() -> updated() -> initialize() -> refresh()
@@ -74,7 +84,7 @@ void refresh() {
         
         metaConfig = setCurrentStatesToHide(['needUpdate'], metaConfig=metaConfig)
         //metaConfig = setDatasToHide(['preferences', 'namespace', 'appReturn', 'metaConfig'], metaConfig=metaConfig)
-        metaConfig = setDatasToHide(['namespace', 'appReturn', 'ip', 'port', 'password'], metaConfig=metaConfig)
+        metaConfig = setDatasToHide(['namespace', 'appReturn', 'password'], metaConfig=metaConfig)
         metaConfig = setPreferencesToHide([], metaConfig=metaConfig)
     }
     try {
@@ -129,18 +139,18 @@ void runInstallCommands(installCommands) {
     List rule3 = []
     installCommands.each {cmd->
         if(cmd[0].toLowerCase() == "rule1") {
-            rule1.add([command: cmd[0], value:urlEscape(cmd[1])])
+            rule1.add([command: cmd[0], value:cmd[1]])
         } else if(cmd[0].toLowerCase() == "rule2") {
-            rule2.add([command: cmd[0], value:urlEscape(cmd[1])])
+            rule2.add([command: cmd[0], value:cmd[1]])
         } else if(cmd[0].toLowerCase() == "rule3") {
-            rule3.add([command: cmd[0], value:urlEscape(cmd[1])])
+            rule3.add([command: cmd[0], value:cmd[1]])
         } else {
-            backlogs.add([command: cmd[0], value:urlEscape(cmd[1])])
+            backlogs.add([command: cmd[0], value:cmd[1]])
         }
     }
 
     // Backlog inter-command delay in milliseconds
-    getAction(getCommandString("SetOption34", "20"))
+    //getAction(getCommandString("SetOption34", "20"))
     pauseExecution(100)
     // Maximum 30 commands per backlog call
     while(backlogs.size() > 0) {
@@ -161,7 +171,7 @@ void runInstallCommands(installCommands) {
             // REALLY don't use pauseExecution often... NOT good for performance...
         }
     }
-    getAction(getCommandString("SetOption34", "200"))
+    //getAction(getCommandString("SetOption34", "200"))
 }
 
 void updatePresence(String presence) {
@@ -202,7 +212,7 @@ def parse(asyncResponse, data) {
     // Parse called by default when using asyncHTTP
     if(asyncResponse != null) {
         try{
-            logging("parse(asyncResponse.getJson() 2= \"${asyncResponse.getJson()}\", data = \"${data}\")", 1)
+            logging("parse(asyncResponse.getJson() = \"${asyncResponse.getJson()}\")", 100)
             parseResult(asyncResponse.getJson())
         } catch(MissingMethodException e1) {
             log.error e1
@@ -295,19 +305,23 @@ void configureChildDevices(asyncResponse, data) {
 
     // The built-in Generic Components are:
     //
-    // Acceleration Sensor - ID: 189
-    // Contact Sensor      - ID: 192
-    // Contact/Switch      - ID: 199
-    // CT                  - ID: 198
-    // Dimmer              - ID: 187
-    // Metering Switch     - ID: 188
-    // Motion Sensor       - ID: 197
-    // RGB                 - ID: 195
-    // RGBW                - ID: 191
-    // Smoke Detector      - ID: 196
-    // Switch              - ID: 190
-    // Temperature Sensor  - ID: 200
-    // Water Sensor        - ID: 194
+    // Acceleration Sensor  - ID: 189
+    // Button Controller    - ID: 1029
+    // Central Scene Dimmer - ID: 912
+    // Central Scene Switch - ID: 913
+    // Contact Sensor       - ID: 192
+    // Contact/Switch       - ID: 199
+    // CT                   - ID: 198
+    // Dimmer               - ID: 187
+    // Metering Switch      - ID: 188
+    // Motion Sensor        - ID: 197
+    // RGB                  - ID: 195
+    // RGBW                 - ID: 191
+    // Smoke Detector       - ID: 196
+    // Switch               - ID: 190
+    // Temperature Sensor   - ID: 200
+    // Water Sensor         - ID: 194
+    
 
     // {"StatusSTS":{"Time":"2020-01-26T01:13:27","Uptime":"15T02:59:27","UptimeSec":1306767,
     // "Heap":26,"SleepMode":"Dynamic","Sleep":50,"LoadAvg":19,"MqttCount":0,"POWER1":"OFF",
@@ -448,11 +462,13 @@ void configureChildDevices(asyncResponse, data) {
     def driverName = ["Tasmota - Universal Plug/Outlet (Child)", "Generic Component Switch"]
     def namespace = "tasmota"
     if(deviceInfo["numSwitch"] > 0) {
-        if(deviceInfo["numSwitch"] > 1 && (
+        /*if(deviceInfo["numSwitch"] > 1 && (
             deviceInfo["isDimmer"] == true || deviceInfo["isAddressable"] == true || 
             deviceInfo["isRGB"] == true || deviceInfo["hasCT"] == true)) {
-                log.warn "There's more than one switch and the device is either dimmable, addressable, RGB or has CT capability. This is not fully supported yet, please report which device and settings you're using to the developer so that a solution can be found."
-        }
+                // This is supported now ;)
+                // log.warn "There's more than one switch and the device is either dimmable, addressable, RGB or has CT capability. This is not fully supported yet, please report which device and settings you're using to the developer so that a solution can be found."
+
+        }*/
         if(deviceInfo["hasEnergy"]  == true && (deviceInfo["isAddressable"] == false && deviceInfo["isRGB"] == false && deviceInfo["hasCT"] == false)) {
             if(deviceInfo["isDimmer"]) {
                 // TODO: Make a Component Dimmer with Metering
@@ -485,9 +501,10 @@ void configureChildDevices(asyncResponse, data) {
             namespace = "tasmota"
             def childId = "POWER$i"
             def childName = getChildDeviceNameRoot(keepType=true) + " ${getMinimizedDriverName(driverName[0])} ($childId)"
-            def childLabel = "${getMinimizedDriverName(device.getLabel())} ($childId)"
+            def childLabel = "${getMinimizedDriverName(device.getLabel())} ($i)"
             logging("createChildDevice: POWER$i", 1)
             createChildDevice(namespace, driverName, childId, childName, childLabel)
+            
             // Once the first switch is created we only support one type... At least for now...
             driverName = ["Tasmota - Universal Plug/Outlet (Child)", "Generic Component Switch"]
         }
@@ -509,7 +526,7 @@ void configureChildDevices(asyncResponse, data) {
     deviceInfo["sensorMap"].each {
         logging("sensorMap: $it.key", 0)
         namespace = "tasmota"
-        driverName = ["Tasmota - Universal Multisensor (Child)"]
+        driverName = ["Tasmota - Universal Multi Sensor (Child)"]
         def childId = "${it.key}"
         def childName = getChildDeviceNameRoot(keepType=true) + " ${getMinimizedDriverName(driverName[0])} ($childId)"
         def childLabel = "${getMinimizedDriverName(device.getLabel())} ($childId)"
@@ -546,6 +563,10 @@ String getMinimizedDriverName(String driverName) {
     } else if(driverName.toLowerCase().endsWith(' parent')) {
         driverName = driverName.substring(0, driverName.length()-7)
     }
+    // Just replace all Occurrances of Parent
+    driverName = driverName.replaceAll("(?i) \\(parent\\)", "").replaceAll("(?i) parent", "").replaceAll("(?i)parent", "")
+    log.debug("driverName: $driverName")
+
     if(driverName.toLowerCase().startsWith('tasmota - ')) {
         driverName = driverName.substring(10, driverName.length())
     }
@@ -576,7 +597,9 @@ private void createChildDevice(String namespace, List driverName, String childId
     if (childDevice) {
         // The device exists, just update it
         childDevice.setName(childName)
-        logging(childDevice.getData(), 10)
+        //Setting isComponent to false doesn't change how the device is treated...
+        //childDevice.updateDataValue('isComponent', "false")
+        logging("childDevice.getData(): ${childDevice.getData()}", 1)
     } else {
         logging("The child device doesn't exist, create it...", 0)
         Integer s = childName.size()
@@ -630,7 +653,7 @@ void prepareDNI() {
 
 private void updateDNI() {
     // Called from:
-    // preapreDNI()
+    // prepareDNI()
     // httpGetAction(uri, callback="parse")
     // postAction(uri, data)
     if (state.dni != null && state.dni != "" && device.deviceNetworkId != state.dni) {
@@ -646,16 +669,23 @@ Integer getTelePeriodValue() {
 }
 
 private String getHostAddress() {
-    if (port == null) {
-        port = 80
+    Integer port = 80
+    if (getDeviceDataByName("port") != null) {
+        port = getDeviceDataByName("port").toInteger()
     }
     if (override == true && ipAddress != null){
-        return "${ipAddress}:${port}"
-    }
-    else if(getDeviceDataByName("ip") && getDeviceDataByName("port")){
-        return "${getDeviceDataByName("ip")}:${getDeviceDataByName("port")}"
-    }else{
-	    return "${ip}:80"
+        // Preferences
+        return "${ipAddress}:$port"
+    } else if(device.currentValue("ip") != null) {
+        // Current States
+        return "${device.currentValue("ip")}:$port"
+    } else if(getDeviceDataByName("ip") != null) {
+        // Data Section
+        return "${getDeviceDataByName("ip")}:$port"
+    } else {
+        // There really is no fallback here, if we get here, something went WRONG, probably with the DB...
+        log.warn "getHostAddress() failed and ran out of fallbacks! If this happens, contact the developer, this is an \"impossible\" scenario!"
+	    return "127.0.0.1:$port"
     }
 }
 
@@ -663,7 +693,7 @@ private String convertIPtoHex(ipAddress) {
     String hex = null
     if(ipAddress != null) {
         hex = ipAddress.tokenize( '.' ).collect {  String.format( '%02X', it.toInteger() ) }.join()
-        logging("Get this IP in hex: ${hex}", 0)
+        logging("Got this IP in hex: ${hex}", 0)
     } else {
         hex = null
         if (useIPAsID) {
@@ -673,11 +703,22 @@ private String convertIPtoHex(ipAddress) {
     return hex
 }
 
+private String getFirstTwoIPBytes(ipAddress) {
+    String ipStart = null
+    if(ipAddress != null) {
+        ipStart = ipAddress.tokenize( '.' ).take(2).join('.') + '.'
+        logging("Got these IP bytes: ${ipStart}", 0)
+    } else {
+        ipStart = ''
+    }
+    return ipStart
+}
+
 void sync(String ip, Integer port = null) {
     String existingIp = getDataValue("ip")
     String existingPort = getDataValue("port")
     logging("Running sync()", 1)
-    if (ip != null && ip != existingIp.toInteger()) {
+    if (ip != null && ip != existingIp) {
         updateDataValue("ip", ip)
         sendEvent(name: 'ip', value: ip, isStateChange: false)
         sendEvent(name: "ipLink", value: "<a target=\"device\" href=\"http://$ip\">$ip</a>", isStateChange: false)
@@ -726,7 +767,7 @@ private void httpGetAction(String uri, callback="parse") {
   updateDNI()
   
   def headers = getHeader()
-  logging("Using httpGetAction for 'http://${getHostAddress()}$uri'...", 0)
+  logging("Using httpGetAction for 'http://${getHostAddress()}$uri'...", 100)
   try {
     /*hubAction = new hubitat.device.HubAction(
         method: "GET",
@@ -760,6 +801,39 @@ private postAction(String uri, String data) {
     log.error "Error in postAction(uri, data): $e ('$uri', '$data')"
   }
   return hubAction    
+}
+
+void sendCommand(String command) {
+    sendCommand(command, null)
+}
+
+void sendCommand(String command, String argument) {
+    String descriptionText = "${command}${argument != null ? " " + argument : ""}"
+    logging("sendCommand: $descriptionText", 100)
+    sendEvent(name: "commandSent", value: command, descriptionText: descriptionText, isStateChange: true)
+    getAction(getCommandString(command, argument), callback="sendCommandParse")
+}
+
+def sendCommandParse(asyncResponse, data) {
+    // Parse called using sendCommand
+    if(asyncResponse != null) {
+        try{
+            def r = asyncResponse.getJson()
+            logging("sendCommandParse(asyncResponse.getJson() = \"${r}\")", 100)
+            sendEvent(name: "commandResult", value: asyncResponse.getData(), isStateChange: true)
+            parseResult(r)
+        } catch(MissingMethodException e1) {
+            log.error e1
+        } catch(e1) {
+            try{
+                logging("parse(asyncResponse.data = \"${asyncResponse.data}\", data = \"${data}\") e1=$e1", 1)
+            } catch(e2) {
+                logging("parse(asyncResponse.data = null, data = \"${data}\") Is the device online? e2=$e2", 1)
+            }
+        }
+    } else {
+        logging("parse(asyncResponse.data = null, data = \"${data}\")", 1)
+    }
 }
 
 String getCommandString(String command, String value) {

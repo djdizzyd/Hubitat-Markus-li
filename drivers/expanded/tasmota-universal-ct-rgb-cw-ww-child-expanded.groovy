@@ -1,6 +1,8 @@
 /**
  *  Copyright 2020 Markus Liljergren
  *
+ *  Code Version: v1.0.0228Tb
+ *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at:
@@ -20,8 +22,6 @@ import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 // Used for MD5 calculations
 import java.security.MessageDigest
-//import groovy.transform.TypeChecked
-//import groovy.transform.TypeCheckingMode
 // END:  getDefaultImports()
 
 
@@ -37,25 +37,49 @@ metadata {
         capability "ColorTemperature"             // Attributes: colorName - STRING, colorTemperature - NUMBER
         capability "ColorMode"                    // Attributes: colorMode - ENUM ["CT", "RGB"]
         capability "Refresh"
+        capability "LightEffects"                 // Attributes: effectName - STRING, lightEffects - JSON_OBJECT
 
-        // BEGIN:getMetadataCommandsForHandlingRGBWDevices()
-        // Commands for handling RGBW Devices
-        command "colorWhite"
-        command "colorRed"
-        command "colorGreen"
-        command "colorBlue"
-        command "colorYellow"
-        command "colorCyan"
-        command "colorPink"
-        // END:  getMetadataCommandsForHandlingRGBWDevices()
+        // BEGIN:getMinimumChildAttributes()
+        // Attributes used by all Child Drivers
+        attribute   "driver", "string"
+        // END:  getMinimumChildAttributes()
+
+        //lightEffects = [1: "Effect Name", 2: "Other effect", 3: "etc..."] to JSON...
+        attribute  "effectNumber", "number"
+        
+        // For Addressable LEDs, we need to add settings for
+        // https://tasmota.github.io/docs/#/Commands?id=light
+        // Pixels
+        // Rotation
+        // Led
+        // Width - This one could be complicated to get understandable...
+        
+        command "setPixelColor", [[name:"RGB*", type: "STRING", description: "RGB in HEX, eg: #FF0000"],
+            [name:"Pixel Number*", type: "NUMBER", description: "Pixel to change the color of (1 to \"Addressable Pixels\")"]]
+        command "setAddressableRotation", [[name:"Addressable Rotation*", type: "NUMBER", description: "1..512 = set amount of pixels to rotate (up to Addressable Pixels value)"]]
+        command "setEffectWidth", [[name:"Addressable Effect Width*", type: "ENUM", description: "This width is used by Addressable pixel effects",
+                                    constraints: ["0", "1", "2", "3", "4"]]]
+
+        command "setColorByName", [[name:"Color Name*", type: "ENUM", description: "Choose a color",
+                                    constraints: ["#FF0000":"Red",
+                                                  "#00FF00":"Green",
+                                                  "#0000FF":"Blue",
+                                                  "#FFFF00":"Yellow",
+                                                  "#00FFFF":"Cyan",
+                                                  "#FF00FF":"Pink",
+                                                  "#FFFFFFFFFF":"White"]]]
+
+        //include:getMetadataCommandsForHandlingRGBWDevices()
         // BEGIN:getMetadataCommandsForHandlingTasmotaRGBWDevices()
         // Commands for handling Tasmota RGBW Devices
-        command "modeNext", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
-        command "modePrevious", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
-        command "modeSingleColor", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
-        command "modeCycleUpColors", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
-        command "modeCycleDownColors", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
-        command "modeRandomColors", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
+        command "setEffectWithSpeed", [[name:"Effect number*", type: "NUMBER", description: "Effect number to enable"],
+            [name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
+        command "setNextEffectWithSpeed", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
+        command "setPreviousEffectWithSpeed", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
+        command "setEffectSingleColor", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
+        command "setEffectCycleUpColors", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
+        command "setEffectCycleDownColors", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
+        command "setEffectRandomColors", [[name:"Speed", type: "NUMBER", description: "1..40 = set speed, it represents the time in 0.5s to fade from 0 to 100%"]]
         // END:  getMetadataCommandsForHandlingTasmotaRGBWDevices()
         // BEGIN:getMetadataCommandsForHandlingTasmotaDimmerDevices()
         // Commands for handling Tasmota Dimmer Devices
@@ -69,7 +93,12 @@ metadata {
         // Default Preferences
         generate_preferences(configuration_model_debug())
         // END:  getDefaultMetadataPreferences()
-
+        input(name: "hideColorTemperatureCommands", type: "bool", title: addTitleDiv("Hide Color Temperature Commands"), defaultValue: false, displayDuringSetup: false, required: false)
+        input(name: "hideEffectCommands", type: "bool", title: addTitleDiv("Hide Effect Commands"), defaultValue: true, displayDuringSetup: false, required: false)
+        input(name: "hideColorCommands", type: "bool", title: addTitleDiv("Hide Color Commands"), defaultValue: false, displayDuringSetup: false, required: false)
+        input(name: "isAddressable", type: "bool", title: addTitleDiv("Addressable Light"), description: addDescriptionDiv("Treat as an Addressable Light"), defaultValue: false, displayDuringSetup: false, required: false)
+        input(name: "addressablePixels", type: "number", title: addTitleDiv("Addressable Pixels"), description: addDescriptionDiv("1..512 = set amount of pixels in strip or ring and reset Rotation"), displayDuringSetup: false, required: false, defaultValue: 30)
+        //input(name: "addressableRotation", type: "number", title: addTitleDiv("Addressable Rotation"), description: addDescriptionDiv("1..512 = set amount of pixels to rotate (up to Addressable Pixels value)"), displayDuringSetup: false, required: false, defaultValue: 30)
     }
 
     // The below line needs to exist in ALL drivers for custom CSS to work!
@@ -85,10 +114,10 @@ metadata {
 }
 
 // BEGIN:getDeviceInfoFunction()
-public getDeviceInfoByName(infoName) { 
+String getDeviceInfoByName(infoName) { 
     // DO NOT EDIT: This is generated from the metadata!
     // TODO: Figure out how to get this from Hubitat instead of generating this?
-    def deviceInfo = ['name': 'Tasmota - Universal CT/RGB/RGB+CW+WW (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-ct-rgb-cw-ww-child-expanded.groovy']
+    Map deviceInfo = ['name': 'Tasmota - Universal CT/RGB/RGB+CW+WW (Child)', 'namespace': 'tasmota', 'author': 'Markus Liljergren', 'importURL': 'https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/tasmota-universal-ct-rgb-cw-ww-child-expanded.groovy']
     //logging("deviceInfo[${infoName}] = ${deviceInfo[infoName]}", 1)
     return(deviceInfo[infoName])
 }
@@ -97,27 +126,48 @@ public getDeviceInfoByName(infoName) {
 
 /* These functions are unique to each driver */
 void parse(List<Map> description) {
+    //logging("Child: parse()", 100)
     description.each {
-        // TODO: Make sure the parent sends RGB and color!
+        // TODO: Make sure the parent sends RGB and color! Or do we even need these?
         if (it.name in ["switch", "level", "RGB", "color", "colorName", "hue", "saturation",
                         "colorTemperature", "colorMode"]) {
             logging(it.descriptionText, 100)
+            sendEvent(it)
+        } else if(it.name == "effectNumber") {
+            logging(it.descriptionText, 100)
+            sendEvent(name: "effectName", value: getLightEffectNameByNumber(it.value), isStateChange: false)
             sendEvent(it)
         } else {
             log.warn "Got '$it.name' attribute data, but doesn't know what to do with it! Did you choose the right device type?"
         }
     }
-}
-
-void updated() {
-    log.info "updated()"
-    refresh()
+    //logging("Child: END parse()", 100)
 }
 
 void installed() {
     log.info "installed()"
     device.removeSetting("logLevel")
     device.updateSetting("logLevel", "100")
+    sendEvent(name: "colorMode", value: "CT")
+    sendEvent(name: "colorTemp", value: "3000")
+    sendEvent(name: "hue", value: "0")
+    sendEvent(name: "saturation", value: "0")
+    sendEvent(name: "level", value: "100")
+    sendEvent(name: "colorName", value: "Daylight")
+    refresh()
+}
+
+void updated() {
+    log.info "updated()"
+    if(addressablePixels != null && addressablePixels != state.addressablePixels) {
+        setAddressablePixels(addressablePixels.toInteger())
+        state.addressablePixels = addressablePixels
+    }
+    // BEGIN:getChildComponentDefaultUpdatedContent()
+    // This is code needed to run in updated() in ALL Child drivers
+    getDriverVersion()
+    // END:  getChildComponentDefaultUpdatedContent()
+    //if(addressableRotation != null) setAddressableRotation(addressableRotation.toInteger())
     refresh()
 }
 
@@ -128,6 +178,37 @@ void refresh() {
     def metaConfig = clearThingsToHide()
     metaConfig = setDatasToHide(['metaConfig', 'isComponent', 'preferences', 'label', 'name'], metaConfig=metaConfig)
     // END:  getChildComponentMetaConfigCommands()
+
+    metaConfig = setStateVariablesToHide(["mode", "effectnumber"], metaConfig=metaConfig)
+
+    List commandsToHide = ["setEffect", "setNextEffect", "setPreviousEffect"]
+    if(hideColorTemperatureCommands == true) {
+        commandsToHide.addAll(["setColorTemperature"])
+    }
+    if(hideEffectCommands == null || hideEffectCommands == true) {
+        commandsToHide.addAll(["setEffectWithSpeed", "setNextEffectWithSpeed", "setPreviousEffectWithSpeed", "modeWakeUp", "setEffectSingleColor", "setEffectCycleUpColors", "setEffectCycleDownColors", "setEffectRandomColors"])
+    }
+    if(hideColorCommands == null || hideColorCommands == true) {
+        //"colorWhite", "colorRed", "colorGreen", "colorBlue", "colorYellow", "colorCyan", "colorPink"
+        commandsToHide.addAll(["setColor", "setColorByName", "setHue", "setSaturation"])
+    }
+    
+    Map lightEffects = [:]
+    if(isAddressable == true) {
+        lightEffects = [0: "Single Color", 1: "Wake Up", 2: "Cycle Up Colors", 3: "Cycle Down Colors", 
+                        4: "Random Colors", 5: "Clock Mode", 6: "Candlelight Pattern", 7: "RGB Pattern",
+                        8: "Christmas Pattern", 9: "Hanukkah Pattern", 10: "Kwanzaa Pattern",
+                        11: "Rainbow Pattern", 12: "Fire Pattern"]
+    } else {
+        metaConfig = setStateVariablesToHide(["addressablePixels"], metaConfig=metaConfig)
+        commandsToHide.addAll(["addressablePixel", "setEffectWidth", "setPixelColor", "setAddressableRotation"])
+        metaConfig = setPreferencesToHide(["addressablePixels"], metaConfig=metaConfig)
+        lightEffects = [0: "Single Color", 1: "Wake Up", 2: "Cycle Up Colors", 3: "Cycle Down Colors", 
+                        4: "Random Colors"]
+    }
+    if(commandsToHide != []) metaConfig = setCommandsToHide(commandsToHide, metaConfig=metaConfig)
+
+    sendEvent(name: "lightEffects", value: JsonOutput.toJson(lightEffects))
     parent?.componentRefresh(this.device)
 }
 
@@ -199,28 +280,106 @@ void colorPink() {
     parent?.componentSetRGB(this.device, 255, 0, 255)
 }
 
-void modeNext(BigDecimal speed=3) {
-    parent?.componentModeNext(this.device, speed)
+void setColorByName(String colorName) {
+    logging("setColorByName(colorName ${colorName})", 1)
+    String colorRGB = ""
+    switch(colorName) {
+        case "Red":
+            colorRGB = "#FF0000"
+            break
+        case "Green":
+            colorRGB = "#00FF00"
+            break
+        case "Blue":
+            colorRGB = "#0000FF"
+            break
+        case "Yellow":
+            colorRGB = "#FFFF00"
+            break
+        case "Cyan":
+            colorRGB = "#00FFFF"
+            break
+        case "Pink":
+            colorRGB = "#FF00FF"
+            break
+        default:
+            colorRGB = "#FFFFFFFFFF"
+    }
+    setColorByRGBString(colorRGB)
 }
 
-void modePrevious(BigDecimal speed=3) {
-    parent?.componentModePrevious(this.device, speed)
+void setColorByRGBString(String colorRGB) {
+    logging("setColorByRGBString(colorRGB ${colorRGB})", 1)
+    parent?.componentSetColorByRGBString(this.device, colorRGB)
 }
 
-void modeSingleColor(BigDecimal speed=3) {
-    parent?.componentModeSingleColor(this.device, speed)
+void setEffect(BigDecimal effectnumber) {
+    setEffectWithSpeed(effectnumber, 2)
 }
 
-void modeCycleUpColors(BigDecimal speed=3) {
-    parent?.componentModeCycleUpColors(this.device, speed)
+Map getLightEffects() {
+    String lightEffectsJSON = device.currentValue('lightEffects')
+    Map lightEffects = [0: "Undefined"]
+    if(lightEffectsJSON != null) {
+        log.debug "lightEffectsJSON = $lightEffectsJSON"
+        JsonSlurper jsonSlurper = new JsonSlurper()
+        lightEffects = jsonSlurper.parseText(lightEffectsJSON)
+    }
+    return lightEffects
 }
 
-void modeCycleDownColors(BigDecimal speed=3) {
-    parent?.componentModeCycleDownColors(this.device, speed)
+String getLightEffectNameByNumber(BigDecimal effectnumber) {
+    Map lightEffects = getLightEffects()
+    lightEffects.get(effectnumber.toString(), 'Unknown')
 }
 
-void modeRandomColors(BigDecimal speed=3) {
-    parent?.componentModeRandomColors(this.device, speed)
+void setNextEffect() {
+    setNextEffectWithSpeed(2)
+}
+
+void setPreviousEffect() {
+    setPreviousEffectWithSpeed(2)
+}
+
+void setEffectWithSpeed(BigDecimal effectnumber, BigDecimal speed=3) {
+    state.effectnumber = effectnumber
+    parent?.componentSetEffect(this.device, effectnumber, speed)
+}
+
+void setNextEffectWithSpeed(BigDecimal speed=3) {
+    logging("setNextEffectWithSpeed()", 10)
+    if (state.effectnumber != null && state.effectnumber < getLightEffects().size() - 1) {
+        state.effectnumber = state.effectnumber + 1
+    } else {
+        state.effectnumber = 0
+    }
+    setEffectWithSpeed(state.effectnumber, speed)
+}
+
+void setPreviousEffectWithSpeed(BigDecimal speed=3) {
+    logging("setPreviousEffectWithSpeed()", 10)
+    if (state.effectnumber != null && state.effectnumber > 0) {
+        state.effectnumber = state.effectnumber - 1
+    } else {
+        state.effectnumber = getLightEffects().size() - 1
+    }
+    setEffectWithSpeed(state.effectnumber, speed)
+}
+
+void setEffectSingleColor(BigDecimal speed=3) {
+    setEffectWithSpeed(0, speed)
+}
+
+void setEffectCycleUpColors(BigDecimal speed=3) {
+    setEffectWithSpeed(2, speed)
+}
+
+void setEffectCycleDownColors(BigDecimal speed=3) {
+    setEffectWithSpeed(3, speed)
+}
+
+void setEffectRandomColors(BigDecimal speed=3) {
+    setEffectWithSpeed(4, speed)
 }
 
 void modeWakeUp(BigDecimal wakeUpDuration) {
@@ -230,8 +389,51 @@ void modeWakeUp(BigDecimal wakeUpDuration) {
 }
 
 void modeWakeUp(BigDecimal wakeUpDuration, BigDecimal level) {
+    state.effectnumber = 1
     parent?.componentModeWakeUp(this.device, wakeUpDuration, level)
 }
+
+void setPixelColor(String colorRGB, BigDecimal pixel) {
+    parent?.componentSetPixelColor(this.device, colorRGB, pixel)
+}
+
+void setAddressablePixels(BigDecimal pixels) {
+    parent?.componentSetAddressablePixels(this.device, pixels)
+}
+
+void setAddressableRotation(BigDecimal pixels) {
+    parent?.componentSetAddressableRotation(this.device, pixels)
+}
+
+void setEffectWidth(String pixels) {
+    setEffectWidth(pixels.toInteger())
+}
+
+void setEffectWidth(BigDecimal pixels) {
+    parent?.componentSetEffectWidth(this.device, pixels)
+}
+
+/*
+Fade between colours:
+rule3 on Rules#Timer=1 do backlog color1 #ff0000; ruletimer2 10; endon on Rules#Timer=2 do backlog color1 #0000ff; ruletimer3 10; endon on Rules#Timer=3 do backlog color1 #00ff00; ruletimer1 10; endon
+backlog rule3 1; color1 #ff0000; fade 1; speed 18; color1 #0000ff; ruletimer3 10;
+
+Fade up to color:
+backlog fade 0; dimmer 0; color2 #ff0000; fade 1; speed 20; dimmer 100;
+
+Fade down from color:
+backlog fade 0; dimmer 100; color2 #ff0000; fade 1; speed 20; dimmer 0;
+
+Fade up and down:
+
+rule3 on Rules#Timer=1 do backlog color2 #ff0000; dimmer 100; ruletimer2 10; endon on Rules#Timer=2 do backlog dimmer 0; ruletimer3 10; endon  on Rules#Timer=3 do backlog color2 #00ff00; dimmer 100; ruletimer4 10; endon on Rules#Timer=4 do backlog dimmer 0; ruletimer1 10; endon 
+backlog rule3 1; fade 0; dimmer 0; color2 #ff0000; fade 1; speed 20; dimmer 100; ruletimer2 10;
+
+To disable a running effect:
+rule3 0
+backlog
+
+*/
 
 /**
  * -----------------------------------------------------------------------------
@@ -240,6 +442,20 @@ void modeWakeUp(BigDecimal wakeUpDuration, BigDecimal level) {
  * --- Nothing to edit here, move along! ---------------------------------------
  * -----------------------------------------------------------------------------
  */
+
+// BEGIN:getDefaultFunctions()
+/* Default Driver Methods go here */
+private String getDriverVersion() {
+    //comment = ""
+    //if(comment != "") state.comment = comment
+    String version = "v1.0.0228Tb"
+    logging("getDriverVersion() = ${version}", 100)
+    sendEvent(name: "driver", value: version)
+    updateDataValue('driver', version)
+    return version
+}
+// END:  getDefaultFunctions()
+
 
 /**
  * ALL DEBUG METHODS (helpers-all-debug)
@@ -254,7 +470,7 @@ String configuration_model_debug() {
         }
         return '''
 <configuration>
-<Value type="bool" index="debugLogging" label="Enable debug logging" description="" value="true" submitOnChange="true" setting_type="preference" fw="">
+<Value type="bool" index="debugLogging" label="Enable debug logging" description="" value="false" submitOnChange="true" setting_type="preference" fw="">
 <Help></Help>
 </Value>
 <Value type="bool" index="infoLogging" label="Enable descriptionText logging" description="" value="true" submitOnChange="true" setting_type="preference" fw="">
@@ -271,7 +487,7 @@ String configuration_model_debug() {
         }
         return '''
 <configuration>
-<Value type="list" index="logLevel" label="Debug Log Level" description="Under normal operations, set this to None. Only needed for debugging. Auto-disabled after 30 minutes." value="-1" submitOnChange="true" setting_type="preference" fw="">
+<Value type="list" index="logLevel" label="Debug Log Level" description="Under normal operations, set this to None. Only needed for debugging. Auto-disabled after 30 minutes." value="100" submitOnChange="true" setting_type="preference" fw="">
 <Help>
 </Help>
     <Item label="None" value="0" />
@@ -325,11 +541,14 @@ void deviceCommand(cmd) {
 
 	Purpose: initialize the driver/app
 	Note: also called from updated()
+    This is called when the hub starts, DON'T declare it with return as void,
+    that seems like it makes it to not run? Since testing require hub reboots
+    and this works, this is not conclusive...
 */
 // Call order: installed() -> configure() -> updated() -> initialize()
-void initialize() {
+def initialize() {
     logging("initialize()", 100)
-	unschedule()
+	unschedule("updatePresence")
     // disable debug logs after 30 min, unless override is in place
 	if (logLevel != "0" && logLevel != "100") {
         if(runReset != "DEBUG") {
@@ -391,12 +610,12 @@ void logsOff() {
         }
     } else {
         log.warn "OVERRIDE: Disabling Debug logging will not execute with 'DEBUG' set..."
-        if (logLevel != "0" && logLevel != "100") runIn(1800, logsOff)
+        if (logLevel != "0" && logLevel != "100") runIn(1800, "logsOff")
     }
 }
 
 boolean isDeveloperHub() {
-    return generateMD5(location.hub.zigbeeId as String) == "125fceabd0413141e34bb859cd15e067"
+    return generateMD5(location.hub.zigbeeId as String) == "125fceabd0413141e34bb859cd15e067_disabled"
 }
 
 def getEnvironmentObject() {
@@ -487,7 +706,11 @@ BigDecimal round2(BigDecimal number, Integer scale) {
 }
 
 String generateMD5(String s) {
-    return MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
+    if(s != null) {
+        return MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
+    } else {
+        return "null"
+    }
 }
 
 Integer extractInt(String input) {
@@ -944,15 +1167,19 @@ String makeTextItalic(s) {
 /* Logging function included in all drivers */
 private boolean logging(message, level) {
     boolean didLogging = false
-    if (infoLogging == true) {
-        logLevel = 100
+    Integer logLevelLocal = (logLevel != null ? logLevel.toInteger() : 0)
+    if(!isDeveloperHub()) {
+        logLevelLocal = 0
+        if (infoLogging == true) {
+            logLevelLocal = 100
+        }
+        if (debugLogging == true) {
+            logLevelLocal = 1
+        }
     }
-    if (debugLogging == true) {
-        logLevel = 1
-    }
-    if (logLevel != "0"){
-        switch (logLevel) {
-        case "-1": // Insanely verbose
+    if (logLevelLocal != "0"){
+        switch (logLevelLocal) {
+        case -1: // Insanely verbose
             if (level >= 0 && level < 100) {
                 log.debug "$message"
                 didLogging = true
@@ -961,7 +1188,7 @@ private boolean logging(message, level) {
                 didLogging = true
             }
         break
-        case "1": // Very verbose
+        case 1: // Very verbose
             if (level >= 1 && level < 99) {
                 log.debug "$message"
                 didLogging = true
@@ -970,7 +1197,7 @@ private boolean logging(message, level) {
                 didLogging = true
             }
         break
-        case "10": // A little less
+        case 10: // A little less
             if (level >= 10 && level < 99) {
                 log.debug "$message"
                 didLogging = true
@@ -979,20 +1206,20 @@ private boolean logging(message, level) {
                 didLogging = true
             }
         break
-        case "50": // Rather chatty
+        case 50: // Rather chatty
             if (level >= 50 ) {
                 log.debug "$message"
                 didLogging = true
             }
         break
-        case "99": // Only parsing reports
+        case 99: // Only parsing reports
             if (level >= 99 ) {
                 log.debug "$message"
                 didLogging = true
             }
         break
         
-        case "100": // Only special debug messages, eg IR and RF codes
+        case 100: // Only special debug messages, eg IR and RF codes
             if (level == 100 ) {
                 log.info "$message"
                 didLogging = true

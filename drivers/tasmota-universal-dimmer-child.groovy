@@ -11,6 +11,8 @@ metadata {
 		capability "SwitchLevel"                  // Attributes: level - NUMBER
         capability "ChangeLevel"
         capability "Refresh"
+
+        #!include:getMinimumChildAttributes()
     }
 
     preferences {
@@ -38,6 +40,7 @@ void parse(List<Map> description) {
 
 void updated() {
     log.info "updated()"
+    #!include:getChildComponentDefaultUpdatedContent()
     refresh()
 }
 
@@ -45,6 +48,7 @@ void installed() {
     log.info "installed()"
     device.removeSetting("logLevel")
     device.updateSetting("logLevel", "100")
+    sendEvent(name: "level", value: "100")
     refresh()
 }
 
@@ -84,6 +88,8 @@ void stopLevelChange() {
  * --- Nothing to edit here, move along! ---------------------------------------
  * -----------------------------------------------------------------------------
  */
+
+#!include:getDefaultFunctions()
 
 #!include:getHelperFunctions('all-default')
 

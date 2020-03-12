@@ -38,6 +38,12 @@ TreeMap getDeviceConfigurations() {
          installCommands: [],
          deviceLink: 'https://templates.blakadder.com/ce_smart_home_LQ-2-W3.html'],
 
+        [typeId: 'ce-la-wf7-pm-plug',
+         name: 'CE Smart Home LA-WF7 Power Monitor Plug',
+         template: '{"NAME":"CESmartHLA-WF7","GPIO":[0,56,0,17,134,132,0,0,131,57,21,0,0],"FLAG":0,"BASE":18}',
+         installCommands: [],
+         deviceLink: 'https://templates.blakadder.com/ce_smart_home_LA-WF7.html'],
+
         [typeId: 'awp02l-n-plug',
          name: 'AWP02L-N Plug',
          template: '{"NAME":"AWP02L-N","GPIO":[57,0,56,0,0,0,0,0,0,17,0,21,0],"FLAG":1,"BASE":18}',
@@ -120,14 +126,14 @@ TreeMap getDeviceConfigurations() {
          deviceLink: 'https://templates.blakadder.com/sonoff_ifan03.html'],*/
 
         [typeId: 'sonoff-ifan03-no_beep-m71',
-         name: 'Sonoff iFan03 (No Beep) M71',
+         name: 'Sonoff iFan03 (No Beep)',
          module: 71,
          //template: '{"NAME":"SonoffiFan03","GPIO":[17,148,0,149,0,0,29,161,23,56,22,24,0],"FLAG":0,"BASE":71}',
          installCommands: [["SetOption67", "0"], ['Rule1', '0']],
          deviceLink: 'https://templates.blakadder.com/sonoff_ifan03.html'],
 
         [typeId: 'sonoff-ifan03-beep-m71',
-         name: 'Sonoff iFan03 (Beep) M71',
+         name: 'Sonoff iFan03 (Beep)',
          module: 71,
          //template: '{"NAME":"SonoffiFan03","GPIO":[17,148,0,149,0,0,29,161,23,56,22,24,0],"FLAG":0,"BASE":71}',
          installCommands: [["SetOption67", "1"], 
@@ -140,6 +146,12 @@ TreeMap getDeviceConfigurations() {
          template: '{"NAME":"KMC 4 Plug","GPIO":[0,56,0,0,133,132,0,0,130,22,23,21,17],"FLAG":0,"BASE":36}',
          installCommands: [],
          deviceLink: 'https://templates.blakadder.com/kmc-4.html'],
+
+        [typeId: 'teckin-sp10-plug',
+         name: 'Teckin SP10 Plug',
+         template: '{"NAME":"Teckin SP10","GPIO":[255,255,56,255,255,255,0,0,255,17,255,21,255],"FLAG":0,"BASE":18}',
+         installCommands: [],
+         deviceLink: 'https://templates.blakadder.com/teckin_SP10.html'],
 
         [typeId: 'awp04l-pm-plug',
          name: 'AWP04L Power Monitor Plug',
@@ -231,6 +243,12 @@ TreeMap getDeviceConfigurations() {
         installCommands: [["SetOption81", "1"]],
         deviceLink: 'https://templates.blakadder.com/brilliantsmart_20676.html'],
 
+        [typeId: 'globe-34207-bulb' ,
+        name: 'Globe 34207 800lm RGBCCT Bulb',
+        template: '{"NAME":"GlobeRGBWW","GPIO":[0,0,0,0,37,40,0,0,38,41,39,0,0],"FLAG":0,"BASE":18}',
+        installCommands: [],
+        deviceLink: 'https://templates.blakadder.com/globe-34207.html'],
+
         [typeId: 'brilliantsmart-20676-plug' ,
         name: 'BrilliantSmart 20676 USB Charger Plug',
         template: '{"NAME":"Brilliant20676","GPIO":[0,0,0,0,0,21,0,0,0,52,90,0,0],"FLAG":0,"BASE":18}',
@@ -243,6 +261,12 @@ TreeMap getDeviceConfigurations() {
         installCommands: [],
         deviceLink: 'https://templates.blakadder.com/brilliant_BL20925.html'],
 
+        [typeId: 'deta-6930ha-plug', 
+        name: 'Deta 6930HA Plug',
+        template: '{"NAME":"Deta6930HAPlug","GPIO":[0,17,0,0,0,0,0,0,0,56,21,0,0],"FLAG":0,"BASE":18}',
+        installCommands: [],
+        deviceLink: 'https://templates.blakadder.com/deta_6930HA.html'],
+
         [typeId: 'prime-ccrcwfii113pk-plug', 
         name: 'Prime CCRCWFII113PK Plug',
         template: '{"NAME":"PrimeCCRC13PK","GPIO":[0,0,0,0,57,56,0,0,21,122,0,0,0],"FLAG":0,"BASE":18}',
@@ -252,6 +276,12 @@ TreeMap getDeviceConfigurations() {
         [typeId: 'ykyc-wj1y0-10a', 
         name: 'YKYC-WJ1Y0-10A PM Plug',
         template: '{"NAME":"YKYC-001PMPlug","GPIO":[0,17,0,57,133,132,0,0,130,56,21,0,0],"FLAG":0,"BASE":18}',
+        installCommands: [],
+        deviceLink: ''],
+
+        [typeId: 'ykyc-wj1y0-10a', 
+        name: 'Merkury MI-BW210-999W',
+        template: '{"NAME":"MI-BW210-999W","GPIO":[0,0,0,0,140,37,0,0,142,38,141,0,0],"FLAG":0,"BASE":48}',
         installCommands: [],
         deviceLink: ''],
 
@@ -272,20 +302,28 @@ TreeMap getDeviceConfigurations() {
         name: 'Sonoff 4CH',
         template: '{"NAME":"Sonoff 4CH","GPIO":[17,255,255,255,23,22,18,19,21,56,20,24,0],"FLAG":0,"BASE":7}',
         installCommands: [],
-       deviceLink: 'https://templates.blakadder.com/sonoff_4CH.html'],
+        deviceLink: 'https://templates.blakadder.com/sonoff_4CH.html'],
+
+        [typeId: 'sonoff-4ch-pro-r2',
+        name: 'Sonoff 4CH Pro (R2)',
+        template: '{"NAME":"Sonoff 4CH Pro","GPIO":[17,255,255,255,23,22,18,19,21,56,20,24,0],"FLAG":0,"BASE":23}',
+        installCommands: [],
+        deviceLink: 'https://templates.blakadder.com/sonoff_4CH_Pro.html'],
 
         [typeId: 'tuyamcu-znsn-wifi-curtain-wall-panel',
         comment: 'NOT GENERIC - read the instructions',
         name: 'TuyaMCU ZNSN Wifi Curtain Wall Panel',
         module: 54,
-        // TODO: Add special handling for Rule-commands, DON'T use Backlog!
-        // TODO: Add the special parsing for this
-        installCommands: [["WebLog", "2"],  // A good idea for dimmers
-                        ['Mem1', '100'],  // Updated with the current Curtain location
-                        ['Mem2', '11'],   // Step for each increase
-                        ['Mem3', '1'],    // delay in 10th of a second (1 = 100ms)
-                        ['Mem4', '9'],    // Motor startup steps
-                        ['Mem5', '1'],    // Extra step when opening
+        installCommands: [["WebLog", "2"], // A good idea for dimmers
+                        //SetOption66 - Set publishing TuyaReceived to MQTT  »6.7.0
+                        //0 = disable publishing TuyaReceived over MQTT (default)
+                        //1 = enable publishing TuyaReceived over MQTT
+                        ['SetOption66', "1"], // This is REQUIRED to get the Tuya Data
+                        ['Mem1', '100'],   // Updated with the current Curtain location
+                        ['Mem2', '11'],    // Step for each increase
+                        ['Mem3', '1'],     // delay in 10th of a second (1 = 100ms)
+                        ['Mem4', '9'],     // Motor startup steps
+                        ['Mem5', '1'],     // Extra step when opening
                         ['Delay', '15'],   // Set delay between Backlog commands
                         ['Rule1', 'ON Dimmer#State DO Mem1 %value%; ENDON'],
                         ['Rule1', '+ ON TuyaReceived#Data=55AA00070005650400010277 DO Backlog Var1 %mem1%; Var2 Go; Var5 C; Add1 %mem2%; Sub1 %mem4%; Var4 %mem2%; Event Go; ENDON'],
@@ -306,6 +344,44 @@ TreeMap getDeviceConfigurations() {
         stop: ["TuyaSend4", "101,1"],
         close: ["TuyaSend4", "101,2"],],
         
+        [typeId: 'mj-sd02-dimmer-switch',
+        comment: 'WITHOUT power status LED active by design',
+        name: 'Martin Jerry MJ-SD02 Dimmer Switch',
+        template: '{"NAME":"MJ-SD02","GPIO":[19,18,0,33,34,32,255,255,31,37,30,126,29],"FLAG":15,"BASE":18}',
+        // Possible alternative: {"NAME":"MJ-SD02","GPIO":[19,18,0,35,36,34,255,255,33,37,32,126,29],"FLAG":15,"BASE":18}
+        installCommands: [["WebLog", "2"], // A good idea for dimmers
+                        ['SerialLog', '0'],
+                        ['setoption3', '1'], // enable MQTT - REQUIRED for these rules to work!
+                        ['setoption1', '1'], // restrict to single, double and hold actions (i.e., disable inadvertent reset due to long press)
+                        ['setoption32', '8'],     // Number of 0.1 seconds to hold button before sending HOLD action message.
+                        ['buttontopic', '0'],   // This enables the below Rule triggers
+                        ['Rule1', 'on Button3#state=2 do dimmer + endon on Button2#state=2 do dimmer - endon '],
+                        ['Rule1', '+ on Button2#state=3 do dimmer 20 endon on Button3#state=3 do dimmer 100 endon '],
+                        ['Rule1', '+ on Button1#state=2 do power1 2 endon on Button1#state=3 do power1 0 endon'],
+                        ['Rule1', '1']],
+        deviceLink: ''],
+
+        [typeId: 'mj-sd02-dimmer-switch-led',
+        comment: 'WITH power status LED active by design',
+        name: 'Martin Jerry MJ-SD02 Dimmer Switch',
+        template: '{"NAME":"MJ-SD02-LED","GPIO":[19,18,0,33,56,32,255,255,31,37,30,126,29],"FLAG":15,"BASE":18}',
+        // Possible alternative: {"NAME":"MJ-SD02","GPIO":[19,18,0,35,36,34,255,255,33,37,32,126,29],"FLAG":15,"BASE":18}
+        installCommands: [["WebLog", "2"], // A good idea for dimmers
+                        ['SerialLog', '0'],
+                        ['setoption3', '1'], // enable MQTT - REQUIRED for these rules to work!
+                        ['setoption1', '1'], // restrict to single, double and hold actions (i.e., disable inadvertent reset due to long press)
+                        ['setoption32', '8'],     // Number of 0.1 seconds to hold button before sending HOLD action message.
+                        ['buttontopic', '0'],   // This enables the below Rule triggers
+                        ['LedPower', '1'],
+                        ['SetOption31', '0'],
+                        ['Rule1', 'on Button3#state=2 do dimmer + endon on Button2#state=2 do dimmer - endon '],
+                        ['Rule1', '+ on Button2#state=3 do dimmer 20 endon on Button3#state=3 do dimmer 100 endon '],
+                        ['Rule1', '+ on Button1#state=2 do power1 2 endon on Button1#state=3 do power1 0 endon'],
+                        ['Rule1', '1']],
+        deviceLink: ''],
+
+        //https://templates.blakadder.com/oil_diffuser_550ml.html
+
         // https://tasmota.github.io/docs/#/devices/Sonoff-RF-Bridge-433pi 
         [typeId: 'sonoff-rf-bridge-parent' , 
         notForUniversal: true,
@@ -327,11 +403,10 @@ TreeMap getDeviceConfigurations() {
         [typeId: '01generic-device',
         comment: 'Works with most devices' ,
         name: 'Generic Device',
-        template: '',
         installCommands: [],
         deviceLink: ''],
 
-        [typeId: '01generic-switch-plug',
+        /*[typeId: '01generic-switch-plug',
         comment: 'Works as Plug/Outlet with Alexa' ,
         name: 'Generic Switch/Plug',
         template: '',
@@ -343,7 +418,7 @@ TreeMap getDeviceConfigurations() {
         name: 'Generic Switch/Light',
         template: '',
         installCommands: [],
-        deviceLink: ''],
+        deviceLink: ''],*/
 
         [typeId: '01generic-rgb-rgbw-controller-bulb-dimmer', 
         comment: 'RGB+WW+CW should all work properly',
@@ -358,11 +433,11 @@ TreeMap getDeviceConfigurations() {
         installCommands: [["TempRes", (tempRes == '' || tempRes == null ? "1" : tempRes)]],
         deviceLink: ''],
 
-        [typeId: '01generic-dimmer' ,
+        /*[typeId: '01generic-dimmer' ,
         name: 'Generic Dimmer',
         template: '',
         installCommands: [["WebLog", "2"]],
-        deviceLink: ''],
+        deviceLink: ''],*/
     ]
 
     TreeMap deviceConfigurationsMap = [:] as TreeMap

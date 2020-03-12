@@ -107,7 +107,7 @@ class HubitatCodeBuilder:
 
     def __init__(self, hubitat_hubspider, calling_namespace=None, app_dir=Path('./apps'), app_build_dir=Path('./apps/expanded'), \
                  driver_dir=Path('./drivers'), driver_build_dir=Path('./drivers/expanded'), \
-                 build_suffix='-expanded', driver_raw_repo_url=None):
+                 build_suffix='-expanded', driver_raw_repo_url=None, app_raw_repo_url=None):
         self.app_dir = Path(app_dir)
         self.app_build_dir = Path(app_build_dir)
         self.driver_dir = Path(driver_dir)
@@ -125,6 +125,10 @@ class HubitatCodeBuilder:
         if (self.driver_raw_repo_url[-1] != '/'):
             self.driver_raw_repo_url += '/'
             self.log.warn("Had to add a '/' to the self.driver_raw_repo_url! You should specify it with a '/' at the end!")
+        self.app_raw_repo_url = app_raw_repo_url
+        if (self.app_raw_repo_url[-1] != '/'):
+            self.app_raw_repo_url += '/'
+            self.log.warn("Had to add a '/' to the self.app_raw_repo_url! You should specify it with a '/' at the end!")
         # Check if we have a saved session
         try:
             with open('__hubitat_checksums', 'rb') as f:
@@ -218,10 +222,10 @@ class HubitatCodeBuilder:
                 definition_dict[k] = '"x' + definition_dict[k] + 'x"'
             new_definition = (l[:definition_position]) + 'definition (' + yaml.dump(definition_dict, default_flow_style=False, sort_keys=False ).replace('\'"x', '"').replace('x"\'', '"').replace('\n', ', ')[:-2] + ') {\n'
             #print(new_definition)
-            output = 'public getDeviceInfoByName(infoName) { \n' + \
+            output = 'String getDeviceInfoByName(infoName) { \n' + \
                 '    // DO NOT EDIT: This is generated from the metadata!\n' + \
                 '    // TODO: Figure out how to get this from Hubitat instead of generating this?\n' + \
-                '    def deviceInfo = ' + ds + '\n' + \
+                '    Map deviceInfo = ' + ds + '\n' + \
                 '    //logging("deviceInfo[${infoName}] = ${deviceInfo[infoName]}", 1)\n' + \
                 '    return(deviceInfo[infoName])\n' + \
                 '}'
@@ -276,6 +280,7 @@ class HubitatCodeBuilder:
         # 4. If all fails, throw an exception!
         if(found == False):
             try:
+                self.log.debug("eval_cmd: " + eval_cmd)
                 output = eval(eval_cmd)
             except NameError:
                 try:
@@ -360,12 +365,14 @@ class HubitatCodeBuilder:
                         #self.log.debug(self._definition_string)
                         r['name'] = definition_dict_original['name']
                 includePosition = l.find('#!include:')
+                numCharsToRemove = 10
                 includeNC = False
                 if(includePosition == -1):
                     includePosition = l.find('#!includeNC:')
+                    numCharsToRemove = 12
                     includeNC = True
                 if(includePosition != -1):
-                    eval_cmd = l[includePosition+10:].strip()
+                    eval_cmd = l[includePosition+numCharsToRemove:].strip()
                     output = self._runEvalCmd(eval_cmd)
                     if(includeNC == False and eval_cmd.startswith("getHelperFunctions") == False and 
                         eval_cmd.startswith("getHeaderLicense") == False):

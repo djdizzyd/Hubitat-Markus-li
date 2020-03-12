@@ -6,12 +6,17 @@ metadata {
 	definition (name: "Tasmota - Universal Parent", namespace: "tasmota", author: "Markus Liljergren", vid: "generic-switch") {
         #!include:getDefaultMetadataCapabilities()
         capability "PresenceSensor"
+        capability "Initialize"         // This makes initialize() run on hub start, only needed in the Parent
         
         #!include:getDefaultParentMetadataAttributes()
         #!include:getDefaultMetadataAttributes()
+        attribute "commandSent", "string"
+        attribute "commandResult", "string"
 
         #!include:getMetadataCommandsForHandlingChildDevices()
         #!include:getDefaultMetadataCommands()
+        command "sendCommand", [[name:"Command*", type: "STRING", description: "Tasmota Command"],
+            [name:"Argument", type: "STRING", description: "Argument (optional)"]]
 	}
 
 	preferences {
@@ -24,6 +29,7 @@ metadata {
         #!include:getMetadataPreferencesForHiding()
 
         #!include:getDefaultMetadataPreferencesForTasmota(True) # False = No TelePeriod setting
+        input(name: "invertPowerNumber", type: "bool", title: addTitleDiv("Send POWER1 events to POWER2, and vice versa"), description: addDescriptionDiv("Use this if you have a dimmer AND a switch in the same device and on/off is not sent/received correctly. Normally this is NOT needed."), defaultValue: false, displayDuringSetup: false, required: false)
         #!include:getDefaultMetadataPreferencesLast()
 	}
 
@@ -128,6 +134,9 @@ def getDriverCSS() {
         /*position: absolute;*/
         display: list-item;
     }
+    .property-value {
+        overflow-wrap: break-word;
+    }
     '''
     return r
 }
@@ -144,13 +153,16 @@ def refreshAdditional(metaConfig) {
     metaConfig = setStateVariablesToHide(['mac'], metaConfig=metaConfig)
     logging("hideExtended=$hideExtended, hideAdvanced=$hideAdvanced", 1)
     if(hideExtended == null || hideExtended == true) {
-        metaConfig = setPreferencesToHide(['hideAdvanced', 'ipAddress', 'override', 'useIPAsID', 'telePeriod'], metaConfig=metaConfig)
+        metaConfig = setPreferencesToHide(['hideAdvanced', 'ipAddress', 'override', 'useIPAsID', 'telePeriod', 'invertPowerNumber'], metaConfig=metaConfig)
     }
     if(hideExtended == null || hideExtended == true || hideAdvanced == null || hideAdvanced == true) {
-        metaConfig = setPreferencesToHide(['disableModuleSelection', 'moduleNumber', 'deviceTemplateInput', , 'port', 'disableCSS'], metaConfig=metaConfig)
+        //  'deviceTemplateInput',
+        metaConfig = setPreferencesToHide(['disableModuleSelection', 'port', 'disableCSS', 'moduleNumber'], metaConfig=metaConfig)
     }
     if(hideDangerousCommands == null || hideDangerousCommands == true) {
-        metaConfig = setCommandsToHide(['deleteChildren'], metaConfig=metaConfig)
+        metaConfig = setCommandsToHide(['deleteChildren', 'initialize'], metaConfig=metaConfig)
+    } else {
+        metaConfig = setCommandsToHide(['initialize'], metaConfig=metaConfig)
     }
     if(deviceConfig == null) deviceConfig = "01generic-device"
     deviceConfigMap = getDeviceConfiguration(deviceConfig)
@@ -191,7 +203,7 @@ def refreshAdditional(metaConfig) {
 }
 
 /* The parse(description) function is included and auto-expanded from external files */
-def parse(description) {
+void parse(description) {
     #!include:getGenericTasmotaNewParseHeader()
         missingChild = parseResult(result, missingChild)
     #!include:getGenericTasmotaNewParseFooter()
@@ -204,18 +216,24 @@ boolean parseResult(result) {
 }
 
 boolean parseResult(result, missingChild) {
-
-    updatePresence("present")
+    //logging("Entered parseResult 1", 100)
     boolean log99 = logging("parseResult: $result", 99)
-    #!include:getTasmotaNewParserForBasicData()
+    #!include:getTasmotaNewParserForStatusSTS()
+    //logging("Entered parseResult 1a", 100)
     #!include:getTasmotaNewParserForParentSwitch()
-    #!include:getTasmotaNewParserForFanMode()
-    #!include:getTasmotaNewParserForEnergyMonitor()
+    //logging("Entered parseResult 1b", 100)
     #!include:getTasmotaNewParserForDimmableDevice()
+    //logging("Entered parseResult 1c", 100)
     #!include:getTasmotaNewParserForRGBWDevice()
+    //logging("Entered parseResult 1d", 100)
+    #!include:getTasmotaNewParserForFanMode()
+    //logging("Entered parseResult 2", 100)
+    #!include:getTasmotaNewParserForBasicData()    
+    #!include:getTasmotaNewParserForEnergyMonitor()
     #!include:getTasmotaNewParserForSensors()
     #!include:getTasmotaNewParserForWifi()
-
+    //logging("Entered parseResult 3", 100)
+    updatePresence("present")
     return missingChild
 }
 
@@ -232,7 +250,9 @@ void updateNeededSettings() {
     if(deviceTemplateInput == "") deviceTemplateInput = null
     if(moduleNumber == "") moduleNumber = null
 
-    logging("updateNeededSettings: deviceConfigMap=$deviceConfigMap, deviceTemplateInput=$deviceTemplateInput, moduleNumber=$moduleNumber", 0)
+    if(deviceTemplateInput != null && moduleNumber == null) moduleNumber = 0
+
+    logging("updateNeededSettings: deviceConfigMap=$deviceConfigMap, deviceTemplateInput=$deviceTemplateInput, moduleNumber=$moduleNumber", 1)
 
     #!include:getUpdateNeededSettingsTasmotaDynamicModuleCommand()
     logging("After getUpdateNeededSettingsTasmotaDynamicModuleCommand", 1)
@@ -258,25 +278,31 @@ void updateNeededSettings() {
 
 /** Calls TO Child devices */
 boolean callChildParseByTypeId(String deviceTypeId, event, boolean missingChild) {
+    //logging("Before callChildParseByTypeId()", 100)
     event.each{
         if(it.containsKey("descriptionText") == false) {
             it["descriptionText"] = "'$it.name' set to '$it.value'"
         }
         it["isStateChange"] = false
     }
-    try {
-        cd = getChildDevice("$device.id-$deviceTypeId")
-        if(cd != null) {
-            cd.parse(event)
-        } else {
-            // We're missing a device...
-            log.warn("childParse() can't FIND the device ${cd?.displayName}! (childId: ${"$device.id-$deviceTypeId"}) Did you delete something?")
-            missingChild = true
-        }
-    } catch(e) {
-        log.warn("childParse() can't send parse event to device ${cd?.displayName}! Error=$e")
+    // Try - Catch is expensive since it won't be optimized
+    //try {
+    //logging("Before getChildDevice()", 100)
+    cd = getChildDevice("$device.id-$deviceTypeId")
+    if(cd != null) {
+        //logging("Before Child parse()", 100)
+        // It takes 30 to 40ms to just call into the child device parse
+        cd.parse(event)
+        //logging("After Child parse()", 100)
+    } else {
+        // We're missing a device...
+        log.warn("childParse() can't FIND the device ${cd?.displayName}! (childId: ${"$device.id-$deviceTypeId"}) Did you delete something?")
         missingChild = true
     }
+    //} catch(e) {
+    //    log.warn("childParse() can't send parse event to device ${cd?.displayName}! Error=$e")
+    //    missingChild = true
+    //}
     return missingChild
 }
 
@@ -301,6 +327,14 @@ void componentRefresh(cd) {
 
 void componentOn(cd) {
     String actionType = getDeviceActionType(cd.deviceNetworkId)
+    if(invertPowerNumber == true) {
+        // This is used when Tasmota mixes things up with a dimmer and relay in the same device
+        if(actionType == "POWER1") { 
+            actionType = "POWER2"
+        } else if(actionType == "POWER2"){
+            actionType = "POWER1"
+        }
+    }
     logging("componentOn(cd=${cd.displayName} (${cd.deviceNetworkId})) actionType=$actionType", 1)
     getAction(getCommandString("$actionType", "1"))
     //childParse(cd, [[name:"switch", value:"on", descriptionText:"${cd.displayName} was turned on"]])
@@ -308,6 +342,14 @@ void componentOn(cd) {
 
 void componentOff(cd) {
     String actionType = getDeviceActionType(cd.deviceNetworkId)
+    if(invertPowerNumber == true) {
+        // This is used when Tasmota mixes things up with a dimmer and relay in the same device
+        if(actionType == "POWER1") { 
+            actionType = "POWER2"
+        } else if(actionType == "POWER2"){
+            actionType = "POWER1"
+        }
+    }
     logging("componentOff(cd=${cd.displayName} (${cd.deviceNetworkId})) actionType=$actionType", 1)
     getAction(getCommandString("$actionType", "0"))
     //childParse(cd, [[name:"switch", value:"off", descriptionText:"${cd.displayName} was turned off"]])
@@ -373,28 +415,8 @@ void componentSetColorTemperature(cd, BigDecimal colortemperature) {
     setColorTemperature(colortemperature)
 }
 
-void componentModeNext(cd, BigDecimal speed) {
-    modeNext(speed)
-}
-
-void componentModePrevious(cd, BigDecimal speed) {
-    modePrevious(speed)
-}
-
-void componentModeSingleColor(cd, BigDecimal speed) {
-    modeSingleColor(speed)
-}
-
-void componentModeCycleUpColors(cd, BigDecimal speed) {
-    modeCycleUpColors(speed)
-}
-
-void componentModeCycleDownColors(cd, BigDecimal speed) {
-    modeCycleDownColors(speed)
-}
-
-void componentModeRandomColors(cd, BigDecimal speed) {
-    modeRandomColors(speed)
+void componentSetEffect(cd, BigDecimal effectnumber, BigDecimal speed) {
+    modeSet((Integer) effectnumber, speed)
 }
 
 void componentModeWakeUp(cd, BigDecimal wakeUpDuration, BigDecimal level) {
@@ -421,6 +443,43 @@ void componentSetSpeed(cd, String fanspeed) {
     }  
 }
 
+void componentOpen(cd) {
+    //TODO: Get this command from the device config!
+    getAction(getCommandString("TuyaSend4", "101,0"))
+}
+
+void componentClose(cd) {
+    getAction(getCommandString("TuyaSend4", "101,2"))
+}
+
+void componentStop(cd) {
+    getAction(getCommandString("TuyaSend4", "101,1"))
+}
+
+void componentSetPosition(cd, BigDecimal position) {
+    // This is run in the child for now...
+}
+
+void componentSetColorByRGBString(cd, String colorRGB) {
+    setColorByRGBString(colorRGB)
+}
+
+void componentSetPixelColor(cd, String colorRGB, BigDecimal pixel) {
+    setPixelColor(colorRGB, pixel)
+}
+
+void componentSetAddressablePixels(cd, BigDecimal pixels) {
+    setAddressablePixels(pixels)
+}
+
+void componentSetAddressableRotation(cd, BigDecimal pixels) {
+    setAddressableRotation(pixels)
+}
+
+void componentSetEffectWidth(cd, BigDecimal pixels) {
+    setEffectWidth(pixels)
+}
+
 /**
  * -----------------------------------------------------------------------------
  * Everything below here are LIBRARY includes and should NOT be edited manually!
@@ -444,8 +503,6 @@ void componentSetSpeed(cd, String fanspeed) {
 #!include:getHelperFunctions('driver-default')
 
 #!include:getHelperFunctions('childDevices')
-
-#!include:getHelperFunctions('temperature-humidity')
 
 #!include:getHelperFunctions('tasmota')
 

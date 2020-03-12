@@ -1,4 +1,6 @@
-#!include:getHeaderLicense()
+#!includeNC:getAppRawRepoURL()
+
+#!includeNC:getHeaderLicense()
 
 #!include:getDefaultParentImports()
 
@@ -17,15 +19,22 @@ definition(
 }
 
 preferences {
-     page(name: "mainPage", title: "", install: true, uninstall: true)
+     page(name: "mainPage", title: "Tasmota Device Handler", install: true, uninstall: true)
      page(name: "deleteDevice")
      page(name: "refreshDevices")
      page(name: "resultPage")
      page(name: "configureTasmotaDevice")
      page(name: "addDevices", title: "Add Tasmota-based Device", content: "addDevices")
-     page(name: "deviceDiscovery")
      page(name: "manuallyAdd")
      page(name: "manuallyAddConfirm")
+     page(name: "changeName")
+
+     page(name: "discoveryPage", title: "Device Discovery", content: "discoveryPage", refreshTimeout:10)
+     page(name: "deviceDiscovery")
+     page(name: "deviceDiscoveryPage2")
+     page(name: "deviceDiscoveryReset")
+     page(name: "discoveredAddConfirm")
+     
 }
 
 // https://docs.smartthings.com/en/latest/smartapp-developers-guide/preferences-and-settings.html#preferences-and-settings
@@ -56,14 +65,14 @@ Map getTimeStringSinceDateWithMaximum(myDate, maxMillis) {
 }
 
 #!include:getDefaultAppMethods()
-
+ 
 void makeAppTitle() {
     section(getElementStyle('title', getMaterialIcon('build', 'icon-large') + "${app.label} <span id='version'>${getAppVersion()}</span>" + getCSSStyles())){
         }
 }
 
 Map mainPage() {
-	return dynamicPage(name: "mainPage", nextPage: null, uninstall: true, install: true) {
+    return dynamicPage(name: "mainPage", title: "", nextPage: null, uninstall: true, install: true) {
         makeAppTitle() // Also contains the CSS
         logging("Building mainPage", 1)
         // Hubitat green: #81BC00
@@ -81,21 +90,22 @@ Map mainPage() {
             //href "deviceDiscoveryCancel", title:"Cancel Discover Device", description:""
             }
             section(getElementStyle('header', getMaterialIcon('library_add') + "Install New Devices"), hideable: true, hidden: false){
-                href("deviceDiscovery", title:getMaterialIcon('', 'he-discovery_1') + "Discover Devices", description:"")
-                href("manuallyAdd", title:getMaterialIcon('', 'he-add_1') + "Manually Add Device", description:"")
+                href("deviceDiscovery", title:getMaterialIcon('', 'he-discovery_1') + "Discover Devices (using SSDP)", description:"")
+                href("manuallyAdd", title:getMaterialIcon('', 'he-add_1') + "Manually Install Device", description:"")
             }
             section(getElementStyle('header', getMaterialIcon('playlist_add') + 'Grant Access to Additional Devices'), hideable: true, hidden: true){
                 paragraph("Select the devices to grant access to, if the device doesn't use a compatible driver it will be ignored, so selecting too many or the wrong ones, doesn't matter. Easiest is probably to just select all devices. Only Parent devices are shown.")
-                input(name:	"devicesSelected", type: "capability.refresh", title: "Available Devices", multiple: true, required: false, submitOnChange: true)
+                input(name:	"devicesSelected", type: "capability.initialize", title: "Available Devices", multiple: true, required: false, submitOnChange: true)
             }
             section(getElementStyle('header', getMaterialIcon('', 'he-settings1') + "Configure Devices"), hideable: true, hidden: false){ 
-                paragraph('<div style="margin: 8px;">All devices below use a compatible driver, if any device is missing, add them above in "Grant Access to Additional Devices". Newly selected devices will not be shown until after you\'ve pressed Done.</div>')
+                paragraph('<div style="margin: 8px;">All devices below use a compatible driver, if any device is missing, add them above in "Grant Access to Additional Devices". Newly selected devices will not be shown until after you\'ve pressed Done. \"Refresh Devices\" runs the \"Refresh\" command on all devices in the list, this can take a bit of time if you have many devices...</div>')
                 
                 //input(name: "refreshDevices", type: "bool", defaultValue: "false", submitOnChange: true, title: "Refresh Devices", description: "Refresh Devices Desc")
                 href("resultPage", title:getMaterialIcon('autorenew') + "Result Page", description: "")
                 href("refreshDevices", title:getMaterialIcon('autorenew') + "Refresh Devices", description: "")
-
-                state.devices.each { rawDev ->
+                
+                getAllTasmotaDevices().each { rawDev ->
+                //state.devices.each { rawDev ->
                     def cDev = getTasmotaDevice(rawDev.deviceNetworkId)
                     //getLastActivity()
                     if(cDev != null) {
@@ -148,11 +158,11 @@ Map mainPage() {
 
                 }
             }
-            section(getElementStyle('header', "More things"), hideable: true, hidden: true){
+            /*section(getElementStyle('header', "More things"), hideable: true, hidden: true){
                 paragraph("Select the devices to configure, if the device doesn't use a compatible driver it will be ignored, so selecting too many or the wrong ones, doesn't matter. Easiest is probably to just select all devices. Only Parent devices are shown.")
                 
                 input(name:	"devicesAvailable", type: "enum", title: "Available Devices", multiple: true, required: false, submitOnChange: true, options: state.devicesSelectable)
-            }
+            }*/
         } else {
             section(getElementStyle('subtitle', "Configure")){
                 generate_preferences(configuration_model_debug())
@@ -204,7 +214,7 @@ Map resultPage(name, title, result, nextPage = "mainPage"){
     }
 }
 
-def getElementStyle(style, content=""){
+String getElementStyle(style, String content=""){
     switch (style) {
         case 'header':
             //return '<div style="font-weight: bold; color:#fff;">' + content + '</div>'
@@ -224,171 +234,12 @@ def getElementStyle(style, content=""){
     }
 }
 
-String getMaterialIcon(iconName, extraClass='') {
+String getMaterialIcon(String iconName, String extraClass='') {
     // Browse icons here
     // https://material.io/resources/icons/?style=baseline
     // known HE icons (set as class): he-bulb_1, he-settings1, he-file1, he-default_dashboard_icon, he-calendar1
     // he-discovery_1, he-add_2, he-door_closed
     return '<i class="material-icons icon-position ' + extraClass + '">' + iconName + '</i>'
-}
-
-//#.form div.mdl-cell h4.pre {
-String getCSSStyles() {
-    return '''<style>
-/* General App Styles */
-#version {
-    font-size: 50%;
-}
-.btn {
-    font-family: "Roboto","Helvetica","Arial",sans-serif;
-}
-.mdl-card, .mdl-switch__label, .mdl-textfield  {
-    font-size: 14px;
-    font-family: "Roboto","Helvetica","Arial",sans-serif;
-}
-.btn-sub {
-    padding: 2px 30px 2px 2px;
-}
-div.mdl-button--raised {
-    font-weight: bold; 
-    color:#fff; 
-    background-color:#81bc00; 
-    border: 1px solid;
-}
-div.mdl-button--raised:hover, div.mdl-button--raised:focus {
-    color: #212121;
-    background-color:#91d844; 
-}
-.btn-sub.hrefElem:before {
-    top: calc(50% - 0.75625rem);
-}
-div.mdl-button--raised h4.pre {
-    font-weight: bold; 
-    color: #fff;
-    vertical-align: middle;
-}
-
-/* Icon Styles */
-.icon-position {
-    margin-right: 12px;
-    vertical-align: middle;
-}
-.icon-tiny {
-    margin-right: 8px;
-    font-size: 14px;
-}
-.icon-small {
-    margin-right: 8px;
-    font-size: 18px;
-}
-.icon-large {
-    margin-right: 12px;
-    font-size: 32px;
-}
-
-/* Configure Devices List Styles */
-#collapse4 .hrefElem::before {
-    filter: invert(100%);
-}
-#collapse4 .hrefElem:hover::before, #collapse4 .hrefElem:focus::before {
-    filter: invert(0%);
-}
-#collapse4 table .hrefElem::before {
-    filter: invert(0%);
-}
-#collapse4 .btn-block {
-    color: #f5f5f5;
-    background-color: #382e2b;
-    
-    font-size: 14px;
-    /*font-size: calc(100% + 0.08vw);*/
-    max-width: inherit;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-#collapse4 .btn-block span {
-    white-space: nowrap !important;
-    max-width: inherit;
-}
-#collapse4 .btn-block:hover, #collapse4 .btn-block:focus {
-    color: #212121;
-    background-color: #e0e0e0;
-}
-#collapse4 div.mdl-textfield {
-    margin: 0px;
-}
-.device-config_table {
-    border-spacing: 2px 0px;
-    table-layout:fixed;
-    width: 100%
-}
-.device-config_td {
-    text-align: center;
-    vertical-align: middle;
-}
-.device-config_btn {
-    width: 100%;
-}
-.device-config_table th, .device-config_table td {
-    font-family: "Roboto","Helvetica","Arial",sans-serif;
-    font-size: 13px;
-    vertical-align: middle;
-    width: 100%;
-}
-.device-config_table th div, .device-config_td div, .device-config_table td a {
-    text-align: center;
-    white-space: nowrap !important;
-    max-width: inherit;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 100%;
-    display: block;
-}
-.device-config_btn_icon {
-    text-align: center;
-    width: 100%;
-}
-
-/* Action Buttons */
-#collapse4 [name*="refreshDevices"] {
-    float: right !important;
-}
-#collapse4 [name*="resultPage"] {
-    float: left !important;
-}
-#collapse4 [name*="refreshDevices"], #collapse4 [name*="resultPage"] {
-    color: #000;
-    width: 170px !important;
-    min-width: 170px;
-    background: rgba(158,158,158,.2);
-    border: none;
-    margin-left: 0px;
-    text-align: center !important;
-    vertical-align: middle;
-    line-height: 36px;
-    padding-right: unset;
-    padding: 0px 16px;
-    display:inline;
-}
-#collapse4 .mdl-cell--12-col:nth-of-type(2), #collapse4 .mdl-cell--12-col:nth-of-type(3) {
-    width: 50% !important;
-    display:inline !important;
-}
-#collapse4 [name*="refreshDevices"] span, #collapse4 [name*="resultPage"] span {
-    font-weight: 500;
-    text-align: center !important;
-    white-space: nowrap !important;
-}
-#collapse4 [name*="refreshDevices"]::before, #collapse4 [name*="resultPage"]::before {
-    content: "";
-}
-
-@media (min-width: 840px)
-.mdl-cell--8-col, .mdl-cell--8-col-desktop.mdl-cell--8-col-desktop {
-    width: calc(76.6666666667% - 16px);
-}
-</style>'''
 }
 
 Map btnParagraph(buttons, extra="") {
@@ -412,16 +263,16 @@ Map btnParagraph(buttons, extra="") {
     return paragraph(content) 
 }
 
-def getDeviceTableCell(deviceInfoEntry, link=true) {
-    it = deviceInfoEntry
-    def content = '<td class="device-config_td ' + "${it['td_class']}" + '">'
+String getDeviceTableCell(deviceInfoEntry, link=true) {
+    def it = deviceInfoEntry
+    String content = '<td class="device-config_td ' + "${it['td_class']}" + '">'
         
     if(link == true) {
         content += '<a class="device-config_btn ' + "${it['class']}" + '" href="' + "${it['href']}" + '" target="' +"${it['target']}" + '">'
     }
     
     //content += '<button type="button" class="btn btn-default hrefElem btn-lg mdl-button--raised mdl-shadow--2dp btn-sub">'
-    extraTitle = ""
+    String extraTitle = ""
     if(it['title'] != null && it['title'].indexOf('material-icons') == -1) {
         extraTitle = "title=\"${it['title']}\""
     }
@@ -442,9 +293,9 @@ def getDeviceTableCell(deviceInfoEntry, link=true) {
     return content
 }
 
-def getDeviceTable(deviceInfo, extra="") {
+String getDeviceTable(deviceInfo, String extra="") {
     //getDeviceConfigLink(it.id)
-    def content = '<table class="device-config_table"><tr>'
+    String content = '<table class="device-config_table"><tr>'
     content += '<th style="width: 40px;"><div>Config</div></th>'
     content += '<th style="width: 100px;"><div>Tasmota&nbsp;Config</div></th>'
     content += '<th style="width: 80px;"><div>Uptime</div></th>'
@@ -506,18 +357,18 @@ def configureTasmotaDevice(params) {
             state.currentDisplayName = getTasmotaDevice(params.params.did)?.label
         }
     }
-    device = getTasmotaDevice(state.currentDeviceId)
+    def device = getTasmotaDevice(state.currentDeviceId)
     state.currentDisplayName = device.label
     logging("state.currentDeviceId: ${state.currentDeviceId}, label: ${device.label}", 1)
     //if (device != null) device.configure()
-    dynamicPage(name: "configureTasmotaDevice", title: "Configure Tasmota-based Devices created with this app", nextPage: null) {
+    dynamicPage(name: "configureTasmotaDevice", title: "Configure Tasmota-based Devices created with this app", nextPage: "mainPage") {
             section {
                 app.updateSetting("${state.currentDeviceId}_label", device.label)
-                input "${state.currentDeviceId}_label", "text", title:"Device Name", description: "", required: false
+                input "${state.currentDeviceId}_label", "text", title:"Device Name" + getCSSStyles(), description: "", required: false
                 href "changeName", title:"Change Device Name", description: "Edit the name above and click here to change it"
             }
             section {
-                href "deleteDevice", title:"Delete $state.label", description: ""
+                href "deleteDevice", title:"Delete \"$device.label\"", description: ""
             }
     }
     // device = getChildDevice(did)
@@ -528,8 +379,8 @@ def configureTasmotaDevice(params) {
 }
 
 //
-def deviceDiscovery(){
-   dynamicPage(name: "deviceDiscovery", title: "Discover Tasmota-based Devices", nextPage: "mainPage") {
+def deviceDiscoveryTEMP() {
+   dynamicPage(name: "deviceDiscoveryTEMP", title: "Discover Tasmota-based Devices", nextPage: "mainPage") {
 		section {
 			paragraph "NOT FUNCTIONAL: This process will automatically discover your device, this may take a few minutes. Please be patient. Tasmota Device Handler then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your WiFi network."
             /*input "deviceType", "enum", title:"Device Type", description: "", required: true, options: 
@@ -540,17 +391,26 @@ def deviceDiscovery(){
 }
 
 
-def manuallyAdd(){
-   dynamicPage(name: "manuallyAdd", title: "Manually add a Tasmota-based Device", nextPage: "manuallyAddConfirm") {
-		section {
-            paragraph "This process will manually create a Tasmota-based Device with the entered IP address. Tasmota Device Handler then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your wifi network."
-            input "deviceType", "enum", title:"Device Type", description: "", required: true, submitOnChange: false, options: 
+def manuallyAdd() {
+    dynamicPage(name: "manuallyAdd", title: "", nextPage: "manuallyAddConfirm", previousPage: "mainPage") {
+        makeAppTitle() // Also contains the CSS
+		section(getElementStyle('header', getMaterialIcon('', 'he-add_1') + "Manually Install a Tasmota-based Device"), hideable: true, hidden: false) {
+            paragraph("This process will install a Tasmota-based Device with the entered IP address. Tasmota Device Handler then communicates with the device to obtain additional information from it. Make sure the device is on and connected to your wifi network.")
+            
+            input("deviceType", "enum", title:"Device Type", description: "", required: true, submitOnChange: false, options: 
                 #!include:makeTasmotaConnectDriverListV1()
-            input("ipAddress", "text", title:"IP Address", description: "", required: true, submitOnChange: false)
+            )
+            input(name: "deviceConfig", type: "enum", title: "Device Configuration", 
+                description: "Select a Device Configuration (default: Generic Device)<br/>'Generic Device' doesn't configure device Template and/or Module on Tasmota. Child devices and types are auto-detected as well as auto-created and does NOT depend on this setting.", 
+                options: getDeviceConfigurationsAsListOption(), defaultValue: "01generic-device", required: false)
+            input("ipAddress", "text", title:"IP Address", description: "", required: false, submitOnChange: false)
             input("deviceLabel", "text", title:"Device Label", description: "", required: true, defaultValue: (deviceType ? deviceType : "Tasmota - Universal Parent") + " (%device_ip%)")
             paragraph("'%device_ip%' = insert device IP here")
-            input("passwordDevice", "password", title:"Tasmota Device Password", description: "Only needed if set in Tasmota.", defaultValue: passwordDefault, submitOnChange: true, displayDuringSetup: true)
+            input("passwordDevice", "password", title:"Tasmota Device Password", description: "Only needed if set in Tasmota.", defaultValue: passwordDefault, submitOnChange: true, displayDuringSetup: true)            
             paragraph("Only needed if set in Tasmota.")
+            paragraph("To exit without installing a device, complete the required fields but DON'T enter a correct IP, then click \"Next\".")
+            // Have to find a way to leave this page without filling in the required fields...
+            //href("mainPage", title:getMaterialIcon('cancel') + "Cancel", description: "")
 		}
     }
 }
@@ -564,30 +424,33 @@ def manuallyAddConfirm(){
         def child = addChildDevice("tasmota", deviceType ? deviceType : "Tasmota - Universal Parent", "${convertIPtoHex(ipAddress)}", location.hubs[0].id, [
            "label": (deviceLabel ? deviceLabel : "Tasmota - Universal Parent (%device_ip%)").replace("%device_ip%", "${ipAddress}"),
            "data": [
-           "ip": ipAddress,
-           "port": "80",
-           "password": encrypt(passwordDevice)
+                "ip": ipAddress,
+                "port": "80",
+                "password": encrypt(passwordDevice),
+                "deviceConfig": deviceConfig
            ]
         ])
 
         // We do this to get everything setup correctly
+        //child.updateSetting("deviceConfig", [type: "enum", value:deviceConfig])
+        // After adding preferences, Configure() needs to run to apply them, but we have to wait a little bit.
+        child.configureDelayed()
+        // This will refresh and detect child devices based on the above config
         child.refresh()
-
-        app.updateSetting("ipAddress", "")
+        def tmpIpAddress = ipAddress
+        // Restore for next time
+        app.updateSetting("ipAddress", [type: "string", value:getFirstTwoIPBytes(ipAddress)])
         app.updateSetting("deviceLabel", "")
         app.updateSetting("passwordDevice", "")
-            
-        dynamicPage(name: "manuallyAddConfirm", title: "Manually add a Tasmota-based Device", nextPage: "mainPage") {
-            section {
-                paragraph "The device has been added. Press next to return to the main page."
-            }
-        }
+        //app.updateSetting("deviceConfig", [type: "enum", value:"01generic-device"])
+        
+        resultPage("manuallyAddConfirm", "Manual Installation Summary", 
+                   "The device with IP \"$tmpIpAddress\" has been installed. It may take up to a minute or so before all child devices have been created if many are needed. Be patient. If all child devices are not created as expected, press Configure and Refresh in the Universal Parent and wait again. Don't click multiple times, it takes time for the device to reconfigure itself. Press \"Next\" to Continue.", 
+                   nextPage="mainPage")
     } else {
-        dynamicPage(name: "manuallyAddConfirm", title: "Manually add a Tasmota-based Device", nextPage: "mainPage") {
-		    section {
-			    paragraph "The entered ip address is not valid. Please try again."
-		    }
-        }
+        resultPage("manuallyAddConfirm", "Manual Installation Summary", 
+                   "The entered ip address ($ipAddress) is not valid. Please try again. Press \"Next\" to Continue.", 
+                   nextPage="mainPage")
     }
 }
 
@@ -595,25 +458,28 @@ def deleteDevice(){
     try {
         unsubscribe()
         deleteChildDevice(state.currentDeviceId)
-        dynamicPage(name: "deleteDevice", title: "Deletion Summary", nextPage: "mainPage") {
-            section {
-                paragraph "The device has been deleted. Press next to continue"
-            } 
-        }
-    
+        resultPage("deleteDevice", "Deletion Summary", 
+                   "The device with DNI $state.currentDeviceId has been deleted. Press \"Next\" to Continue.", 
+                   nextPage="mainPage")
 	} catch (e) {
-        dynamicPage(name: "deleteDevice", title: "Deletion Summary", nextPage: "mainPage") {
-            section {
-                paragraph "Error: ${(e as String).split(":")[1]}."
-            } 
-        }
-    
+        resultPage("deleteDevice", "Deletion Summary", 
+                   "Error: ${(e as String).split(":")[1]}.", 
+                   nextPage="mainPage")    
     }
+}
+
+def changeName(){
+    def thisDevice = getChildDevice(state.currentDeviceId)
+    thisDevice.label = settings["${state.currentDeviceId}_label"]
+
+    resultPage("changeName", "Change Name Summary", 
+                   "The device has been renamed to \"$thisDevice.label\". Press \"Next\" to Continue.", 
+                   nextPage="mainPage")
 }
 
 def getDeviceDriverName(device) {
     //getTasmotaDevice device.deviceNetworkId
-    driverName = 'Unknown'
+    String driverName = 'Unknown'
     try {
         driverName = runDeviceCommand(device, 'getDeviceInfoByName', args=['name'])
     } catch(e) {
@@ -685,7 +551,7 @@ def updatedAdditional() {
     logging("updatedAdditional()", 1)
 	unsubscribe()
     unschedule()
-    devices = getAllTasmotaDevices()
+    def devices = getAllTasmotaDevices()
     
     //app.removeSetting("devicesAvailable")
     //app.updateSetting("devicesAvailable", devices)
@@ -717,10 +583,10 @@ def runDeviceCommand(device, cmd, args=[]) {
 
 // 
 def getAllTasmotaDevices() {
-    toRemove = []
-    devicesFiltered = []
+    def toRemove = []
+    def devicesFiltered = []
     devicesSelected.eachWithIndex { it, i ->
-        namespace = 'unknown'
+        def namespace = 'unknown'
         try {
             //runDeviceCommand(it, 'setDeviceInfoAsData', ['namespace'])
             //namespace = runDeviceCommand(it, 'getDeviceInfoByName', ['namespace'])
@@ -739,10 +605,10 @@ def getAllTasmotaDevices() {
             devicesFiltered << it
         }
     }
-    childDevices = getChildDevices()
+    def childDevices = getChildDevices()
     logging("getChildDevices: ${getChildDevices()}", 1)
     childDevices.eachWithIndex { it, i ->
-        namespace = 'unknown'
+        def namespace = 'unknown'
         try {
             //runDeviceCommand(it, 'setDeviceInfoAsData', ['namespace'])
             namespace = runDeviceCommand(it, 'getDeviceInfoByName', ['namespace'])
@@ -762,11 +628,22 @@ def getAllTasmotaDevices() {
         }
     }
     //devicesFiltered << childDevices
-    return devicesFiltered
+    return devicesFiltered.sort({ a, b -> a.label <=> b.label })
+}
+
+def getAllTasmotaDeviceIPs() {
+    def deviceIPs = []
+    getAllTasmotaDevices().each { rawDev ->
+        def cDev = getTasmotaDevice(rawDev.deviceNetworkId)
+        if(cDev != null) {
+            deviceIPs << rawDev['data']['ip']
+        }
+    }
+    return deviceIPs
 }
 
 def getTasmotaDevice(deviceNetworkId) {
-    r = getChildDevice(deviceNetworkId)
+    def r = getChildDevice(deviceNetworkId)
     if(r == null) {
         devicesSelected.each {
             //logging("'" + it.deviceNetworkId + "' =? '" + deviceNetworkId + "'", 1)
@@ -788,14 +665,17 @@ def getTasmotaDevice(deviceNetworkId) {
 */
 def initializeAdditional() {
     logging("initializeAdditional()", 1)
-    //getAllTasmotaDevices()
-    //ssdpSubscribe()
-    //runEvery5Minutes("ssdpDiscover")
+    // Do NOT start SSDP discovery here! That should ONLY be done when searching for devices
+    deviceDiscoveryCancel()
 }
 
 #!include:getLoggingFunction()
 
 #!include:getHelperFunctions('app-default')
+
+#!include:getHelperFunctions('app-css')
+
+#!include:getHelperFunctions('app-tasmota-device-discovery')
 
 #!include:getHelperFunctions('tasmota')
 

@@ -21,6 +21,7 @@
 # External modules
 from pathlib import Path
 import logging
+import io
 from colorama import init, Fore, Style
 import sys
 init()
@@ -45,21 +46,34 @@ from hubitat_driver_snippets_metadata import *
 
 # Setup the logger
 log = logging.getLogger(__name__)
+errors = io.StringIO()
 log.setLevel(logging.DEBUG)
 log_cb = logging.getLogger(HubitatCodeBuilder.__module__)
 log_cb.setLevel(logging.DEBUG)
 log_hs = logging.getLogger(HubitatHubSpider.__module__)
 log_hs.setLevel(logging.DEBUG)
+
 h = logging.StreamHandler()
 h.setLevel(logging.DEBUG)
 h.setFormatter(HubitatCodeBuilderLogFormatter(error_beep=True))
+ha = logging.StreamHandler(errors)
+ha.setLevel(logging.WARN)
+ha.setFormatter(HubitatCodeBuilderLogFormatter(error_beep=False))
+
 hhs = logging.StreamHandler()
 hhs.setLevel(logging.DEBUG)
 hhs.setFormatter(HubitatCodeBuilderLogFormatter(error_beep=True, debug_color=Fore.CYAN, default_color=Fore.MAGENTA))
-log.addHandler(h)
-log_cb.addHandler(h)
-log_hs.addHandler(hhs)
 
+hhsa = logging.StreamHandler(errors)
+hhsa.setLevel(logging.WARN)
+hhsa.setFormatter(HubitatCodeBuilderLogFormatter(error_beep=False))
+
+log.addHandler(h)
+log.addHandler(ha)
+log_cb.addHandler(h)
+log_cb.addHandler(ha)
+log_hs.addHandler(hhs)
+log_hs.addHandler(hhsa)
 
 try:
     from config.driver_list_2nd_hub import driver_files_2nd
@@ -74,6 +88,7 @@ except SyntaxError as e:
 def main():
     base_repo_url = 'https://github.com/markus-li/Hubitat/blob/development/drivers/expanded/'
     base_raw_repo_url = 'https://raw.githubusercontent.com/markus-li/Hubitat/development/drivers/expanded/'
+    app_raw_repo_url = 'https://raw.githubusercontent.com/markus-li/Hubitat/development/apps/expanded/'
 
     # Get us a Code Builder...
     
@@ -85,7 +100,8 @@ def main():
 
     # By including our namespace, anything we import in this file is available
     # to call by the include tags in the .groovy files when we process them
-    cb = HubitatCodeBuilderTasmota(hhs, calling_namespace=sys.modules[__name__], driver_raw_repo_url=base_raw_repo_url)
+    cb = HubitatCodeBuilderTasmota(hhs, calling_namespace=sys.modules[__name__], driver_raw_repo_url=base_raw_repo_url,
+                app_raw_repo_url=app_raw_repo_url)
     #cb = HubitatCodeBuilderTasmota()
     
     driver_files = [
@@ -130,11 +146,6 @@ def main():
         # 'alternate_name': 'Tasmota - Aoycocr X10S Power Monitor Plug', \
         # 'alternate_template': '{"NAME":"Aoycocr X10S","GPIO":[56,0,57,0,21,134,0,0,131,17,132,0,0],"FLAG":0,"BASE":45}',
         # 'deviceLink': 'https://templates.blakadder.com/aoycocr_X10S.html'},
-        {'id': 589, 'file': 'tasmota-generic-rgb-rgbw-controller-bulb-dimmer.groovy',
-         'alternate_output_filename': 'tasmota-brilliant-20699-rgbw-bulb', \
-         'alternate_name': 'Tasmota - Brilliant 20699 800lm RGBW Bulb', \
-         'alternate_template': '{"NAME":"Brilliant20699","GPIO":[0,0,0,0,141,140,0,0,37,142,0,0,0],"FLAG":0,"BASE":18}',
-         'deviceLink': 'https://templates.blakadder.com/brilliant_20699.html'},
         {'id': 592, 'file': 'tasmota-generic-wifi-switch-plug.groovy' , \
          'alternate_output_filename': 'tasmota-sonoff-sv', \
          'alternate_name': 'Tasmota - Sonoff SV', \
@@ -145,11 +156,11 @@ def main():
         # 'alternate_name': 'Tasmota - Sonoff TH', \
         # 'alternate_template': '{"NAME":"Sonoff TH","GPIO":[17,255,0,255,255,0,0,0,21,56,255,0,0],"FLAG":0,"BASE":4}',
         # 'deviceLink': 'https://templates.blakadder.com/sonoff_TH.html'},
-        {'id': 547, 'file': 'tasmota-sonoff-powr2.groovy' , \
-         'alternate_output_filename': 'tasmota-sonoff-pow', \
-         'alternate_name': 'Tasmota - Sonoff POW', \
-         'alternate_template': '{"NAME":"Sonoff Pow","GPIO":[17,0,0,0,0,130,0,0,21,132,133,52,0],"FLAG":0,"BASE":6}',
-         'deviceLink': 'https://templates.blakadder.com/sonoff_Pow.html'},
+        #{'id': 547, 'file': 'tasmota-sonoff-powr2.groovy' , \
+        # 'alternate_output_filename': 'tasmota-sonoff-pow', \
+        # 'alternate_name': 'Tasmota - Sonoff POW', \
+        # 'alternate_template': '{"NAME":"Sonoff Pow","GPIO":[17,0,0,0,0,130,0,0,21,132,133,52,0],"FLAG":0,"BASE":6}',
+        # 'deviceLink': 'https://templates.blakadder.com/sonoff_Pow.html'},
         #{'id': 359, 'file': 'tasmota-sonoff-powr2.groovy' , \
         # 'alternate_output_filename': 'tasmota-sonoff-s31', \
         # 'alternate_name': 'Tasmota - Sonoff S31', \
@@ -250,9 +261,11 @@ def main():
         # Universal drivers
         {'id': 865, 'file': 'tasmota-universal-parent.groovy', 'specialDebugLabel': 'descriptionText' },
         
-        {'id': 866, 'file': 'tasmota-universal-multisensor-child.groovy', 
+        {'id': 866, 'file': 'tasmota-universal-multi-sensor-child.groovy', 
             'specialDebugLabel': 'descriptionText' },
         {'id': 993, 'file': 'tasmota-universal-fancontrol-child.groovy', 
+            'specialDebugLabel': 'descriptionText' },
+        {'id': 589, 'file': 'tasmota-universal-curtain-child.groovy', 
             'specialDebugLabel': 'descriptionText' },
         {'id': 359, 'file': 'tasmota-universal-switch-as-contact-sensor-child.groovy', 
             'specialDebugLabel': 'descriptionText' },
@@ -280,9 +293,11 @@ def main():
         {'id': 867, 'file': 'tasmota-universal-parent.groovy', 'specialDebugLabel': 'descriptionText',
          'alternate_output_filename': 'tasmota-universal-parent-testing', \
          'alternate_name': 'Tasmota - Universal Parent Testing' },
-        {'id': 868, 'file': 'tasmota-universal-multisensor-child.groovy', 'specialDebugLabel': 'descriptionText',
-         'alternate_output_filename': 'tasmota-universal-multisensor-testing-child', \
-         'alternate_name': 'Tasmota - Universal Multisensor Testing (Child)' },
+        {'id': 868, 'file': 'tasmota-universal-multi-sensor-child.groovy', 'specialDebugLabel': 'descriptionText',
+         'alternate_output_filename': 'tasmota-universal-multi-sensor-testing-child', \
+         'alternate_name': 'Tasmota - Universal Multi Sensor Testing (Child)' },
+
+        {'id': 547, 'file': 'testing-bare-minimum-driver.groovy' },
 
         # Zigbee
         {'id': 579, 'file': 'zigbee-generic-wifi-switch-plug.groovy' },
@@ -325,7 +340,7 @@ def main():
     # As long as we have an id, we can just supply that here instead of the whole config...
     # 651 left over from RF Link Child
     driver_files_testing = [
-        {'id': 865}, {'id': 866}, # Universal Drivers RELEASE
+        {'id': 866},
         {'id': 359}, # Switch as Contact Sensor Child
         {'id': 361}, # Switch as Motion Sensor Child
         {'id': 555}, # Switch as Water Sensor Child
@@ -334,11 +349,14 @@ def main():
         {'id': 577}, # CT/RGB/RGB+CW+WW Child
         {'id': 646}, # Dimmer Child
         {'id': 559}, # Metering Dimmer Child
+        {'id': 589}, # Curtain Child
         {'id': 644}, {'id': 647}, # Metering Children
         {'id': 581}, {'id': 582}, # Switch Children
+        {'id': 547},
 
         {'id': 962}, # Javascript Injection Driver
-    #    {'id': 867}, {'id': 868},  # Universal Drivers TESTING
+        #{'id': 867}, {'id': 868},  # Universal Drivers TESTING
+        {'id': 865}, {'id': 866}, # Universal Drivers RELEASE
         
     #    {'id': 801}, {'id': 579},  # Zigbee drivers
     #     {'id':587},  # Wifi Curtain Wall Panel
@@ -560,6 +578,14 @@ def main():
         log.info('No new apps where created!')
 
     log.info('Current version: {}'.format(getDriverVersion()))
+    
+    contents=errors.getvalue()
+    if(len(contents) > 0):
+        print('ERRORS and/or WARNINGS occured during this run:')
+        print(contents)
+    else:
+        log.info('No ERRORS or WARNINGS occured during this run :)')
+    errors.close()
 
     cb.saveChecksums()
     hhs.save_session()

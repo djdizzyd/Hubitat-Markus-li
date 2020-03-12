@@ -7,6 +7,8 @@ metadata {
     definition (name: "Tasmota - Universal Fan Control (Child)", namespace: "tasmota", author: "Markus Liljergren") {
         capability "FanControl"
         capability "Refresh"
+
+        #!include:getMinimumChildAttributes()
     }
 
     preferences {
@@ -34,6 +36,7 @@ void parse(List<Map> description) {
 
 void updated() {
     log.info "updated()"
+    #!include:getChildComponentDefaultUpdatedContent()
     refresh()
 }
 
@@ -61,6 +64,8 @@ void setSpeed(String value) {
  * --- Nothing to edit here, move along! ---------------------------------------
  * -----------------------------------------------------------------------------
  */
+
+#!include:getDefaultFunctions()
 
 #!include:getHelperFunctions('all-default')
 

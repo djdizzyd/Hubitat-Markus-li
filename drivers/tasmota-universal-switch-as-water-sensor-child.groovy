@@ -9,6 +9,7 @@ metadata {
         capability "WaterSensor"                  // Attributes: water - ENUM ["wet", "dry"]
         capability "Refresh"
 
+        #!include:getMinimumChildAttributes()
     }
 
     preferences {
@@ -38,6 +39,7 @@ void parse(List<Map> description) {
 
 void updated() {
     log.info "updated()"
+    #!include:getChildComponentDefaultUpdatedContent()
     refresh()
 }
 
@@ -60,6 +62,8 @@ void refresh() {
  * --- Nothing to edit here, move along! ---------------------------------------
  * -----------------------------------------------------------------------------
  */
+
+#!include:getDefaultFunctions()
 
 #!include:getHelperFunctions('all-default')
 
